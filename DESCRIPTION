@@ -1,0 +1,11 @@
+Package: csaw
+Version: 0.0.1
+Date: 2013/02/26
+Title: ChIP-seq Analysis with Windows
+Author: Aaron Lun <alun@wehi.edu.au>
+Maintainer: Aaron Lun <alun@wehi.edu.au>
+Depends: R (>= 2.15.0), GenomicRanges, Rsamtools, edgeR
+Suggests:
+biocViews: Bioinformatics, HighThroughputSequencing, ChIP-Seq
+Description: Efficient counts for sliding windows in ChIP-seq data
+License: LGPL (>= 2)

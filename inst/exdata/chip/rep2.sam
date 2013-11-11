@@ -1,0 +1,30 @@
+@SQ	SN:chrA	LN:2000
+@SQ	SN:chrB	LN:1000
+x	0	chrA	12	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrA	150	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	1159	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	1185	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	1985	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrA	231	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	5	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	122	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	150	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrB	940	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	88	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrA	76	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrA	31	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	543	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrA	113	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	350	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrB	990	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrB	32	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrB	1	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrA	22	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrB	20	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	16	chrB	37	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrB	337	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrB	72	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+x	0	chrB	683	200	10M	*	0	0	NNNNNNNNNN	hhhhhhhhhh
+
+
+
