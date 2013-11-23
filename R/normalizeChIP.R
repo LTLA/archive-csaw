@@ -1,4 +1,4 @@
-normalizeChIP <- function(counts, lib.sizes=colSums(counts), refColumn=NULL, prior.count=0.1, logratioTrim = 0.3, sumTrim = 0.05)
+.normalizeChIP <- function(counts, lib.sizes=colSums(counts), refColumn=NULL, prior.count=0.1, logratioTrim = 0.3, sumTrim = 0.05)
 # This performs TMM normalization with some modifications to deal with low 
 # counts and other problems specific to ChIP-seq data. It also has a slight
 # difference in implementation to improve behaviour around ties.
@@ -56,4 +56,16 @@ normalizeChIP <- function(counts, lib.sizes=colSums(counts), refColumn=NULL, pri
 	return(2^normfacs)
 }
  
-
+normalizeChIP <- function(counts, lib.sizes=colSums(counts), weighted=FALSE, ...) 
+# This is a wrapper to perform TMM normalization with non-standard library 
+# sizes (e.g. due to filtering) and weighting turned off. Purely for 
+# convenience, as I don't want to put in an extra three lines per call 
+# (especially when there are multiple calls to test robustness).
+#
+# written by Aaron Lun
+# 19 November, 2013
+{
+	y<-DGEList(counts, lib.size=lib.sizes)
+	y<-calcNormFactors(y, doWeighting=weighted, ...)
+	y$samples$norm.factors
+}
