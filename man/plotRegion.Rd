@@ -6,7 +6,8 @@
 \description{Plot the depth on each strand for all reads from a BAM file in a specified genomic region}
 
 \usage{
-plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, max.depth=NULL, fcol = "blue", rcol="red", ...)
+plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, max.depth=NULL, fcol = "blue", rcol="red", 
+    xlab="Genomic position (bp)", ylab="Read depth", ...)
 }
 
 \arguments{
@@ -17,6 +18,8 @@ plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, max.depth=NULL, fcol = "bl
 	\item{max.depth}{a numeric value specifying the maximum height of the plot}
 	\item{fcol}{a R colour object for forward reads}
 	\item{rcol}{a R colour object for reverse reads}
+	\item{xlab}{a character string for the x-axis label}
+	\item{ylab}{a character string for the y-axis label}
 	\item{...}{other arguments to be passed to \code{plot}}
 }	
 
