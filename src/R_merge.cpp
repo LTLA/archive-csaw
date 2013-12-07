@@ -53,23 +53,21 @@ SEXP R_merge(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP ma
 			optr[i]=optr[i-1];
 			const bool diffchr=(cptr[i]!=cptr[i-1]);
 			if (diffchr 											// Obviously, changing if we're on a different chromosome.
-				|| sptr[i]-last_end-1 > tol							// Space between windows, start anew if this is greater than the tolerance.
-				|| lptr[i]!=last_sign 								// Checking if space is consistent.
+				|| sptr[i]-eptr[i-1]-1 > tol						// Space between windows, start anew if this is greater than the tolerance.
+				|| lptr[i]!=lptr[i-1] 								// Checking if the sign is consistent.
 				|| (limit_size && eptr[i]-current_start >= maxs) 	// Width is end-start+1, but '+1' gets absorbed when '>' turns into '>='.
 		   	) { 
 				++optr[i]; 
 				current_start=sptr[i];
 			}
 
-			/* This provides some protection against nested elements by ensuring that only the
-			 * largest end is used as 'last_end'. Nested elements with the opposite sign to 
-			 * the nesting element have no easy interpretation; in this case, they form 
-			 * separate clusters (though really, they shouldn't be showing up at all).
-			 */
-			if (diffchr || eptr[i] > last_end) { 
-				last_end=eptr[i]; 
-				last_sign=lptr[i];
-			}
+			/* Note that any nested regions with the opposite sign as the parent will break
+ 			 * any stretch involving the parent. This is probably the correct interpretation
+ 			 * and it is also convenient to code. Mind you, these shouldn't really be observed
+ 			 * anyway, except maybe at the ends of the chromosome where trimming results in
+ 			 * everything having the same end point (and even then, you'd need a striped pattern
+ 			 * of changes to get alternating signs throughout). 
+ 			 */ 
 		}
 
 		// Now, identifying the chromosome, start and end of each region.
