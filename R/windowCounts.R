@@ -22,6 +22,10 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 		filter<-1L
 		ext<-1L
 	}
+	pet <- as.logical(pet)
+	max.frag <- as.integer(max.frag)
+	minq <- as.integer(minq)
+	dedup <- as.logical(dedup)
 
 	# Initializing various collectable containers.
 	totals<-integer(nbam)	
