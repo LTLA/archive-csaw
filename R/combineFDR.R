@@ -4,6 +4,9 @@ combineFDR<-function(ids, tab, weight=rep(1, length(ids)))
 # is to test the joint null for each cluster, and then use that to compute the 
 # FDR across all clusters. Clusters can be formed by whatever means are deemed 
 # necessary (e.g. mergeWindows below, or using peaks).
+# 
+# written by Aaron Lun
+# 30 July 2013
 {
 	if (!is.integer(ids)) { ids<-as.integer(ids+0.5) }
 	if (!is.double(weight)) { weight<-as.double(weight) }
@@ -33,6 +36,9 @@ mergeWindows <- function(regions, tol, sign=NULL, max.width=NULL)
 # Any abundance filtering should be done beforehand. Negative values of tol refer
 # to a minimum overlap. A value of zero means that the windows must be adjacent
 # (i.e. non-overlapping and contiguous).
+# 
+# written by Aaron Lun
+# 30 July 2013
 {
 	tol<-as.integer(tol+0.5)
 	max.width<-as.integer(max.width+0.5)
