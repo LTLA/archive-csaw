@@ -6,13 +6,14 @@
 \description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PET) data.}
 
 \usage{
-getPETSizes(bam.file, dedup=FALSE, minq=0)
+getPETSizes(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 }
 
 \arguments{
 	\item{bam.file}{a character string containing the file path to a sorted and indexed BAM file}
 	\item{dedup}{a boolean scalar specifying whether or not marked duplicates should be removed}
     \item{minq}{an integer scalar defining the minimum threshold for the mapping quality score when computing sizes}
+    \item{restrict}{a character vector specifying chromosomes from which fragment sizes should be extracted}
 }
 
 \value{
@@ -51,5 +52,6 @@ computing fragment sizes for valid read pairs. No filtering on mapping quality i
 \examples{
 bamFile<-system.file("exdata", "pet", "pet_sort.bam", package="csaw")
 out<-getPETSizes(bamFile)
+out<-getPETSizes(bamFile, restrict="chrA")
 }
 

@@ -1,4 +1,4 @@
-getPETSizes <- function(bam.file, dedup=FALSE, minq=0) 
+getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL) 
 # This function takes a BAM file and reads it to parse the size of the PET fragments. It then
 # returns a vector of sizes which can be plotted for diagnostics. The length of the vector
 # will also tell you how many read pairs were considered valid. The total number of reads, the
@@ -12,6 +12,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0)
 	one.unmapped<-0L
 	totals<-0L
     chromosomes<-scanBamHeader(bam.file)[[1]][[1]]
+    if (!is.null(restrict)) { chromosomes<-chromosomes[names(chromosomes) %in% restrict] }
 
 	for (i in 1:length(chromosomes)) {
 		where<-GRanges(names(chromosomes)[i], IRanges(1, chromosomes[i]))

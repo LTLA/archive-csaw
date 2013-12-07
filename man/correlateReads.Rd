@@ -15,7 +15,7 @@ correlateReads(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restri
 	\item{dedup}{a logical scalar specifying whether or not marked duplicate reads should be removed}
 	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
 	\item{cross}{a logical scalar specifying whether cross-correlations should be computed}
-	\item{restrict}{a character vector containing chromosomes for which correlations should be computed}
+	\item{restrict}{a character vector specifying chromosomes for which correlations should be computed}
 }
 
 \value{

@@ -7,7 +7,8 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, left=0, right=0, ext=100, 
-	pet=FALSE, max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, minq=0)
+	pet=FALSE, max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, 
+	minq=0, restrict=NULL)
 }
 
 \arguments{
@@ -22,6 +23,7 @@ windowCounts(bam.files, spacing=50, left=0, right=0, ext=100,
 	\item{bin}{an integer scalar specifying the bin width, if binning is desired}
 	\item{dedup}{a boolean specifying whether marked duplicates should be removed}
 	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
+    \item{restrict}{a character vector specifying which chromosomes should be used for read counting}
 }
 
 \value{
@@ -76,4 +78,5 @@ windowCounts(bamFiles, spacing=100, filter=1)
 bamFile<-system.file("exdata", "pet", "pet_sort.bam", package="csaw")
 windowCounts(bamFile, pet=TRUE, filter=1)
 windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1)
+windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1, restrict="chrA")
 }
