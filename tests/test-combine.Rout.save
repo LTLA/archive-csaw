@@ -622,9 +622,35 @@ GRanges with 917 ranges and 0 metadata columns:
    chrA chrB chrC
      NA   NA   NA
 > 
+> # Seeing what happens with nested windows of same and opposing sign.
+> 
+> gr <- GRanges("chrA", IRanges(c(1,1,1), c(100, 30, 50))) # should be okay, start point equality
+> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
+> x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
+> 
+> gr <- GRanges("chrA", IRanges(c(100, 20, 40), c(200, 200, 200))) # should be okay, end point equality
+> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
+> x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
+> 
+> gr <- GRanges("chrA", IRanges(c(1, 3, 50), c(200, 100, 80))) 
+> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE)) # should be okay
+> try(x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))) # should fail.
+Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) : 
+  fully nested windows of opposite sign are not supported
+> gr2 <- GRanges(c("chrA", "chrB", "chrA"), IRanges(c(1, 3, 50), c(200, 100, 80))) 
+> x <- mergeWindows(gr2, tol=10, sign=c(TRUE, FALSE, TRUE)) # should be okay again
+> 
+> # In this case, we should see the use of the larger nested region to match to the nest window,
+> # as they should be exactly 99 bp apart.
+> gr <- c(gr, GRanges("chrA", IRanges(300, 400)))
+> x <- mergeWindows(gr, tol=99)
+> stopifnot(length(unique(x$id))==1L)
+> x <- mergeWindows(gr, tol=98)
+> stopifnot(length(unique(x$id))==2L)
+> 
 > ###################################################################################################
 > 
 > 
 > proc.time()
    user  system elapsed 
- 10.225   0.074  10.302 
+ 11.055   0.054  11.127 

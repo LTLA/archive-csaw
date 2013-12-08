@@ -48,26 +48,43 @@ SEXP R_merge(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP ma
 		SET_VECTOR_ELT(output, 0, NEW_INTEGER(n));
 		int* optr=INTEGER_POINTER(VECTOR_ELT(output, 0));
 		*optr=1;
-		int last_end=*eptr, last_sign=*lptr, current_start=*sptr;
+		int current_start=*sptr, last_end=*eptr;
+		bool diffchr, diffsign;
+
 		for (int i=1; i<n; ++i) {
 			optr[i]=optr[i-1];
-			const bool diffchr=(cptr[i]!=cptr[i-1]);
+			diffchr=(cptr[i]!=cptr[i-1]);
+ 		   	diffsign=(lptr[i]!=lptr[i-1]);
+
 			if (diffchr 											// Obviously, changing if we're on a different chromosome.
-				|| sptr[i]-eptr[i-1]-1 > tol						// Space between windows, start anew if this is greater than the tolerance.
-				|| lptr[i]!=lptr[i-1] 								// Checking if the sign is consistent.
+				|| sptr[i]-last_end-1 > tol							// Space between windows, start anew if this is greater than the tolerance.
+				|| diffsign 										// Checking if the sign is consistent.
 				|| (limit_size && eptr[i]-current_start >= maxs) 	// Width is end-start+1, but '+1' gets absorbed when '>' turns into '>='.
 		   	) { 
 				++optr[i]; 
 				current_start=sptr[i];
 			}
 
-			/* Note that any nested regions with the opposite sign as the parent will break
- 			 * any stretch involving the parent. This is probably the correct interpretation
- 			 * and it is also convenient to code. Mind you, these shouldn't really be observed
- 			 * anyway, except maybe at the ends of the chromosome where trimming results in
- 			 * everything having the same end point (and even then, you'd need a striped pattern
- 			 * of changes to get alternating signs throughout). 
- 			 */ 
+			/* Fully nested regions don't have a properly defined interpretation when it comes
+ 			 * to splitting things by sign. We only support consideration of nested regions where
+ 			 * either of the boundaries are the same. That can be considered to break the 
+ 			 * previous stretch if it had opposite sign. Otherwise, the next window would have to
+ 			 * make the decision to match the parent window or its nested child.
+ 			 *
+ 			 * If the start is the same, the window with the earlier end point should be ordered
+ 			 * first, so that isn't a problem. If the end is the same, then they're the same. This
+ 			 * means that it'll only throw an error if we have a fully nested window. Start and
+ 			 * end-point equality might be possible at the ends of chromosomes where trimming 
+ 			 * enforces sameness, but full nesting should not be observed.
+ 			 *
+ 			 * If the nested region has the same sign as the parent, then everything proceeds
+ 			 * normally i.e. same cluster. We make sure to keep 'last_end' as the parent end in
+ 			 * such cases. This ensures that the following windows get a change to compute
+ 			 * distances to the parent end (which should be closer).
+ 			 */
+ 		    if (!diffchr && eptr[i] < eptr[i-1]) {
+ 			   	if (diffsign) { throw std::runtime_error("fully nested windows of opposite sign are not supported"); } 
+			} else { last_end=eptr[i]; }
 		}
 
 		// Now, identifying the chromosome, start and end of each region.

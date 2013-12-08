@@ -183,5 +183,29 @@ mcomp(1000, chrs=chrs, nwin=200, winsize=10)
 mcomp(1000, chrs=chrs, nwin=500, winsize=10)
 mcomp(1000, chrs=chrs, nwin=600, winsize=10)
 
+# Seeing what happens with nested windows of same and opposing sign.
+
+gr <- GRanges("chrA", IRanges(c(1,1,1), c(100, 30, 50))) # should be okay, start point equality
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
+
+gr <- GRanges("chrA", IRanges(c(100, 20, 40), c(200, 200, 200))) # should be okay, end point equality
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
+
+gr <- GRanges("chrA", IRanges(c(1, 3, 50), c(200, 100, 80))) 
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE)) # should be okay
+try(x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))) # should fail.
+gr2 <- GRanges(c("chrA", "chrB", "chrA"), IRanges(c(1, 3, 50), c(200, 100, 80))) 
+x <- mergeWindows(gr2, tol=10, sign=c(TRUE, FALSE, TRUE)) # should be okay again
+
+# In this case, we should see the use of the larger nested region to match to the nest window,
+# as they should be exactly 99 bp apart.
+gr <- c(gr, GRanges("chrA", IRanges(300, 400)))
+x <- mergeWindows(gr, tol=99)
+stopifnot(length(unique(x$id))==1L)
+x <- mergeWindows(gr, tol=98)
+stopifnot(length(unique(x$id))==2L)
+
 ###################################################################################################
 
