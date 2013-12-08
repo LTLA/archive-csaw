@@ -5,6 +5,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 # number of singletons and the number of interchromosomal pairs is also reported.
 # 
 # written by Aaron Lun
+# a long long time ago, in a galaxy far far away.
 {
 	norm.list<-list()
 	inter.chr<-0L
@@ -19,7 +20,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 		out<-.extractPET(bam.file, where, dedup=dedup, minq=minq)
 		norm.list[[i]]<-out$size
 	
-		# Pulling out other diagnostics.
+		# Pulling out other diagnostics, including less-good reads which were left out in .extractPET.
 		reads<-scanBam(bam.file, param=ScanBamParam(what=c("flag", "isize", "mapq"), which=where, 
 			flag=scanBamFlag(isUnmappedQuery=FALSE,	isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
 		curf<-reads$flag
@@ -41,26 +42,49 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 			mate.unmapped=one.unmapped, inter.chr=inter.chr)));
 }
 
-.extractPET <- function(bam.file, where, dedup=FALSE, minq=0) 
-# A function to extract PET data for a particular chromosome. We rely on 
-# properly synchronised read pair data for convenience. Otherwise, we'd
-# have to figure out which reads were paired. This becomes inconveniet
-# if sorted by position; and, if sorted by name, it'd mean we have to process
-# the entire genome at once (can't go chromosoem-by-chromosome).
+.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, na.rm=TRUE)
+# A function to extract PET data for a particular chromosome. Synchronisation is expected.
+# We avoid sorting by name  as it'd mean we have to process the entire genome at once 
+# (can't go chromosome-by-chromosome).  This probably results in increased memory usage 
+# across the board, and it doesn't fit in well with the rest of the pipelines which assume 
+# coordinate sorting.
+# 
+# written by Aaron Lun
+# 8 December 2013
 {
-    reads<-scanBam(bam.file, param=ScanBamParam(what=c("pos", "mpos", "isize", "mapq"),
+    read1 <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "pos", "qwidth", "mapq"),
 		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
 		isPaired=TRUE, hasUnmappedMate=FALSE, isMinusStrand=FALSE, isMateMinusStrand=TRUE)))[[1]]
+    keep<-read1$mapq >= minq
+	if (na.rm) { keep<-keep & !is.na(read1$mapq) }
+	read1$qname <- read1$qname[keep]
+	read1$pos<-read1$pos[keep]
+	read1$qwidth<-read1$qwidth[keep]
+	read1$mapq<-NULL
 
-	# Protecting against undefined behavior when fragment=read length. Which one is the 
-	# rightmost or leftmost segment may not be defined as they only differ in strandedness.
-	# Unfortunately, it won't filter out scenarios where the reverse read is nested in the forward read.
-	# This should be only possible when working with variable length sequencing data (e.g. Roche).
-	reads$isize<-abs(reads$isize)
+    read2 <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "pos", "qwidth", "mapq"),
+		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
+		isPaired=TRUE, hasUnmappedMate=FALSE, isMinusStrand=TRUE, isMateMinusStrand=FALSE)))[[1]]
+    keep<-read2$mapq >= minq
+	if (na.rm) { keep<-keep & !is.na(read2$mapq) }
+	read2$qname <- read2$qname[keep]
+	read2$strand<-read2$strand[keep]
+	read2$pos<-read2$pos[keep]
+	read2$qwidth<-read2$qwidth[keep]
+	read2$mapq<-NULL
 
-	invalid<-reads$pos > reads$mpos 	# removes reverse reads which lie before the forward read
-	inter.chr<-reads$isize==0L			# gets rid of reads from different chromosomes
-	good.q<-reads$mapq >= minq 			# gets rid of pairs with low mapping quality (assuming they are equal between reads in a pair) 
-	keep<-!(invalid | inter.chr) & good.q
-	return(list(pos=reads$pos[keep], size=reads$isize[keep]))
+	# Matching the two.
+	corresponding <- match(read1$qname, read2$qname)
+	hasmatch <- !is.na(corresponding)
+	fpos <- read1$pos[hasmatch]
+	fwidth <- read1$qwidth[hasmatch]
+	rpos <- read2$pos[corresponding[hasmatch]]
+	rwidth <- read2$qwidth[corresponding[hasmatch]]
+
+	# Allowing only valid PETs.
+	fend <- pmin(fpos+fwidth, end(where)+1L)
+	rend <- pmin(rpos+rwidth, end(where)+1L)
+    valid <- fpos <= rpos & fend <= rend
+	total.size <- rend - fpos 
+	return(list(pos=fpos[valid], size=total.size[valid]))
 }

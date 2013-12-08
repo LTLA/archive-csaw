@@ -42,9 +42,9 @@ Each window is defined as the interval \code{[x-left, x+right]} for a centre pos
 Each read in \code{bam.files} is extended by \code{ext} in the direction of the read to obtain a rough estimate of the fragment boundaries. 
 The number of fragments overlapping the window for each library is then counted for each window position.
 
-The value of \code{ext} can be estimated using \code{correlateReads} or from post-fragmentation gel electrophoresis. Of course, this is
-irrelevant when \code{pet=TRUE} where the region bounded by the 5' ends of the reads in each valid pair exactly defines the boundaries 
-of the fragment. Fragment sizes above \code{max.frag} are removed. An appropriate choice for this value can be found using \code{getPETSizes}. 
+For single-end data, the value of \code{ext} can be estimated using \code{correlateReads} or from post-fragmentation gel electrophoresis. 
+For paired-end data, the fragment boundaries can be computed exactly with \code{pet=TRUE} for valid pairs with reads in an inward-facing 
+orientation. Fragment sizes above \code{max.frag} are removed. An appropriate choice for this value can be found using \code{getPETSizes}. 
 
 The \code{left} and \code{right} parameters define the width of the binding site i.e. the size of the contact region between the DNA and protein. In 
 practical terms, it determines the spatial resolution of the analysis. Larger values for either mean that reads are counted over a larger region 
@@ -60,9 +60,12 @@ If \code{bin!=NULL}, the settings are internally adjusted so that all reads are 
 Specifically, \code{right} is set to \code{bin-1}, \code{left} is set to 0, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
 Only the 5' end of each read or fragment (for paired-end data) is used in counting.
 
-Duplicates must be marked using a tool like Picard's \code{MarkDuplicates} if it is to be removed with \code{dedup=TRUE}. Reads can also be filtered 
-by mapping quality score if \code{minq!=0}. However, if \code{pet=TRUE}, only the quality score of the read on the forward strand will be used.  
-More generally, users should ensure that PET data is properly synchronised prior to counting.
+The duplicate flag must be set if reads are to be removed with \code{dedup=TRUE}. For paired-end data, users should ensure that the BAM files 
+are properly synchronised prior to counting. Both these procedures can be performed using tools from the Picard suite prior to read counting.	  
+	
+Reads can also be filtered by mapping quality score if \code{minq!=0}. This is generally recommended to remove low-confidence alignments.
+The exact threshold for \code{minq} will depend on the range of scores provided by the aligner. If \code{pet=TRUE}, both reads of a pair 
+must have a mapping quality score above \code{minq}.
 
 The \code{countWindows} function is a wrapper which allows users to pass in a list of non-default arguments. This ensures that multiple calls
 to \code{windowCounts} can be synchronised easily by passing in the same list in \code{param}. In particular, users should use the same values
