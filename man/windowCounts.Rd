@@ -1,5 +1,6 @@
 \name{windowCounts}
 \alias{windowCounts}
+\alias{countWindows}
 
 \title{Count reads overlapping each window}
 
@@ -9,6 +10,7 @@
 windowCounts(bam.files, spacing=50, left=0, right=0, ext=100, 
 	pet=FALSE, max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, 
 	minq=0, restrict=NULL)
+countWindows(param, ...)
 }
 
 \arguments{
@@ -24,6 +26,8 @@ windowCounts(bam.files, spacing=50, left=0, right=0, ext=100,
 	\item{dedup}{a boolean specifying whether marked duplicates should be removed}
 	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
     \item{restrict}{a character vector specifying which chromosomes should be used for read counting}
+	\item{param}{a named list of non-default arguments with appropriate values}
+	\item{...}{other arguments to be passed to \code{windowCounts}}
 }
 
 \value{
@@ -58,7 +62,12 @@ Only the 5' end of each read or fragment (for paired-end data) is used in counti
 
 Duplicates must be marked using a tool like Picard's \code{MarkDuplicates} if it is to be removed with \code{dedup=TRUE}. Reads can also be filtered 
 by mapping quality score if \code{minq!=0}. However, if \code{pet=TRUE}, only the quality score of the read on the forward strand will be used.  
-More generally, users should ensure that PET data is properly synchronised prior to counting. 
+More generally, users should ensure that PET data is properly synchronised prior to counting.
+
+The \code{countWindows} function is a wrapper which allows users to pass in a list of non-default arguments. This ensures that multiple calls
+to \code{windowCounts} can be synchronised easily by passing in the same list in \code{param}. In particular, users should use the same values
+for \code{pet}, \code{dedup}, \code{minq}, \code{bam.files} and (for paired-end data) \code{max.frag}. This ensures that the same reads are 
+being counted in each call. Note that any additional arguments to \code{countWindows} will override those specified in \code{param}.
 }
 
 \author{Aaron Lun}
@@ -69,13 +78,20 @@ More generally, users should ensure that PET data is properly synchronised prior
 
 \examples{
 # A low filter is only used here as the examples have very few reads.
-bamFiles<-system.file("exdata", "chip", c("rep1_sort.bam", "rep2_sort.bam"), package="csaw")
+bamFiles <- system.file("exdata", "chip", c("rep1_sort.bam", "rep2_sort.bam"), package="csaw")
 windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, right=100, filter=1)
 windowCounts(bamFiles, spacing=100, filter=1)
 
+# Performing additional non-default calls.
+param <- list(bam.files=bamFiles, minq=10, dedup=FALSE)
+countWindows(param)
+countWindows(param, ext=110, filter=1)
+countWindows(param, right=999, filter=2)
+countWindows(param, restrict="chrB", filter=3)
+
 # Loading PET data.
-bamFile<-system.file("exdata", "pet", "pet_sort.bam", package="csaw")
+bamFile <- system.file("exdata", "pet", "pet_sort.bam", package="csaw")
 windowCounts(bamFile, pet=TRUE, filter=1)
 windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1)
 windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1, restrict="chrA")

@@ -85,6 +85,19 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 	return(list(counts=do.call(rbind, all.out), totals=totals, region=all.regions))
 }
 
+countWindows <- function(param, ...) 
+# This is a wrapper for windowCounts which accepts a named parameter list and other
+# non-default arguments. The latter will overwrite the former, if there are any 
+# conflicts. The idea is to improve the re-callability of windowCounts.
+#
+# written by Aaron Lun
+# 8 December, 2013
+{
+	other <- list(...)
+	for (x in names(other)) { param[[x]]<-other[[x]] }
+	do.call(windowCounts, param)
+}
+
 .extractSET <- function(bam, where, dedup, minq, na.rm=TRUE) {
 	reads<-scanBam(bam, param=ScanBamParam(what=c("strand", "pos", "qwidth", "mapq"),
 			which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
