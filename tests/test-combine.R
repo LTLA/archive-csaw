@@ -163,7 +163,7 @@ mcomp <- function(tol=1000, ...) {
 	posfc<-stuff$tab$logFC>0
 	combo<-mergeWindows(stuff$region, tol=tol, sign=posfc)
 	merged.ids<-nativemerge(stuff$region, tol=tol, sign=posfc)
-	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match") }
+	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match for variable sign") }
 
 	signs<-split(posfc, merged.ids)
 	if (!all(sapply(signs, FUN=function(x) { length(unique(x))==1L }))) {
@@ -206,6 +206,61 @@ x <- mergeWindows(gr, tol=99)
 stopifnot(length(unique(x$id))==1L)
 x <- mergeWindows(gr, tol=98)
 stopifnot(length(unique(x$id))==2L)
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+# Testing the maximum limit.
+
+maxcomp <- function(tol=1000, maxd=2000, ...) {
+	stuff<-generateWindows(...)
+	combo<-mergeWindows(stuff$region, tol=tol, max.width=maxd)
+	merged.ids<-nativemerge(stuff$region, tol=tol)
+	
+	# Parsing the merged.ids, and splitting them.
+	gunk <- split(1:length(merged.ids), merged.ids)
+	allstarts <- start(stuff$region)
+	allends <- end(stuff$region)
+	last.id <- 1L
+	for (x in gunk) {
+		curstarts <- allstarts[x]
+		curends <- allends[x]
+		o <- order(curstarts)
+		curstarts <- curstarts[o]
+		curends <- curends[o]
+
+		last.start <- curstarts[1]
+		new.ids <- integer(length(o))
+		for (y in 1:length(o)) {
+			if (curends[y]-last.start + 1L > maxd) {
+				last.id <- last.id + 1L
+				last.start <- curstarts[y]				
+			}
+			new.ids[y] <- last.id
+		}
+		last.id <- last.id + 1L
+		new.ids[o] <- new.ids
+		merged.ids[x] <- new.ids
+	}
+	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match with maximum limit") }
+	head(combo$region)
+}
+
+maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=1)
+maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=10)
+maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=100)
+
+maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=1)
+maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=10)
+maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=100)
+
+maxcomp(1000, maxd=500, chrs=chrs, nwin=200, winsize=10)
+maxcomp(1000, maxd=500, chrs=chrs, nwin=500, winsize=10)
+maxcomp(1000, maxd=500, chrs=chrs, nwin=600, winsize=10)
+
+maxcomp(1000, maxd=2000, chrs=chrs, nwin=200, winsize=10)
+maxcomp(1000, maxd=2000, chrs=chrs, nwin=500, winsize=10)
+maxcomp(1000, maxd=2000, chrs=chrs, nwin=600, winsize=10)
 
 ###################################################################################################
 
