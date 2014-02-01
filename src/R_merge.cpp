@@ -72,10 +72,9 @@ SEXP R_merge(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP ma
  			 * make the decision to match the parent window or its nested child.
  			 *
  			 * If the start is the same, the window with the earlier end point should be ordered
- 			 * first, so that isn't a problem. If the end is the same, then they're the same. This
- 			 * means that it'll only throw an error if we have a fully nested window. Start and
- 			 * end-point equality might be possible at the ends of chromosomes where trimming 
- 			 * enforces sameness, but full nesting should not be observed.
+ 			 * first, so that won't pass the first 'if'. This means that it'll only enter with
+ 			 * a fully nested window. Start and end-point equality might be possible at the ends 
+ 			 * of chromosomes where trimming enforces sameness, but full nesting should not be observed.
  			 *
  			 * If the nested region has the same sign as the parent, then everything proceeds
  			 * normally i.e. same cluster. We make sure to keep 'last_end' as the parent end in
