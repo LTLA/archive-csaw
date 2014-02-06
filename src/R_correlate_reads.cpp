@@ -11,12 +11,12 @@
 
 int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_ptr, const int* cnt_ptr,
 		const int total_len, const int chr_len, const bool reverse) {
-	/* Generating vectors. Also avoiding issues where n>=chr_len, by resetting the maximum delay
- 	 * shift so that there's at least two elements. Otherwise, the variance is undefined.
+	/* Generating vectors. Also avoiding issues where 'n' is too large, by resetting the maximum delay
+ 	 * shift so that there's at least two base positions. Otherwise, the variance is undefined.
  	 */
 	mu.resize(n+1);
 	sd.resize(n+1);
-	if (n>=chr_len) { n=chr_len-2; }
+	if (n>chr_len-2) { n=chr_len-2; }
 	int first_pos_sd=-1;
 
 	int step=1, start=0, end=total_len, threshold=chr_len-n;
@@ -28,7 +28,8 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 	}
 	/* Treading backwards, and identifying the first index where the position
  	 * is past the threshold (in terms of increasing step, so we've got to +step
- 	 * after we reach the point of equality).
+ 	 * after we reach the point of equality). This identifies the index of the
+ 	 * first read outside the common subsection.
  	 */
 	int temp_end=start;
 	for (int i=end-step; i!=start-step; i-=step) {
@@ -38,9 +39,11 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 		}
 	}
 
-	/* Computing the mean and variance for the longest common subsection (i.e. the largest delay).
- 	 * We use a jump table for the latter, just to speed things up when we're dealing with a large
- 	 * number of zero's and one's.
+	/* Computing the mean and variance for the longest common subsection (i.e.
+ 	 * the largest delay).  We use a jump table for the latter, just to speed
+ 	 * things up when we're dealing with a large number of zero's and one's.
+ 	 * This is the typical case when you're running it with duplicates thrown
+ 	 * out.
  	 */
 	double& curmean=mu[n];
 	for (int index=start; index!=temp_end; index+=step) { curmean += cnt_ptr[index]; }
@@ -48,31 +51,31 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 	double& curvar=sd[n];
 	std::deque<bool> present;
 	{
-		std::deque<double> tmps(1, -1);
+		std::deque<double> jumptab(1, -1);
 		for (int index=start; index!=temp_end; index+=step) { 
 			const int& curcount=cnt_ptr[index];
-			if (tmps.size() <= curcount) { tmps.resize(curcount+1, -1); } 
-			if (tmps[curcount]<0) {
-				tmps[curcount]=curcount-curmean;
-				tmps[curcount]*=tmps[curcount];
+			if (jumptab.size() <= curcount) { jumptab.resize(curcount+1, -1); } 
+			if (jumptab[curcount]<0) {
+				jumptab[curcount]=curcount-curmean;
+				jumptab[curcount]*=jumptab[curcount];
 			}
-			curvar += tmps[curcount];
+			curvar += jumptab[curcount];
 		}
-		const int leftover=chr_len-n-(temp_end-start)*step;
-		curvar+=curmean*curmean*leftover;
+		const int num_zero_pos=chr_len-n-(temp_end-start)*step;
+		curvar+=curmean*curmean*num_zero_pos;
 
 		/* Checking whether it would theoretically have a zero-sd, using integers. If there's 
  		 * at least two unique positive integers, or there's one unique positive integer and at 
  		 * least one zero value, then the standard deviation must be positive.
  		 */
-		present.resize(tmps.size(), false);
+		present.resize(jumptab.size(), false);
 		int counted=0;
-		if (leftover) { 
+		if (num_zero_pos) { 
 			++counted;
 			present[0]=true;
 		}
-		for (int i=1; i<tmps.size(); ++i) { 
-			if (tmps[i]>0) { 
+		for (int i=1; i<jumptab.size(); ++i) { 
+			if (jumptab[i]>0) { 
 				++counted; 
 				if (counted>=2) { 
 					first_pos_sd=n; 
@@ -84,35 +87,39 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 	}
 	
 	/* Now, computing running mean and variance values for all the delays. We use Welford's algorithm
-	 * to provide some numerical stability. We take the square root to get the standard deviation.
+	 * to provide some numerical stability when computing each value, in addition to being able to
+	 * be online with respect to decreasing delay distance (equivalent to adding a new base position
+	 * as the shift/delay distance decreases; equivalent to a new observation; need to handle a stream).
 	 */
-	int running = chr_len-n;
 	int current_pos=threshold;
 	int current_count=0;
 	double delta;
 	for (int i=n-1; i>=0; --i) {
-		running+=1;
-		current_pos+=step;
-		if (pos_ptr[temp_end]==current_pos) {
+ 		current_pos+=step;
+		if (temp_end!=end && pos_ptr[temp_end]==current_pos) {
 			current_count=cnt_ptr[temp_end];
 			temp_end+=step;
 		} else { current_count=0; }
 
 		delta=current_count-mu[i+1];
-		mu[i]=mu[i+1]+delta/running;
+		mu[i]=mu[i+1]+delta/(chr_len-i);
 		sd[i]=sd[i+1]+delta*(current_count-mu[i]);
-		sd[i+1]/=running-2;
-		sd[i+1]=sqrt(sd[i+1]);
-
+		
 		/* Also checking whether this would break the zero-sd condition. Any addition
 		 * will be sufficient, as 'counted' should be at least 1 (i.e. at least two
-		 * non-negative values should be in there, somewhere).
+		 * non-negative values should be in there, somewhere). Note that this is 'first'
+		 * in terms of decreasing delay distance; it'll be the last delay distance for
+		 * which correlation calculations are valid.
 		 */
 		if (first_pos_sd < 0 && (current_count>=present.size() || !present[current_count])) { 
 			first_pos_sd=i; }
 	}
-	sd[0]/=chr_len-1;
-	sd[0]=sqrt(sd[0]);
+
+	// Tidying up the standard deviation estimates, to actually get the standard deviation.
+	for (int i=0; i<=n; ++i) {
+		sd[i]/=chr_len-i-1;
+		sd[i]=sqrt(sd[i]);
+	}
 
 	return first_pos_sd;
 }
