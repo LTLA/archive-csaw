@@ -6,37 +6,28 @@
 \description{Calculate normalization factors to scale the raw library sizes using a modified TMM implementation.}
 
 \usage{
-normalizeChIP(counts, lib.sizes=colSums(counts), weighted=FALSE, ...)
+normalizeChIP(counts, lib.sizes=colSums(counts), method=c("TMM", "loess"), weighted=FALSE, dispersion=0.05, ...)
 }
 
 \arguments{
   \item{counts}{a matrix of integer counts with one column per library}
   \item{lib.sizes}{a numeric vector specifying the total number of reads per library}
-  \item{weighted}{a logical scalar indicating whether precision weights should be used for TMM}
-  \item{...}{other arguments to be passed to \code{calcNormFactors}}
+  \item{method}{a character string indicating what type of normalization is to be performed}
+  \item{weighted}{a logical scalar indicating whether precision weights should be used for \code{method="TMM"}}
+  \item{dispersion}{a numeric scalar specifying the NB dispersion for calculation of the average count in \code{method="loess"}}
+  \item{...}{other arguments to be passed to \code{\link{calcNormFactors}} for \code{method="TMM"}, or \code{\link{loessFit}} for \code{method="loess"}}
 }
 
 \details{
-This function provides a convenience wrapper for the trimmed mean of M-values (TMM) method implemented in the \code{calcNormFactors}
+If \code{method="TMM"}, this function provides a convenience wrapper for the trimmed mean of M-values (TMM) method implemented in the \code{calcNormFactors}
 function from the \code{edgeR} package. Briefly, log-expression ratios (M-values) are computed between each library and 
 a selected reference library. Trimming is performed to remove M-values which are themselves extreme or correspond to 
 extreme abundances. The normalization factor is then defined from the mean of the remaining M-values.
-
-% This implementation differs from the original by providing support for prior count values. The addition of a \code{prior.count}
-% prevents undefined M-values when the count for either library is zero. Simply discarding these instances can lead to some 
-% unpredictable results, espeically in ChIP-seq data where a non-negligble proportion of counts can be zero. Note that instances 
-% involving two zero counts are still discarded.
-
-% Compare the 'low count' example to calcNormFactors, for potential issues with the precision of the estimates.
 
 Note that the precision weighting in the original TMM procedure is turned off by default. The weighting scheme will increase the 
 contribution of points where the counts are high. However, differential binding in a ChIP-seq experiment is more likely to occur 
 at high abundance features corresponding to enriched regions. If any differentially bound regions survive trimming (e.g. those 
 with subtle fold changes), upweighting them will defeat the purpose of trimming to remove potential DE regions in the first place.
-
-% If \code{refColumn=NULL}, the reference library is defined as that with the median count closest to the mean of the median counts
-% across all librarites. This is designed to select the library with the most intermediate counts. Such a library will generally be 
-% most suited for comparison to all other libraries.
 
 % We can't min/maximize some quantity with regards to the estimated normalization factors, and then choose a reference
 % from that, as that would bias the resulting estimates (or at least, interact with existing bias unpredictably).
@@ -44,16 +35,26 @@ with subtle fold changes), upweighting them will defeat the purpose of trimming 
 % Large changes in the normalization factor estimates with changes in the prior suggest that the counts are too low i.e. not
 % enough new information in the dataset. This can be overcome by (obviously) increasing the counts. For example, binning
 % can be performed with a larger bin size in \code{windowCounts} to obtain proportionally larger counts.
+
+If \code{method="loess"}, this function performs non-linear normalization similar to the fast loess method in
+\code{\link{normalizeCyclicLoess}}.  For each sample, a lowess curve is fitted to the log-counts against the log-average count.
+The fitted value for each bin pair is used as the generalized linear model offset for that sample. The use of the
+average count provides more stability than the average log-count when low counts are present for differentially bound regions.
 }
 
 \value{
-A numeric vector containing the relative normalization factors for each library.
+For \code{method="TMM"}, a numeric vector containing the relative normalization factors for each library.
+
+For \code{method="loess"}, a numeric matrix of the same dimensions as \code{counts}, containing the log-based
+offsets for use in GLM fitting.
 }
 
 \author{Aaron Lun}
 
 \references{
 Robinson MD, Oshlack A (2010). A scaling normalization method for differential expression analysis of RNA-seq data. \emph{Genome Biology} 11, R25.
+
+Ballman KV, Grill DE, Oberg AL, Therneau TM (2004). Faster cyclic loess: normalizing RNA arrays via linear models. \emph{Bioinformatics} 20, 2778-86.
 }
 
 \examples{
@@ -85,9 +86,17 @@ normalizeChIP(blah)
 true.value<-colSums(blah[(tospike+1):n,])/colSums(blah)
 true.value<-true.value/exp(mean(log(true.value)))
 true.value
+
+# Using loess-based normalization, instead.
+offsets <- normalizeChIP(counts, method="loess")
+head(offsets)
+offsets <- normalizeChIP(counts, method="loess", span=0.4)
+offsets <- normalizeChIP(counts, method="loess", iterations=1)
 }
 
 
 \seealso{
 \code{\link{calcNormFactors}}
+\code{\link{loessFit}}
+\code{\link{normalizeCyclicLoess}}
 }

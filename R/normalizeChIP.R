@@ -56,16 +56,26 @@
 	return(2^normfacs)
 }
  
-normalizeChIP <- function(counts, lib.sizes=colSums(counts), weighted=FALSE, ...) 
-# This is a wrapper to perform TMM normalization with non-standard library 
-# sizes (e.g. due to filtering) and weighting turned off. Purely for 
-# convenience, as I don't want to put in an extra three lines per call 
-# (especially when there are multiple calls to test robustness).
+normalizeChIP <- function(counts, lib.sizes=colSums(counts), method=c("TMM", "loess"), weighted=FALSE, dispersion=0.05, ...) 
+# This provides a wrapper to perform TMM normalization with non-standard
+# library sizes (e.g. due to filtering) and weighting turned off.
+# Alternatively, it can do a form a fast loess-like normalization which uses
+# the average count as the covariate, rather than the typical A-value-based
+# shenanigans,
 #
 # written by Aaron Lun
 # 19 November, 2013
 {
-	y<-DGEList(counts, lib.size=lib.sizes)
-	y<-calcNormFactors(y, doWeighting=weighted, ...)
-	y$samples$norm.factors
+	method <- match.arg(method)
+	if (method=="TMM") { 
+		y<-DGEList(counts, lib.size=lib.sizes)
+		y<-calcNormFactors(y, doWeighting=weighted, ...)
+		return(y$samples$norm.factors)
+	} else if (method=="loess") { 
+	    ab <- aveLogCPM(counts, lib.size=lib.sizes, dispersion=dispersion)
+		offs <- matrix(0, nrow(counts), ncol(counts), byrow=TRUE)
+		for (x in 1:ncol(counts)) { offs[,x]<-loessFit(log(counts[,x]+0.5), ab, ...)$fitted }
+		offs<-offs-rowMeans(offs)
+		return(offs)
+	}
 }
