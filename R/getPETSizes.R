@@ -52,34 +52,30 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 # written by Aaron Lun
 # 8 December 2013
 {
-    read1 <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "pos", "qwidth", "mapq"),
+    reads <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq"),
 		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
-		isPaired=TRUE, hasUnmappedMate=FALSE, isMinusStrand=FALSE, isMateMinusStrand=TRUE)))[[1]]
-    keep<-read1$mapq >= minq
-	if (na.rm) { keep<-keep & !is.na(read1$mapq) }
-	read1$qname <- read1$qname[keep]
-	read1$pos<-read1$pos[keep]
-	read1$qwidth<-read1$qwidth[keep]
-	read1$mapq<-NULL
+		isPaired=TRUE, hasUnmappedMate=FALSE)))[[1]]
+    keep<-reads$mapq >= minq
+	if (na.rm) { keep<-keep & !is.na(reads$mapq) }
+	reads$qname <- reads$qname[keep]
+	reads$flag <- reads$flag[keep]
+	reads$pos<-reads$pos[keep]
+	reads$qwidth<-reads$qwidth[keep]
+	reads$mapq<-NULL
 
-    read2 <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "pos", "qwidth", "mapq"),
-		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
-		isPaired=TRUE, hasUnmappedMate=FALSE, isMinusStrand=TRUE, isMateMinusStrand=FALSE)))[[1]]
-    keep<-read2$mapq >= minq
-	if (na.rm) { keep<-keep & !is.na(read2$mapq) }
-	read2$qname <- read2$qname[keep]
-	read2$strand<-read2$strand[keep]
-	read2$pos<-read2$pos[keep]
-	read2$qwidth<-read2$qwidth[keep]
-	read2$mapq<-NULL
+	# Figuring out the strandedness and read'ness.
+ 	is.forward <- bitwAnd(reads$flag, 0x10) == 0L
+	has.rev.mate <- bitwAnd(reads$flag, 0x20) != 0L
+	should.be.left <- is.forward & has.rev.mate
+	should.be.right <- !is.forward & !has.rev.mate
 
 	# Matching the two.
-	corresponding <- match(read1$qname, read2$qname)
+	corresponding <- match(reads$qname[should.be.left], reads$qname[should.be.right])
 	hasmatch <- !is.na(corresponding)
-	fpos <- read1$pos[hasmatch]
-	fwidth <- read1$qwidth[hasmatch]
-	rpos <- read2$pos[corresponding[hasmatch]]
-	rwidth <- read2$qwidth[corresponding[hasmatch]]
+	fpos <- reads$pos[should.be.left][hasmatch]
+	fwidth <- reads$qwidth[should.be.left][hasmatch]
+	rpos <- reads$pos[should.be.right][corresponding[hasmatch]]
+	rwidth <- reads$qwidth[should.be.right][corresponding[hasmatch]]
 
 	# Allowing only valid PETs.
 	fend <- pmin(fpos+fwidth, end(where)+1L)
@@ -87,4 +83,12 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
     valid <- fpos <= rpos & fend <= rend
 	total.size <- rend - fpos 
 	return(list(pos=fpos[valid], size=total.size[valid]))
+}
+
+.extractBrokenPET <- function(bam.file, where, dedup=FALSE, minq=0, na.rm=TRUE, use.first=TRUE) 
+# A function to extract PET data, but as single-end data (i.e. only using one of the reads).
+# Useful when paired-end data has gone completely off the rails.
+{
+	.extractSET(bam.file, where, dedup=dedup, minq=minq, na.rm=na.rm, 
+		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }

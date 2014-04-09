@@ -109,9 +109,10 @@ compstat(5000, 0, c(chrA=10))
 ###################################################################################################
 # We then write a function to check the extraction procedure.	
 	
-checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1) {
+checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 	stuff<-file.path(dir, paste("x", 1:2, sep=""));
 	all.ranges<-list()
+	first.is.left <- list()
 
 	for (x in 1:length(stuff)) {
     	# Seeding all reads.
@@ -157,10 +158,12 @@ checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, rig
 
     	# Compiling them into counts for each chromosome.
 		all.ranges[[x]]<-GRanges(names(chromosomes)[vchrs], IRanges(vpos, vpos+sizes-1))
+		first.is.left[[x]] <- str1[valid][!is.spaced]
 	}
 
     # Collating all counts.
-	x<-windowCounts(paste0(stuff, ".bam"), spacing=spacing, max.frag=max.frag, left=left, right=right, pet=TRUE, filter=filter)
+	fnames <- paste0(stuff, ".bam")
+	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, left=left, right=right, pet="both", filter=filter)
 	out<-matrix(0L, length(x$region), length(stuff))
 	totals<-integer(length(stuff))
 	for (i in 1:length(stuff)) {
@@ -169,8 +172,31 @@ checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, rig
 		totals[i]<-length(all.ranges[[i]])
 	}
 
-	if (!identical(out, x$counts)) { stop('mismatches in counts'); }
-	if (!identical(totals, x$totals)) { stop("mismatches in totals"); }
+	if (!identical(out, x$counts)) { stop('mismatches in counts for paired data') }
+	if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
+
+	# Also checking forward and reverse counts.
+	for (mode in c("first", "second")) { 
+		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, left=left, right=right, pet=mode, filter=filter)
+		out<-matrix(0L, length(x$region), length(stuff))
+		totals<-integer(length(stuff))
+		for (i in 1:length(stuff)) {
+			cur.ranges <- all.ranges[[i]]
+			if (mode=="first") {
+				cur.stat <- first.is.left[[i]]
+			} else {
+				cur.stat <- !first.is.left[[i]]
+			}
+			start(cur.ranges) <- ifelse(cur.stat, start(cur.ranges), end(cur.ranges)-ext+1L)
+			end(cur.ranges) <- ifelse(cur.stat, start(cur.ranges)+ext-1L, end(cur.ranges))
+        	current<-findOverlaps(x$region, all.ranges[[i]])
+       		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
+			totals[i]<-length(all.ranges[[i]])
+		}
+		if (!identical(out, x$counts)) { stop('mismatches in counts for single coercion') }
+		if (!identical(totals, x$totals)) { stop("mismatches in totals for single coercion") }
+	}
+		
 
 	return(x$region)
 }
@@ -185,7 +211,7 @@ checkcount(5000, c(chrA=1000, chrB=2000), spacing=25)
 
 checkcount(5000, c(chrA=1000, chrB=2000), spacing=25, max.frag=100)
 
-# Checking out restrictions on hte max size.
+# Checking out restrictions on the max size.
 
 checkcount(1000, c(chrA=1000, chrB=2000), spacing=50, right=0)
 
@@ -193,7 +219,7 @@ checkcount(1000, c(chrA=1000, chrB=2000), spacing=100, right=20)
 
 checkcount(2000, c(chrA=1000, chrB=2000), spacing=100, right=10, max.frag=200)
 
-# Checking out right details.
+# Checking out window extension details.
 
 checkcount(1000, c(chrA=1000, chrB=2000), spacing=30, right=100)
 
@@ -202,7 +228,17 @@ checkcount(1000, c(chrA=1000, chrB=2000), spacing=20, left=100)
 checkcount(2000, c(chrA=1000, chrB=2000), spacing=15, right=20, left=20)
 
 checkcount(2000, c(chrA=1000, chrB=2000), spacing=15, right=10, left=10, max.frag=200)
-		
+	
+# Checking out read extension for singles.
+
+checkcount(1000, c(chrA=1000, chrB=2000), spacing=20, ext=100)
+
+checkcount(2000, c(chrA=1000, chrB=2000), spacing=50, ext=50)
+
+checkcount(5000, c(chrA=1000, chrB=2000), spacing=25, ext=20)
+
+checkcount(5000, c(chrA=1000, chrB=2000), spacing=25, ext=200)
+	
 ###################################################################################################
 # Cleaning up.
 

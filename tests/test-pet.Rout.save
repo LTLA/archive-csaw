@@ -1,11 +1,13 @@
 
-R version 3.0.0 (2013-04-03) -- "Masked Marvel"
-Copyright (C) 2013 The R Foundation for Statistical Computing
+R version 3.0.3 (2014-03-06) -- "Warm Puppy"
+Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -162,9 +164,10 @@ Type 'q()' to quit R.
 > ###################################################################################################
 > # We then write a function to check the extraction procedure.	
 > 	
-> checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1) {
+> checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 + 	stuff<-file.path(dir, paste("x", 1:2, sep=""));
 + 	all.ranges<-list()
++ 	first.is.left <- list()
 + 
 + 	for (x in 1:length(stuff)) {
 +     	# Seeding all reads.
@@ -210,10 +213,12 @@ Type 'q()' to quit R.
 + 
 +     	# Compiling them into counts for each chromosome.
 + 		all.ranges[[x]]<-GRanges(names(chromosomes)[vchrs], IRanges(vpos, vpos+sizes-1))
++ 		first.is.left[[x]] <- str1[valid][!is.spaced]
 + 	}
 + 
 +     # Collating all counts.
-+ 	x<-windowCounts(paste0(stuff, ".bam"), spacing=spacing, max.frag=max.frag, left=left, right=right, pet=TRUE, filter=filter)
++ 	fnames <- paste0(stuff, ".bam")
++ 	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, left=left, right=right, pet="both", filter=filter)
 + 	out<-matrix(0L, length(x$region), length(stuff))
 + 	totals<-integer(length(stuff))
 + 	for (i in 1:length(stuff)) {
@@ -222,8 +227,31 @@ Type 'q()' to quit R.
 + 		totals[i]<-length(all.ranges[[i]])
 + 	}
 + 
-+ 	if (!identical(out, x$counts)) { stop('mismatches in counts'); }
-+ 	if (!identical(totals, x$totals)) { stop("mismatches in totals"); }
++ 	if (!identical(out, x$counts)) { stop('mismatches in counts for paired data') }
++ 	if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
++ 
++ 	# Also checking forward and reverse counts.
++ 	for (mode in c("first", "second")) { 
++ 		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, left=left, right=right, pet=mode, filter=filter)
++ 		out<-matrix(0L, length(x$region), length(stuff))
++ 		totals<-integer(length(stuff))
++ 		for (i in 1:length(stuff)) {
++ 			cur.ranges <- all.ranges[[i]]
++ 			if (mode=="first") {
++ 				cur.stat <- first.is.left[[i]]
++ 			} else {
++ 				cur.stat <- !first.is.left[[i]]
++ 			}
++ 			start(cur.ranges) <- ifelse(cur.stat, start(cur.ranges), end(cur.ranges)-ext+1L)
++ 			end(cur.ranges) <- ifelse(cur.stat, start(cur.ranges)+ext-1L, end(cur.ranges))
++         	current<-findOverlaps(x$region, all.ranges[[i]])
++        		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
++ 			totals[i]<-length(all.ranges[[i]])
++ 		}
++ 		if (!identical(out, x$counts)) { stop('mismatches in counts for single coercion') }
++ 		if (!identical(totals, x$totals)) { stop("mismatches in totals for single coercion") }
++ 	}
++ 		
 + 
 + 	return(x$region)
 + }
@@ -310,7 +338,7 @@ GRanges with 120 ranges and 0 metadata columns:
    chrA chrB
    1000 2000
 > 
-> # Checking out restrictions on hte max size.
+> # Checking out restrictions on the max size.
 > 
 > checkcount(1000, c(chrA=1000, chrB=2000), spacing=50, right=0)
 GRanges with 60 ranges and 0 metadata columns:
@@ -372,7 +400,7 @@ GRanges with 30 ranges and 0 metadata columns:
    chrA chrB
    1000 2000
 > 
-> # Checking out right details.
+> # Checking out window extension details.
 > 
 > checkcount(1000, c(chrA=1000, chrB=2000), spacing=30, right=100)
 GRanges with 101 ranges and 0 metadata columns:
@@ -453,7 +481,89 @@ GRanges with 201 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB
    1000 2000
-> 		
+> 	
+> # Checking out read extension for singles.
+> 
+> checkcount(1000, c(chrA=1000, chrB=2000), spacing=20, ext=100)
+GRanges with 150 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [146]     chrB [1901, 1901]      *
+  [147]     chrB [1921, 1921]      *
+  [148]     chrB [1941, 1941]      *
+  [149]     chrB [1961, 1961]      *
+  [150]     chrB [1981, 1981]      *
+  ---
+  seqlengths:
+   chrA chrB
+   1000 2000
+> 
+> checkcount(2000, c(chrA=1000, chrB=2000), spacing=50, ext=50)
+GRanges with 60 ranges and 0 metadata columns:
+       seqnames       ranges strand
+          <Rle>    <IRanges>  <Rle>
+   [1]     chrA   [  1,   1]      *
+   [2]     chrA   [ 51,  51]      *
+   [3]     chrA   [101, 101]      *
+   [4]     chrA   [151, 151]      *
+   [5]     chrA   [201, 201]      *
+   ...      ...          ...    ...
+  [56]     chrB [1751, 1751]      *
+  [57]     chrB [1801, 1801]      *
+  [58]     chrB [1851, 1851]      *
+  [59]     chrB [1901, 1901]      *
+  [60]     chrB [1951, 1951]      *
+  ---
+  seqlengths:
+   chrA chrB
+   1000 2000
+> 
+> checkcount(5000, c(chrA=1000, chrB=2000), spacing=25, ext=20)
+GRanges with 120 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 26,  26]      *
+    [3]     chrA   [ 51,  51]      *
+    [4]     chrA   [ 76,  76]      *
+    [5]     chrA   [101, 101]      *
+    ...      ...          ...    ...
+  [116]     chrB [1876, 1876]      *
+  [117]     chrB [1901, 1901]      *
+  [118]     chrB [1926, 1926]      *
+  [119]     chrB [1951, 1951]      *
+  [120]     chrB [1976, 1976]      *
+  ---
+  seqlengths:
+   chrA chrB
+   1000 2000
+> 
+> checkcount(5000, c(chrA=1000, chrB=2000), spacing=25, ext=200)
+GRanges with 120 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 26,  26]      *
+    [3]     chrA   [ 51,  51]      *
+    [4]     chrA   [ 76,  76]      *
+    [5]     chrA   [101, 101]      *
+    ...      ...          ...    ...
+  [116]     chrB [1876, 1876]      *
+  [117]     chrB [1901, 1901]      *
+  [118]     chrB [1926, 1926]      *
+  [119]     chrB [1951, 1951]      *
+  [120]     chrB [1976, 1976]      *
+  ---
+  seqlengths:
+   chrA chrB
+   1000 2000
+> 	
 > ###################################################################################################
 > # Cleaning up.
 > 
@@ -466,4 +576,4 @@ GRanges with 201 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 12.493   0.916  37.320 
+ 23.439   0.161  23.654 

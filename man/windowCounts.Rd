@@ -8,7 +8,7 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, left=0, right=0, ext=100, 
-	pet=FALSE, max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, 
+	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, 
 	minq=0, restrict=NULL)
 countWindows(param, ...)
 }
@@ -19,7 +19,7 @@ countWindows(param, ...)
 	\item{left}{an integer scalar specifying the width of the window to the left of centre}
 	\item{right}{an integer scalar specifying the width of the window to the right of centre}
 	\item{ext}{an integer scalar describing the average length of the sequenced fragment}
-	\item{pet}{a boolean specifying whether the data involves paired end tags}
+	\item{pet}{a character string specifying whether the data involves paired end tags}
 	\item{max.frag}{an integer scalar, specifying the maximum allowable fragment size for PET data}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar specifying the bin width, if binning is desired}
@@ -43,8 +43,9 @@ Each read in \code{bam.files} is extended by \code{ext} in the direction of the 
 The number of fragments overlapping the window for each library is then counted for each window position.
 
 For single-end data, the value of \code{ext} can be estimated using \code{correlateReads} or from post-fragmentation gel electrophoresis. 
-For paired-end data, the fragment boundaries can be computed exactly with \code{pet=TRUE} for valid pairs with reads in an inward-facing 
-orientation. Fragment sizes above \code{max.frag} are removed. An appropriate choice for this value can be found using \code{getPETSizes}. 
+For paired-end data, the fragment boundaries can be computed exactly with \code{pet="both"} for valid pairs with reads in an inward-facing 
+orientation. Fragment sizes above \code{max.frag} are removed; use \code{getPETSizes} to pick an appropriate value. Poor-quality paired-end
+data can be treated as single-end data by only using one read from each pair with \code{pet="first"} or \code{"second"}.
 
 The \code{left} and \code{right} parameters define the width of the binding site i.e. the size of the contact region between the DNA and protein. In 
 practical terms, it determines the spatial resolution of the analysis. Larger values for either mean that reads are counted over a larger region 
@@ -95,7 +96,8 @@ countWindows(param, restrict="chrB", filter=3)
 
 # Loading PET data.
 bamFile <- system.file("exdata", "pet", "pet_sort.bam", package="csaw")
-windowCounts(bamFile, pet=TRUE, filter=1)
-windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1)
-windowCounts(bamFile, max.frag=100, pet=TRUE, filter=1, restrict="chrA")
+windowCounts(bamFile, pet="both", filter=1)
+windowCounts(bamFile, pet="first", filter=1)
+windowCounts(bamFile, max.frag=100, pet="both", filter=1)
+windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA")
 }
