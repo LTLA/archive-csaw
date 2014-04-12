@@ -1,4 +1,6 @@
-plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, max.depth=NULL, fcol="blue", rcol="red", 
+plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, 
+	pet=c("none", "both", "first", "second"), max.frag=500,		
+	max.depth=NULL, fcol="blue", rcol="red", 
 	xlab="Genomic position (bp)", ylab="Read depth", ...)
 # Exactly as specified. Takes a region and plots it in bimodal mode, with options for duplicate 
 # removal and colorization.
@@ -6,28 +8,38 @@ plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, max.depth=NULL
 # written by Aaron Lun
 {
     if (length(cur.region)!=1L) { stop("exactly one range is required for plotting") }
-	cur.width<-width(cur.region)
-	if (cur.width < 50) { 
-		warning("width of specified region may be too low")
-		if (cur.width==1) { 
-			cur.width<-50
-			end(cur.region)<-start(cur.region)+cur.width
-		}
-	}
-
     chrs<-scanBamHeader(bam.file)[[1]][[1]]
 	cur.chr<-as.character(seqnames(cur.region)[1])
 	if (!(cur.chr %in% names(chrs))) { stop("cannot find current chromosome in the BAM file header") }
+
+	cur.width<-width(cur.region)
 	max.len<-chrs[[cur.chr]]
-	ext<-cur.width/2+1000
+	ext<-cur.width/2+1000 + ifelse(pet=="both", max.frag, 0) # Need some extension to account for reads on the edge of the plot.
 	actual.region<-GRanges(cur.chr, IRanges(pmax(1L, start(cur.region)-ext), 
 		pmin(max.len, end(cur.region)+ext)))
 
 	# Pulling out reads from a region and setting up coverage RLE's.
-	cur.reads<-.extractSET(bam.file, where=actual.region, dedup=dedup, minq=minq)
-	forward<-cur.reads$strand=="+"
-  	starts<-cur.reads$pos
-	ends<-starts+cur.reads$qwidth-1L
+	if (pet!="both") {
+		if (pet=="none") { 
+			cur.reads <- .extractSET(bam.file, where=actual.region, dedup=dedup, minq=minq)
+		} else {
+			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, dedup, minq, use.first=(pet=="first"))
+		}
+		forward<-cur.reads$strand=="+"
+  		starts<-cur.reads$pos
+		ends<-starts+cur.reads$qwidth-1L
+	} else {
+		cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, minq=minq)
+	    keep <- cur.reads$size <= max.frag
+		cur.reads$pos <- cur.reads$pos[keep]
+		cur.reads$size <- cur.reads$size[keep]
+
+		# Plotting PETs with a bit more care.
+		forward <- c(logical(sum(keep)), !logical(sum(keep)))
+		midpoint <- as.integer(cur.reads$pos + cur.reads$size/2)
+		starts <- c(midpoint+1L, cur.reads$pos)
+ 	    ends <- c(cur.reads$pos + cur.reads$size, midpoint)
+	}
 	pos<-coverage(IRanges(starts[forward], ends[forward]), width=max.len)
 	neg<-coverage(IRanges(starts[!forward], ends[!forward]), width=max.len)
 	
