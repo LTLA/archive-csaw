@@ -33,7 +33,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL)
 		# Collating them as necessary.
 		totals<-totals+length(reads$flag)
 		singles<-singles+sum(!paired)
-		one.unmapped<-one.unmapped<-sum(!both.mapped)				
+		one.unmapped<-one.unmapped + sum(!both.mapped)				
 		inter.chr<-inter.chr+sum(reads$isize[paired][both.mapped][is.first]==0L)
 	}
 
