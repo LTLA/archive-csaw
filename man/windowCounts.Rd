@@ -9,7 +9,7 @@
 \usage{
 windowCounts(bam.files, spacing=50, left=0, right=0, ext=100, 
 	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, bin=NULL, dedup=FALSE, 
-	minq=0, restrict=NULL)
+	minq=0, restrict=NULL, discard=NULL)
 countWindows(param, ...)
 }
 
@@ -26,6 +26,7 @@ countWindows(param, ...)
 	\item{dedup}{a boolean specifying whether marked duplicates should be removed}
 	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
     \item{restrict}{a character vector specifying which chromosomes should be used for read counting}
+	\item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
 	\item{param}{a named list of non-default arguments with appropriate values}
 	\item{...}{other arguments to be passed to \code{windowCounts}}
 }
@@ -61,6 +62,10 @@ If \code{bin!=NULL}, the settings are internally adjusted so that all reads are 
 Specifically, \code{right} is set to \code{bin-1}, \code{left} is set to 0, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
 Only the 5' end of each read or fragment (for paired-end data) is used in counting.
 
+If \code{restrict} is set, reads will only be extracted from the chromosomes contained in the supplied vector. This is useful to restrict the
+analysis to interesting chromosomes (e.g., no contigs). Conversely, if \code{discard} is set, reads that overlap the supplied ranges are 
+discarded. This is useful for removing reads in repeat regions.
+
 The duplicate flag must be set if reads are to be removed with \code{dedup=TRUE}. For paired-end data, users should ensure that the BAM files 
 are properly synchronised prior to counting. Both these procedures can be performed using tools from the Picard suite prior to read counting.	  
 	
@@ -93,6 +98,7 @@ countWindows(param)
 countWindows(param, ext=110, filter=1)
 countWindows(param, right=999, filter=2)
 countWindows(param, restrict="chrB", filter=3)
+countWindows(param, filter=3, discard=GRanges("chrA", IRanges(1, 100)))
 
 # Loading PET data.
 bamFile <- system.file("exdata", "pet", "pet_sort.bam", package="csaw")

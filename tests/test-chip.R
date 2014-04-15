@@ -18,19 +18,24 @@ regen <- function(nreads, chromos, outfname) {
 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos);
 }
 
-expectedRanges <- function(width, offset, spacing, bam.files) {
+expectedRanges <- function(width, offset, spacing, bam.files, restrict=NULL) {
 	spacing<-as.integer(spacing)
 	width<-as.integer(width)
 	offset<-as.integer(offset)
 	chrs<-scanBamHeader(bam.files[1])[[1]][[1]]
 	output<-list()
+	if (!is.null(restrict)) { chrs <- chrs[names(chrs) %in% restrict] }
+
 	for (x in names(chrs)) {
 		multiples<-as.integer((chrs[[x]]-1L)/spacing)
 		all.starts<-0:multiples*spacing+1L-offset
 		all.ends<-all.starts+width-1L
 		all.starts<-pmax(all.starts, 1L)
 		all.ends<-pmin(all.ends, chrs[[x]])
-		output[[length(output)+1L]]<-GRanges(x, IRanges(all.starts, all.ends))
+
+		gr <-GRanges(x, IRanges(all.starts, all.ends))
+		keep <- !GenomicRanges::duplicated(gr)
+		output[[length(output)+1L]]<- gr[keep]
 	}
 	output<-suppressWarnings(do.call(c, output))
 	return(output)
@@ -47,8 +52,9 @@ compare2Ranges <- function(left, right) {
 
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1) {
-	x<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=filter)
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=NULL, restrict=NULL) {
+	x<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=filter, 
+		discard=discard, restrict=restrict)
 
 	# Checking with countOverlaps.
 	totals<-integer(length(bamFiles))
@@ -57,18 +63,22 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1) 
         reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth")))[[1]]
 		read.starts<-ifelse(reads[[2]]=="+", reads[[3]], reads[[3]]+reads[[4]]-fraglen)
 		read.ends<-read.starts+fraglen-1L
-		reads <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
-		current<-findOverlaps(x$region, reads)
+		frags <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
+
+		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard)] }
+		if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
+		current<-findOverlaps(x$region, frags)
 		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
-		totals[i]<-length(reads)
+		totals[i]<-length(frags)
 	}
 
 	if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
 	if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
 
 	# Checking the filter.
-    x2<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=-1)
-	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles)
+    x2<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=-1, 
+			discard=discard, restrict=restrict)
+	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
 	if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions"); }
 
 	keep<-rowSums(x2$counts)>=filter
@@ -222,6 +232,31 @@ comp(bamFiles, spacing=max(chromos))
 # We also try to do some crazy extension. We should see 1 combination per chromosome, consisting of all reads.
 
 comp(bamFiles, right=max(chromos), left=max(chromos))
+
+###################################################################################################
+# Restricted and/or discarded.
+
+chromos<-c(chrA=5000, chrB=5000, chrC=8000)
+bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+
+makeDiscard <- function(ndisc, sizeof) {
+	chosen <- sample(length(chromos), ndisc, replace=T)
+	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
+	GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof))
+}
+
+comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200))
+comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
+
+comp(bamFiles, fraglen=100, left=100, discard=makeDiscard(50, 20))
+comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
+
+comp(bamFiles, fraglen=200, left=0, spacing=50, discard=makeDiscard(20, 200))
+comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000))
+
+comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500))
+comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
+comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
 
 ###################################################################################################
 # Cleaning up.
