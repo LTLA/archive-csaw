@@ -89,7 +89,11 @@ Type 'q()' to quit R.
 +    	sizes<-abs(pos1-pos2)[valid]
 + 	stopifnot(length(sizes)==length(stuff$sizes));
 + 	if (any(sort(sizes)!=sort(stuff$sizes))) { stop("mismatch in sizes"); }
-+ 	
++ 
++ 	# Checking incorrect orientations.
++ 	invalid <- chr1==chr2 & !valid
++ 	if (sum(invalid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
++ 
 + 	head(sizes);
 + }
 > 
@@ -98,67 +102,67 @@ Type 'q()' to quit R.
 > set.seed(1002)
 > 
 > compstat(500, 0, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         1000             0             0           259 
+        total        single    unoriented mate.unmapped     inter.chr 
+         1000             0           176             0           259 
 [1] 746 475 617 786 987 681
 > 
 > compstat(1000, 0, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         2000             0             0           496 
+        total        single    unoriented mate.unmapped     inter.chr 
+         2000             0           367             0           496 
 [1]  416  857  168 1252 1022  205
 > 
 > compstat(2000, 0, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         4000             0             0           947 
+        total        single    unoriented mate.unmapped     inter.chr 
+         4000             0           779             0           947 
 [1]  310  313 1207  357 1362  576
 > 
 > compstat(5000, 0, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-        10000             0             0          2507 
+        total        single    unoriented mate.unmapped     inter.chr 
+        10000             0          1882             0          2507 
 [1] 209  18  23 484 815  64
 > 
 > # Again, with some singles.
 > 
 > compstat(500, 20, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         1020            20             0           262 
+        total        single    unoriented mate.unmapped     inter.chr 
+         1020            20           178             0           262 
 [1]  684  202  266   62  312 1161
 > 
 > compstat(1000, 100, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         2100           100             0           500 
+        total        single    unoriented mate.unmapped     inter.chr 
+         2100           100           383             0           500 
 [1] 1431  166   99  619  730  210
 > 
 > compstat(2000, 100, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-         4100           100             0          1012 
+        total        single    unoriented mate.unmapped     inter.chr 
+         4100           100           732             0          1012 
 [1]  670  558 1329  482  352  512
 > 
 > compstat(5000, 100, c(chrA=1000, chrB=2000))
-        total        single mate.unmapped     inter.chr 
-        10100           100             0          2551 
+        total        single    unoriented mate.unmapped     inter.chr 
+        10100           100          1845             0          2551 
 [1] 308 356 524 599 593 221
 > 
 > # Going pathologically low to force the PET algorithm to process end-of-chromosome catches and stacked F/R reads.
 > 	
 > compstat(1000, 0, c(chrA=50))
-        total        single mate.unmapped     inter.chr 
-         2000             0             0             0 
+        total        single    unoriented mate.unmapped     inter.chr 
+         2000             0           745             0             0 
 [1] 38 32 24  7 17 25
 > 
 > compstat(1000, 0, c(chrA=10))
-        total        single mate.unmapped     inter.chr 
-         2000             0             0             0 
+        total        single    unoriented mate.unmapped     inter.chr 
+         2000             0           730             0             0 
 [1] 7 4 2 9 7 9
 > 
 > compstat(2000, 0, c(chrA=10))
-        total        single mate.unmapped     inter.chr 
-         4000             0             0             0 
+        total        single    unoriented mate.unmapped     inter.chr 
+         4000             0          1455             0             0 
 [1] 5 6 5 9 8 9
 > 
 > compstat(5000, 0, c(chrA=10))
-        total        single mate.unmapped     inter.chr 
-        10000             0             0             0 
+        total        single    unoriented mate.unmapped     inter.chr 
+        10000             0          3658             0             0 
 [1] 5 6 6 6 8 8
 > 
 > ###################################################################################################
@@ -576,4 +580,4 @@ GRanges with 120 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 23.439   0.161  23.654 
+ 22.145   0.167  22.358 

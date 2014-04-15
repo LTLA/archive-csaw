@@ -70,7 +70,11 @@ compstat<-function (nreads, singles, chromosomes) {
    	sizes<-abs(pos1-pos2)[valid]
 	stopifnot(length(sizes)==length(stuff$sizes));
 	if (any(sort(sizes)!=sort(stuff$sizes))) { stop("mismatch in sizes"); }
-	
+
+	# Checking incorrect orientations.
+	invalid <- chr1==chr2 & !valid
+	if (sum(invalid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
+
 	head(sizes);
 }
 
