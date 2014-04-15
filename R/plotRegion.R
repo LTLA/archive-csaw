@@ -1,9 +1,10 @@
-plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, 
+plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL, 
 	pet=c("none", "both", "first", "second"), max.frag=500,		
 	max.depth=NULL, fcol="blue", rcol="red", 
 	xlab="Genomic position (bp)", ylab="Read depth", ...)
-# Exactly as specified. Takes a region and plots it in bimodal mode, with options for duplicate 
-# removal and colorization.
+# Exactly as specified. Takes a region and plots it in bimodal mode, with
+# options for duplicate removal, mapping quality enhancement, colorization,
+# and PET manipulation.
 #
 # written by Aaron Lun
 {
@@ -12,24 +13,32 @@ plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0,
 	cur.chr<-as.character(seqnames(cur.region)[1])
 	if (!(cur.chr %in% names(chrs))) { stop("cannot find current chromosome in the BAM file header") }
 
+	# Expanding the extracted region so that it's continuous past the plot margins.
 	cur.width<-width(cur.region)
 	max.len<-chrs[[cur.chr]]
-	ext<-cur.width/2+1000 + ifelse(pet=="both", max.frag, 0) # Need some extension to account for reads on the edge of the plot.
+	ext<-cur.width/2+1000 + ifelse(pet=="both", max.frag, 0) 
 	actual.region<-GRanges(cur.chr, IRanges(pmax(1L, start(cur.region)-ext), 
 		pmin(max.len, end(cur.region)+ext)))
 
+	# Dropping additional reads if required.
+    if (!is.null(discard)) { discard <- ranges(discard[overlapsAny(discard, actual.region)]) }
+
 	# Pulling out reads from a region and setting up coverage RLE's.
+	pet <- match.arg(pet)
 	if (pet!="both") {
 		if (pet=="none") { 
-			cur.reads <- .extractSET(bam.file, where=actual.region, dedup=dedup, minq=minq)
+			cur.reads <- .extractSET(bam.file, where=actual.region, dedup=dedup, 
+				minq=minq, discard=discard)
 		} else {
-			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, dedup, minq, use.first=(pet=="first"))
+			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, dedup=dedup, 
+				minq=minq, discard=discard, use.first=(pet=="first"))
 		}
 		forward<-cur.reads$strand=="+"
   		starts<-cur.reads$pos
 		ends<-starts+cur.reads$qwidth-1L
 	} else {
-		cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, minq=minq)
+		cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, 
+			minq=minq, discard=discard)
 	    keep <- cur.reads$size <= max.frag
 		cur.reads$pos <- cur.reads$pos[keep]
 		cur.reads$size <- cur.reads$size[keep]
