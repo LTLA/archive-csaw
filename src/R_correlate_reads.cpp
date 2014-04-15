@@ -13,6 +13,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 		const int total_len, const int chr_len, const bool reverse) {
 	/* Generating vectors. Also avoiding issues where 'n' is too large, by resetting the maximum delay
  	 * shift so that there's at least two base positions. Otherwise, the variance is undefined.
+ 	 * Note that we assume that the chromosome length is greater than 2.
  	 */
 	mu.resize(n+1);
 	sd.resize(n+1);
@@ -159,6 +160,7 @@ SEXP R_correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dis
 	if (!IS_INTEGER(chrlen) || LENGTH(chrlen)!=1) { throw std::runtime_error("length of chromosome must be an integer scalar");} 
 	const int clen=INTEGER_VALUE(chrlen);
 
+
 	// Computing the mean and variance.
 	std::deque<double> fmean, rmean, fsd, rsd;
 	const int ffirst=fill(mdist, fmean, fsd, fpptr, fcptr, fLen, clen, false);
@@ -229,7 +231,7 @@ SEXP R_correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dis
  		 * and subtracting large values. The best case would be alternating positive and negative 
  		 * values but that's harder to do, as you'd have to mess with sumptr additions, above.
  		 */
-		for (int i=0; i<=mdist; ++i) {
+		for (int i=0; i<=mdist && i<=clen-2; ++i) {
 			sumptr[i]-=rmean[i]*fmean[i]*(clen-i-nonempty[i]); // A bit of numerical instability with this step.
 			sumptr[i]+=rmean[i]*sumfdiff[i]+fmean[i]*sumrdiff[i];
 		

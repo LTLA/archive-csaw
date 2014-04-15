@@ -6,7 +6,7 @@
 \description{Computes the auto- or cross-correlation coefficients between read positions across a set of delay intervals.}
 
 \usage{
-correlateReads(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL)
+correlateReads(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL, discard=NULL)
 }
 
 \arguments{
@@ -16,6 +16,7 @@ correlateReads(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restri
 	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
 	\item{cross}{a logical scalar specifying whether cross-correlations should be computed}
 	\item{restrict}{a character vector specifying chromosomes for which correlations should be computed}
+    \item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
 }
 
 \value{
@@ -45,12 +46,20 @@ Note that any duplicate read must be marked in the bit field of the BAM file usi
 
 \examples{
 n<-20
-bamFile<-system.file("exdata", "chip", "rep1_sort.bam", package="csaw");
-par(mfrow=c(1,2))
-x<-correlateReads(bamFile, max.dist=n);
-plot(0:n, x, xlab="delay (bp)", ylab="ccf");
-x<-correlateReads(bamFile, max.dist=n, cross=FALSE);
-plot(0:n, x, xlab="delay (bp)", ylab="acf");
+bamFile<-system.file("exdata", "chip", "rep1_sort.bam", package="csaw")
+par(mfrow=c(2,2))
+
+x<-correlateReads(bamFile, max.dist=n)
+plot(0:n, x, xlab="delay (bp)", ylab="ccf")
+
+x<-correlateReads(bamFile, max.dist=n, discard=GRanges("chrB", IRanges(1, 100)))
+plot(0:n, x, xlab="delay (bp)", ylab="ccf")
+
+x<-correlateReads(bamFile, max.dist=n, restrict="chrA")
+plot(0:n, x, xlab="delay (bp)", ylab="ccf")
+
+x<-correlateReads(bamFile, max.dist=n, cross=FALSE)
+plot(0:n, x, xlab="delay (bp)", ylab="acf")
 }
 
 \seealso{

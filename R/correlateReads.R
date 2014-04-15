@@ -1,4 +1,4 @@
-correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL) 
+correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL, discard=NULL) 
 # This is just a function to calculate the autocorrelation between reads of different strands (or
 # between reads in general). Note that the BAM files must be sorted. It will calculate the values 
 # required for computation of the correlation function across all chromosomes, then it will crunch all 
@@ -11,7 +11,8 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 	bf<-lapply(bam.files, FUN=function(b) { open(BamFile(b)); })
     chromosomes<-scanBamHeader(bam.files[1])[[1]][[1]]
 	if (!is.null(restrict)) { chromosomes<-chromosomes[names(chromosomes) %in% restrict] }
-	
+	discard <- .processDiscard(discard)
+
 	# Loading containers.
 	max.dist<-as.integer(max.dist)
     if (max.dist <=0 ) { stop("maximum distance must be positive"); }
@@ -19,19 +20,20 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
     total_read_num<-0L;
 
     for (i in 1:length(chromosomes)) {
-		if (chromosomes[i]==0) { next }
+		if (chromosomes[i]<2L) { next } # No way to compute variance if there's only one base.
+		chr <- names(chromosomes)[i]
+		where <- GRanges(chr, IRanges(1, chromosomes[i]))
 
         # Reading in the reads for the current chromosome for all the BAM files.
-		my.chr<-GRanges(names(chromosomes)[i], IRanges(1, chromosomes[i]))
 		all.f<-all.r<-list()
 		num.reads<-0
 		forward.reads<-0
 		for (b in 1:length(bf)) {
-			reads<-.extractSET(bf[[b]], where=my.chr, dedup=dedup, minq=minq)
-			forwards<-(reads$strand=="+");
+			reads<-.extractSET(bf[[b]], where=where, dedup=dedup, minq=minq, discard=discard[[chr]])
+			forwards<-reads$strand=="+"
 			num.reads<-num.reads+length(forwards)
 			forward.reads<-forward.reads+sum(forwards)
-			if (!all(forwards)) { reads$pos[!forwards]<-pmin(chromosomes[i], reads$pos[!forwards]+reads$qwidth[!forwards]);	}
+			if (!all(forwards)) { reads$pos[!forwards]<-pmin(chromosomes[i], reads$pos[!forwards]+reads$qwidth[!forwards]) }
 			if (cross) {
 				all.f[[b]]<-reads$pos[forwards]
 				all.r[[b]]<-reads$pos[!forwards]
