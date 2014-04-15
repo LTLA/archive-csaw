@@ -22,7 +22,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 		where<-GRanges(chr, IRanges(1, chromosomes[i]))
 		reads<-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq"), which=where, 
 			flag=scanBamFlag(isUnmappedQuery=FALSE,	isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
-		reads <- .discardReads(reads, discard=discard[[chr]])
+		reads <- .discardReads(reads, discard[[chr]])
 	    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
 		reads$mapq <- NULL
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
