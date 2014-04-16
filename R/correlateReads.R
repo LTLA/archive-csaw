@@ -7,33 +7,27 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 #
 # written by Aaron Lun
 {
-	# Loading various details of the biological system.
-	bf<-lapply(bam.files, FUN=function(b) { open(BamFile(b)); })
-    chromosomes<-scanBamHeader(bam.files[1])[[1]][[1]]
-	if (!is.null(restrict)) { chromosomes<-chromosomes[names(chromosomes) %in% restrict] }
-	discard <- .processDiscard(discard)
-
-	# Loading containers.
+    extracted <- .processIncoming(bam.files, restrict, discard)
 	max.dist<-as.integer(max.dist)
     if (max.dist <=0 ) { stop("maximum distance must be positive"); }
-    total_cor<-numeric(max.dist+1L);
-    total_read_num<-0L;
+    total.cor<-numeric(max.dist+1L);
+    total.read.num<-0L;
 
-    for (i in 1:length(chromosomes)) {
-		if (chromosomes[i]<2L) { next } # No way to compute variance if there's only one base.
-		chr <- names(chromosomes)[i]
-		where <- GRanges(chr, IRanges(1, chromosomes[i]))
+    for (i in 1:length(extracted$chrs)) {
+		if (extracted$chrs[i]<2L) { next } # No way to compute variance if there's only one base.
+		chr <- names(extracted$chrs)[i]
+		where <- GRanges(chr, IRanges(1L, extracted$chrs[i]))
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		all.f<-all.r<-list()
 		num.reads<-0
 		forward.reads<-0
-		for (b in 1:length(bf)) {
-			reads<-.extractSET(bf[[b]], where=where, dedup=dedup, minq=minq, discard=discard[[chr]])
+		for (b in 1:length(bam.files)) {
+			reads<-.extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]])
 			forwards<-reads$strand=="+"
 			num.reads<-num.reads+length(forwards)
 			forward.reads<-forward.reads+sum(forwards)
-			if (!all(forwards)) { reads$pos[!forwards]<-pmin(chromosomes[i], reads$pos[!forwards]+reads$qwidth[!forwards]) }
+			if (!all(forwards)) { reads$pos[!forwards]<-pmin(extracted$chrs[i], reads$pos[!forwards]+reads$qwidth[!forwards]) }
 			if (cross) {
 				all.f[[b]]<-reads$pos[forwards]
 				all.r[[b]]<-reads$pos[!forwards]
@@ -54,19 +48,18 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 
 	    # We call the C++ function to compute correlations. 
 		ccfs<-.Call("R_correlate_reads", all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, 
-			chromosomes[i], PACKAGE="csaw");
+			extracted$chrs[i], PACKAGE="csaw");
 		if (is.character(ccfs)) { stop(ccfs); }
 
 		# Returning some output. Note that the coefficient is weighted according to the number
         # of reads on each chromosome, as described in as described by Kharchenko et al. (2008).
-        total_read_num<-total_read_num+num.reads;
-        total_cor<-total_cor+ccfs*num.reads;
+        total.read.num<-total.read.num+num.reads;
+        total.cor<-total.cor+ccfs*num.reads;
     }
 
 	# Cleaning up and returning the correlations.
-	for (b in bf) { close(b) }
-	if (total_read_num) { total_cor<-total_cor/total_read_num }
-    return(total_cor)
+	if (total.read.num) { total.cor<-total.cor/total.read.num }
+    return(total.cor)
 }
 
 ###################################################################################################
