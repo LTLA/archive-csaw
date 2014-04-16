@@ -11,23 +11,17 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	singles<-0L
 	totals<-0L
 	others<-0L
-    chromosomes<-scanBamHeader(bam.file)[[1]][[1]]
-    if (!is.null(restrict)) { chromosomes<-chromosomes[names(chromosomes) %in% restrict] }
-	discard <- .processDiscard(discard)
-
+	stopifnot(length(bam.file)==1L)
+    extracted <- .processIncoming(bam.file, restrict, discard)
 	loose.names.1 <- list()
 	loose.names.2 <- list()
 	one.unmapped <- 0L
 
-	for (i in 1:length(chromosomes)) {
-		chr <- names(chromosomes)[i]
-		where<-GRanges(chr, IRanges(1, chromosomes[i]))
-		reads<-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq", "isize"), which=where, 
-			flag=scanBamFlag(isUnmappedQuery=FALSE,	isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
-		reads <- .discardReads(reads, discard[[chr]])
-	    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
-		reads$mapq <- NULL
-		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
+	for (i in 1:length(extracted$chrs)) {
+		chr <- names(extracted$chrs)[i]
+		where <- GRanges(chr, IRanges(1L, extracted$chrs[i]))
+		reads <- .extractSET(bam.file, extras=c("qname", "flag", "isize"), where=where, 
+			dedup=dedup, discard=extracted$discard[[chr]], minq=minq)
 
 		# Getting rid of unpaired reads.
 		totals <- totals + length(reads$flag)
@@ -38,7 +32,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }	
 		
 		# Identifying valid reads.
-		okay <- .yieldInterestingBits(reads, where, diag=TRUE)
+		okay <- .yieldInterestingBits(reads, extracted$chrs[i], diag=TRUE)
 		norm.list[[i]] <- okay$size
 		left.names <- reads$qname[!okay$is.ok]
 		left.flags <- reads$flag[!okay$is.ok]
@@ -84,17 +78,12 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 # written by Aaron Lun
 # 8 December 2013
 {
-    reads <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq"),
-		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
-		isPaired=TRUE, hasUnmappedMate=FALSE)))[[1]]
-    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
-	reads$mapq<-NULL
-	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	reads <- .discardReads(reads, discard)
-	.yieldInterestingBits(reads, where)
+	reads <- .extractSET(bam.file, extras=c("qname", "flag"), where=where, dedup=dedup,
+		minq=minq, isPaired=TRUE, hasUnmappedMate=FALSE, discard=discard)
+	.yieldInterestingBits(reads, max(end(where)))
 }
 
-.yieldInterestingBits <- function(reads, where, diag=FALSE)
+.yieldInterestingBits <- function(reads, clen, diag=FALSE)
 # This figures out what the interesting reads are, given a list of 
 # read names, flags, positions and qwidths. In particular, reads have
 # to be properly paired in an inward conformation, without one read
@@ -134,8 +123,8 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	rwidth <- reads$qwidth[corresponding[hasmatch]]
 
 	# Allowing only valid PETs.
-	fend <- pmin(fpos+fwidth, end(where)+1L)
-	rend <- pmin(rpos+rwidth, end(where)+1L)
+	fend <- pmin(fpos+fwidth, clen+1L)
+	rend <- pmin(rpos+rwidth, clen+1L)
     valid <- fpos <= rpos & fend <= rend
 	total.size <- rend - fpos
 	fpos <- fpos[valid]
@@ -152,11 +141,11 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 ##################################
 
-.extractBrokenPET <- function(bam.file, where, dedup=FALSE, minq=0, na.rm=TRUE, discard=NULL, use.first=TRUE) 
+.extractBrokenPET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL, use.first=TRUE) 
 # A function to extract PET data, but as single-end data (i.e. only using one of the reads).
 # Useful when paired-end data has gone completely off the rails.
 {
-	.extractSET(bam.file, where, dedup=dedup, minq=minq, na.rm=na.rm, discard=discard,
+	.extractSET(bam.file, where=where, dedup=dedup, minq=minq, discard=discard,
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }
 
