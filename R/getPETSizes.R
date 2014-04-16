@@ -36,29 +36,31 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
  	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single] }	
 		okay <- .yieldInterestingBits(reads, where, diag=TRUE)
 		norm.list[[i]] <- okay$size
-	
-		# Identifying improperly orientated pairs.
-		leftovers <- reads$qname[!okay$is.ok]
-		is.first <- bitwAnd(reads$flag[!okay$is.ok], 0x40)!=0L
-		is.second <- bitwAnd(reads$flag[!okay$is.ok], 0x80)!=0L
-		what.matched <- match(leftovers[is.first], leftovers[is.second])
+		
+		# Setting up some more filters.
+		on.same.chr <- reads$isize != 0L
+		only.one <- bitwAnd(reads$flag, 0x8)!=0L
+		is.first <- bitwAnd(reads$flag, 0x40)!=0L
+		is.second <- bitwAnd(reads$flag, 0x80)!=0L
+		one.unmapped <- one.unmapped + sum(only.one)
+		
+		# Identifying improperly orientated pairs and reads with unmapped counterparts.
+		left <- !okay$is.ok & on.same.chr & !only.one
+		leftovers.first <- reads$qname[left & is.first]
+		leftovers.second <- reads$qname[left & is.second]
+		what.matched <- match(leftovers.first, leftovers.second)
 		has.pair <- !is.na(what.matched)
 		others <- others + sum(has.pair)
-		left.1 <- leftovers[is.first][!has.pair]
-		left.2 <- leftovers[is.second][-what.matched[has.pair]]
-
-		# Identifying reads unmapped on this chromosome (i.e. other read was thrown out earlier)
-		on.chr <- reads$isize[!okay$is.ok]
-		on.chr.1 <- on.chr[is.first][!has.pair] != 0L
-		on.chr.2 <- on.chr[is.second][-what.matched[has.pair]] != 0L
-		one.unmapped <- one.unmapped + sum(on.chr.1) + sum(on.chr.2)
+		one.unmapped <- one.unmapped + length(leftovers.first) + length(leftovers.second) - 2L*sum(has.pair) 
 
 		# Collecting the rest to match inter-chromosomals.
-		loose.names.1[[i]] <- left.1[!on.chr.1]
-		loose.names.2[[i]] <- left.2[!on.chr.2]
+		inters <- !okay$is.ok & !on.same.chr & !only.one
+		loose.names.1[[i]] <- reads$qname[inters & is.first]
+		loose.names.2[[i]] <- reads$qname[inters & is.second]
 	}
 
-	# Checking whether a read positively matched to a mapped counterpart on another chromosome.
+	# Checking whether a read is positively matched to a mapped counterpart on another chromosome.
+	# If not, then it's just an read in an unmapped pair.
 	loose.names.1 <- unlist(loose.names.1)
 	loose.names.2 <- unlist(loose.names.2)
 	pairing <- match(loose.names.1, loose.names.2)
