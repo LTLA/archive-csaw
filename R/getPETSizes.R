@@ -51,10 +51,9 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 		# Identifying improperly orientated pairs and reads with unmapped counterparts.
 		leftovers.first <- left.names[on.same.chr & is.first]
 		leftovers.second <- left.names[on.same.chr & is.second]
-		what.matched <- match(leftovers.first, leftovers.second)
-		has.pair <- !is.na(what.matched)
-		others <- others + sum(has.pair)
-		one.unmapped <- one.unmapped + length(leftovers.first) + length(leftovers.second) - 2L*sum(has.pair) 
+		has.pair <- sum(leftovers.first %in% leftovers.second)
+		others <- others + has.pair
+		one.unmapped <- one.unmapped + length(leftovers.first) + length(leftovers.second) - 2L*has.pair 
 
 		# Collecting the rest to match inter-chromosomals.
 		loose.names.1[[i]] <- left.names[!on.same.chr & is.first]
@@ -65,8 +64,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	# If not, then it's just an read in an unmapped pair.
 	loose.names.1 <- unlist(loose.names.1)
 	loose.names.2 <- unlist(loose.names.2)
-	pairing <- match(loose.names.1, loose.names.2)
-	inter.chr <- sum(!is.na(pairing))
+	inter.chr <- sum(loose.names.1 %in% loose.names.2)
 	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
 	# Returning sizes and some diagnostic data.
@@ -113,6 +111,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	should.be.right <- !is.forward & !is.mate.reverse
     is.first <- bitwAnd(reads$flag, 0x40) != 0L
 	is.second <- bitwAnd(reads$flag, 0x80) != 0L	
+	stopifnot(all(is.first!=is.second))
 
 	# Matching the reads in each pair so only valid PETs are formed.
 	set.first.A <- should.be.left & is.first
