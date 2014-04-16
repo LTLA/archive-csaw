@@ -84,7 +84,8 @@ Type 'q()' to quit R.
 + 		read.ends<-read.starts+fraglen-1L
 + 		frags <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
 + 
-+ 		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard)] }
++ 		# Discarding. No variable read lengths here, so no need to use alignment width.			
++ 		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard, type="within")] }
 + 		if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
 + 		current<-findOverlaps(x$region, frags)
 + 		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
@@ -1062,7 +1063,7 @@ GRanges with 524 ranges and 0 metadata columns:
    chrA chrC
    5000 8000
 > comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
-GRanges with 622 ranges and 0 metadata columns:
+GRanges with 635 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,  51]      *
@@ -1071,11 +1072,11 @@ GRanges with 622 ranges and 0 metadata columns:
     [4]     chrA   [101, 151]      *
     [5]     chrA   [121, 171]      *
     ...      ...          ...    ...
-  [618]     chrC [7901, 7951]      *
-  [619]     chrC [7921, 7971]      *
-  [620]     chrC [7941, 7991]      *
-  [621]     chrC [7961, 8000]      *
-  [622]     chrC [7981, 8000]      *
+  [631]     chrC [7901, 7951]      *
+  [632]     chrC [7921, 7971]      *
+  [633]     chrC [7941, 7991]      *
+  [634]     chrC [7961, 8000]      *
+  [635]     chrC [7981, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -1092,4 +1093,4 @@ GRanges with 622 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 61.371   0.280  61.852 
+ 65.519   0.423  66.135 

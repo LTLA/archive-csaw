@@ -10,9 +10,7 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 # ages ago.
 {   
 	nbam<-length(bam.files)
-	chrs<-scanBamHeader(bam.files[1])[[1]][[1]]
-    if (!is.null(restrict)) { chrs<-chrs[names(chrs) %in% restrict] }
-	discard <- .processDiscard(discard)
+	extracted <- .processIncoming(bam.files, restrict, discard)
 
 	# Processing input parameters.
 	if (is.null(bin)) { 
@@ -41,8 +39,8 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 	all.regions<-list(GRanges())
 	ix<-1
 
-	for (chr in names(chrs)) {
-		outlen<-chrs[chr]		
+	for (chr in names(extracted$chrs)) {
+		outlen<-extracted$chrs[[chr]]		
 		total.pts<-1L+as.integer((outlen-1L)/spacing)
 		outcome<-matrix(0L, total.pts, nbam) 
 
@@ -50,15 +48,18 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 			where<-GRanges(chr, IRanges(1, outlen))
 			if (pet!="both") {
 				if (pet=="none") { 
-   					reads<-.extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, discard=discard[[chr]])
+   					reads<-.extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+						discard=extracted$discard[[chr]])
 				} else {
-					reads <- .extractBrokenPET(bam.files[bf], where=where, dedup=dedup, minq=minq, discard=discard[[chr]], use.first=(pet=="first"))
+					reads <- .extractBrokenPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+						discard=extracted$discard[[chr]], use.first=(pet=="first"))
 				}
 				frag.start<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
 				if (length(frag.start)) { frag.start<-pmin(frag.start, outlen) }
 				frag.end<-frag.start+ext-1L
 			} else {
-				out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, discard=discard[[chr]])
+				out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+					discard=extracted$discard[[chr]])
 				keep<-out$size <= max.frag
 				frag.start<-out$pos[keep]
 
@@ -89,8 +90,8 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 
 	# Generating the remaining GRanges for output (suppressing numerous warnings).
 	all.regions<-suppressWarnings(do.call(c, all.regions))
-	seqlevels(all.regions)<-names(chrs)
-	seqinfo(all.regions)<-Seqinfo(names(chrs), chrs)
+	seqlevels(all.regions) <- names(extracted$chrs)
+	seqlengths(all.regions) <- extracted$chrs
 	return(list(counts=do.call(rbind, all.out), totals=totals, region=all.regions))
 }
 
@@ -111,33 +112,59 @@ countWindows <- function(param, ...)
 
 ########################################################
 
-.extractSET <- function(bam, where, dedup, minq, na.rm=TRUE, discard=NULL, ...) 
-# Extracts single-end read data from a BAM file.
+.extractSET <- function(bam, where, dedup, minq, discard=NULL, extras="strand", ...) 
+# Extracts single-end read data from a BAM file with removal of unmapped,
+# duplicate and poorly mapped/non-unique reads. We also discard reads in the
+# specified discard regions. In such cases, the offending reads must be wholly
+# within the repeat region.  We use the real alignment width, just in case we
+# have very long reads in the alignment that are heavily soft-clipped (i.e., they
+# should be reported as within but the read length will put them out).
 {
-	reads<-scanBam(bam, param=ScanBamParam(what=c("strand", "pos", "qwidth", "mapq"),
-			which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
-			isDuplicate=ifelse(dedup, FALSE, NA), ...)))[[1]]
-    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
-	reads$mapq <- NULL
+	all.fields <- c("pos", "qwidth", "mapq", extras)
+	if (!is.null(discard)) { all.fields <- c(all.fields, "cigar") }	
+	all.fields <- unique(all.fields)
+	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
+		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
+		isDuplicate=ifelse(dedup, FALSE, NA), ...)))[[1]]
+   
+	# Filtering by MAPQ.
+	keep<-reads$mapq >= minq & !is.na(reads$mapq) 
+	if (!"mapq" %in% extras) { reads$mapq <- NULL }
 	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	reads <- .discardReads(reads, discard)
+	
+	# Filtering by discard regions.
+	if (!is.null(discard)) { 
+		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
+		keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), discard, type="within")
+		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
+		if (!"cigar" %in% extras) { reads$cigar <- NULL }
+	}
 	return(reads)
 }
 
-.processDiscard <- function(discard) 
-# Processes a GRanges list for discarding objects.
+.processIncoming <- function(bam.files, restrict, discard) 
+# Processes the incoming data; checks that bam headers are all correct,
+# truncates the list according to 'restrict', processes the GRanges list 
+# for discarding objects.
 { 
-	if (is.null(discard) || length(discard)==0L) { return(NULL) } 
-	return(	split(ranges(discard), seqnames(discard)) )
-}
+	originals <- NULL
+	for (bam in bam.files) {
+		chrs <- scanBamHeader(bam)[[1]][[1]]
+		chrs <- chrs[order(names(chrs))]
+		if (is.null(originals)) { originals <- chrs } 
+		else if (!identical(originals, chrs)) { 
+			warning("chromosomes are not identical between BAM files")
+			pairing <- match(names(originals), names(chrs))
+			originals <- pmin(originals[!is.na(pairing)], chrs[pairing[!is.na(pairing)]])
+		}
+	}
 
-.discardReads <- function(reads, discard.x) 
-# Takes reads and discards them if they overlap with an intrachromosomal IRanges in 'discard.x'
-{
-	if (is.null(discard.x)) { return(reads) }
-	keep <- !overlapsAny(IRanges(reads$pos, reads$pos+reads$qwidth-1L), discard.x)
-	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	return(reads)
+	if (!is.null(restrict)) { originals <- originals[names(originals) %in% restrict] }
+	if (!is.null(discard)) { 
+		discard <- discard[seqnames(discard) %in% names(originals)]
+		discard <- split(ranges(discard), seqnames(discard), drop=TRUE)
+	} 
+	return(list(discard=discard, chrs=originals))
 }
 
 ########################################################

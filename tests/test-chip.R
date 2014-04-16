@@ -65,7 +65,8 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 		read.ends<-read.starts+fraglen-1L
 		frags <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
 
-		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard)] }
+		# Discarding. No variable read lengths here, so no need to use alignment width.			
+		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard, type="within")] }
 		if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
 		current<-findOverlaps(x$region, frags)
 		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
