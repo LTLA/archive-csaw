@@ -29,34 +29,36 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 		reads$mapq <- NULL
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 
-		# Processing higher-order statistics.
+		# Getting rid of unpaired reads.
 		totals <- totals + length(reads$flag)
 		is.single <- bitwAnd(reads$flag, 0x1)==0L
 		singles <- singles + sum(is.single)
- 	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single] }	
+ 		only.one <- bitwAnd(reads$flag, 0x8)!=0L
+		one.unmapped <- one.unmapped + sum(!is.single & only.one)
+	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }	
+		
+		# Identifying valid reads.
 		okay <- .yieldInterestingBits(reads, where, diag=TRUE)
 		norm.list[[i]] <- okay$size
+		left.names <- reads$qname[!okay$is.ok]
+		left.flags <- reads$flag[!okay$is.ok]
 		
 		# Setting up some more filters.
-		on.same.chr <- reads$isize != 0L
-		only.one <- bitwAnd(reads$flag, 0x8)!=0L
-		is.first <- bitwAnd(reads$flag, 0x40)!=0L
-		is.second <- bitwAnd(reads$flag, 0x80)!=0L
-		one.unmapped <- one.unmapped + sum(only.one)
+		on.same.chr <- reads$isize[!okay$is.ok]!=0L
+		is.first <- bitwAnd(left.flags, 0x40)!=0L
+		is.second <- bitwAnd(left.flags, 0x80)!=0L
 		
 		# Identifying improperly orientated pairs and reads with unmapped counterparts.
-		left <- !okay$is.ok & on.same.chr & !only.one
-		leftovers.first <- reads$qname[left & is.first]
-		leftovers.second <- reads$qname[left & is.second]
+		leftovers.first <- left.names[on.same.chr & is.first]
+		leftovers.second <- left.names[on.same.chr & is.second]
 		what.matched <- match(leftovers.first, leftovers.second)
 		has.pair <- !is.na(what.matched)
 		others <- others + sum(has.pair)
 		one.unmapped <- one.unmapped + length(leftovers.first) + length(leftovers.second) - 2L*sum(has.pair) 
 
 		# Collecting the rest to match inter-chromosomals.
-		inters <- !okay$is.ok & !on.same.chr & !only.one
-		loose.names.1[[i]] <- reads$qname[inters & is.first]
-		loose.names.2[[i]] <- reads$qname[inters & is.second]
+		loose.names.1[[i]] <- left.names[!on.same.chr & is.first]
+		loose.names.2[[i]] <- left.names[!on.same.chr & is.second]
 	}
 
 	# Checking whether a read is positively matched to a mapped counterpart on another chromosome.
