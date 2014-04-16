@@ -94,6 +94,23 @@ Type 'q()' to quit R.
 + 	invalid <- chr1==chr2 & !valid
 + 	if (sum(invalid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
 + 
++ 	# Checking what happens when you max out the MAPQ.
++ 	stuff <- getPETSizes(out, minq=500)
++ 	if (length(stuff$sizes) || any(stuff$diagnostics!=0L)) { 
++ 		stop("mismatch in unmapping numbers when MAPQ is set high")
++ 	}
++ 
++ 	# Checking what happens when you drop everything on not on the first chromosome (ensure 'unmapped' is correct)
++ 	if (length(chromosomes) > 1L) { 
++ 		chosen <- 1
++ 		stuff <- getPETSizes(out, restrict=names(chromosomes)[chosen])
++ 		obs.total <- sum(chr1==chosen) + sum(chr2==chosen) 
++ 		if (singles) { obs.total <- obs.total + sum(schrs==chosen) }
++ 		if (obs.total != stuff$diagnostics[["total"]]) { stop("mismatch in total numbers upon restriction") }
++ 		if (sum(chr1==chosen & chr2!=chosen) + sum(chr2==chosen & chr1!=chosen) != stuff$diagnostics[["mate.unmapped"]]) {
++ 			stop("mismatch in unmapped numbers upon restriction") }
++ 	}
++ 	
 + 	head(sizes);
 + }
 > 
@@ -580,4 +597,4 @@ GRanges with 120 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 22.145   0.167  22.358 
+ 22.814   0.162  23.030 

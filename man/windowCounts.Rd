@@ -66,11 +66,11 @@ If \code{restrict} is set, reads will only be extracted from the chromosomes con
 analysis to interesting chromosomes (e.g., no contigs). Conversely, if \code{discard} is set, reads that overlap the supplied ranges are 
 discarded. This is useful for removing reads in repeat regions.
 
-The duplicate flag must be set if reads are to be removed with \code{dedup=TRUE}. For paired-end data, users should ensure that the BAM files 
+The duplicate flag must be set if reads are to be removed with \code{dedup=TRUE}. For \code{pet="both"}, users should ensure that the BAM files 
 are properly synchronised prior to counting. Both these procedures can be performed using tools from the Picard suite prior to read counting.	  
 	
 Reads can also be filtered by mapping quality score if \code{minq!=0}. This is generally recommended to remove low-confidence alignments.
-The exact threshold for \code{minq} will depend on the range of scores provided by the aligner. If \code{pet=TRUE}, both reads of a pair 
+The exact threshold for \code{minq} will depend on the range of scores provided by the aligner. If \code{pet="both"}, both reads of a pair 
 must have a mapping quality score above \code{minq}.
 
 The \code{countWindows} function is a wrapper which allows users to pass in a list of non-default arguments. This ensures that multiple calls

@@ -15,12 +15,14 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
     if (!is.null(restrict)) { chromosomes<-chromosomes[names(chromosomes) %in% restrict] }
 	discard <- .processDiscard(discard)
 
-	loose.names <- list()
+	loose.names.1 <- list()
+	loose.names.2 <- list()
+	one.unmapped <- 0L
+
 	for (i in 1:length(chromosomes)) {
-		# Filtering out reads.
 		chr <- names(chromosomes)[i]
 		where<-GRanges(chr, IRanges(1, chromosomes[i]))
-		reads<-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq"), which=where, 
+		reads<-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq", "isize"), which=where, 
 			flag=scanBamFlag(isUnmappedQuery=FALSE,	isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
 		reads <- .discardReads(reads, discard[[chr]])
 	    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
@@ -35,20 +37,33 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 		okay <- .yieldInterestingBits(reads, where, diag=TRUE)
 		norm.list[[i]] <- okay$size
 	
-		# Storing loose names.
+		# Identifying improperly orientated pairs.
 		leftovers <- reads$qname[!okay$is.ok]
-		freqs <- table(leftovers)
-		others <- others + as.integer(sum(freqs==2L))
-		loose.names[[i]] <- names(freqs)[freqs==1L]
+		is.first <- bitwAnd(reads$flag[!okay$is.ok], 0x40)!=0L
+		is.second <- bitwAnd(reads$flag[!okay$is.ok], 0x80)!=0L
+		what.matched <- match(leftovers[is.first], leftovers[is.second])
+		has.pair <- !is.na(what.matched)
+		others <- others + sum(has.pair)
+		left.1 <- leftovers[is.first][!has.pair]
+		left.2 <- leftovers[is.second][-what.matched[has.pair]]
+
+		# Identifying reads unmapped on this chromosome (i.e. other read was thrown out earlier)
+		on.chr <- reads$isize[!okay$is.ok]
+		on.chr.1 <- on.chr[is.first][!has.pair] != 0L
+		on.chr.2 <- on.chr[is.second][-what.matched[has.pair]] != 0L
+		one.unmapped <- one.unmapped + sum(on.chr.1) + sum(on.chr.2)
+
+		# Collecting the rest to match inter-chromosomals.
+		loose.names.1[[i]] <- left.1[!on.chr.1]
+		loose.names.2[[i]] <- left.2[!on.chr.2]
 	}
 
-	# Cleaning up the loose names; figuring out if they're unmapped or interchromosomal.
-	# If there's only 1, then the other read is unmapped somewhere so it's the former. If there's
-	# 2, then they must be on different chromosomes to slip through the net.
-	loose.names <- unlist(loose.names)
-	occurrences <- table(loose.names)
-	one.unmapped <- sum(occurrences==1L)
-	inter.chr <- sum(occurrences==2L)
+	# Checking whether a read positively matched to a mapped counterpart on another chromosome.
+	loose.names.1 <- unlist(loose.names.1)
+	loose.names.2 <- unlist(loose.names.2)
+	pairing <- match(loose.names.1, loose.names.2)
+	inter.chr <- sum(!is.na(pairing))
+	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
 	# Returning sizes and some diagnostic data.
     return(list(sizes=unlist(norm.list), diagnostics=c(total=totals, single=singles, unoriented=others,
@@ -87,17 +102,34 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 # written by Aaron Lun
 # 15 April 2014
 { 
-	# Figuring out the strandedness, and matching the reads.
- 	should.be.left <- bitwAnd(reads$flag, 0x10) == 0L
-	should.be.right <- !should.be.left
-	corresponding <- match(reads$qname[should.be.left], reads$qname[should.be.right])
-	hasmatch <- !is.na(corresponding)
+	# Figuring out the strandedness and the read number.
+ 	is.forward <- bitwAnd(reads$flag, 0x10) == 0L 
+ 	is.mate.reverse <- bitwAnd(reads$flag, 0x20) != 0L
+	should.be.left <- is.forward & is.mate.reverse
+	should.be.right <- !is.forward & !is.mate.reverse
+    is.first <- bitwAnd(reads$flag, 0x40) != 0L
+	is.second <- bitwAnd(reads$flag, 0x80) != 0L	
 
-	# Selecting. Anything that survives the above should be forward in 'left', and reverse in 'right'.
-	fpos <- reads$pos[should.be.left][hasmatch]
-	fwidth <- reads$qwidth[should.be.left][hasmatch]
-	rpos <- reads$pos[should.be.right][corresponding[hasmatch]]
-	rwidth <- reads$qwidth[should.be.right][corresponding[hasmatch]]
+	# Matching the reads in each pair so only valid PETs are formed.
+	set.first.A <- should.be.left & is.first
+	set.second.A <- should.be.right & is.second
+	set.first.B <- should.be.left & is.second
+	set.second.B <- should.be.right & is.first
+	corresponding.1 <- match(reads$qname[set.first.A], reads$qname[set.second.A])
+	corresponding.2 <- match(reads$qname[set.first.B], reads$qname[set.second.B])
+
+	hasmatch <- logical(length(reads$flag))
+	hasmatch[set.first.A] <- !is.na(corresponding.1)
+	hasmatch[set.first.B] <- !is.na(corresponding.2)
+	corresponding <- integer(length(reads$flag))
+	corresponding[set.first.A] <- which(set.second.A)[corresponding.1]
+	corresponding[set.first.B] <- which(set.second.B)[corresponding.2]
+
+	# Selecting the read pairs.
+	fpos <- reads$pos[hasmatch]
+	fwidth <- reads$qwidth[hasmatch]
+	rpos <- reads$pos[corresponding[hasmatch]]
+	rwidth <- reads$qwidth[corresponding[hasmatch]]
 
 	# Allowing only valid PETs.
 	fend <- pmin(fpos+fwidth, end(where)+1L)
@@ -109,8 +141,8 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 	if (diag) { 
 		is.ok <- logical(length(reads$flag))
-		is.ok[should.be.left][hasmatch][valid] <- TRUE
-		is.ok[should.be.right][corresponding[hasmatch]][valid] <- TRUE
+		is.ok[hasmatch][valid] <- TRUE
+		is.ok[corresponding[hasmatch]][valid] <- TRUE
 		return(list(pos=fpos, size=total.size, is.ok=is.ok))
 	}
 	return(list(pos=fpos, size=total.size))

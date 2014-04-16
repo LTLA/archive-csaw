@@ -38,7 +38,7 @@ Read pairs must pass all criteria and be successfully mapped on two separate chr
 the read pair will be recorded as having one unmapped mate as the alignment is not reliable if it fails any of the criteria.
 
 Note that any duplicate read must be marked in the bit field of the BAM file using a tool like Picard if it is to be removed with \code{dedup=TRUE}.
-Also note that this function does \emph{not} require synchronization of read pair information (though it wouldn't hurt). 
+Also note that the read pair information in each BAM file \emph{must} be synchronized.
 }
 
 \author{Aaron Lun}
