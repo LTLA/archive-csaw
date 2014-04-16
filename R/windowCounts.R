@@ -117,8 +117,7 @@ countWindows <- function(param, ...)
 	reads<-scanBam(bam, param=ScanBamParam(what=c("strand", "pos", "qwidth", "mapq"),
 			which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
 			isDuplicate=ifelse(dedup, FALSE, NA), ...)))[[1]]
-    keep<-reads$mapq >= minq 
-	if (na.rm) { keep<-keep & !is.na(reads$mapq) }
+    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
 	reads$mapq <- NULL
 	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	reads <- .discardReads(reads, discard)

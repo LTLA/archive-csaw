@@ -74,7 +74,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 ##################################
 
-.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, na.rm=TRUE, discard=NULL)
+.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL)
 # A function to extract PET data for a particular chromosome. Synchronisation is expected.
 # We avoid sorting by name  as it'd mean we have to process the entire genome at once 
 # (can't go chromosome-by-chromosome).  This probably results in increased memory usage 
@@ -87,8 +87,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
     reads <-scanBam(bam.file, param=ScanBamParam(what=c("qname", "flag", "pos", "qwidth", "mapq"),
 		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(dedup, FALSE, NA), 
 		isPaired=TRUE, hasUnmappedMate=FALSE)))[[1]]
-    keep<-reads$mapq >= minq
-	if (na.rm) { keep<-keep & !is.na(reads$mapq) }
+    keep<-reads$mapq >= minq & !is.na(reads$mapq) 
 	reads$mapq<-NULL
 	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	reads <- .discardReads(reads, discard)
