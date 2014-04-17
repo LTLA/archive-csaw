@@ -1,4 +1,4 @@
-# This tests the combining power of the combineFDR function.
+# This tests the combining power of the combineTests function.
 
 nativemerge <- function(reg, tol, sign=NULL) {
 	n<-length(reg)
@@ -27,7 +27,7 @@ comp <- function(reg, tab, tol) {
 	ids<-mergeWindows(reg, tol=tol)
 	merged.ids<-nativemerge(reg, tol=tol)
 	if (!identical(merged.ids, ids$id)) { stop("merging IDs are not identical") }
-	out<-combineFDR(ids$id, tab)
+	out<-combineTests(ids$id, tab)
 
 	# Aggregating on the merging ID's to get average log-FC, average log-CPM, and Simes.
 	almostidentical <- function(x, y, tol=1e-8) { 
@@ -45,7 +45,7 @@ comp <- function(reg, tab, tol) {
 
 	# Checking if we get the same results after reversing the ids (ensures internal re-ordering is active).
 	re.o<-length(ids$id):1
-	out2<-combineFDR(ids$id[re.o], tab[re.o,])
+	out2<-combineTests(ids$id[re.o], tab[re.o,])
 	if (!almostidentical(out$logFC, out2$logFC) || !almostidentical(out$logCPM, out2$logCPM)
 			|| !almostidentical(out$PValue, out2$PValue)) { stop("values not preserved after shuffling"); }
 
@@ -53,12 +53,12 @@ comp <- function(reg, tab, tol) {
 	is.fc<-which(colnames(tab)=="logFC")
 	colnames(tab)[is.fc]<-"logFC.1"
 	tab$logFC.2<--tab$logFC.1
-    out<-combineFDR(ids$id, tab)
+    out<-combineTests(ids$id, tab)
 	if (!almostidentical(out$logFC.1, -out$logFC.2)) { stop("check failed for multiple log-FC columns") }
 
 	# Also checking with weights for the Simes p-values.
 	rand.weights<-runif(length(ids$id), 0, 1)
-    out2<-combineFDR(ids$id, tab, weight=rand.weights)
+    out2<-combineTests(ids$id, tab, weight=rand.weights)
 	checker<-split(data.frame(tab$PValue, rand.weights), merged.ids)
 	wsimes<-sapply(checker, FUN=function(x) {
 		o<-order(x[,1])
