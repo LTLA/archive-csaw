@@ -16,10 +16,9 @@ combineTests(ids, tab, weight=rep(1, length(ids)))
 }
 
 \value{
-A dataframe with one row per cluster and the numeric fields \code{logFC}, the average of each supplied log-FC
-across the cluster; \code{logCPM}, the average log-CPM; \code{PValue}, the combined p-value; 
-and \code{FDR}, the q-value corresponding to the combined p-value. The name of each row corresponds
-to the sorted cluster IDs.
+A dataframe with one row per cluster and the numeric fields \code{logCPM}, the average log-CPM; \code{PValue}, the combined p-value; 
+and \code{FDR}, the q-value corresponding to the combined p-value. There is also one numeric field representing the average of each 
+supplied \code{logFC} in \code{tab}. The name of each row corresponds to the sorted cluster IDs.
 }
 
 \details{
@@ -45,26 +44,21 @@ This allows the direct use of \code{ids} as an index for the output table.
 } 
 
 \examples{ 
-counts<-matrix(rnbinom(400, mu=10, size=20), ncol=4)
-y<-DGEList(counts)
-design<-model.matrix(~factor(c("a", "a", "b", "b")))
-fit<-glmFit(y, design, dispersion=0.05)
-out<-glmLRT(fit)
-ids<-round(runif(100, 1, 10))
-combined<-combineTests(ids, out$table)
+ids <- round(runif(100, 1, 10))
+tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100),
+	    PValue=rbeta(100, 1, 2))
+combined <- combineTests(ids, tab)
 head(combined)
 
 # With window weighting.
 w<-round(runif(100, 1, 5))
-combined<-combineTests(ids, out$table, weight=w)
+combined<-combineTests(ids, tab, weight=w)
 head(combined)
 
-# With cluster weighting, defined as the mean of window weights.
-cluster.w<-as.numeric(by(w, list(ids), FUN=mean))
-o<-order(combined$PValue)
-total.w<-sum(cluster.w)
-cs.w<-cumsum(cluster.w[o])
-combined$FDR[o]<-rev(cummin(rev(combined$PValue[o]*total.w/cs.w)))
+# With multiple log-FCs.
+tab$logFC.whee <- rnorm(100, 5)
+combined <- combineTests(ids, tab)
+head(combined)
 }
 
 \seealso{
