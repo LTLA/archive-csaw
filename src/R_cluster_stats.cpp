@@ -83,7 +83,8 @@ SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP 
 
 			/* Computing the weighted Simes value. The weights are implemented as frequency 
  			 * weights, e.g., if you had 2 tests with a weight of 10 to 1, you'd consider the
- 			 * one with the higher weight 10 more times to try to reject the global null.
+ 			 * one with the higher weight 10 more times to try to reject the global null (i.e.,
+ 			 * expanding it in-place in the sorted vector of p-values).
  			 */
 			std::sort(sortvec+i, sortvec+j, pcomp);
 			double more_temp=0, remaining=wptr[sortvec[i]];
