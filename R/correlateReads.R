@@ -69,5 +69,4 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
     return(total.cor)
 }
 
-###################################################################################################
-# End.
+
