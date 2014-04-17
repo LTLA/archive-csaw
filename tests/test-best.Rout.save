@@ -23,25 +23,26 @@ Loading required package: GenomicRanges
 Loading required package: BiocGenerics
 Loading required package: parallel
 
-Attaching package: ‘BiocGenerics’
+Attaching package: 'BiocGenerics'
 
-The following objects are masked from ‘package:parallel’:
+The following objects are masked from 'package:parallel':
 
     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
     clusterExport, clusterMap, parApply, parCapply, parLapply,
     parLapplyLB, parRapply, parSapply, parSapplyLB
 
-The following object is masked from ‘package:stats’:
+The following object is masked from 'package:stats':
 
     xtabs
 
-The following objects are masked from ‘package:base’:
+The following objects are masked from 'package:base':
 
-    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
-    duplicated, eval, evalq, Filter, Find, get, intersect, is.unsorted,
-    lapply, Map, mapply, match, mget, order, paste, pmax, pmax.int,
-    pmin, pmin.int, Position, rank, rbind, Reduce, rep.int, rownames,
-    sapply, setdiff, sort, table, tapply, union, unique, unlist
+    Filter, Find, Map, Position, Reduce, anyDuplicated, append,
+    as.data.frame, as.vector, cbind, colnames, duplicated, eval, evalq,
+    get, intersect, is.unsorted, lapply, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, rank, rbind, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist
 
 Loading required package: IRanges
 Loading required package: XVector
@@ -50,9 +51,9 @@ Loading required package: Biostrings
 Loading required package: edgeR
 Loading required package: limma
 
-Attaching package: ‘limma’
+Attaching package: 'limma'
 
-The following object is masked from ‘package:BiocGenerics’:
+The following object is masked from 'package:BiocGenerics':
 
     plotMA
 
@@ -251,4 +252,4 @@ The following object is masked from ‘package:BiocGenerics’:
 > 
 > proc.time()
    user  system elapsed 
-  9.621   0.073   9.703 
+  7.551   0.078   7.638 
