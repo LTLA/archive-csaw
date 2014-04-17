@@ -12,7 +12,7 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL)
 \arguments{
 	\item{regions}{a \code{GRanges} object}
 	\item{tol}{a numeric scalar specifying the maximum distance between adjacent windows}
-	\item{sign}{a logical specifying whether each window has a positive log-FC}
+	\item{sign}{a logical vector specifying whether each window has a positive log-FC}
 	\item{max.width}{a numeric scalar specifying the maximum size of merged intervals}
 }
 
@@ -48,7 +48,7 @@ mergeWindows(gr, 100, sign=rep(c(TRUE, FALSE), 5))
 }
 
 \seealso{
-\code{\link{combineFDR}}, \code{\link{windowCounts}}
+\code{\link{combineTests}}, \code{\link{windowCounts}}
 }
 
 \author{Aaron Lun}
