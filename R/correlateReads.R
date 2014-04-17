@@ -1,4 +1,5 @@
-correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL, discard=NULL) 
+correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL, 
+	discard=NULL, pet=c("none", "first", "second")) 
 # This is just a function to calculate the autocorrelation between reads of different strands (or
 # between reads in general). Note that the BAM files must be sorted. It will calculate the values 
 # required for computation of the correlation function across all chromosomes, then it will crunch all 
@@ -9,9 +10,10 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 {
     extracted <- .processIncoming(bam.files, restrict, discard)
 	max.dist<-as.integer(max.dist)
-    if (max.dist <=0 ) { stop("maximum distance must be positive"); }
-    total.cor<-numeric(max.dist+1L);
-    total.read.num<-0L;
+    if (max.dist <=0 ) { stop("maximum distance must be positive") }
+    total.cor <- numeric(max.dist+1L)
+    total.read.num <- 0L;
+	pet <- match.arg(pet)
 
     for (i in 1:length(extracted$chrs)) {
 		if (extracted$chrs[i]<2L) { next } # No way to compute variance if there's only one base.
@@ -23,7 +25,12 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 		num.reads<-0
 		forward.reads<-0
 		for (b in 1:length(bam.files)) {
-			reads<-.extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]])
+			if (pet=="none") { 
+				reads<-.extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]])
+			} else {
+				reads<-.extractBrokenPET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]],
+					use.first=(pet=="first"))
+			}
 			forwards<-reads$strand=="+"
 			num.reads<-num.reads+length(forwards)
 			forward.reads<-forward.reads+sum(forwards)
