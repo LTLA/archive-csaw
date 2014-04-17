@@ -65,6 +65,8 @@ comp <- function(reg, tab, tol) {
 		min(x[o,1]*sum(x[,2])/cumsum(x[o,2]))
 	})
 	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up") }
+    out2<-combineTests(ids$id[re.o], tab[re.o,], weight=rand.weights[re.o])
+	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up after shuffling") }
 
 	# Checking the reported value of each region.
 	ostarts<-aggregate(start(reg)~ merged.ids, FUN=min, data=NULL)

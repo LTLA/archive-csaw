@@ -13,6 +13,7 @@ combineTests <- function(ids, tab, weight=rep(1, length(ids)))
 	id.order<-order(ids)
 	ids<-ids[id.order]
 	tab<-tab[id.order,]
+	weight <- weight[id.order]
 
 	# Saying which columns are what.
 	is.fcs<-grep("logFC", colnames(tab))-1L	

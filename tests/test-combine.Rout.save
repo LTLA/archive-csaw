@@ -1,6 +1,6 @@
 
-R version 3.0.0 (2013-04-03) -- "Masked Marvel"
-Copyright (C) 2013 The R Foundation for Statistical Computing
+R version 3.0.3 (2014-03-06) -- "Warm Puppy"
+Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -82,6 +82,8 @@ Type 'q()' to quit R.
 + 		min(x[o,1]*sum(x[,2])/cumsum(x[o,2]))
 + 	})
 + 	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up") }
++     out2<-combineTests(ids$id[re.o], tab[re.o,], weight=rand.weights[re.o])
++ 	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up after shuffling") }
 + 
 + 	# Checking the reported value of each region.
 + 	ostarts<-aggregate(start(reg)~ merged.ids, FUN=min, data=NULL)
@@ -864,4 +866,4 @@ GRanges with 6 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 12.776   0.080  12.876 
+ 12.857   0.079  12.944 
