@@ -14,11 +14,12 @@ getBestTest <- function(ids, tab, weight=rep(1, length(ids)))
 	ids<-ids[id.order]
 	tab<-tab[id.order,]
 	if (is.null(tab$PValue)) { stop("result table should have one PValue field") }
+	weight <- weight[id.order]
 
 	# Running the clustering procedure.
 	out<-.Call("R_best_in_cluster", tab$PValue, ids, weight, PACKAGE="csaw")
 	if (is.character(out)) { stop(out) }
-	combined<-data.frame(best=out[[2]], PValue=out[[1]], FDR=p.adjust(out[[1]], method="BH"))
+	combined<-data.frame(best=id.order[out[[2]]+1L], PValue=out[[1]], FDR=p.adjust(out[[1]], method="BH"))
 	rownames(combined)<-ids[c(TRUE, diff(ids)!=0L)]
 	return(combined)
 }
