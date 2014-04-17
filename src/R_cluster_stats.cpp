@@ -81,7 +81,10 @@ SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP 
 			}
 			outcpm/=subweight;
 
-			// Computing the weighted Simes value.
+			/* Computing the weighted Simes value. The weights are implemented as frequency 
+ 			 * weights, e.g., if you had 2 tests with a weight of 10 to 1, you'd consider the
+ 			 * one with the higher weight 10 more times to try to reject the global null.
+ 			 */
 			std::sort(sortvec+i, sortvec+j, pcomp);
 			double more_temp=0, remaining=wptr[sortvec[i]];
 			double& outp=(*opptr=pptr[sortvec[i]]/remaining); 
