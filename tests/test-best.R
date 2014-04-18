@@ -1,10 +1,10 @@
 # This tests the correctness of the getBestTest function.
 
-require(csaw)
+suppressPackageStartupMessages(require(csaw))
 comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 	n <- 10000
     ids<-round(runif(n, 1, nids))
-	tab <- data.frame(logFC=rnorm(n), PValue=rbeta(n, alpha, beta))
+	tab <- data.frame(logFC=rnorm(n), logCPM=rnorm(n), PValue=rbeta(n, alpha, beta))
 	best<-getBestTest(ids, tab)
 
 	ref <- aggregate(tab$PValue ~ ids, FUN=function(x) { min(1, x*length(x)) }, data=NULL)	
@@ -23,6 +23,11 @@ comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 			!identical(best$best, xref[,2]) ) {
 		stop("best p-value doesn't match reference after weighting") 
 	}
+
+	# Now, searching for the max log-CPM.
+	almostbest <- getBestTest(ids, tab, mode="logCPM")
+    ref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.max(tab$logCPM[x])] }, data=NULL)
+	if (!identical(ref[,2], almostbest$best)) { stop("tests with the highest log-CPMs don't match reference") }
 	
 	return(head(best))	
 }

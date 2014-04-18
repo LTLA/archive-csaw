@@ -54,6 +54,7 @@ SEXP R_best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 			}
 			outp*=subweight;
  		    if (outp > 1) { outp=1; }	
+			++outi; // For 1-based indexing in R.
 
 			// Setting it up for the next round.
 			++opptr;
