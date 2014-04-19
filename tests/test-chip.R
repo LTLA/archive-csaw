@@ -76,7 +76,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 	if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
 	if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
 
-	# Checking the filter.
+	# Checking the filter. We need to do this separately as the check above is not filter-aware.
     x2<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=-1, 
 			discard=discard, restrict=restrict)
 	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
@@ -87,13 +87,13 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 	if (sum(keep)==0 && length(x$region)==0) { } 
 	else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions"); }
 
-	# Checking MAPQ filtering.
-	xx<-windowCounts(bamFiles, minq=200)
+	# Checking MAPQ filtering. This example is a bit silly; we make sure nothing survives when we set the filter too high.
+	xx<-windowCounts(bamFiles, minq=1000)
 	if (!all(xx$totals==0)) { stop("MAPQ filtering failed") }
 	return(x$region);
 }
 
-# Bin counts.
+# Bin count checker.
 
 bincomp <- function(bamFiles, binsize=1000L) {
 	binsize<-as.integer(binsize+0.5)
