@@ -42,6 +42,10 @@ for any rejections within a cluster. This function specifies the exact location 
 the cluster, which may be more useful in some cases but at the cost of conservativeness. In both cases,
 clustering procedures such as \code{\link{mergeWindows}} can be used.
 
+% The vagueness of combineTests may be good enough in most applications (i.e. wanting to get a location
+% to look at the genomic context, or in instances where differential binding is obvious). If error control
+% at specific locations is needed, then getBestTests is probably more appropriate..
+
 If \code{mode="logCPM"}, the best test is defined as that with the highest log-CPM value. This should
 be independent of the p-value so no adjustment is necessary. Weights are not applied here. This mode
 may be useful when abundance is correlated to rejection under the alternative hypothesis, e.g., picking

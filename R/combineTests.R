@@ -26,7 +26,7 @@ combineTests <- function(ids, tab, weight=rep(1, length(ids)))
 	# Running the clustering procedure.
 	out<-.Call("R_get_cluster_stats", is.fcs, is.cpm, is.pval, tab, ids, weight, PACKAGE="csaw")
 	if (is.character(out)) { stop(out) }
-	combined<-data.frame(out[[1]], logCPM=out[[2]], PValue=out[[3]], FDR=p.adjust(out[[3]], method="BH"), rownames=ids[c(TRUE, diff(ids)!=0L)])
+	combined<-data.frame(out[[1]], logCPM=out[[2]], PValue=out[[3]], FDR=p.adjust(out[[3]], method="BH"), row.names=ids[c(TRUE, diff(ids)!=0L)])
 	colnames(combined)[1:length(is.fcs)] <- colnames(tab)[is.fcs+1L]
 	return(combined)
 }
