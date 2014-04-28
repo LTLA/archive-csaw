@@ -63,8 +63,8 @@ Specifically, \code{right} is set to \code{bin-1}, \code{left} is set to 0, \cod
 Only the 5' end of each read or fragment (for paired-end data) is used in counting.
 
 If \code{restrict} is set, reads will only be extracted from the chromosomes contained in the supplied vector. This is useful to restrict the
-analysis to interesting chromosomes (e.g., no contigs). Conversely, if \code{discard} is set, reads that overlap the supplied ranges are 
-discarded. This is useful for removing reads in repeat regions.
+analysis to interesting chromosomes (e.g., no contigs, mitochondria). Conversely, if \code{discard} is set, a read will be removed if the corresponding
+alignment is wholly contained within any of the supplied ranges. This is useful for removing reads in repeat regions. 
 
 The duplicate flag must be set if reads are to be removed with \code{dedup=TRUE}. For \code{pet="both"}, users should ensure that the BAM files 
 are properly synchronised prior to counting. Both these procedures can be performed using tools from the Picard suite prior to read counting.	  

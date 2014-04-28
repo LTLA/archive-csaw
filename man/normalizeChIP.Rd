@@ -94,9 +94,8 @@ offsets <- normalizeChIP(counts, method="loess", span=0.4)
 offsets <- normalizeChIP(counts, method="loess", iterations=1)
 }
 
-
 \seealso{
-\code{\link{calcNormFactors}}
-\code{\link{loessFit}}
+\code{\link{calcNormFactors}},
+\code{\link{loessFit}},
 \code{\link{normalizeCyclicLoess}}
 }
