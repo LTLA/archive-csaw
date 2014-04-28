@@ -133,7 +133,8 @@ countWindows <- function(param, ...)
 	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	
 	# Filtering by discard regions.
-	if (!is.null(discard)) { 
+	if (!is.null(discard)) {
+ 	   	require(GenomicAlignments)	
 		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
 		keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), discard, type="within")
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
@@ -160,9 +161,15 @@ countWindows <- function(param, ...)
 	}
 
 	if (!is.null(restrict)) { originals <- originals[names(originals) %in% restrict] }
-	if (!is.null(discard)) { 
-		discard <- discard[seqnames(discard) %in% names(originals)]
+	if (!is.null(discard)) {
 		discard <- split(ranges(discard), seqnames(discard), drop=TRUE)
+		for (x in names(discard)) { 
+			if (x %in% names(originals)) { 
+				discard[[x]] <- reduce(discard[[x]])
+			} else {
+				discard[[x]] <- NULL 
+			}
+		}
 	} 
 	return(list(discard=discard, chrs=originals))
 }
