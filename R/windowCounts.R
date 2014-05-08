@@ -1,6 +1,6 @@
-windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100, 
-	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, bin=NULL, 
-	dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
+	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, 
+	bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -13,20 +13,18 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 	extracted <- .processIncoming(bam.files, restrict, discard)
 
 	# Processing input parameters.
-	if (is.null(bin)) { 
-		spacing<-as.integer(spacing+0.5)
-		left<-as.integer(left+0.5)
-		right<-as.integer(right+0.5)
-		ext<-as.integer(ext+0.5)
-		if (is.null(filter)) { filter <-5L*nbam }
+	if (!bin) { 
+		spacing <- as.integer(spacing+0.5)
+		left <- as.integer(shift+0.5)
+		right <- as.integer(width+0.5) - left - 1L
+		ext <- as.integer(ext+0.5)
+		if (is.null(filter)) { filter <- 5L*nbam }
 	} else {
 		# A convenience flag, which assigns sensible arguments to everything else.
-		bin<-as.integer(bin+0.5)
-		spacing<-bin
-		right<-bin-1L
-		left<-0L
-		filter<-1L
-		ext<-1L
+		spacing <- as.integer(width+0.5)
+		left <- as.integer(shift+0.5)
+		right <- spacing - 1L - left
+		filter <- ext <- 1L
 	}
 	pet <- match.arg(pet)
 	max.frag <- as.integer(max.frag)
@@ -64,7 +62,7 @@ windowCounts<-function(bam.files, spacing=50, left=0, right=0, ext=100,
 				frag.start<-out$pos[keep]
 
 				# Only want to record each pair once in a bin, so forcing it to only use the starting read.
-				if (!is.null(bin)) { frag.end<-frag.start }
+				if (bin) { frag.end<-frag.start }
 				else { frag.end<-frag.start+out$size[keep]-1L; }
 			}
 

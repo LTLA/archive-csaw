@@ -1,5 +1,5 @@
 
-R version 3.0.3 (2014-03-06) -- "Warm Puppy"
+R version 3.1.0 (2014-04-10) -- "Spring Dance"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -239,7 +239,7 @@ Type 'q()' to quit R.
 + 
 +     # Collating all counts.
 + 	fnames <- paste0(stuff, ".bam")
-+ 	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, left=left, right=right, pet="both", filter=filter)
++ 	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, shift=left, width=right+left+1, pet="both", filter=filter)
 + 	out<-matrix(0L, length(x$region), length(stuff))
 + 	totals<-integer(length(stuff))
 + 	for (i in 1:length(stuff)) {
@@ -253,7 +253,7 @@ Type 'q()' to quit R.
 + 
 + 	# Also checking forward and reverse counts.
 + 	for (mode in c("first", "second")) { 
-+ 		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, left=left, right=right, pet=mode, filter=filter)
++ 		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, pet=mode, filter=filter)
 + 		out<-matrix(0L, length(x$region), length(stuff))
 + 		totals<-integer(length(stuff))
 + 		for (i in 1:length(stuff)) {
@@ -597,4 +597,4 @@ GRanges with 120 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 22.814   0.162  23.030 
+ 22.196   0.174  22.412 

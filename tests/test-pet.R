@@ -184,7 +184,7 @@ checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, rig
 
     # Collating all counts.
 	fnames <- paste0(stuff, ".bam")
-	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, left=left, right=right, pet="both", filter=filter)
+	x<-windowCounts(fnames, spacing=spacing, max.frag=max.frag, shift=left, width=right+left+1, pet="both", filter=filter)
 	out<-matrix(0L, length(x$region), length(stuff))
 	totals<-integer(length(stuff))
 	for (i in 1:length(stuff)) {
@@ -198,7 +198,7 @@ checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, rig
 
 	# Also checking forward and reverse counts.
 	for (mode in c("first", "second")) { 
-		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, left=left, right=right, pet=mode, filter=filter)
+		bravo <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, pet=mode, filter=filter)
 		out<-matrix(0L, length(x$region), length(stuff))
 		totals<-integer(length(stuff))
 		for (i in 1:length(stuff)) {

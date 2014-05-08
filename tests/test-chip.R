@@ -53,7 +53,7 @@ compare2Ranges <- function(left, right) {
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=NULL, restrict=NULL) {
-	x<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=filter, 
+	x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
 		discard=discard, restrict=restrict)
 
 	# Checking with countOverlaps.
@@ -77,7 +77,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 	if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
 
 	# Checking the filter. We need to do this separately as the check above is not filter-aware.
-    x2<-windowCounts(bamFiles, ext=fraglen, right=right, left=left, spacing=spacing, filter=-1, 
+    x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
 			discard=discard, restrict=restrict)
 	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
 	if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions"); }
@@ -97,7 +97,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 
 bincomp <- function(bamFiles, binsize=1000L) {
 	binsize<-as.integer(binsize+0.5)
-	blah<-windowCounts(bamFiles, bin=binsize)	
+	blah<-windowCounts(bamFiles, width=binsize, bin=TRUE)	
 	if (!identical(blah$totals, as.integer(colSums(blah$counts)+0.5))) { stop("totals do not match up") }
 	expected<-expectedRanges(binsize, 0L, binsize, bamFiles)
 	chrs<-scanBamHeader(bamFiles)[[1]][[1]]
@@ -134,25 +134,26 @@ dir.create(dir);
 
 set.seed(2123)
 chromos<-c(chrA=10000, chrB=5000)
-bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 
 # Vanilla comparison.
 
+bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, spacing=20)
 comp(bamFiles, fraglen=200, spacing=50)
-
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
 
 # More complex with right arguments.
 
+bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=30, spacing=20)
 comp(bamFiles, fraglen=200, left=50, spacing=25)
 comp(bamFiles, fraglen=150, right=10, left=10, spacing=30)
 
 # Even more complex, with filtering arguments
 
+bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, filter=5)
 comp(bamFiles, fraglen=100, filter=10)
 comp(bamFiles, fraglen=200, filter=15)
@@ -161,42 +162,40 @@ comp(bamFiles, fraglen=200, filter=15)
 
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
-
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
-
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
 
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=100)
 comp(bamFiles, fraglen=200, left=50)
-
 comp(bamFiles, fraglen=200, right=0, spacing=20)
 comp(bamFiles, fraglen=200, left=100, spacing=100)
 
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, filter=20)
 comp(bamFiles, fraglen=200, filter=40)
 comp(bamFiles, fraglen=200, filter=60)
 
-# One more time; sparse across the genome.
+# One more time; sparse across the genome, but three files.
 
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
-bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
-
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
 
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, left=100)
 comp(bamFiles, fraglen=200, right=50)
-
 comp(bamFiles, fraglen=200, left=0, spacing=50)
 comp(bamFiles, fraglen=200, right=100, spacing=100)
 
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, filter=0)
 comp(bamFiles, fraglen=200, filter=1)
 comp(bamFiles, fraglen=200, right=50, filter=2)
@@ -205,56 +204,47 @@ comp(bamFiles, fraglen=200, right=50, filter=2)
 # We test with four files. Oh, the humanity.
 
 bamFiles<-sapply(1:4, FUN=function(i) { regen(3000, chromos, file.path(dir, paste("A", i, sep=""))) })
-
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
-
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
 
+bamFiles<-sapply(1:4, FUN=function(i) { regen(3000, chromos, file.path(dir, paste("A", i, sep=""))) })
 comp(bamFiles, fraglen=100, right=100)
 comp(bamFiles, fraglen=200, right=50)
-
 comp(bamFiles, fraglen=200, right=0, spacing=40)
 comp(bamFiles, fraglen=200, right=100, spacing=100)
-
 comp(bamFiles, fraglen=200, filter=100)
 comp(bamFiles, fraglen=200, filter=150)
 
 ###################################################################################################
-# We try to do some crazy spacing.
+# We try to do some crazy spacing and some crazy extension. We should see 1 combination per chromosome, consisting of all reads.
 
 chromos<-c(chrA=8000, chrB=8000)
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
-
 comp(bamFiles, spacing=max(chromos))
-
-# We also try to do some crazy extension. We should see 1 combination per chromosome, consisting of all reads.
-
 comp(bamFiles, right=max(chromos), left=max(chromos))
 
 ###################################################################################################
 # Restricted and/or discarded.
 
-chromos<-c(chrA=5000, chrB=5000, chrC=8000)
-bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-
 makeDiscard <- function(ndisc, sizeof) {
 	chosen <- sample(length(chromos), ndisc, replace=T)
 	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
-	GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof))
+	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
 }
+chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 
+bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200))
 comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
-
 comp(bamFiles, fraglen=100, left=100, discard=makeDiscard(50, 20))
 comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
 
+bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=200, left=0, spacing=50, discard=makeDiscard(20, 200))
 comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000))
-
 comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500))
 comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
 comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
