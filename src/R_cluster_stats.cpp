@@ -47,7 +47,7 @@ SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP 
 		else if (bptr[i]!=bptr[i-1]) { ++total; }
 		sortvec[i]=i;
 	}
-	sort_row_index pcomp(pptr);
+	sort_row_index<double> pcomp(pptr);
 
 	// Pulling out results.
 	SEXP output=PROTECT(NEW_LIST(3));

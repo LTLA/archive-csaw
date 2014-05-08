@@ -9,11 +9,12 @@ extern "C" {
 #include <deque>
 #include <algorithm>
 
+template <class T>
 struct sort_row_index {
-	sort_row_index(const double* p) : ptr(p) {}
+	sort_row_index(const T* p) : ptr(p) {}
 	bool operator() (const int& l, const int& r) const { return (ptr[l] < ptr[r]); }
 private:
-	const double* ptr;
+	const T* ptr;
 };
 
 #endif
