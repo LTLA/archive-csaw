@@ -1,11 +1,11 @@
-\name{annotateRange}
-\alias{annotateRange}
+\name{detailRanges}
+\alias{detailRanges}
 
 \title{Add annotation to ranges}
-\description{Add exon-based annotation to specified regions}
+\description{Add detailed exon-based annotation to specified regions}
 
 \usage{
-annotateRange(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
+detailRanges(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
 }
 
 \arguments{
@@ -70,7 +70,7 @@ require(org.Mm.eg.db)
 require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
-output <- annotateRange(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
+output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
 head(output$overlap)
 head(output$right)
 head(output$left)

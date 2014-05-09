@@ -1,4 +1,4 @@
-annotateRange <- function(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
+detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
 # This gives three character vectors for each 'incoming'. The first specifies
 # which features are wholly or partially overlapped by the current range.
 # The second specifies what features are within 'tol' of the 5' end of 
