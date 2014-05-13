@@ -8,8 +8,8 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
-	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, 
-	bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+	pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
+	filter=NULL, bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
 countWindows(param, ...)
 }
 
@@ -21,6 +21,7 @@ countWindows(param, ...)
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{pet}{a character string specifying whether the data involves paired end tags}
 	\item{max.frag}{an integer scalar, specifying the maximum allowable fragment size for PET data}
+	\item{rescue.pairs}{a logical scalar indicating whether invalid read pairs should be counted}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar indicating whether binning should be performed}
 	\item{dedup}{a boolean specifying whether marked duplicates should be removed}
@@ -94,9 +95,20 @@ synchronised prior to counting. Proper pairs are defined as those reads that
 are close together and in an inward-facing orientation. Fragment sizes above
 \code{max.frag} are removed; use \code{\link{getPETSizes}} to pick an
 appropriate value. Both reads of a pair must also have a mapping quality score
-above \code{minq}. Poor-quality paired-end data can be treated as single-end
-data by only using one read from each pair with \code{pet="first"} or
-\code{"second"}.
+above \code{minq}. 
+
+If \code{rescue=TRUE}, the function will attempt to use proper pairs. If this
+is not possible for a read pair, the read with the higher MAPQ score will be
+taken, extended to \code{ext} and used as the fragment. This may be useful in
+cases where only one read can be mapped from a pair (e.g., if \code{minq} or
+\code{discard} is too stringent). Note that both reads will be used for
+interchromosomal read pairs.
+
+Finally, paired-end data can also be treated as single-end data by only using
+one read from each pair with \code{pet="first"} or \code{"second"}.  This is
+useful for poor-quality data where the paired-end procedure has obviously
+failed, e.g., many interchromosomal read pairs or pairs with large fragment
+lengths.
 }
 
 \section{Repeated calls with the same parameters}{
@@ -137,4 +149,9 @@ windowCounts(bamFile, pet="both", filter=1)
 windowCounts(bamFile, pet="first", filter=1)
 windowCounts(bamFile, max.frag=100, pet="both", filter=1)
 windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA")
+
+# Running rescues of PET data (use -1 to coerce single-endedness).
+windowCounts(bamFile, max.frag=50, pet="both", filter=1, rescue.pairs=TRUE)
+windowCounts(bamFile, max.frag=-1, pet="both", filter=1, rescue.pairs=TRUE)
+windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA", rescue.pairs=TRUE)
 }

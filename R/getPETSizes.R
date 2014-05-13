@@ -68,7 +68,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 ##################################
 
-.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL)
+.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, max.frag=Inf, discard=NULL)
 # A function to extract PET data for a particular chromosome. Synchronisation is expected.
 # We avoid sorting by name  as it'd mean we have to process the entire genome at once 
 # (can't go chromosome-by-chromosome).  This probably results in increased memory usage 
@@ -80,10 +80,10 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 {
 	reads <- .extractSET(bam.file, extras=c("qname", "flag"), where=where, dedup=dedup,
 		minq=minq, isPaired=TRUE, hasUnmappedMate=FALSE, discard=discard)
-	.yieldInterestingBits(reads, max(end(where)))
+	.yieldInterestingBits(reads, max(end(where)), max.frag=max.frag)
 }
 
-.yieldInterestingBits <- function(reads, clen, diag=FALSE)
+.yieldInterestingBits <- function(reads, clen, max.frag=Inf, diag=FALSE)
 # This figures out what the interesting reads are, given a list of 
 # read names, flags, positions and qwidths. In particular, reads have
 # to be properly paired in an inward conformation, without one read
@@ -92,6 +92,10 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 # written by Aaron Lun
 # 15 April 2014
 { 
+	if (max.frag <= 0L) {
+		return(list(pos=integer(0), size=integer(0), is.ok=logical(length(reads$flag))))
+	}
+
 	# Figuring out the strandedness and the read number.
  	is.forward <- bitwAnd(reads$flag, 0x10) == 0L 
  	is.mate.reverse <- bitwAnd(reads$flag, 0x20) != 0L
@@ -125,8 +129,8 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 	# Allowing only valid PETs.
 	fend <- pmin(fpos+fwidth, clen+1L)
 	rend <- pmin(rpos+rwidth, clen+1L)
-    valid <- fpos <= rpos & fend <= rend
 	total.size <- rend - fpos
+    valid <- fpos <= rpos & fend <= rend & total.size <= max.frag
 	fpos <- fpos[valid]
 	total.size <- total.size[valid]
 
@@ -142,11 +146,48 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 ##################################
 
 .extractBrokenPET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL, use.first=TRUE) 
-# A function to extract PET data, but as single-end data (i.e. only using one of the reads).
-# Useful when paired-end data has gone completely off the rails.
+# A function to extract PET data, but as single-end data (i.e. only using one
+# of the reads).  Useful when paired-end data has gone completely off the
+# rails.
 {
 	.extractSET(bam.file, where=where, dedup=dedup, minq=minq, discard=discard,
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
+}
+
+.rescuePET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL, ext=100, max.frag=Inf) 
+# A function to extract PET data where possible, but to rescue those that
+# are invalid by using them as single-end data with read extension. Those
+# reads that form invalid pairs are broken up and the read with the better
+# MAPQ is chosen. Any single read (due to filtering or whatever) is used as-is.
+# Interchromosomal pairs get counted once on each chromosome.
+#
+# written by Aaron Lun
+# 13 May, 2014
+{
+	reads <- .extractSET(bam.file, extras=c("qname", "flag", "mapq"), where=where, dedup=dedup,
+		minq=minq, isPaired=TRUE, discard=discard)
+	output <- .yieldInterestingBits(reads, max(end(where)), diag=TRUE, max.frag=max.frag)
+
+	# Figuring out which reads do pair up.
+	is.first <- bitwAnd(reads$flag, 0x40) != 0L
+	nok.first <- !output$is.ok & is.first
+	nok.second <- !output$is.ok & !is.first
+	corresponding <- match(reads$qname[nok.first], reads$qname[nok.second])
+	first.paired <- which(!is.na(corresponding))
+	second.paired <- corresponding[first.paired]
+	
+	# Picking the unique reads, or the better read from the each pair.
+	additor <- logical(length(reads$flag))
+	additor[nok.first][-first.paired] <- TRUE
+	additor[nok.second][-second.paired] <- TRUE
+	is.better <- reads$mapq[nok.first][first.paired] > reads$mapq[nok.second][second.paired]
+	additor[nok.first][first.paired][is.better] <- TRUE
+	additor[nok.second][second.paired][!is.better] <- TRUE
+
+	# Returning the loot. Yar!	
+	return( list( pos=c(output$pos, ifelse(bitwAnd(reads$flag[additor], 0x10)==0L, reads$pos[additor], 
+					reads$pos[additor]+reads$qwidth[additor]-ext)),
+		      size=c(output$size, rep(ext, sum(additor))) ) )
 }
 
 ##################################

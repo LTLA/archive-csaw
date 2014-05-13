@@ -1,6 +1,6 @@
 windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
-	pet=c("none", "both", "first", "second"), max.frag=500, filter=NULL, 
-	bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+	pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
+	filter=NULL, bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -56,14 +56,18 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 				if (length(frag.start)) { frag.start<-pmin(frag.start, outlen) }
 				frag.end<-frag.start+ext-1L
 			} else {
-				out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-					discard=extracted$discard[[chr]])
-				keep<-out$size <= max.frag
-				frag.start<-out$pos[keep]
+				if (rescue.pairs) { 
+					out<-.rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+						max.frag=max.frag, ext=ext, discard=extracted$discard[[chr]])
+				} else {
+					out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+						discard=extracted$discard[[chr]], max.frag=max.frag)
+				}
+				frag.start<-out$pos
 
 				# Only want to record each pair once in a bin, so forcing it to only use the starting read.
 				if (bin) { frag.end<-frag.start }
-				else { frag.end<-frag.start+out$size[keep]-1L; }
+				else { frag.end<-frag.start+out$size-1L; }
 			}
 
 			# Extending reads to account for window sizes > 1 bp. 'left' and 'right' refer to the length of
