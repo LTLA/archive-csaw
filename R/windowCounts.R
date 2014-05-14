@@ -13,6 +13,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	extracted <- .processIncoming(bam.files, restrict, discard)
 
 	# Processing input parameters.
+	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
 	if (!bin) { 
 		spacing <- as.integer(spacing+0.5)
 		left <- as.integer(shift+0.5)

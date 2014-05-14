@@ -1,5 +1,5 @@
 plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL, 
-	pet=c("none", "both", "first", "second"), max.frag=500,		
+	pet=c("none", "both", "first", "second"), max.frag=500,	rescue.ext=NULL,
 	max.depth=NULL, fcol="blue", rcol="red", 
 	xlab="Genomic position (bp)", ylab="Read depth", ...)
 # Exactly as specified. Takes a region and plots it in bimodal mode, with
@@ -37,14 +37,17 @@ plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL,
   		starts<-cur.reads$pos
 		ends<-starts+cur.reads$qwidth-1L
 	} else {
-		cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, 
-			minq=minq, discard=discard)
-	    keep <- cur.reads$size <= max.frag
-		cur.reads$pos <- cur.reads$pos[keep]
-		cur.reads$size <- cur.reads$size[keep]
+		if (!is.null(rescue.ext)) {
+			cur.reads <- .rescuePET(bam.file, where=actual.region, dedup=dedup, 
+					minq=minq, discard=discard, max.frag=max.frag, ext=rescue.ext)
+		} else {
+			cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, 
+					minq=minq, discard=discard, max.frag=max.frag)
+		}
 
 		# Plotting PETs with a bit more care.
-		forward <- c(logical(sum(keep)), !logical(sum(keep)))
+		nx <- length(cur.reads$pos)
+		forward <- c(logical(nx), !logical(nx))
 		midpoint <- as.integer(cur.reads$pos + cur.reads$size/2)
 		starts <- c(midpoint+1L, cur.reads$pos)
  	    ends <- c(cur.reads$pos + cur.reads$size, midpoint)
