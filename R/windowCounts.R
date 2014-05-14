@@ -68,7 +68,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 
 				# Only want to record each pair once in a bin, so forcing it to only use the starting read.
 				if (bin) { frag.end<-frag.start }
-				else { frag.end<-frag.start+out$size-1L; }
+				else { frag.end<-frag.start+out$size-1L }
 			}
 
 			# Extending reads to account for window sizes > 1 bp. 'left' and 'right' refer to the length of
