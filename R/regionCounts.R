@@ -23,13 +23,13 @@ regionCounts <- function(bam.files, regions,  ext=100,
 	indices <- split(1:nx, seqnames(regions))
 
     for (chr in names(extracted$chrs)) {
-        outlen<-extracted$chrs[[chr]]
 		chosen <- indices[[chr]]
 		if (is.null(chosen)) { next }
+        outlen<-extracted$chrs[[chr]]
+        where<-GRanges(chr, IRanges(1, outlen))
 
 		# Pulling out reads as previously described.
         for (bf in 1:nbam) {
-            where<-GRanges(chr, IRanges(1, outlen))
             if (pet!="both") {
                 if (pet=="none") {
                     reads<-.extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq,

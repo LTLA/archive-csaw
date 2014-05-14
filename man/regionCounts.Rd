@@ -12,6 +12,7 @@ regionCounts(bam.files, regions, ext=100, pet=c("none", "both", "first", "second
 
 \arguments{
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
+	\item{regions}{a \code{GRanges} object containing the regions over which reads are to be counted}
 	\item{ext}{an integer scalar describing the average length of the sequenced fragment}
 	\item{pet}{a character string specifying whether the data involves paired end tags}
 	\item{max.frag}{an integer scalar, specifying the maximum allowable fragment size for PET data}

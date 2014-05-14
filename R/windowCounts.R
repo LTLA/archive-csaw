@@ -40,11 +40,11 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 
 	for (chr in names(extracted$chrs)) {
 		outlen<-extracted$chrs[[chr]]		
+		where<-GRanges(chr, IRanges(1, outlen))
 		total.pts<-1L+as.integer((outlen-1L)/spacing)
 		outcome<-matrix(0L, total.pts, nbam) 
 
 		for (bf in 1:nbam) {
-			where<-GRanges(chr, IRanges(1, outlen))
 			if (pet!="both") {
 				if (pet=="none") { 
    					reads<-.extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
