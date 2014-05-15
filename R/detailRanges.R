@@ -1,4 +1,4 @@
-detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 0), max.intron=1e6)
+detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), max.intron=1e6)
 # This gives three character vectors for each 'incoming'. The first specifies
 # which features are wholly or partially overlapped by the current range.
 # The second specifies what features are within 'tol' of the 5' end of 
@@ -59,22 +59,37 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 0), 
 	gene.id <- c(gene.id, gene.id[gb.ref], gene.id[gb.ref])
 	ex.num <- c(ex.num, integer(length(gb.ref)), rep(-1L, length(gb.ref)))
 	gene.str <- c(gene.str, gene.str[gb.ref], gene.str[gb.ref])
+
+	# Reordering so we're in gene.id and ex.num order, for simplicity at the C++ level.
+	o <- order(gene.id, ex.num)
+	curex <- curex[o]
+	gene.name <- gene.name[o]
+	gene.id <- gene.id[o]
+	ex.num <- ex.num[o]
+	gene.str <- gene.str[o]
 	
 	###############################
 	# Computing overlaps to everyone and his dog. Note that we don't do
 	# intronic or promoter overlaps to the flanks; we don't care that
-	# we're so-and-so base pairs away from the end of the promoter.
+	# we're so-and-so base pairs away from the end of the promoter. We also
+	# rule out negative or zero distances i.e. those that would overlap the
+	# region itself (zero distance means 1-based end and start are equal).
 	full.lap <- findOverlaps(incoming, curex)
 	flank.only <- ex.num > 0L
-	left.lap <- findOverlaps(left.flank, curex[flank.only])
-	left.dist <- start(incoming)[queryHits(left.lap)] - end(curex[flank.only])[subjectHits(left.lap)]
-	right.lap <- findOverlaps(right.flank, curex[flank.only])
-	right.dist <- start(curex[flank.only])[subjectHits(right.lap)] - end(incoming)[queryHits(right.lap)]  
+	to.flank <- curex[flank.only]
+
+	left.lap <- findOverlaps(left.flank, to.flank)
+	left.dist <- start(incoming)[queryHits(left.lap)] - end(to.flank)[subjectHits(left.lap)]
+	left.nolap <- left.dist > 0L
+
+	right.lap <- findOverlaps(right.flank, to.flank)
+	right.dist <- start(to.flank)[subjectHits(right.lap)] - end(incoming)[queryHits(right.lap)]  
+	right.nolap <- right.dist > 0L
 	
 	# Collating the left-overs.
 	all.strs <- .Call("R_annotate", length(incoming), queryHits(full.lap)-1L, subjectHits(full.lap)-1L,
-			queryHits(left.lap)-1L, which(flank.only)[subjectHits(left.lap)]-1L, left.dist,
-			queryHits(right.lap)-1L, which(flank.only)[subjectHits(right.lap)]-1L, right.dist,
+			queryHits(left.lap)[left.nolap]-1L, which(flank.only)[subjectHits(left.lap)][left.nolap]-1L, left.dist[left.nolap],
+			queryHits(right.lap)[right.nolap]-1L, which(flank.only)[subjectHits(right.lap)][right.nolap]-1L, right.dist[right.nolap],
 			gene.name, ex.num, gene.id, gene.str, PACKAGE="csaw")
 	if (is.character(all.strs)) { stop(all.strs) }
 	names(all.strs) <- c("overlap", "left", "right")

@@ -93,64 +93,61 @@ try {
 	return mkString(e.what()); 
 }
 
-/* This function takes a region and finds all features that start or end in
- * that region. To wit; the start and end is re-defined according to the
- * strand, so it will process them correctly. If both the start and the end
- * match, it'll only keep the closer value.
+/* This function takes a 'start' and 'end' index. These two indices indicate the
+ * range of overlaps for a particular annotation/region combination. The
+ * annotation indices corresponding to each overlap are in 'indices', so
+ * 'indices[start <= x < end]' will give integer indices that point to the gene
+ * information i.e. 'symbols', 'features', 'strand'. The overlaps are also assigned
+ * distances in 'dists', so 'dists[start <= x < end]' will give the distances from
+ * the edge of the region to the annotated bit (if the pointer is not NULL).
+ * The function will return a string collating all information for that annotated
+ * feature (i.e., collate exon-level overlaps to a gene-level string).
  */
 
-struct overlaps { 
-	overlaps (int o, int x, int c=-1) : original(o), dist(c), collected(1, x) {}
-	int original, dist;
-	std::deque<int> collected;	
-};
-std::string digest2string (std::map<int, overlaps>& tango, SEXP symbols, const int* gsptr) {
-	std::string temp;
-	int index=0;
-	bool wasokay=false;
-	for (std::map<int, overlaps>::iterator it=tango.begin(); it!=tango.end(); ++it) {
-		std::stringstream ss;
-		const int& curid = (it->second).original;
-		ss << CHAR(STRING_ELT(symbols, curid)) << '|'; 
-		std::deque<int>& collected=(it->second).collected;
+std::string digest2string (const int start, const int end, const int* indices, const int* dists, SEXP symbols, const int* features, const int* strand) {
+	std::stringstream ss;
+	ss << CHAR(STRING_ELT(symbols, indices[start])) << '|'; 
 
-		// Deciding what to print.
-		if (collected.size()==1) {
-			if (collected.front()==-1) {
-				ss << "I"; 
-			} else {
-				ss << collected[0];
-			}
-		} else if (collected.empty()) { 
-			throw std::runtime_error("empty vector of collected exon numbers"); 
-		} else {			
-			std::sort(collected.begin(), collected.end());
-			index=(collected.front()==-1 ? 1 : 0);
-			ss << collected[index];
-			wasokay=false;
-
-			// Running through and printing all stretches of contiguous exons.
-			while ((++index)<collected.size()) {
-				if (collected[index]==collected[index-1]+1) { 
-					wasokay=true;
-				} else {
-					if (wasokay) { 
-						ss << "-" << collected[index-1];
-						wasokay=false;
-					}
-					ss << "," << collected[index];
-				}
-			}
-			if (wasokay) { ss << "-" << collected.back(); }
+	// Deciding what to print.
+	if (end==start) {
+		throw std::runtime_error("empty vector of collected exon numbers"); 
+	} else if (end==start+1) {
+		if (features[indices[start]]==-1) {
+			ss << "I"; 
+		} else {
+			ss << features[indices[start]];
 		}
+	} else {		
+		int index=start;
+		if (features[indices[index]]==-1) { ++index; } 
+		ss << features[indices[index]];
+		bool wasokay=false;
 
-		// Adding the strand and distance information.	
-		ss << '|' << (gsptr[curid] ? '+' : '-');
-		if ((it->second).dist > 0) { ss << "[" << (it->second).dist << "]"; }
-		if (!temp.empty()) { temp += ","; }
-		temp += ss.str();
+		// Running through and printing all stretches of contiguous exons.
+		while ((++index)<end) {
+			if (features[indices[index]]==features[indices[index-1]]+1) { 
+				wasokay=true;
+			} else {
+				if (wasokay) { 
+					ss << "-" << features[indices[index-1]];
+					wasokay=false;
+				}
+				ss << "," << features[indices[index]];
+			}
+		}
+		if (wasokay) { ss << "-" << features[indices[end-1]]; }
 	}
-	return temp;
+	
+	// Adding the strand and distance information.	
+	ss << '|' << (strand[indices[start]] ? '+' : '-');
+	if (dists!=NULL) {
+		int lowest=dists[start];
+		for (int index=start+1; index < end; ++index) {
+			if (lowest > dists[index]) { lowest=dists[index]; }
+		}
+		ss << "[" << lowest << "]";
+	}
+	return ss.str();
 }
 
 SEXP R_annotate (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
@@ -202,66 +199,56 @@ try {
 	SEXP right_out=VECTOR_ELT(output, 2);
 
 	int fullx=0, leftx=0, rightx=0;
-	std::map<int, overlaps> processed;
-	std::map<int, overlaps>::iterator itp;
+	int curend;
+	int* curx_p;
+	const int* curn_p;
+	const int* cur_qptr;
+	const int* cur_sptr;
+	const int* cur_dptr;
+	SEXP curout;
+
 	for (int curreg=0; curreg<nin; ++curreg) {
-
-		// Adding the full overlaps. Assuming that findOverlaps gives ordered output, which it should.
-		while (fullx < nfull && fqptr[fullx]==curreg) {
-			const int& curindex=fsptr[fullx];
-			if (curindex >= nsym) { throw std::runtime_error("symbol index out of range for full overlaps"); }
-					
-			// Smart insert. A gene body overlap is the baseline (-1 for curfeature), but anything else replaces it.
-			const int& curgene=giptr[curindex];
-			const int& curfeature=gfptr[curindex];
-			itp=processed.lower_bound(curgene);
-			if (itp==processed.end() || processed.key_comp()(curgene, itp->first)) {
-				processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature)));
-			} else {
-				(itp->second).collected.push_back(curfeature);
+		// Adding all overlaps of each type. Assuming that findOverlaps gives ordered output, which it should.
+		std::string resultstr;
+		for (int mode=0; mode<3; ++mode) {
+			if(mode==0) {
+				curx_p=&fullx;
+				curn_p=&nfull;
+				cur_qptr=fqptr;
+				cur_sptr=fsptr;
+				cur_dptr=NULL;
+				curout=full_out;
+			} else if (mode==1) {
+				curx_p=&leftx;
+				curn_p=&nleft;
+				cur_qptr=lqptr;
+				cur_sptr=lsptr;
+				cur_dptr=ldptr;
+				curout=left_out;
+			} else if (mode==2) {
+				curx_p=&rightx;
+				curn_p=&nright;
+				cur_qptr=rqptr;
+				cur_sptr=rsptr;
+				cur_dptr=rdptr;
+				curout=right_out;
 			}
-			++fullx;
-		}
-
-		std::string temp=digest2string(processed, symbol, gsptr);
-//		std::cout << curreg << "\t" << temp << std::endl;
-		SET_STRING_ELT(full_out, curreg, mkChar((digest2string(processed, symbol, gsptr)).c_str()));
-//		std::cout << "Done!" << std::endl;
-		processed.clear();
-
-		// Adding the left and right overlaps. The key thing here is that only the closest feature has its distance recorded.
-		for (int mode=0; mode<2; ++mode) { 
-			int& curx = (mode ? leftx : rightx);
-			const int & ncur = (mode ? nleft : nright);
-			const int* cur_qptr = (mode ? lqptr : rqptr);
-			const int* cur_sptr = (mode ? lsptr : rsptr);
-			const int* cur_dptr = (mode ? ldptr : rdptr);
-
-			while (curx < ncur && cur_qptr[curx]==curreg) {
-				const int& curdist=cur_dptr[curx];
-
-				// We skip those with negative or zero distances, as they'd overlap directly.
-				if (curdist > 0) { 
-					const int& curindex=cur_sptr[curx];
-					if (curindex >= nsym) { throw std::runtime_error("symbol index out of range for left/right overlaps"); }
-					const int& curgene=giptr[curindex];
-					const int& curfeature=gfptr[curindex];
-					itp=processed.lower_bound(curgene);
-					if (itp==processed.end() || processed.key_comp()(curgene, itp->first)) {
-						processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature, curdist)));
-					} else {
-						(itp->second).collected.push_back(curfeature);
-						if (curfeature < (itp->second).dist) { (itp->second).dist = curdist; }
-					}
-				}
-				++curx;
+	
+			// For the current region, we get everything in the current overlap; for each overlapping gene, we collate its features.
+			int& curx=*curx_p;
+			const int& curn=*curn_p;
+			while (curx < curn && cur_qptr[curx]==curreg) {
+				const int& curindex=cur_sptr[curx];
+				if (curindex >= nsym) { throw std::runtime_error("symbol out of range for overlap index"); }
+				curend=curx+1;
+				while (curend < curn && cur_qptr[curend]==curreg && giptr[cur_sptr[curend]]==giptr[curindex]) { ++curend; }
+				if (!resultstr.empty()) { resultstr += ","; }
+				resultstr += digest2string(curx, curend, cur_sptr, cur_dptr, symbol, gfptr, gsptr);
+				curx=curend;
 			}
-
-//			std::cout << (mode ? "LEFT:" : "RIGHT:") << "\t" << temp << std::endl;
-			SET_STRING_ELT((mode ? left_out : right_out), curreg, mkChar((digest2string(processed, symbol, gsptr)).c_str()));
-//			std::cout << "Done!" << std::endl;
-			processed.clear();
-		}
+			SET_STRING_ELT(curout, curreg, mkChar(resultstr.c_str()));
+			resultstr.clear();
+		} 
 	}
 } catch (std::exception& e) {
 	UNPROTECT(1);

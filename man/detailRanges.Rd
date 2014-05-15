@@ -5,7 +5,7 @@
 \description{Add detailed exon-based annotation to specified regions}
 
 \usage{
-detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 500), max.intron=1e6)
+detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), max.intron=1e6)
 }
 
 \arguments{
