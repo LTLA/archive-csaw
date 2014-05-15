@@ -16,26 +16,30 @@ regen <- function(nreads, chromos) {
 	for (i in 1:length(chromos)) {
 		current<-pos.chr==i
 		pos.pos[current]<-as.integer(round(runif(sum(current), 1, chromos[i])))
-		str[current]<-(rbinom(sum(current), 1, 0.5)==1);
+		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 	}
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos);
+	isdup <- rbinom(nreads, 1, 0.8)==0L
+	mapq <- round(runif(nreads, 50, 199))
+	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, mapq=mapq, is.dup=isdup)
 }
 
 suppressPackageStartupMessages(library(csaw))
 
-manualcor<-function(bamx, n, cross) { 
+manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) { 
 	chromos<-scanBamHeader(bamx)[[1]][[1]]
 	out<-0
 	total<-0
 	for (chr in names(chromos)) {
 		clen<-chromos[[chr]]
-		param <- ScanBamParam(what =c("pos", "qwidth", "strand"), which=GRanges(chr, IRanges(1, clen)))
+		param <- ScanBamParam(what=c("pos", "qwidth", "strand", "mapq"), which=GRanges(chr, IRanges(1, clen)),
+			flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA)))
 		reads<-list()
 		for (b in bamx) {
-			new.reads <- scanBam(b, param = param)[[1]]
-			reads$str<-c(reads$str, new.reads$str=="+")
-			reads$qwidth<-c(reads$qwidth, new.reads$qwidth)
-			reads$pos<-c(reads$pos, new.reads$pos)
+			new.reads <- scanBam(b, param = param)[[1]]	
+			keep <- new.reads$mapq >= minq
+			reads$str<-c(reads$str, new.reads$str[keep]=="+")
+			reads$qwidth<-c(reads$qwidth, new.reads$qwidth[keep])
+			reads$pos<-c(reads$pos, new.reads$pos[keep])
 		}
 		f<-r<-rep(0, clen)
 
@@ -66,10 +70,22 @@ manualcor<-function(bamx, n, cross) {
 
 comp<-function(bamFiles, n, cross=TRUE) {
 	precision<-1e-8
-	out<-manualcor(bamFiles, n, cross=cross)
-	out2<-correlateReads(bamFiles, n, cross=cross)
-	if (length(out)!=length(out2)) { stop("mismatch in length of output vector"); }
-	if (any( abs((out-out2)/(abs(out)+precision)) > precision ))  { stop("mismatch in correlation coefficients"); }
+    for (type in 1:3) {
+        if (type==1) {
+            dedup <- FALSE
+            minq <- 100
+        } else if (type==2) {
+            dedup <- TRUE
+            minq <- 0
+        } else if (type==3) {
+            dedup<- FALSE
+            minq <- 0
+        }
+		out<-manualcor(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
+		out2<-correlateReads(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
+		if (length(out)!=length(out2)) { stop("mismatch in length of output vector"); }
+		if (any( abs((out-out2)/(abs(out)+precision)) > precision ))  { stop("mismatch in correlation coefficients"); }
+	}
 	head(out)
 }
 

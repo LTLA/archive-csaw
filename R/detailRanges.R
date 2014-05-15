@@ -61,7 +61,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	gene.str <- c(gene.str, gene.str[gb.ref], gene.str[gb.ref])
 	
 	# Returning the useful stuff, if no overlaps are requested.
-	if (is.na(incoming)) { 
+	if (missing(incoming)) { 
 		curex$symbol <- gene.name
 		curex$exon <- ex.num
 		return(curex)

@@ -16,7 +16,8 @@ regen <- function(nreads, chromos, outfname) {
 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 	}
 	isdup <- rbinom(nreads, 1, 0.8)==0L
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup)
+    mapq <- round(runif(nreads, 50, 199))
+	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup, mapq=mapq)
 }
 
 # We compare windowCounts and regionCounts directly.

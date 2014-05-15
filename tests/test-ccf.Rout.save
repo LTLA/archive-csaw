@@ -1,11 +1,13 @@
 
-R version 3.0.0 (2013-04-03) -- "Masked Marvel"
-Copyright (C) 2013 The R Foundation for Statistical Computing
+R version 3.1.0 (2014-04-10) -- "Spring Dance"
+Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -33,26 +35,30 @@ Type 'q()' to quit R.
 + 	for (i in 1:length(chromos)) {
 + 		current<-pos.chr==i
 + 		pos.pos[current]<-as.integer(round(runif(sum(current), 1, chromos[i])))
-+ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1);
++ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 + 	}
-+ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos);
++ 	isdup <- rbinom(nreads, 1, 0.8)==0L
++ 	mapq <- round(runif(nreads, 50, 199))
++ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, mapq=mapq, is.dup=isdup)
 + }
 > 
 > suppressPackageStartupMessages(library(csaw))
 > 
-> manualcor<-function(bamx, n, cross) { 
+> manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) { 
 + 	chromos<-scanBamHeader(bamx)[[1]][[1]]
 + 	out<-0
 + 	total<-0
 + 	for (chr in names(chromos)) {
 + 		clen<-chromos[[chr]]
-+ 		param <- ScanBamParam(what =c("pos", "qwidth", "strand"), which=GRanges(chr, IRanges(1, clen)))
++ 		param <- ScanBamParam(what=c("pos", "qwidth", "strand", "mapq"), which=GRanges(chr, IRanges(1, clen)),
++ 			flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA)))
 + 		reads<-list()
 + 		for (b in bamx) {
-+ 			new.reads <- scanBam(b, param = param)[[1]]
-+ 			reads$str<-c(reads$str, new.reads$str=="+")
-+ 			reads$qwidth<-c(reads$qwidth, new.reads$qwidth)
-+ 			reads$pos<-c(reads$pos, new.reads$pos)
++ 			new.reads <- scanBam(b, param = param)[[1]]	
++ 			keep <- new.reads$mapq >= minq
++ 			reads$str<-c(reads$str, new.reads$str[keep]=="+")
++ 			reads$qwidth<-c(reads$qwidth, new.reads$qwidth[keep])
++ 			reads$pos<-c(reads$pos, new.reads$pos[keep])
 + 		}
 + 		f<-r<-rep(0, clen)
 + 
@@ -83,10 +89,22 @@ Type 'q()' to quit R.
 > 
 > comp<-function(bamFiles, n, cross=TRUE) {
 + 	precision<-1e-8
-+ 	out<-manualcor(bamFiles, n, cross=cross)
-+ 	out2<-correlateReads(bamFiles, n, cross=cross)
-+ 	if (length(out)!=length(out2)) { stop("mismatch in length of output vector"); }
-+ 	if (any( abs((out-out2)/(abs(out)+precision)) > precision ))  { stop("mismatch in correlation coefficients"); }
++     for (type in 1:3) {
++         if (type==1) {
++             dedup <- FALSE
++             minq <- 100
++         } else if (type==2) {
++             dedup <- TRUE
++             minq <- 0
++         } else if (type==3) {
++             dedup<- FALSE
++             minq <- 0
++         }
++ 		out<-manualcor(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
++ 		out2<-correlateReads(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
++ 		if (length(out)!=length(out2)) { stop("mismatch in length of output vector"); }
++ 		if (any( abs((out-out2)/(abs(out)+precision)) > precision ))  { stop("mismatch in correlation coefficients"); }
++ 	}
 + 	head(out)
 + }
 > 
@@ -106,61 +124,61 @@ Type 'q()' to quit R.
 > 
 > bamFile<-regen(1000, c(chrA=10000))
 > comp(bamFile, 50)
-[1] -0.001975336  0.005940889  0.017817803 -0.001990220  0.007906444
-[6]  0.001960522
+[1]  0.016054018 -0.007900011 -0.009806199 -0.017802005  0.016153910
+[6] -0.011818996
 > comp(bamFile, 100)
-[1] -0.001975336  0.005940889  0.017817803 -0.001990220  0.007906444
-[6]  0.001960522
+[1]  0.016054018 -0.007900011 -0.009806199 -0.017802005  0.016153910
+[6] -0.011818996
 > 
 > # Repeating with more reads.
 > 
 > bamFile<-regen(2000, c(chrA=10000))
 > comp(bamFile, 50)
-[1]  1.619969e-02  5.127700e-03  3.106390e-03  7.937089e-05 -1.401015e-02
-[6]  3.076325e-03
+[1] -0.002004522 -0.003031676  0.010178818  0.006100802 -0.003062285
+[6] -0.002055485
 > comp(bamFile, 100)
-[1]  1.619969e-02  5.127700e-03  3.106390e-03  7.937089e-05 -1.401015e-02
-[6]  3.076325e-03
+[1] -0.002004522 -0.003031676  0.010178818  0.006100802 -0.003062285
+[6] -0.002055485
 > 
 > # Trying it out with multiple chromosomes.
 > 
 > bamFile<-regen(5000, c(chrA=10000, chrB=5000))
 > comp(bamFile, 50)
-[1] -0.002598292 -0.003473870  0.010611247  0.005386998 -0.004938632
-[6] -0.008151512
+[1] -0.002777951  0.017666580  0.001279660  0.002706772 -0.008404466
+[6] -0.004900409
 > comp(bamFile, 100)
-[1] -0.002598292 -0.003473870  0.010611247  0.005386998 -0.004938632
-[6] -0.008151512
+[1] -0.002777951  0.017666580  0.001279660  0.002706772 -0.008404466
+[6] -0.004900409
 > 
 > # And again, with more reads.
 > 
 > bamFile<-regen(10000, c(chrA=10000, chrB=5000))
 > comp(bamFile, 50)
-[1] -0.003510803 -0.014312800  0.012628067 -0.014907258  0.022053461
-[6] -0.009835785
+[1] -0.0041927894  0.0099575772 -0.0108393829 -0.0003031947  0.0208851271
+[6] -0.0036994382
 > comp(bamFile, 100)
-[1] -0.003510803 -0.014312800  0.012628067 -0.014907258  0.022053461
-[6] -0.009835785
+[1] -0.0041927894  0.0099575772 -0.0108393829 -0.0003031947  0.0208851271
+[6] -0.0036994382
 > 
 > # Trying it out with multiple BAM files.
 > 
 > bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
 > comp(bamFiles, 50)
-[1] -0.001446651  0.019668147 -0.002336510 -0.029212227 -0.032508883
-[6] -0.022785831
+[1]  0.038827106 -0.005894268  0.039078141  0.031593805  0.015864472
+[6]  0.033392710
 > comp(bamFiles, 100)
-[1] -0.001446651  0.019668147 -0.002336510 -0.029212227 -0.032508883
-[6] -0.022785831
+[1]  0.038827106 -0.005894268  0.039078141  0.031593805  0.015864472
+[6]  0.033392710
 > 
 > # And again, with more reads.
 > 
 > bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
 > comp(bamFiles, 50)
-[1] -0.003979427 -0.010792535  0.009234520  0.003793809  0.002073750
-[6]  0.007656343
+[1]  2.120768e-03  1.171446e-02  8.534441e-05 -8.930186e-03  3.377820e-03
+[6]  1.768343e-02
 > comp(bamFiles, 100)
-[1] -0.003979427 -0.010792535  0.009234520  0.003793809  0.002073750
-[6]  0.007656343
+[1]  2.120768e-03  1.171446e-02  8.534441e-05 -8.930186e-03  3.377820e-03
+[6]  1.768343e-02
 > 
 > ###################################################################################################
 > # Repeating; but this time, looking at autocorrelations.
@@ -178,61 +196,61 @@ Type 'q()' to quit R.
 > 
 > bamFile<-regen(1000, c(chrA=10000))
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.000000000  0.026797741  0.003267677  0.004285020 -0.000863102
-[6]  0.005292172
+[1]  1.000000000 -0.010873174  0.015268929 -0.017934539 -0.002856624
+[6] -0.005786054
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.000000000  0.026797741  0.003267677  0.004285020 -0.000863102
-[6]  0.005292172
+[1]  1.000000000 -0.010873174  0.015268929 -0.017934539 -0.002856624
+[6] -0.005786054
 > 
 > # Repeating with more reads.
 > 
 > bamFile<-regen(2000, c(chrA=10000))
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.000000000 -0.002891568 -0.007367711 -0.005902206 -0.003446322
-[6] -0.005348653
+[1]  1.000000000 -0.005230377  0.006272436 -0.007676681  0.004329367
+[6] -0.008218131
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.000000000 -0.002891568 -0.007367711 -0.005902206 -0.003446322
-[6] -0.005348653
+[1]  1.000000000 -0.005230377  0.006272436 -0.007676681  0.004329367
+[6] -0.008218131
 > 
 > # Trying it out with multiple chromosomes.
 > 
 > bamFile<-regen(5000, c(chrA=10000, chrB=5000))
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.000000000 -0.006114789  0.001338672  0.007825041  0.001030004
-[6]  0.010882434
+[1]  1.0000000000  0.0038545617  0.0072358664  0.0069742394 -0.0008960064
+[6]  0.0013759728
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.000000000 -0.006114789  0.001338672  0.007825041  0.001030004
-[6]  0.010882434
+[1]  1.0000000000  0.0038545617  0.0072358664  0.0069742394 -0.0008960064
+[6]  0.0013759728
 > 
 > # And again, with more reads.
 > 
 > bamFile<-regen(10000, c(chrA=10000, chrB=5000))
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.000000000  0.013889222 -0.015875326  0.002614008  0.005602877
-[6]  0.014227690
+[1]  1.0000000000 -0.0008178159  0.0085679119  0.0153257346 -0.0020366033
+[6]  0.0036763692
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.000000000  0.013889222 -0.015875326  0.002614008  0.005602877
-[6]  0.014227690
+[1]  1.0000000000 -0.0008178159  0.0085679119  0.0153257346 -0.0020366033
+[6]  0.0036763692
 > 
 > # Trying it out with multiple BAM files.
 > 
 > bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
 > comp(bamFiles, 50, cross=FALSE)
-[1]  1.000000000  0.028375726  0.015615753 -0.019385647  0.065248369
-[6]  0.002885287
+[1]  1.000000000 -0.007275493  0.017740259  0.020515912 -0.019760487
+[6] -0.039227615
 > comp(bamFiles, 100, cross=FALSE)
-[1]  1.000000000  0.028375726  0.015615753 -0.019385647  0.065248369
-[6]  0.002885287
+[1]  1.000000000 -0.007275493  0.017740259  0.020515912 -0.019760487
+[6] -0.039227615
 > 
 > # And again, with more reads.
 > 
 > bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
 > comp(bamFiles, 50, cross=FALSE)
-[1]  1.000000000  0.005345227 -0.002268170 -0.001925157 -0.004059153
-[6] -0.005215345
+[1]  1.000000000  0.007091897  0.004283831 -0.003042116  0.010984413
+[6] -0.001033001
 > comp(bamFiles, 100, cross=FALSE)
-[1]  1.000000000  0.005345227 -0.002268170 -0.001925157 -0.004059153
-[6] -0.005215345
+[1]  1.000000000  0.007091897  0.004283831 -0.003042116  0.010984413
+[6] -0.001033001
 > 
 > ###################################################################################################
 > # Throwing in some stress tests.
@@ -251,19 +269,21 @@ Type 'q()' to quit R.
 > 
 > bamFile<-regen(10, c(chrA=50))
 > comp(bamFile, 50, cross=TRUE)
-[1]  0.1179675  0.1160096  0.1139606 -0.1166754 -0.1195229  0.1071987
+[1] -0.1019357 -0.1042572 -0.1066870 -0.1092329 -0.1119034  0.1310947
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.00000000  0.01692183  0.01300751 -0.20009686  0.02588235  0.13043478
+[1]  1.000000e+00  1.205128e-01  1.157895e-01 -2.530047e-01 -2.599376e-01
+[6]  9.960679e-21
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.00000000  0.01692183  0.01300751 -0.20009686  0.02588235  0.13043478
+[1]  1.000000e+00  1.205128e-01  1.157895e-01 -2.530047e-01 -2.599376e-01
+[6]  9.960679e-21
 > 
 > bamFile<-regen(5, c(chrA=100))
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.00000000 -0.05319149 -0.05376344 -0.05434783  0.15604396 -0.05555556
+[1]  1.00000000 -0.04732485 -0.04783101 -0.04834812 -0.04887653 -0.04941662
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.00000000 -0.05319149 -0.05376344 -0.05434783  0.15604396 -0.05555556
+[1]  1.00000000 -0.04732485 -0.04783101 -0.04834812 -0.04887653 -0.04941662
 > 
 > # When the number of reads is zero in one chromosome.
 > 
@@ -271,25 +291,27 @@ Type 'q()' to quit R.
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.00000000 -0.01020408 -0.01030928 -0.01041667 -0.01052632 -0.01063830
+[1]  1.000000000 -0.005050505 -0.005076142 -0.005102041 -0.005128205
+[6] -0.005154639
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.00000000 -0.01020408 -0.01030928 -0.01041667 -0.01052632 -0.01063830
+[1]  1.000000000 -0.005050505 -0.005076142 -0.005102041 -0.005128205
+[6] -0.005154639
 > 
 > bamFile<-regen(2, c(chrA=100, chrB=200, chrC=30))
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
-[1]  1.00000000 -0.02038240 -0.02105659 -0.02178179 -0.02256410 -0.02341065
+[1]  1.00000000 -0.02061856 -0.02083333 -0.02105263 -0.02127660 -0.02150538
 > comp(bamFile, 100, cross=FALSE)
-[1]  1.00000000 -0.02038240 -0.02105659 -0.02178179 -0.02256410 -0.02341065
+[1]  1.00000000 -0.02061856 -0.02083333 -0.02105263 -0.02127660 -0.02150538
 > 
 > bamFile<-regen(1, c(chrA=100, chrB=200, chrC=30))
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
-[1] 1 0 0 0 0 0
+[1]  1.00000000 -0.03571429 -0.03703704 -0.03846154 -0.04000000 -0.04166667
 > comp(bamFile, 100, cross=FALSE)
-[1] 1 0 0 0 0 0
+[1]  1.00000000 -0.03571429 -0.03703704 -0.03846154 -0.04000000 -0.04166667
 > 
 > ###################################################################################################
 > # Cleaning out the directory.
@@ -301,4 +323,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 10.194   0.093  10.330 
+ 24.332   0.247  24.712 

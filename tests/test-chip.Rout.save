@@ -35,7 +35,8 @@ Type 'q()' to quit R.
 + 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 + 	}
 + 	isdup <- rbinom(nreads, 1, 0.8)==0L
-+ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup)
++ 	mapq <- round(runif(nreads, 50, 199))
++ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup, mapq=mapq)
 + }
 > 
 > expectedRanges <- function(width, offset, spacing, bam.files, restrict=NULL) {
@@ -1098,4 +1099,4 @@ GRanges with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-105.569   0.333 106.146 
+ 97.842   0.392  98.538 

@@ -18,9 +18,9 @@ detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), max.intro
 }
 
 \value{
-If \code{incoming} is \code{NA}, a \code{GRanges} object will be returned containing
-ranges for the exons, promoters and gene bodies. Gene IDs, symbol and exon numbers
-are also stored as associated metadata.
+If \code{incoming} is not provided, a \code{GRanges} object will be returned
+containing ranges for the exons, promoters and gene bodies. Gene IDs, symbol
+and exon numbers are also stored as associated metadata.
 
 If \code{incoming} is a \code{GRanges} object, a list will be returned with
 \code{overlap}, \code{left} and \code{right} elements, each a character vector
@@ -68,11 +68,12 @@ belong to the same chromosome. The \code{max.intron} value protects against
 excessively large genes that may occur from considering those locations as 
 a single transcriptional unit.
 
-If \code{incoming} is set as \code{NA}, then the annotation will be provided
-directly to the user in the form of a \code{GRanges} object. This may be more
-useful when further work on the annotation is required. Nonetheless, the
-character output is recommended for routine file storage as it is compact and
-thus relatively easy to interpret when manually examining a result list.
+If \code{incoming} is missing, then the annotation will be provided directly to
+the user in the form of a \code{GRanges} object. This may be more useful when
+further work on the annotation is required. Exon numbers are provided in the 
+metadata with promoters and gene bodies labelled as 0 and -1, respectively.
+Overlaps to introns can be identified by finding those regions that overlap 
+with gene bodies but not with the corresponding exons.
 }
 
 \author{Aaron Lun}
@@ -92,5 +93,5 @@ head(output$overlap)
 head(output$right)
 head(output$left)
 
-detailRanges(NA, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
+detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db)
 }

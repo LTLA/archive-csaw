@@ -20,9 +20,9 @@ compstat<-function (nreads, singles, chromosomes) {
 	}
 
     # Throwing them into the SAM file generator. 
-	str<-rbinom(nreads*2, 1, 0.5)==1; 
+	str<-rbinom(nreads*2, 1, 0.5)==1 
 	outname<-file.path(dir, "out")
-	rlen<-10;
+	rlen<-10
 	reversi<-c(nreads+1:nreads, 1:nreads)
 	out<-simsam(outname, names(chromosomes)[chrs], pos, str, chromosomes, names=names, len=rlen,
 			is.paired=TRUE, is.first=c(rep(TRUE, nreads), rep(FALSE, nreads)), 
@@ -151,7 +151,7 @@ checkcount<-function (nreads, chromosomes, spacing=50, max.frag=500, left=0, rig
 		str<-rbinom(length(names), 1, 0.5)==1; 
 		rlen<-10;
 		reversi<-c(1:nreads+nreads, 1:nreads)
-		out<-simsam(stuff[x], names(chromosomes)[chrs], pos, str, chromosomes, names, 
+		out<-simsam(stuff[x], names(chromosomes)[chrs], pos, str, chromosomes, names=names, 
 				is.first=c(rep(TRUE, nreads), rep(FALSE, nreads)), is.paired=TRUE, 
 				mate.chr=names(chromosomes)[chrs][reversi], mate.pos=pos[reversi], 
 				mate.str=str[reversi], len=rlen);

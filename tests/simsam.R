@@ -2,10 +2,8 @@
 # This is a function which just simulates a SAM file and compresses it. It takes a set of names,
 # positions and strands, and just fills in the rest.
 
-simsam<-function(f.out, pos.chr, pos.pos, strands, chromosomes, mapq=c(50, 199), is.dup=NULL, names=NULL, 
-		is.first=NULL, 
-		is.paired=FALSE, mate.chr=NULL, mate.pos=NULL, mate.str=NULL, 
-		len=10) {
+simsam<-function(f.out, pos.chr, pos.pos, strands, chromosomes, mapq=199, is.dup=NULL, names=NULL, 
+		is.first=NULL, is.paired=FALSE, mate.chr=NULL, mate.pos=NULL, mate.str=NULL, len=10) {
 	samFile<-paste(f.out, ".sam", sep="")
 	out<-file(samFile, open="w");
 	for (chr in names(chromosomes)) {
@@ -38,8 +36,8 @@ simsam<-function(f.out, pos.chr, pos.pos, strands, chromosomes, mapq=c(50, 199),
 		isize[mate.chr!="="]<-0
 	}
 
-	mapqs <- round(runif(length(names), mapq[1], mapq[2]))
-	stuff<-data.frame(names, flags, pos.chr, pos.pos, mapqs, cigar, mate.chr, mate.pos, isize, seq, qual);
+	mapq <- rep(mapq, length.out=length(names))
+	stuff<-data.frame(names, flags, pos.chr, pos.pos, mapq, cigar, mate.chr, mate.pos, isize, seq, qual);
 	write.table(file=out, stuff, row.names=FALSE, col.names=FALSE, quote=FALSE, sep="\t");
 	close(out);
 
