@@ -1,0 +1,342 @@
+
+R version 3.1.0 (2014-04-10) -- "Spring Dance"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ###################################################################################################
+> # This script tests the region-counting capabilities of the 'csaw' package.
+> 
+> suppressPackageStartupMessages(library(csaw))
+> source("simsam.R")
+> 
+> # First, we set up some functions to generate some random SAM files.
+> 
+> regen <- function(nreads, chromos, outfname) {
++ 	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
++ 	pos.pos<-rep(0, nreads)
++ 	str<-rep(0, nreads)
++ 	for (i in 1:length(chromos)) {
++ 		current<-pos.chr==i
++ 		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
++ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
++ 	}
++ 	isdup <- rbinom(nreads, 1, 0.8)==0L
++ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup)
++ }
+> 
+> # We compare windowCounts and regionCounts directly.
+> 
+> comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=NULL, restrict=NULL) {
++ 	for (type in 1:3) {
++ 		if (type==1) {
++ 			dedup<- FALSE
++ 			minq <- 0
++ 		} else if (type==2) {
++ 			dedup <- TRUE
++ 			minq <- 0
++ 		} else if (type==3) {
++ 			dedup <- FALSE
++ 			minq <- 100
++ 		}
++ 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
++ 			discard=discard, restrict=restrict, minq=minq, dedup=dedup)
++ 		y <- regionCounts(bamFiles, regions=x$region, ext=fraglen, discard=discard, restrict=restrict, minq=minq, dedup=dedup)
++ 		if (!identical(y$counts, x$counts)) { stop("mismatch in count matrices") }
++ 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
++ 	}
++ 	return(head(y$counts))
++ }
+> 
+> ###################################################################################################
+> # Setting up some variables to do the comparison.
+> 
+> dir<-"reg-test";
+> dir.create(dir);
+> 
+> set.seed(2123)
+> chromos<-c(chrA=10000, chrB=5000)
+> 
+> # Vanilla comparison.
+> 
+> bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, spacing=20)
+     [,1] [,2]
+[1,]    2    5
+[2,]    2    7
+[3,]    3    7
+[4,]    3    6
+[5,]    4    6
+[6,]    4    6
+> comp(bamFiles, fraglen=200, spacing=50)
+     [,1] [,2]
+[1,]    1    5
+[2,]    3    7
+[3,]    5    9
+[4,]    6   11
+[5,]   10   12
+[6,]   11   11
+> 
+> # More complex with right arguments.
+> 
+> bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, right=30, spacing=20)
+     [,1] [,2]
+[1,]    3    4
+[2,]    3    4
+[3,]    3    4
+[4,]    3    4
+[5,]    4    3
+[6,]    4    4
+> comp(bamFiles, fraglen=200, left=50, spacing=25)
+     [,1] [,2]
+[1,]    3    5
+[2,]    3    5
+[3,]    4    6
+[4,]    5    6
+[5,]    6    6
+[6,]    7    5
+> comp(bamFiles, fraglen=150, right=10, left=10, spacing=30)
+     [,1] [,2]
+[1,]    3    4
+[2,]    3    4
+[3,]    3    5
+[4,]    5    4
+[5,]    4    5
+[6,]    4    4
+> 
+> # Even more complex, with filtering arguments
+> 
+> bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, filter=10)
+     [,1] [,2]
+[1,]    4    6
+[2,]    4    8
+[3,]    2    8
+[4,]    6    4
+[5,]    6    4
+[6,]    6    5
+> comp(bamFiles, fraglen=200, filter=15)
+     [,1] [,2]
+[1,]    8    9
+[2,]    6   10
+[3,]    4   13
+[4,]    5   12
+[5,]    5   13
+[6,]    5   12
+> comp(bamFiles, fraglen=200, filter=20)
+     [,1] [,2]
+[1,]   11    9
+[2,]   12   10
+[3,]   13    9
+[4,]   14    6
+[5,]   13    7
+[6,]   15    6
+> 
+> # And again, with a different chromosome set-up.
+> 
+> chromos<-c(chrA=5000, chrB=5000, chrC=8000)
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100)
+     [,1] [,2]
+[1,]    6    4
+[2,]    7    7
+[3,]   10    9
+[4,]   10   13
+[5,]   10   12
+[6,]   12   14
+> comp(bamFiles, fraglen=200)
+     [,1] [,2]
+[1,]   10   11
+[2,]   13   13
+[3,]   16   16
+[4,]   15   19
+[5,]   18   19
+[6,]   21   21
+> 
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, right=100)
+     [,1] [,2]
+[1,]   17   20
+[2,]   17   24
+[3,]   19   24
+[4,]   24   24
+[5,]   23   27
+[6,]   22   29
+> comp(bamFiles, fraglen=200, left=50)
+     [,1] [,2]
+[1,]   12   14
+[2,]   13   20
+[3,]   14   21
+[4,]   19   23
+[5,]   18   24
+[6,]   23   26
+> comp(bamFiles, fraglen=200, right=0, spacing=20)
+     [,1] [,2]
+[1,]   12   14
+[2,]   12   20
+[3,]   12   20
+[4,]   17   22
+[5,]   17   23
+[6,]   19   24
+> 
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, filter=20)
+     [,1] [,2]
+[1,]    9   11
+[2,]    8   14
+[3,]    7   15
+[4,]    8   19
+[5,]    7   18
+[6,]   10   19
+> comp(bamFiles, fraglen=200, filter=40)
+     [,1] [,2]
+[1,]   14   29
+[2,]   15   29
+[3,]   20   32
+[4,]   23   34
+[5,]   25   37
+[6,]   26   36
+> 
+> # One more time; sparse across the genome, but three files.
+> 
+> chromos<-c(chrA=5000, chrB=5000, chrC=8000)
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100)
+     [,1] [,2] [,3]
+[1,]    3    5    5
+[2,]    6    7    7
+[3,]   10    9    9
+[4,]   12   12   12
+[5,]   15   10   10
+[6,]   16   11   11
+> comp(bamFiles, fraglen=200)
+     [,1] [,2] [,3]
+[1,]   12   11   11
+[2,]   13   13   13
+[3,]   18   14   14
+[4,]   20   19   19
+[5,]   20   16   16
+[6,]   21   14   14
+> 
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, left=100)
+     [,1] [,2] [,3]
+[1,]    2    5    5
+[2,]    4    7    7
+[3,]    5   13   13
+[4,]    8   16   16
+[5,]   12   19   19
+[6,]   14   20   20
+> comp(bamFiles, fraglen=200, right=100, spacing=100)
+     [,1] [,2] [,3]
+[1,]   23   26   26
+[2,]   30   32   32
+[3,]   38   35   35
+[4,]   34   30   30
+[5,]   37   36   36
+[6,]   42   42   42
+> 
+> bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=200, filter=10)
+     [,1] [,2] [,3]
+[1,]   11   15   15
+[2,]   14   18   18
+[3,]   12   18   18
+[4,]   12   17   17
+[5,]   14   14   14
+[6,]   17   16   16
+> comp(bamFiles, fraglen=200, right=50, filter=50)
+     [,1] [,2] [,3]
+[1,]   16   21   21
+[2,]   17   21   21
+[3,]   18   24   24
+[4,]   19   22   22
+[5,]   21   21   21
+[6,]   21   21   21
+> 
+> ###################################################################################################
+> # Restricted and/or discarded.
+> 
+> makeDiscard <- function(ndisc, sizeof) {
++ 	chosen <- sample(length(chromos), ndisc, replace=T)
++ 	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
++ 	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
++ }
+> chromos<-c(chrA=5000, chrB=5000, chrC=8000)
+> 
+> bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200))
+Loading required package: GenomicAlignments
+Loading required package: BSgenome
+     [,1] [,2]
+[1,]    2    3
+[2,]    1    4
+> comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
+     [,1] [,2]
+[1,]    3    2
+[2,]    4    2
+[3,]    3    2
+[4,]    3    2
+[5,]    3    2
+[6,]    2    3
+> comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
+     [,1] [,2]
+[1,]    1    4
+[2,]    1    5
+[3,]    1    5
+[4,]    1    5
+[5,]    1    5
+[6,]    1    4
+> 
+> bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=200, left=0, spacing=50, discard=makeDiscard(20, 200))
+     [,1] [,2]
+[1,]    2    3
+[2,]    2    3
+[3,]    2    3
+[4,]    3    2
+[5,]    1    4
+[6,]    3    3
+> comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
+     [,1] [,2]
+[1,]    1    0
+[2,]    1    0
+[3,]    1    0
+[4,]    1    0
+[5,]    1    0
+[6,]    2    0
+> comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
+     [,1] [,2]
+[1,]    2    0
+[2,]    2    0
+[3,]    2    0
+[4,]    2    0
+[5,]    2    0
+[6,]    2    0
+> 
+> ###################################################################################################
+> # Cleaning up.
+> 
+> unlink(dir, recursive=TRUE)
+> 
+> ###################################################################################################
+> # End.
+> 
+> 
+> proc.time()
+   user  system elapsed 
+ 58.223   0.204  58.554 

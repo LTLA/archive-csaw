@@ -34,7 +34,8 @@ This function simply provides a wrapper around \code{\link{countOverlaps}}
 for read counting into specified regions. It is provided so as to allow
 for counting with awareness of the other parameters, e.g., \code{ext},
 \code{pet}, in case users wish to coordinate these counts with counts from
-\code{\link{windowCounts}}.
+\code{\link{windowCounts}}. Checking that the output \code{totals} are
+the same is strongly recommended.
 }
 
 \author{Aaron Lun}

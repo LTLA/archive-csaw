@@ -22,20 +22,32 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL)
 }
 
 \details{
-Windows are merged if the space between the end of one window and the start of the next is no greater than \code{tol}.
-This is done for any adjacent windows with chaining to build a cluster. A tolerance of zero means that the
-windows must be contiguous whereas negative \code{tol} values specify minimum overlaps.
+Windows are merged if the space between the end of one window and the start of
+the next is no greater than \code{tol}. Adjacent windows can then be chained
+together to build a cluster of windows across the linear genome. A value of
+zero means that the windows must be contiguous whereas negative values specify
+minimum overlaps.
 
-If \code{sign!=NULL}, windows are only merged if they have the same sign of the log-FC and are not separated by 
-windows with opposite log-FC values. This can be useful when summarizing adjacent regions. However, it is not 
-recommended for routine clustering in differential analyses as it may not be independent of the p-value.
+If \code{sign!=NULL}, windows are only merged if they have the same sign of the
+log-FC and are not separated by windows with opposite log-FC values. This can
+be useful when summarizing adjacent regions. However, it is not recommended for
+routine clustering in differential analyses as it may not be independent of the
+p-value.
 
-The \code{max.width} parameter can be specified to avoid the formation of excessively large clusters when
-many adjacent regions are supplied. For typical ChIP-seq datasets, suggested values range from 2000 to 5000 bp.
-If \code{NULL}, no limits are placed on the maximum size.
+The \code{max.width} parameter can be specified to avoid the formation of
+excessively large clusters when many adjacent regions are present. For typical
+ChIP-seq datasets, suggested values range from 2000 to 10000 bp.  Clusters are
+split if they exceed this size, albeit in a rather ad hoc manner. If
+\code{NULL}, no limits are placed on the maximum size.
 
-Note that in the output \code{x}, the cluster ID reported in \code{x$id} corresponds to the index of the 
-cluster coordinates in \code{x$region}.
+The tolerance should reflect the minimum distance at which two regions of
+enrichment are considered separate. If two windows are more than \code{tol}
+apart, they \emph{will} be placed into separate clusters. In contrast, the
+\code{max.width} value reflects the maximum distance at which two windows can be
+considered part of the same region. 
+
+Note that in the output, the cluster ID reported in \code{id} corresponds to
+the index of the cluster coordinates in the input \code{region}.
 }
 
 \examples{

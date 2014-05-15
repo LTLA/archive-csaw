@@ -7,6 +7,8 @@ R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
 
+  Natural language support but running in an English locale
+
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
 'citation()' on how to cite R or R packages in publications.
@@ -30,9 +32,10 @@ Type 'q()' to quit R.
 + 	for (i in 1:length(chromos)) {
 + 		current<-pos.chr==i
 + 		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
-+ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1);
++ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 + 	}
-+ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos);
++ 	isdup <- rbinom(nreads, 1, 0.8)==0L
++ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup)
 + }
 > 
 > expectedRanges <- function(width, offset, spacing, bam.files, restrict=NULL) {
@@ -70,43 +73,66 @@ Type 'q()' to quit R.
 > # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 > 
 > comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=NULL, restrict=NULL) {
-+ 	x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-+ 		discard=discard, restrict=restrict)
++ 	for (type in 1:3) {
++ 		if (type==1) {
++ 			dedup<- FALSE
++ 			minq <- 0
++ 		} else if (type==2) {
++ 			dedup <- TRUE
++ 			minq <- 0
++ 		} else if (type==3) {
++ 			dedup <- FALSE
++ 			minq <- 100
++ 		}
++ 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
++ 			discard=discard, restrict=restrict, minq=minq, dedup=dedup)
 + 
-+ 	# Checking with countOverlaps.
-+ 	totals<-integer(length(bamFiles))
-+ 	out<-matrix(0L, length(x$region), length(bamFiles))
-+ 	for (i in 1:length(bamFiles)) {
-+         reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth")))[[1]]
-+ 		read.starts<-ifelse(reads[[2]]=="+", reads[[3]], reads[[3]]+reads[[4]]-fraglen)
-+ 		read.ends<-read.starts+fraglen-1L
-+ 		frags <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
++ 		# Checking with countOverlaps.
++ 		totals<-integer(length(bamFiles))
++ 		out<-matrix(0L, length(x$region), length(bamFiles))
++ 		for (i in 1:length(bamFiles)) {
++ 	        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth", "mapq"), 
++ 						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
++ 			keep <- reads$mapq >= minq
++ 			reads$mapq <- NULL
++ 			if (any(keep)) {
++ 				reads$pos <- reads$pos[keep]
++ 				reads$strand <- reads$strand[keep]
++ 				reads$rname <- reads$rname[keep]
++ 				reads$qwidth <- reads$qwidth[keep]
++ 			}
 + 
-+ 		# Discarding. No variable read lengths here, so no need to use alignment width.			
-+ 		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard, type="within")] }
-+ 		if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
-+ 		current<-findOverlaps(x$region, frags)
-+ 		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
-+ 		totals[i]<-length(frags)
++ 			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen)
++ 			read.ends<-read.starts+fraglen-1L
++ 			frags <- GRanges(reads$rname, IRanges(read.starts, read.ends))
++ 
++ 			# Discarding. No variable read lengths here, so no need to use alignment width.			
++ 			if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads$rname, IRanges(reads$pos, reads$pos+reads$qwidth-1L)), discard, type="within")] }
++ 			if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
++ 			out[,i]<-countOverlaps(x$region, frags)
++ 			totals[i]<-length(frags)
++ 		}
++ 
++ 		if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
++ 		if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
++ 
++ 		# Checking the filter. We need to do this separately as the check above is not filter-aware.
++ 		if (filter==-1) {
++ 			x2 <- x
++ 		} else {
++ 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
++ 				discard=discard, restrict=restrict, dedup=dedup, minq=minq)
++ 			keep<-rowSums(x2$counts)>=filter
++ 			if (!identical(x$counts, x2$count[keep,])) { stop("mismatch in filtered counts") }
++ 			if (sum(keep)==0 && length(x$region)==0) { } 
++ 			else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions") }
++ 		}
++ 		if (type==1) { 
++ 			expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
++ 			if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions") }
++ 		}
 + 	}
 + 
-+ 	if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
-+ 	if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
-+ 
-+ 	# Checking the filter. We need to do this separately as the check above is not filter-aware.
-+     x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-+ 			discard=discard, restrict=restrict)
-+ 	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
-+ 	if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions"); }
-+ 
-+ 	keep<-rowSums(x2$counts)>=filter
-+ 	if (!identical(x$counts, x2$count[keep,])) { stop("mismatch in filtered counts"); }
-+ 	if (sum(keep)==0 && length(x$region)==0) { } 
-+ 	else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions"); }
-+ 
-+ 	# Checking MAPQ filtering. This example is a bit silly; we make sure nothing survives when we set the filter too high.
-+ 	xx<-windowCounts(bamFiles, minq=1000)
-+ 	if (!all(xx$totals==0)) { stop("MAPQ filtering failed") }
 + 	return(x$region);
 + }
 > 
@@ -265,58 +291,58 @@ GRanges with 501 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, filter=5)
-GRanges with 739 ranges and 0 metadata columns:
+GRanges with 657 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 41,  41]      *
-    [2]     chrA   [ 61,  61]      *
-    [3]     chrA   [ 81,  81]      *
-    [4]     chrA   [101, 101]      *
-    [5]     chrA   [121, 121]      *
-    ...      ...          ...    ...
-  [735]     chrB [4901, 4901]      *
-  [736]     chrB [4921, 4921]      *
-  [737]     chrB [4941, 4941]      *
-  [738]     chrB [4961, 4961]      *
-  [739]     chrB [4981, 4981]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
-> comp(bamFiles, fraglen=100, filter=10)
-GRanges with 524 ranges and 0 metadata columns:
-        seqnames       ranges strand
-           <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 61,  61]      *
+    [1]     chrA   [ 81,  81]      *
     [2]     chrA   [101, 101]      *
     [3]     chrA   [121, 121]      *
     [4]     chrA   [141, 141]      *
     [5]     chrA   [161, 161]      *
     ...      ...          ...    ...
-  [520]     chrB [4901, 4901]      *
-  [521]     chrB [4921, 4921]      *
-  [522]     chrB [4941, 4941]      *
-  [523]     chrB [4961, 4961]      *
-  [524]     chrB [4981, 4981]      *
+  [653]     chrB [4901, 4901]      *
+  [654]     chrB [4921, 4921]      *
+  [655]     chrB [4941, 4941]      *
+  [656]     chrB [4961, 4961]      *
+  [657]     chrB [4981, 4981]      *
+  ---
+  seqlengths:
+    chrA  chrB
+   10000  5000
+> comp(bamFiles, fraglen=100, filter=10)
+GRanges with 297 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [301, 301]      *
+    [2]     chrA   [361, 361]      *
+    [3]     chrA   [381, 381]      *
+    [4]     chrA   [941, 941]      *
+    [5]     chrA   [961, 961]      *
+    ...      ...          ...    ...
+  [293]     chrB [4841, 4841]      *
+  [294]     chrB [4861, 4861]      *
+  [295]     chrB [4881, 4881]      *
+  [296]     chrB [4901, 4901]      *
+  [297]     chrB [4921, 4921]      *
   ---
   seqlengths:
     chrA  chrB
    10000  5000
 > comp(bamFiles, fraglen=200, filter=15)
-GRanges with 700 ranges and 0 metadata columns:
+GRanges with 469 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 41,  41]      *
-    [2]     chrA   [ 61,  61]      *
-    [3]     chrA   [ 81,  81]      *
-    [4]     chrA   [101, 101]      *
-    [5]     chrA   [121, 121]      *
+    [1]     chrA   [201, 201]      *
+    [2]     chrA   [221, 221]      *
+    [3]     chrA   [261, 261]      *
+    [4]     chrA   [281, 281]      *
+    [5]     chrA   [301, 301]      *
     ...      ...          ...    ...
-  [696]     chrB [4901, 4901]      *
-  [697]     chrB [4921, 4921]      *
-  [698]     chrB [4941, 4941]      *
-  [699]     chrB [4961, 4961]      *
-  [700]     chrB [4981, 4981]      *
+  [465]     chrB [4861, 4861]      *
+  [466]     chrB [4881, 4881]      *
+  [467]     chrB [4901, 4901]      *
+  [468]     chrB [4921, 4921]      *
+  [469]     chrB [4941, 4941]      *
   ---
   seqlengths:
     chrA  chrB
@@ -451,58 +477,58 @@ GRanges with 180 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, filter=20)
-GRanges with 844 ranges and 0 metadata columns:
+GRanges with 549 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 21,  21]      *
-    [2]     chrA   [ 41,  41]      *
-    [3]     chrA   [ 61,  61]      *
-    [4]     chrA   [ 81,  81]      *
-    [5]     chrA   [101, 101]      *
+    [1]     chrA   [ 61,  61]      *
+    [2]     chrA   [ 81,  81]      *
+    [3]     chrA   [101, 101]      *
+    [4]     chrA   [121, 121]      *
+    [5]     chrA   [141, 141]      *
     ...      ...          ...    ...
-  [840]     chrC [7821, 7821]      *
-  [841]     chrC [7841, 7841]      *
-  [842]     chrC [7861, 7861]      *
-  [843]     chrC [7901, 7901]      *
-  [844]     chrC [7921, 7921]      *
+  [545]     chrC [7641, 7641]      *
+  [546]     chrC [7661, 7661]      *
+  [547]     chrC [7681, 7681]      *
+  [548]     chrC [7701, 7701]      *
+  [549]     chrC [7721, 7721]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
 > comp(bamFiles, fraglen=200, filter=40)
-GRanges with 860 ranges and 0 metadata columns:
+GRanges with 509 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 21,  21]      *
-    [2]     chrA   [ 41,  41]      *
-    [3]     chrA   [ 61,  61]      *
-    [4]     chrA   [ 81,  81]      *
-    [5]     chrA   [101, 101]      *
+    [1]     chrA   [121, 121]      *
+    [2]     chrA   [141, 141]      *
+    [3]     chrA   [161, 161]      *
+    [4]     chrA   [181, 181]      *
+    [5]     chrA   [201, 201]      *
     ...      ...          ...    ...
-  [856]     chrC [7761, 7761]      *
-  [857]     chrC [7781, 7781]      *
-  [858]     chrC [7801, 7801]      *
-  [859]     chrC [7821, 7821]      *
-  [860]     chrC [7841, 7841]      *
+  [505]     chrC [7481, 7481]      *
+  [506]     chrC [7501, 7501]      *
+  [507]     chrC [7741, 7741]      *
+  [508]     chrC [7761, 7761]      *
+  [509]     chrC [7781, 7781]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
 > comp(bamFiles, fraglen=200, filter=60)
-GRanges with 512 ranges and 0 metadata columns:
-        seqnames       ranges strand
-           <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [141, 141]      *
-    [2]     chrA   [161, 161]      *
-    [3]     chrA   [181, 181]      *
-    [4]     chrA   [201, 201]      *
-    [5]     chrA   [221, 221]      *
-    ...      ...          ...    ...
-  [508]     chrC [7181, 7181]      *
-  [509]     chrC [7201, 7201]      *
-  [510]     chrC [7221, 7221]      *
-  [511]     chrC [7241, 7241]      *
-  [512]     chrC [7261, 7261]      *
+GRanges with 96 ranges and 0 metadata columns:
+       seqnames       ranges strand
+          <Rle>    <IRanges>  <Rle>
+   [1]     chrA   [201, 201]      *
+   [2]     chrA   [221, 221]      *
+   [3]     chrA   [241, 241]      *
+   [4]     chrA   [261, 261]      *
+   [5]     chrA   [281, 281]      *
+   ...      ...          ...    ...
+  [92]     chrB [4321, 4321]      *
+  [93]     chrB [4341, 4341]      *
+  [94]     chrB [4361, 4361]      *
+  [95]     chrB [4401, 4401]      *
+  [96]     chrB [4421, 4421]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -821,39 +847,28 @@ GRanges with 180 ranges and 0 metadata columns:
    chrA chrB chrC
    5000 5000 8000
 > comp(bamFiles, fraglen=200, filter=100)
-GRanges with 686 ranges and 0 metadata columns:
+GRanges with 358 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [ 41,  41]      *
-    [2]     chrA   [ 61,  61]      *
-    [3]     chrA   [ 81,  81]      *
-    [4]     chrA   [101, 101]      *
-    [5]     chrA   [121, 121]      *
+    [1]     chrA   [201, 201]      *
+    [2]     chrA   [221, 221]      *
+    [3]     chrA   [241, 241]      *
+    [4]     chrA   [301, 301]      *
+    [5]     chrA   [321, 321]      *
     ...      ...          ...    ...
-  [682]     chrC [7521, 7521]      *
-  [683]     chrC [7541, 7541]      *
-  [684]     chrC [7561, 7561]      *
-  [685]     chrC [7781, 7781]      *
-  [686]     chrC [7801, 7801]      *
+  [354]     chrB [4801, 4801]      *
+  [355]     chrB [4821, 4821]      *
+  [356]     chrB [4841, 4841]      *
+  [357]     chrB [4861, 4861]      *
+  [358]     chrB [4881, 4881]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
 > comp(bamFiles, fraglen=200, filter=150)
-GRanges with 360 ranges and 0 metadata columns:
-        seqnames       ranges strand
-           <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [161, 161]      *
-    [2]     chrA   [181, 181]      *
-    [3]     chrA   [201, 201]      *
-    [4]     chrA   [221, 221]      *
-    [5]     chrA   [241, 241]      *
-    ...      ...          ...    ...
-  [356]     chrB [4741, 4741]      *
-  [357]     chrB [4761, 4761]      *
-  [358]     chrB [4781, 4781]      *
-  [359]     chrB [4801, 4801]      *
-  [360]     chrB [4821, 4821]      *
+GRanges with 0 ranges and 0 metadata columns:
+   seqnames    ranges strand
+      <Rle> <IRanges>  <Rle>
   ---
   seqlengths:
    chrA chrB chrC
@@ -1034,39 +1049,39 @@ GRanges with 900 ranges and 0 metadata columns:
    chrA chrB chrC
    5000 5000 8000
 > comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
-GRanges with 471 ranges and 0 metadata columns:
+GRanges with 343 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA     [ 1,  1]      *
-    [2]     chrA     [21, 21]      *
-    [3]     chrA     [41, 41]      *
-    [4]     chrA     [61, 61]      *
-    [5]     chrA     [81, 81]      *
+    [1]     chrA   [ 21,  21]      *
+    [2]     chrA   [ 41,  41]      *
+    [3]     chrA   [ 61,  61]      *
+    [4]     chrA   [ 81,  81]      *
+    [5]     chrA   [101, 101]      *
     ...      ...          ...    ...
-  [467]     chrC [7901, 7901]      *
-  [468]     chrC [7921, 7921]      *
-  [469]     chrC [7941, 7941]      *
-  [470]     chrC [7961, 7961]      *
-  [471]     chrC [7981, 7981]      *
+  [339]     chrC [7541, 7541]      *
+  [340]     chrC [7561, 7561]      *
+  [341]     chrC [7581, 7581]      *
+  [342]     chrC [7601, 7601]      *
+  [343]     chrC [7621, 7621]      *
   ---
   seqlengths:
    chrA chrC
    5000 8000
 > comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
-GRanges with 634 ranges and 0 metadata columns:
+GRanges with 479 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA    [ 1,  51]      *
-    [2]     chrA    [21,  71]      *
-    [3]     chrA    [41,  91]      *
-    [4]     chrA    [61, 111]      *
-    [5]     chrA    [81, 131]      *
+    [1]     chrA   [141, 191]      *
+    [2]     chrA   [161, 211]      *
+    [3]     chrA   [181, 231]      *
+    [4]     chrA   [201, 251]      *
+    [5]     chrA   [221, 271]      *
     ...      ...          ...    ...
-  [630]     chrC [7841, 7891]      *
-  [631]     chrC [7861, 7911]      *
-  [632]     chrC [7881, 7931]      *
-  [633]     chrC [7901, 7951]      *
-  [634]     chrC [7921, 7971]      *
+  [475]     chrC [7241, 7291]      *
+  [476]     chrC [7261, 7311]      *
+  [477]     chrC [7281, 7331]      *
+  [478]     chrC [7401, 7451]      *
+  [479]     chrC [7421, 7471]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -1083,4 +1098,4 @@ GRanges with 634 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 76.301   0.324  76.823 
+105.569   0.333 106.146 

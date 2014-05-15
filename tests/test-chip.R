@@ -13,9 +13,10 @@ regen <- function(nreads, chromos, outfname) {
 	for (i in 1:length(chromos)) {
 		current<-pos.chr==i
 		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
-		str[current]<-(rbinom(sum(current), 1, 0.5)==1);
+		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
 	}
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos);
+	isdup <- rbinom(nreads, 1, 0.8)==0L
+	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup)
 }
 
 expectedRanges <- function(width, offset, spacing, bam.files, restrict=NULL) {
@@ -53,43 +54,66 @@ compare2Ranges <- function(left, right) {
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=NULL, restrict=NULL) {
-	x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-		discard=discard, restrict=restrict)
+	for (type in 1:3) {
+		if (type==1) {
+			dedup<- FALSE
+			minq <- 0
+		} else if (type==2) {
+			dedup <- TRUE
+			minq <- 0
+		} else if (type==3) {
+			dedup <- FALSE
+			minq <- 100
+		}
+		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
+			discard=discard, restrict=restrict, minq=minq, dedup=dedup)
 
-	# Checking with countOverlaps.
-	totals<-integer(length(bamFiles))
-	out<-matrix(0L, length(x$region), length(bamFiles))
-	for (i in 1:length(bamFiles)) {
-        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth")))[[1]]
-		read.starts<-ifelse(reads[[2]]=="+", reads[[3]], reads[[3]]+reads[[4]]-fraglen)
-		read.ends<-read.starts+fraglen-1L
-		frags <- GRanges(reads[[1]], IRanges(read.starts, read.ends))
+		# Checking with countOverlaps.
+		totals<-integer(length(bamFiles))
+		out<-matrix(0L, length(x$region), length(bamFiles))
+		for (i in 1:length(bamFiles)) {
+	        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth", "mapq"), 
+						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
+			keep <- reads$mapq >= minq
+			reads$mapq <- NULL
+			if (any(keep)) {
+				reads$pos <- reads$pos[keep]
+				reads$strand <- reads$strand[keep]
+				reads$rname <- reads$rname[keep]
+				reads$qwidth <- reads$qwidth[keep]
+			}
 
-		# Discarding. No variable read lengths here, so no need to use alignment width.			
-		if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads[[1]], IRanges(reads[[3]], reads[[4]]+reads[[3]]-1L)), discard, type="within")] }
-		if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
-		current<-findOverlaps(x$region, frags)
-		out[,i]<-tabulate(queryHits(current), nbins=length(x$region))
-		totals[i]<-length(frags)
+			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen)
+			read.ends<-read.starts+fraglen-1L
+			frags <- GRanges(reads$rname, IRanges(read.starts, read.ends))
+
+			# Discarding. No variable read lengths here, so no need to use alignment width.			
+			if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads$rname, IRanges(reads$pos, reads$pos+reads$qwidth-1L)), discard, type="within")] }
+			if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
+			out[,i]<-countOverlaps(x$region, frags)
+			totals[i]<-length(frags)
+		}
+
+		if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
+		if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
+
+		# Checking the filter. We need to do this separately as the check above is not filter-aware.
+		if (filter==-1) {
+			x2 <- x
+		} else {
+	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
+				discard=discard, restrict=restrict, dedup=dedup, minq=minq)
+			keep<-rowSums(x2$counts)>=filter
+			if (!identical(x$counts, x2$count[keep,])) { stop("mismatch in filtered counts") }
+			if (sum(keep)==0 && length(x$region)==0) { } 
+			else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions") }
+		}
+		if (type==1) { 
+			expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
+			if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions") }
+		}
 	}
 
-	if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
-	if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
-
-	# Checking the filter. We need to do this separately as the check above is not filter-aware.
-    x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-			discard=discard, restrict=restrict)
-	expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
-	if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions"); }
-
-	keep<-rowSums(x2$counts)>=filter
-	if (!identical(x$counts, x2$count[keep,])) { stop("mismatch in filtered counts"); }
-	if (sum(keep)==0 && length(x$region)==0) { } 
-	else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions"); }
-
-	# Checking MAPQ filtering. This example is a bit silly; we make sure nothing survives when we set the filter too high.
-	xx<-windowCounts(bamFiles, minq=1000)
-	if (!all(xx$totals==0)) { stop("MAPQ filtering failed") }
 	return(x$region);
 }
 
