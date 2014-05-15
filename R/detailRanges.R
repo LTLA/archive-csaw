@@ -1,4 +1,4 @@
-detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
+detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 0), max.intron=1e6)
 # This gives three character vectors for each 'incoming'. The first specifies
 # which features are wholly or partially overlapped by the current range.
 # The second specifies what features are within 'tol' of the 5' end of 
@@ -14,13 +14,13 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=3000, max.in
 	left.flank <- suppressWarnings(trim(flank(incoming, dist)))
 	right.flank <- suppressWarnings(trim(flank(incoming, dist, start=FALSE)))
 
-	# Obtain exons, stripping out strand data for any overlap. 
+	# Obtain exons, and cleaning out the annotation.
 	curex <- exonsBy(txdb, by="gene")
 	curex <- GenomicRanges::unlist(curex)
 	gene.id <- names(curex)
 	gene.str <- as.logical(strand(curex)=="+")
-	strand(curex) <- "*"
-	curex <- GRanges(seqnames(curex), ranges(curex))
+	curex$exon_id <- NULL
+	curex$exon_name <- NULL
 
 	# Getting name annotation.
 	anno <- select(orgdb, keys=gene.id, columns=c("SYMBOL"), keytype="ENTREZID")
@@ -46,13 +46,12 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=3000, max.in
 	# Adding the gene bodies, using the extremes for each gene (returned as above).
 	gb.collected <- output[[2]]
 	gb.ref <- gb.collected[[1]]
-	gb.ranges <- GRanges(seqnames(curex)[gb.ref], IRanges(gb.collected[[2]], gb.collected[[3]]))
+	gb.ranges <- GRanges(seqnames(curex)[gb.ref], IRanges(gb.collected[[2]], gb.collected[[3]]),
+		strand=!gene.str[gb.ref], seqinfo=seqinfo(curex))
 
 	# Adding the promoter regions, based on the start/end of the gene bodies.
-	prom.ranges <- gb.ranges
-	strand(prom.ranges) <- !gene.str[gb.ref]
-	prom.ranges <- suppressWarnings(trim(flank(prom.ranges, width=promoter)))
-	strand(prom.ranges) <- "*"
+	if (length(promoter)!=2L) {  stop("need upstream/downstream specification in promoter argument") }
+	prom.ranges <- suppressWarnings(promoters(gb.ranges, upstream=promoter[1], downstream=promoter[2]))
 
 	# Expanding everything to account for the gene body and promoters.
 	curex <- c(curex, prom.ranges, gb.ranges)

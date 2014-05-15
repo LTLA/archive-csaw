@@ -100,23 +100,51 @@ try {
  */
 
 struct overlaps { 
-	overlaps (int o, int a, int b, int c=-1) : original(o), min(a), max(b), dist(c) {}
-	int original, min, max, dist; 
+	overlaps (int o, int x, int c=-1) : original(o), dist(c), collected(1, x) {}
+	int original, dist;
+	std::deque<int> collected;	
 };
 std::string digest2string (std::map<int, overlaps>& tango, SEXP symbols, const int* gsptr) {
 	std::string temp;
+	int index=0;
+	bool wasokay=false;
 	for (std::map<int, overlaps>::iterator it=tango.begin(); it!=tango.end(); ++it) {
 		std::stringstream ss;
 		const int& curid = (it->second).original;
 		ss << CHAR(STRING_ELT(symbols, curid)) << '|'; 
+		std::deque<int>& collected=(it->second).collected;
 
 		// Deciding what to print.
-		if ((it->second).min >=0) { 
-			ss << (it->second).min;
-			if ((it->second).min!=(it->second).max) { ss << '-' << (it->second).max; }
-		} else {
-			ss << "I";
+		if (collected.size()==1) {
+			if (collected.front()==-1) {
+				ss << "I"; 
+			} else {
+				ss << collected[0];
+			}
+		} else if (collected.empty()) { 
+			throw std::runtime_error("empty vector of collected exon numbers"); 
+		} else {			
+			std::sort(collected.begin(), collected.end());
+			index=(collected.front()==-1 ? 1 : 0);
+			ss << collected[index];
+			wasokay=false;
+
+			// Running through and printing all stretches of contiguous exons.
+			while ((++index)<collected.size()) {
+				if (collected[index]==collected[index-1]+1) { 
+					wasokay=true;
+				} else {
+					if (wasokay) { 
+						ss << "-" << collected[index-1];
+						wasokay=false;
+					}
+					ss << "," << collected[index];
+				}
+			}
+			if (wasokay) { ss << "-" << collected.back(); }
 		}
+
+		// Adding the strand and distance information.	
 		ss << '|' << (gsptr[curid] ? '+' : '-');
 		if ((it->second).dist > 0) { ss << "[" << (it->second).dist << "]"; }
 		if (!temp.empty()) { temp += ","; }
@@ -188,12 +216,9 @@ try {
 			const int& curfeature=gfptr[curindex];
 			itp=processed.lower_bound(curgene);
 			if (itp==processed.end() || processed.key_comp()(curgene, itp->first)) {
-				processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature, curfeature)));
+				processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature)));
 			} else {
-				if (curfeature >= 0) { 
-					if (curfeature < (itp->second).min || (itp->second).min<0) { (itp->second).min = curfeature; }
-					if (curfeature > (itp->second).max || (itp->second).max<0) { (itp->second).max = curfeature; }
-				}
+				(itp->second).collected.push_back(curfeature);
 			}
 			++fullx;
 		}
@@ -204,7 +229,7 @@ try {
 //		std::cout << "Done!" << std::endl;
 		processed.clear();
 
-		// Adding the left and right overlaps. The key thing here is that only the closest feature is kept.
+		// Adding the left and right overlaps. The key thing here is that only the closest feature has its distance recorded.
 		for (int mode=0; mode<2; ++mode) { 
 			int& curx = (mode ? leftx : rightx);
 			const int & ncur = (mode ? nleft : nright);
@@ -214,22 +239,19 @@ try {
 
 			while (curx < ncur && cur_qptr[curx]==curreg) {
 				const int& curdist=cur_dptr[curx];
+
+				// We skip those with negative or zero distances, as they'd overlap directly.
 				if (curdist > 0) { 
 					const int& curindex=cur_sptr[curx];
 					if (curindex >= nsym) { throw std::runtime_error("symbol index out of range for left/right overlaps"); }
-		
-					// Smart insert. We don't bother with intronic overlaps on the left and right.
 					const int& curgene=giptr[curindex];
 					const int& curfeature=gfptr[curindex];
-					if (curfeature >= 0)  {
-						itp=processed.lower_bound(curgene);
-						if (itp==processed.end() || processed.key_comp()(curgene, itp->first)) {
-							processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature, curfeature, curdist)));
-						} else {
-							if (curfeature < (itp->second).min) { (itp->second).min = curfeature; }
-							if (curfeature > (itp->second).max) { (itp->second).max = curfeature; }
-							if (curfeature < (itp->second).dist) { (itp->second).dist = curdist; }
-						}
+					itp=processed.lower_bound(curgene);
+					if (itp==processed.end() || processed.key_comp()(curgene, itp->first)) {
+						processed.insert(itp, std::make_pair(curgene, overlaps(curindex, curfeature, curdist)));
+					} else {
+						(itp->second).collected.push_back(curfeature);
+						if (curfeature < (itp->second).dist) { (itp->second).dist = curdist; }
 					}
 				}
 				++curx;

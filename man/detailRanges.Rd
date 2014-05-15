@@ -5,7 +5,7 @@
 \description{Add detailed exon-based annotation to specified regions}
 
 \usage{
-detailRanges(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
+detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 500), max.intron=1e6)
 }
 
 \arguments{
@@ -13,7 +13,7 @@ detailRanges(incoming, txdb, orgdb, dist=5000, promoter=3000, max.intron=1e6)
 \item{txdb}{a TranscriptDb object for the genome of interest}
 \item{orgdb}{a Genome wide annotation object for the genome of interest}
 \item{dist}{an integer scalar specifying the flanking distance to annotate}
-\item{promoter}{an integer scalar specifying the size of a promoter region}
+\item{promoter}{an integer vector of length 2 defining the promoter as some distance upstream and downstream from the TSS}
 \item{max.intron}{an integer scalar indicating the maximum distance between exons}
 }
 
@@ -40,10 +40,10 @@ on the forward or reverse strands, respectively. Promoters are defined as
 the region of length \code{promoter} upstream of the gene TSS, itself 
 defined as the start of the first exon (for genes on the forward strand)
 or the end of the last exon (otherwise). All promoters are marked as
-exon 0 for simplicity. Exon ranges in \code{EXON} are reported from
-the lowest to highest numbering exons. If the region overlaps an intron, 
-it is labelled with \code{I} in \code{EXON}. No overlaps to introns are
-reported if there is an overlap to an exon.
+exon 0 for simplicity. Exon ranges in \code{EXON} are reported from as a
+comma-separated list where stretches of consecutive exons are summarized into a
+range. If the region overlaps an intron, it is labelled with \code{I} in
+\code{EXON}. No intronic overlaps are reported if there is an exonic overlap.
 
 Note that promoter and intronic annotations are only reported for the
 \code{overlap} vector. This reduces redundancy in the output. For example, it
@@ -71,6 +71,11 @@ require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
 output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
+head(output$overlap)
+head(output$right)
+head(output$left)
+
+output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, promoter=c(2000, 1000))
 head(output$overlap)
 head(output$right)
 head(output$left)
