@@ -10,18 +10,24 @@ detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), max.intro
 
 \arguments{
 \item{incoming}{a \code{GRanges} object containing the ranges to be annotated}
-\item{txdb}{a TranscriptDb object for the genome of interest}
-\item{orgdb}{a Genome wide annotation object for the genome of interest}
+\item{txdb}{a \code{TranscriptDb} object for the genome of interest}
+\item{orgdb}{a genome wide annotation object for the genome of interest}
 \item{dist}{an integer scalar specifying the flanking distance to annotate}
 \item{promoter}{an integer vector of length 2 defining the promoter as some distance upstream and downstream from the TSS}
 \item{max.intron}{an integer scalar indicating the maximum distance between exons}
 }
 
 \value{
-A list with \code{overlap}, \code{left} and \code{right} elements, each a character
-vector of length equal to the number of ranges in \code{incoming}. Each non-empty
-string records the gene symbol, the overlapped exons and the strand. For \code{left}
-and \code{right}, the gap between the range and the annotated feature is also included.
+If \code{incoming} is \code{NA}, a \code{GRanges} object will be returned containing
+ranges for the exons, promoters and gene bodies. Gene IDs, symbol and exon numbers
+are also stored as associated metadata.
+
+If \code{incoming} is a \code{GRanges} object, a list will be returned with
+\code{overlap}, \code{left} and \code{right} elements, each a character vector
+of length equal to the number of ranges in \code{incoming}. Each non-empty
+string records the gene symbol, the overlapped exons and the strand. For
+\code{left} and \code{right}, the gap between the range and the annotated
+feature is also included.
 }
 
 \details{
@@ -61,6 +67,12 @@ separate processing. However, this is less obvious when the ambiguous locations
 belong to the same chromosome. The \code{max.intron} value protects against
 excessively large genes that may occur from considering those locations as 
 a single transcriptional unit.
+
+If \code{incoming} is set as \code{NA}, then the annotation will be provided
+directly to the user in the form of a \code{GRanges} object. This may be more
+useful when further work on the annotation is required. Nonetheless, the
+character output is recommended for routine file storage as it is compact and
+thus relatively easy to interpret when manually examining a result list.
 }
 
 \author{Aaron Lun}
@@ -79,4 +91,6 @@ output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db
 head(output$overlap)
 head(output$right)
 head(output$left)
+
+detailRanges(NA, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
 }

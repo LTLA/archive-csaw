@@ -10,11 +10,9 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 # written by Aaron Lun
 # 23 November, 2013
 {
-	require(GenomicFeatures)
-	left.flank <- suppressWarnings(trim(flank(incoming, dist)))
-	right.flank <- suppressWarnings(trim(flank(incoming, dist, start=FALSE)))
 
 	# Obtain exons, and cleaning out the annotation.
+	require(GenomicFeatures)
 	curex <- exonsBy(txdb, by="gene")
 	curex <- GenomicRanges::unlist(curex)
 	gene.id <- names(curex)
@@ -48,10 +46,12 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	gb.ref <- gb.collected[[1]]
 	gb.ranges <- GRanges(seqnames(curex)[gb.ref], IRanges(gb.collected[[2]], gb.collected[[3]]),
 		strand=!gene.str[gb.ref], seqinfo=seqinfo(curex))
+	names(gb.ranges) <- names(curex)[gb.ref]
 
 	# Adding the promoter regions, based on the start/end of the gene bodies.
 	if (length(promoter)!=2L) {  stop("need upstream/downstream specification in promoter argument") }
 	prom.ranges <- suppressWarnings(promoters(gb.ranges, upstream=promoter[1], downstream=promoter[2]))
+	names(prom.ranges) <- names(gb.ranges)
 
 	# Expanding everything to account for the gene body and promoters.
 	curex <- c(curex, prom.ranges, gb.ranges)
@@ -59,6 +59,13 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	gene.id <- c(gene.id, gene.id[gb.ref], gene.id[gb.ref])
 	ex.num <- c(ex.num, integer(length(gb.ref)), rep(-1L, length(gb.ref)))
 	gene.str <- c(gene.str, gene.str[gb.ref], gene.str[gb.ref])
+	
+	# Returning the useful stuff, if no overlaps are requested.
+	if (is.na(incoming)) { 
+		curex$symbol <- gene.name
+		curex$exon <- ex.num
+		return(curex)
+	}
 
 	# Reordering so we're in gene.id and ex.num order, for simplicity at the C++ level.
 	o <- order(gene.id, ex.num)
@@ -78,10 +85,12 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	flank.only <- ex.num > 0L
 	to.flank <- curex[flank.only]
 
+	left.flank <- suppressWarnings(trim(flank(incoming, dist)))
 	left.lap <- findOverlaps(left.flank, to.flank)
 	left.dist <- start(incoming)[queryHits(left.lap)] - end(to.flank)[subjectHits(left.lap)]
 	left.nolap <- left.dist > 0L
 
+	right.flank <- suppressWarnings(trim(flank(incoming, dist, start=FALSE)))
 	right.lap <- findOverlaps(right.flank, to.flank)
 	right.dist <- start(to.flank)[subjectHits(right.lap)] - end(incoming)[queryHits(right.lap)]  
 	right.nolap <- right.dist > 0L
