@@ -135,7 +135,7 @@ countWindows <- function(param, ...)
 	if (!"mapq" %in% extras) { reads$mapq <- NULL }
 	for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	
-	# Filtering by discard regions.
+	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
 	if (!is.null(discard)) {
  	   	require(GenomicAlignments)	
 		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)

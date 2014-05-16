@@ -25,8 +25,6 @@ Type 'q()' to quit R.
 > source("simsam.R")
 > dir<-"pet-test"
 > dir.create(dir)
-Warning message:
-In dir.create(dir) : 'pet-test' already exists
 > 
 > makeDiscard <- function(ndisc, sizeof, chromos) {
 +     chosen <- sample(length(chromos), ndisc, replace=T)
