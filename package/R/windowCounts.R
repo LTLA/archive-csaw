@@ -14,32 +14,36 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 
 	# Processing input parameters.
 	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
-	if (width < 1) { stop("width must be a positive integer") }
 	if (!bin) { 
-		spacing <- as.integer(spacing+0.5)
-		left <- as.integer(shift+0.5)
-		right <- as.integer(width+0.5) - left - 1L
-		ext <- as.integer(ext+0.5)
-		if (is.null(filter)) { filter <- 5L*nbam }
+		spacing <- as.integer(spacing)
+		left <- as.integer(shift)
+		right <- as.integer(width) - left - 1L
+		ext <- as.integer(ext)
+		if (is.null(filter)) { filter <- 5*nbam }
 	} else {
 		# A convenience flag, which assigns sensible arguments to everything else.
-		spacing <- as.integer(width+0.5)
-		left <- as.integer(shift+0.5)
+		spacing <- as.integer(width)
+		left <- as.integer(shift)
 		right <- spacing - 1L - left
-		filter <- ext <- 1L
+		ext <- 1L
+		filter <- 1
 	}
 	pet <- match.arg(pet)
 	max.frag <- as.integer(max.frag)
 	minq <- as.integer(minq)
 	dedup <- as.logical(dedup)
 
-# Figuring out what the extensions are necessary. We've reparameterised it so
+# Checking the extension and spacing parameters. We've reparameterised it so
 # that 'left' and 'right' refer to the extension of the window from a nominal
-# 'center' point. This simplifies counting. However, we do need to account for
-# loss of a point from the front when shift/left is non-zero. There's also a 
-# gain but that's dealt with later.
+# 'center' point. This simplifies read counting as we just measure read
+# overlaps to those center points, spaced at regular intervals. However, we do
+# need to account for loss of a point from the front when shift/left is
+# non-zero. There's also a possible gain but that's dealt with later.
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
+	if (left + right < 0L) { stop("width must be a positive integer") }
+	if (spacing <= 0L) { stop("spacing must be a positive integer") }
+	if (ext <= 0L) { stop("extension width must be a positive integer") }
 	at.start <- right >= 0L
 	first.pt <- ifelse(at.start, 1L, spacing+1L)
 
