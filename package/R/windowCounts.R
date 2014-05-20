@@ -14,6 +14,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 
 	# Processing input parameters.
 	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
+	if (width < 1) { stop("width must be a positive integer") }
 	if (!bin) { 
 		spacing <- as.integer(spacing+0.5)
 		left <- as.integer(shift+0.5)
@@ -32,6 +33,16 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	minq <- as.integer(minq)
 	dedup <- as.logical(dedup)
 
+# Figuring out what the extensions are necessary. We've reparameterised it so
+# that 'left' and 'right' refer to the extension of the window from a nominal
+# 'center' point. This simplifies counting. However, we do need to account for
+# loss of a point from the front when shift/left is non-zero. There's also a 
+# gain but that's dealt with later.
+	if (left >= spacing) { stop("shift must be less than the spacing") }
+	if (left < 0L) { stop("shift must be positive") }
+	at.start <- right >= 0L
+	first.pt <- ifelse(at.start, 1L, spacing+1L)
+
 	# Initializing various collectable containers (non-empty so it'll work if no chromosomes are around).
 	totals<-integer(nbam)	
 	all.out<-list(matrix(0L, ncol=nbam, nrow=0))
@@ -41,8 +52,10 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	for (chr in names(extracted$chrs)) {
 		outlen<-extracted$chrs[[chr]]		
 		where<-GRanges(chr, IRanges(1, outlen))
-		total.pts<-1L+as.integer((outlen-1L)/spacing)
-		outcome<-matrix(0L, total.pts, nbam) 
+		# Accounting for the gain of a point from the back when shift/left is non-zero. 
+		at.end <- spacing - (outlen - 1L) %% spacing <= left
+		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
+		outcome <- matrix(0L, total.pts, nbam) 
 
 		for (bf in 1:nbam) {
 			if (pet!="both") {
@@ -66,28 +79,34 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 				}
 				frag.start<-out$pos
 
-				# Only want to record each pair once in a bin, so forcing it to only use the starting read.
+				# Only want to record each pair once in a bin, so forcing it to only use the 5' end.
 				if (bin) { frag.end<-frag.start }
 				else { frag.end<-frag.start+out$size-1L }
 			}
 
-			# Extending reads to account for window sizes > 1 bp. 'left' and 'right' refer to the length of
-			# the window on either side of the center, so the start of each read must be extended by 'right'
-			# and the end of each read must be extended by 'left'. We then pull out counts at the specified spacing.
-			out<-.Call("R_get_rle_counts", frag.start-right, frag.end+left, total.pts, spacing, PACKAGE="csaw")
+# Extending reads to account for window sizes > 1 bp. The start of each read
+# must be extended by 'right' and the end of each read must be extended by
+# 'left'. We then pull out counts at the specified spacing. We do have to 
+# keep track of whether or not we want to use the first point, though.
+			out<-.Call("R_get_rle_counts", frag.start-right, frag.end+left, total.pts, spacing, at.start, PACKAGE="csaw")
 			if (is.character(out)) { stop(out) }
 			outcome[,bf]<-out
 			totals[bf]<-totals[bf]+length(frag.start)
 		}
 
-		# Filtering on row sums (for memory efficiency) and removing redundant windows. 
-		center <- (1:total.pts-1L)*spacing+1L
+# Filtering on row sums (for memory efficiency). Note that redundant windows
+# are avoided by enforcing 'shift < spacing', as a window that is shifted to 
+# cover the whole chromosome cannot be spaced to a new position where it still 
+# covers the whole chromosome. The next one must be inside the chromosome.
+		keep <- rowSums(outcome)>=filter 
+		if (!any(keep)) { next } 
+		else if (!all(keep)) { outcome <- outcome[keep,,drop=FALSE] }
+		all.out[[ix]] <- outcome
+
+		center <- (which(keep)-1L)*spacing + first.pt
 		reg.start <- pmax(1L, center-left)
 		reg.end <- pmin(outlen, center+right)
-		keep <- rowSums(outcome)>=filter & c(TRUE, diff(reg.start)!=0L | diff(reg.end)!=0L)
-		if (!sum(keep)) { next }
-		all.out[[ix]]<-outcome[keep,,drop=FALSE]
-		all.regions[[ix]]<-GRanges(chr, IRanges(reg.start[keep], reg.end[keep]))
+		all.regions[[ix]]<-GRanges(chr, IRanges(reg.start, reg.end))
 		ix<-ix+1L
 	}
 

@@ -48,14 +48,15 @@ Type 'q()' to quit R.
 + 	if (!is.null(restrict)) { chrs <- chrs[names(chrs) %in% restrict] }
 + 
 + 	for (x in names(chrs)) {
-+ 		multiples<-as.integer((chrs[[x]]-1L)/spacing)
++ 		multiples<-ceiling(chrs[[x]]/spacing)
 + 		all.starts<-0:multiples*spacing+1L-offset
 + 		all.ends<-all.starts+width-1L
 + 		all.starts<-pmax(all.starts, 1L)
 + 		all.ends<-pmin(all.ends, chrs[[x]])
 + 
-+ 		gr <-GRanges(x, IRanges(all.starts, all.ends))
-+ 		keep <- !GenomicRanges::duplicated(gr)
++ 		keep <- all.starts <= chrs[[x]] & all.ends > 0L
++ 		gr <-GRanges(x, IRanges(all.starts[keep], all.ends[keep]))
++ 		keep <- !GenomicRanges::duplicated(gr) 
 + 		output[[length(output)+1L]]<- gr[keep]
 + 	}
 + 	output<-suppressWarnings(do.call(c, output))
@@ -249,21 +250,21 @@ GRanges with 750 ranges and 0 metadata columns:
   seqlengths:
     chrA  chrB
    10000  5000
-> comp(bamFiles, fraglen=200, left=50, spacing=25)
-GRanges with 600 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, left=20, spacing=25)
+GRanges with 602 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,   1]      *
-    [2]     chrA    [ 1,  26]      *
-    [3]     chrA    [ 1,  51]      *
-    [4]     chrA    [26,  76]      *
-    [5]     chrA    [51, 101]      *
+    [2]     chrA    [ 6,  26]      *
+    [3]     chrA    [31,  51]      *
+    [4]     chrA    [56,  76]      *
+    [5]     chrA    [81, 101]      *
     ...      ...          ...    ...
-  [596]     chrB [4826, 4876]      *
-  [597]     chrB [4851, 4901]      *
-  [598]     chrB [4876, 4926]      *
-  [599]     chrB [4901, 4951]      *
-  [600]     chrB [4926, 4976]      *
+  [598]     chrB [4881, 4901]      *
+  [599]     chrB [4906, 4926]      *
+  [600]     chrB [4931, 4951]      *
+  [601]     chrB [4956, 4976]      *
+  [602]     chrB [4981, 5000]      *
   ---
   seqlengths:
     chrA  chrB
@@ -283,6 +284,25 @@ GRanges with 501 ranges and 0 metadata columns:
   [499]     chrB [4911, 4931]      *
   [500]     chrB [4941, 4961]      *
   [501]     chrB [4971, 4991]      *
+  ---
+  seqlengths:
+    chrA  chrB
+   10000  5000
+> comp(bamFiles, fraglen=150, right=-5, left=15)
+GRanges with 750 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 6, 16]      *
+    [2]     chrA     [26, 36]      *
+    [3]     chrA     [46, 56]      *
+    [4]     chrA     [66, 76]      *
+    [5]     chrA     [86, 96]      *
+    ...      ...          ...    ...
+  [746]     chrB [4906, 4916]      *
+  [747]     chrB [4926, 4936]      *
+  [748]     chrB [4946, 4956]      *
+  [749]     chrB [4966, 4976]      *
+  [750]     chrB [4986, 4996]      *
   ---
   seqlengths:
     chrA  chrB
@@ -418,59 +438,59 @@ GRanges with 900 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, left=50)
-GRanges with 900 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, left=10)
+GRanges with 903 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
-    [2]     chrA     [ 1, 21]      *
-    [3]     chrA     [ 1, 41]      *
-    [4]     chrA     [11, 61]      *
-    [5]     chrA     [31, 81]      *
+    [2]     chrA     [11, 21]      *
+    [3]     chrA     [31, 41]      *
+    [4]     chrA     [51, 61]      *
+    [5]     chrA     [71, 81]      *
     ...      ...          ...    ...
-  [896]     chrC [7851, 7901]      *
-  [897]     chrC [7871, 7921]      *
-  [898]     chrC [7891, 7941]      *
-  [899]     chrC [7911, 7961]      *
-  [900]     chrC [7931, 7981]      *
+  [899]     chrC [7911, 7921]      *
+  [900]     chrC [7931, 7941]      *
+  [901]     chrC [7951, 7961]      *
+  [902]     chrC [7971, 7981]      *
+  [903]     chrC [7991, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, right=0, spacing=20)
-GRanges with 900 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, right=-30, left=40, spacing=50)
+GRanges with 360 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA     [ 1,  1]      *
-    [2]     chrA     [21, 21]      *
-    [3]     chrA     [41, 41]      *
-    [4]     chrA     [61, 61]      *
-    [5]     chrA     [81, 81]      *
+    [1]     chrA   [ 11,  21]      *
+    [2]     chrA   [ 61,  71]      *
+    [3]     chrA   [111, 121]      *
+    [4]     chrA   [161, 171]      *
+    [5]     chrA   [211, 221]      *
     ...      ...          ...    ...
-  [896]     chrC [7901, 7901]      *
-  [897]     chrC [7921, 7921]      *
-  [898]     chrC [7941, 7941]      *
-  [899]     chrC [7961, 7961]      *
-  [900]     chrC [7981, 7981]      *
+  [356]     chrC [7761, 7771]      *
+  [357]     chrC [7811, 7821]      *
+  [358]     chrC [7861, 7871]      *
+  [359]     chrC [7911, 7921]      *
+  [360]     chrC [7961, 7971]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, left=100, spacing=100)
-GRanges with 180 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, left=70, spacing=100)
+GRanges with 183 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
-    [2]     chrA   [  1, 101]      *
-    [3]     chrA   [101, 201]      *
-    [4]     chrA   [201, 301]      *
-    [5]     chrA   [301, 401]      *
+    [2]     chrA   [ 31, 101]      *
+    [3]     chrA   [131, 201]      *
+    [4]     chrA   [231, 301]      *
+    [5]     chrA   [331, 401]      *
     ...      ...          ...    ...
-  [176]     chrC [7401, 7501]      *
-  [177]     chrC [7501, 7601]      *
-  [178]     chrC [7601, 7701]      *
-  [179]     chrC [7701, 7801]      *
-  [180]     chrC [7801, 7901]      *
+  [179]     chrC [7531, 7601]      *
+  [180]     chrC [7631, 7701]      *
+  [181]     chrC [7731, 7801]      *
+  [182]     chrC [7831, 7901]      *
+  [183]     chrC [7931, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -585,21 +605,21 @@ GRanges with 900 ranges and 0 metadata columns:
 [1] 3000 3000 3000
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
-> comp(bamFiles, fraglen=100, left=100)
-GRanges with 900 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=100, left=10)
+GRanges with 903 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA      [1,  1]      *
-    [2]     chrA      [1, 21]      *
-    [3]     chrA      [1, 41]      *
-    [4]     chrA      [1, 61]      *
-    [5]     chrA      [1, 81]      *
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [11, 21]      *
+    [3]     chrA     [31, 41]      *
+    [4]     chrA     [51, 61]      *
+    [5]     chrA     [71, 81]      *
     ...      ...          ...    ...
-  [896]     chrC [7801, 7901]      *
-  [897]     chrC [7821, 7921]      *
-  [898]     chrC [7841, 7941]      *
-  [899]     chrC [7861, 7961]      *
-  [900]     chrC [7881, 7981]      *
+  [899]     chrC [7911, 7921]      *
+  [900]     chrC [7931, 7941]      *
+  [901]     chrC [7951, 7961]      *
+  [902]     chrC [7971, 7981]      *
+  [903]     chrC [7991, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -623,40 +643,40 @@ GRanges with 900 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, left=0, spacing=50)
+> comp(bamFiles, fraglen=200, right=-30, left=40, spacing=50)
 GRanges with 360 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [  1,   1]      *
-    [2]     chrA   [ 51,  51]      *
-    [3]     chrA   [101, 101]      *
-    [4]     chrA   [151, 151]      *
-    [5]     chrA   [201, 201]      *
+    [1]     chrA   [ 11,  21]      *
+    [2]     chrA   [ 61,  71]      *
+    [3]     chrA   [111, 121]      *
+    [4]     chrA   [161, 171]      *
+    [5]     chrA   [211, 221]      *
     ...      ...          ...    ...
-  [356]     chrC [7751, 7751]      *
-  [357]     chrC [7801, 7801]      *
-  [358]     chrC [7851, 7851]      *
-  [359]     chrC [7901, 7901]      *
-  [360]     chrC [7951, 7951]      *
+  [356]     chrC [7761, 7771]      *
+  [357]     chrC [7811, 7821]      *
+  [358]     chrC [7861, 7871]      *
+  [359]     chrC [7911, 7921]      *
+  [360]     chrC [7961, 7971]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, right=100, spacing=100)
+> comp(bamFiles, fraglen=200, right=70, spacing=100)
 GRanges with 180 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [  1, 101]      *
-    [2]     chrA   [101, 201]      *
-    [3]     chrA   [201, 301]      *
-    [4]     chrA   [301, 401]      *
-    [5]     chrA   [401, 501]      *
+    [1]     chrA   [  1,  71]      *
+    [2]     chrA   [101, 171]      *
+    [3]     chrA   [201, 271]      *
+    [4]     chrA   [301, 371]      *
+    [5]     chrA   [401, 471]      *
     ...      ...          ...    ...
-  [176]     chrC [7501, 7601]      *
-  [177]     chrC [7601, 7701]      *
-  [178]     chrC [7701, 7801]      *
-  [179]     chrC [7801, 7901]      *
-  [180]     chrC [7901, 8000]      *
+  [176]     chrC [7501, 7571]      *
+  [177]     chrC [7601, 7671]      *
+  [178]     chrC [7701, 7771]      *
+  [179]     chrC [7801, 7871]      *
+  [180]     chrC [7901, 7971]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -809,40 +829,40 @@ GRanges with 900 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, right=0, spacing=40)
+> comp(bamFiles, fraglen=200, left=20, right=-15, spacing=40)
 GRanges with 450 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [  1,   1]      *
-    [2]     chrA   [ 41,  41]      *
-    [3]     chrA   [ 81,  81]      *
-    [4]     chrA   [121, 121]      *
-    [5]     chrA   [161, 161]      *
+    [1]     chrA   [ 21,  26]      *
+    [2]     chrA   [ 61,  66]      *
+    [3]     chrA   [101, 106]      *
+    [4]     chrA   [141, 146]      *
+    [5]     chrA   [181, 186]      *
     ...      ...          ...    ...
-  [446]     chrC [7801, 7801]      *
-  [447]     chrC [7841, 7841]      *
-  [448]     chrC [7881, 7881]      *
-  [449]     chrC [7921, 7921]      *
-  [450]     chrC [7961, 7961]      *
+  [446]     chrC [7821, 7826]      *
+  [447]     chrC [7861, 7866]      *
+  [448]     chrC [7901, 7906]      *
+  [449]     chrC [7941, 7946]      *
+  [450]     chrC [7981, 7986]      *
   ---
   seqlengths:
    chrA chrB chrC
    5000 5000 8000
-> comp(bamFiles, fraglen=200, right=100, spacing=100)
-GRanges with 180 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, left=50, right=100, spacing=100)
+GRanges with 183 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1, 101]      *
-    [2]     chrA   [101, 201]      *
-    [3]     chrA   [201, 301]      *
-    [4]     chrA   [301, 401]      *
-    [5]     chrA   [401, 501]      *
+    [2]     chrA   [ 51, 201]      *
+    [3]     chrA   [151, 301]      *
+    [4]     chrA   [251, 401]      *
+    [5]     chrA   [351, 501]      *
     ...      ...          ...    ...
-  [176]     chrC [7501, 7601]      *
-  [177]     chrC [7601, 7701]      *
-  [178]     chrC [7701, 7801]      *
-  [179]     chrC [7801, 7901]      *
-  [180]     chrC [7901, 8000]      *
+  [179]     chrC [7551, 7701]      *
+  [180]     chrC [7651, 7801]      *
+  [181]     chrC [7751, 7901]      *
+  [182]     chrC [7851, 8000]      *
+  [183]     chrC [7951, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -890,7 +910,26 @@ GRanges with 2 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB
    8000 8000
-> comp(bamFiles, right=max(chromos), left=max(chromos))
+> comp(bamFiles, right=max(chromos))
+GRanges with 800 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 1, 8000]      *
+    [2]     chrA   [21, 8000]      *
+    [3]     chrA   [41, 8000]      *
+    [4]     chrA   [61, 8000]      *
+    [5]     chrA   [81, 8000]      *
+    ...      ...          ...    ...
+  [796]     chrB [7901, 8000]      *
+  [797]     chrB [7921, 8000]      *
+  [798]     chrB [7941, 8000]      *
+  [799]     chrB [7961, 8000]      *
+  [800]     chrB [7981, 8000]      *
+  ---
+  seqlengths:
+   chrA chrB
+   8000 8000
+> comp(bamFiles, right=max(chromos), spacing=max(chromos))
 GRanges with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
@@ -952,21 +991,21 @@ GRanges with 250 ranges and 0 metadata columns:
   seqlengths:
    chrA
    5000
-> comp(bamFiles, fraglen=100, left=100, discard=makeDiscard(50, 20))
-GRanges with 900 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=100, left=30, spacing=50, discard=makeDiscard(50, 20))
+GRanges with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA      [1,  1]      *
-    [2]     chrA      [1, 21]      *
-    [3]     chrA      [1, 41]      *
-    [4]     chrA      [1, 61]      *
-    [5]     chrA      [1, 81]      *
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 21,  51]      *
+    [3]     chrA   [ 71, 101]      *
+    [4]     chrA   [121, 151]      *
+    [5]     chrA   [171, 201]      *
     ...      ...          ...    ...
-  [896]     chrC [7801, 7901]      *
-  [897]     chrC [7821, 7921]      *
-  [898]     chrC [7841, 7941]      *
-  [899]     chrC [7861, 7961]      *
-  [900]     chrC [7881, 7981]      *
+  [359]     chrC [7771, 7801]      *
+  [360]     chrC [7821, 7851]      *
+  [361]     chrC [7871, 7901]      *
+  [362]     chrC [7921, 7951]      *
+  [363]     chrC [7971, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -992,21 +1031,21 @@ GRanges with 500 ranges and 0 metadata columns:
    5000 5000
 > 
 > bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-> comp(bamFiles, fraglen=200, left=0, spacing=50, discard=makeDiscard(20, 200))
-GRanges with 360 ranges and 0 metadata columns:
+> comp(bamFiles, fraglen=200, left=20, spacing=50, discard=makeDiscard(20, 200))
+GRanges with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
-    [2]     chrA   [ 51,  51]      *
-    [3]     chrA   [101, 101]      *
-    [4]     chrA   [151, 151]      *
-    [5]     chrA   [201, 201]      *
+    [2]     chrA   [ 31,  51]      *
+    [3]     chrA   [ 81, 101]      *
+    [4]     chrA   [131, 151]      *
+    [5]     chrA   [181, 201]      *
     ...      ...          ...    ...
-  [356]     chrC [7751, 7751]      *
-  [357]     chrC [7801, 7801]      *
-  [358]     chrC [7851, 7851]      *
-  [359]     chrC [7901, 7901]      *
-  [360]     chrC [7951, 7951]      *
+  [359]     chrC [7781, 7801]      *
+  [360]     chrC [7831, 7851]      *
+  [361]     chrC [7881, 7901]      *
+  [362]     chrC [7931, 7951]      *
+  [363]     chrC [7981, 8000]      *
   ---
   seqlengths:
    chrA chrB chrC
@@ -1099,4 +1138,4 @@ GRanges with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 97.842   0.392  98.538 
+107.038   0.356 107.604 
