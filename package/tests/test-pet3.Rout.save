@@ -444,7 +444,7 @@ GRanges with 34 ranges and 0 metadata columns:
    chrA
    1000
 > 
-> checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, left=100)
+> checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, left=10)
         total        single    unoriented mate.unmapped     inter.chr 
          1062             0           107           512           131 
         total        single    unoriented mate.unmapped     inter.chr 
@@ -453,26 +453,26 @@ GRanges with 34 ranges and 0 metadata columns:
          1693             0           269           263           342 
         total        single    unoriented mate.unmapped     inter.chr 
           985             0           189           489             0 
-GRanges with 50 ranges and 0 metadata columns:
-       seqnames     ranges strand
-          <Rle>  <IRanges>  <Rle>
-   [1]     chrA    [1,  1]      *
-   [2]     chrA    [1, 21]      *
-   [3]     chrA    [1, 41]      *
-   [4]     chrA    [1, 61]      *
-   [5]     chrA    [1, 81]      *
-   ...      ...        ...    ...
-  [46]     chrA [801, 901]      *
-  [47]     chrA [821, 921]      *
-  [48]     chrA [841, 941]      *
-  [49]     chrA [861, 961]      *
-  [50]     chrA [881, 981]      *
+GRanges with 51 ranges and 0 metadata columns:
+       seqnames      ranges strand
+          <Rle>   <IRanges>  <Rle>
+   [1]     chrA    [ 1,  1]      *
+   [2]     chrA    [11, 21]      *
+   [3]     chrA    [31, 41]      *
+   [4]     chrA    [51, 61]      *
+   [5]     chrA    [71, 81]      *
+   ...      ...         ...    ...
+  [47]     chrA [911,  921]      *
+  [48]     chrA [931,  941]      *
+  [49]     chrA [951,  961]      *
+  [50]     chrA [971,  981]      *
+  [51]     chrA [991, 1000]      *
   ---
   seqlengths:
    chrA
    1000
 > 
-> checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=20, left=20)
+> checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=-5, left=10)
         total        single    unoriented mate.unmapped     inter.chr 
          2146            27           219          1025           264 
         total        single    unoriented mate.unmapped     inter.chr 
@@ -484,17 +484,17 @@ GRanges with 50 ranges and 0 metadata columns:
 GRanges with 67 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
-   [1]     chrA    [ 1, 21]      *
-   [2]     chrA    [ 1, 36]      *
-   [3]     chrA    [11, 51]      *
-   [4]     chrA    [26, 66]      *
-   [5]     chrA    [41, 81]      *
+   [1]     chrA    [ 6, 11]      *
+   [2]     chrA    [21, 26]      *
+   [3]     chrA    [36, 41]      *
+   [4]     chrA    [51, 56]      *
+   [5]     chrA    [66, 71]      *
    ...      ...         ...    ...
-  [63]     chrA [911,  951]      *
-  [64]     chrA [926,  966]      *
-  [65]     chrA [941,  981]      *
-  [66]     chrA [956,  996]      *
-  [67]     chrA [971, 1000]      *
+  [63]     chrA [936,  941]      *
+  [64]     chrA [951,  956]      *
+  [65]     chrA [966,  971]      *
+  [66]     chrA [981,  986]      *
+  [67]     chrA [996, 1000]      *
   ---
   seqlengths:
    chrA
@@ -509,7 +509,7 @@ GRanges with 67 ranges and 0 metadata columns:
          3328            24           543           602           642 
         total        single    unoriented mate.unmapped     inter.chr 
          2002            13           382           989             0 
-GRanges with 67 ranges and 0 metadata columns:
+GRanges with 68 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
    [1]     chrA    [ 1, 11]      *
@@ -518,11 +518,11 @@ GRanges with 67 ranges and 0 metadata columns:
    [4]     chrA    [36, 56]      *
    [5]     chrA    [51, 71]      *
    ...      ...         ...    ...
-  [63]     chrA [921,  941]      *
   [64]     chrA [936,  956]      *
   [65]     chrA [951,  971]      *
   [66]     chrA [966,  986]      *
   [67]     chrA [981, 1000]      *
+  [68]     chrA [996, 1000]      *
   ---
   seqlengths:
    chrA
@@ -654,4 +654,4 @@ GRanges with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 96.708   0.288  97.264 
+ 96.879   0.389  97.462 

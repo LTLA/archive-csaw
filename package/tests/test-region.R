@@ -62,8 +62,8 @@ comp(bamFiles, fraglen=200, spacing=50)
 
 bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=30, spacing=20)
-comp(bamFiles, fraglen=200, left=50, spacing=25)
-comp(bamFiles, fraglen=150, right=10, left=10, spacing=30)
+comp(bamFiles, fraglen=200, left=5, spacing=25)
+comp(bamFiles, fraglen=150, right=-10, left=10, spacing=30)
 
 # Even more complex, with filtering arguments
 
@@ -81,8 +81,8 @@ comp(bamFiles, fraglen=200)
 
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=100)
-comp(bamFiles, fraglen=200, left=50)
-comp(bamFiles, fraglen=200, right=0, spacing=20)
+comp(bamFiles, fraglen=200, left=10)
+comp(bamFiles, fraglen=200, right=-5, left=10, spacing=20)
 
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, filter=20)
@@ -96,7 +96,7 @@ comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
 
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=100, left=100)
+comp(bamFiles, fraglen=100, left=50, spacing=100)
 comp(bamFiles, fraglen=200, right=100, spacing=100)
 
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
@@ -119,7 +119,7 @@ comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
 comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=200, left=0, spacing=50, discard=makeDiscard(20, 200))
+comp(bamFiles, fraglen=200, left=25, spacing=50, discard=makeDiscard(20, 200))
 comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
 comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
 

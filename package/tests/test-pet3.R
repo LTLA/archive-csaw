@@ -217,9 +217,9 @@ checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=100, right=10, max.frag=20
 
 checkcount(1000, 100, c(chrA=1000, chrB=2000), spacing=30, right=100)
 
-checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, left=100)
+checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, left=10)
 
-checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=20, left=20)
+checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=-5, left=10)
 
 checkcount(2000, 25, c(chrA=1000, chrB=2000), spacing=15, right=10, left=10, max.frag=200)
 	
