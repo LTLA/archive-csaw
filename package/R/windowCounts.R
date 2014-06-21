@@ -92,7 +92,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 # must be extended by 'right' and the end of each read must be extended by
 # 'left'. We then pull out counts at the specified spacing. We do have to 
 # keep track of whether or not we want to use the first point, though.
-			out<-.Call("R_get_rle_counts", frag.start-right, frag.end+left, total.pts, spacing, at.start, PACKAGE="csaw")
+			out<-.Call(cxx_get_rle_counts, frag.start-right, frag.end+left, total.pts, spacing, at.start)
 			if (is.character(out)) { stop(out) }
 			outcome[,bf]<-out
 			totals[bf]<-totals[bf]+length(frag.start)

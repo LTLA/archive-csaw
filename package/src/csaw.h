@@ -33,6 +33,8 @@ SEXP correlate_reads(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 /* get_rle_counts.cpp */
 
+SEXP get_rle_counts(SEXP, SEXP, SEXP, SEXP, SEXP);
+
 }
 
 #include <stdexcept>
