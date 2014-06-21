@@ -216,6 +216,18 @@ comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
+# Where the chromosome length is literally too small to compute correlations.
+
+bamFile<-regen(1, c(chrA=1, chrB=1))
+comp(bamFile, 50, cross=TRUE)
+comp(bamFile, 50, cross=FALSE)
+comp(bamFile, 100, cross=FALSE)
+
+bamFile<-regen(10, c(chrA=1, chrB=1))
+comp(bamFile, 50, cross=TRUE)
+comp(bamFile, 50, cross=FALSE)
+comp(bamFile, 100, cross=FALSE)
+
 ###################################################################################################
 # Cleaning out the directory.
 

@@ -313,6 +313,24 @@ Type 'q()' to quit R.
 > comp(bamFile, 100, cross=FALSE)
 [1]  1.00000000 -0.03571429 -0.03703704 -0.03846154 -0.04000000 -0.04166667
 > 
+> # Where the chromosome length is literally too small to compute correlations.
+> 
+> bamFile<-regen(1, c(chrA=1, chrB=1))
+> comp(bamFile, 50, cross=TRUE)
+[1] 0 0 0 0 0 0
+> comp(bamFile, 50, cross=FALSE)
+[1] 0 0 0 0 0 0
+> comp(bamFile, 100, cross=FALSE)
+[1] 0 0 0 0 0 0
+> 
+> bamFile<-regen(10, c(chrA=1, chrB=1))
+> comp(bamFile, 50, cross=TRUE)
+[1] 0 0 0 0 0 0
+> comp(bamFile, 50, cross=FALSE)
+[1] 0 0 0 0 0 0
+> comp(bamFile, 100, cross=FALSE)
+[1] 0 0 0 0 0 0
+> 
 > ###################################################################################################
 > # Cleaning out the directory.
 > 
@@ -323,4 +341,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 24.332   0.247  24.712 
+ 25.333   0.224  25.615 

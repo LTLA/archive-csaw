@@ -22,8 +22,8 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		all.f<-all.r<-list()
-		num.reads<-0
-		forward.reads<-0
+		num.reads<-0L
+		forward.reads<-0L
 		for (b in 1:length(bam.files)) {
 			if (pet=="none") { 
 				reads<-.extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]])
@@ -44,8 +44,8 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 		# Assembling RLEs (with some protection from empties). We need reads for any correlation and 
 		# reads on both strands to get cross-correlations. If we're doing cross-correlations, then
 		# we compare between strands; if we're doing autocorrelations, we compare within all reads.		
-		if (num.reads==0) { next; }
-		if (cross && (forward.reads==0 || forward.reads==num.reads)) { next }
+		if (num.reads==0L) { next; }
+		if (cross && (forward.reads==0L || forward.reads==num.reads)) { next }
 		all.f<-rle(sort(do.call(c, all.f)))
 		if (cross) {
 			all.r<-rle(sort(do.call(c, all.r)))
@@ -59,8 +59,8 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=
 
 		# Returning some output. Note that the coefficient is weighted according to the number
         # of reads on each chromosome, as described in as described by Kharchenko et al. (2008).
-        total.read.num<-total.read.num+num.reads;
-        total.cor<-total.cor+ccfs*num.reads;
+        total.read.num<-total.read.num+num.reads
+        total.cor<-total.cor+ccfs*num.reads
     }
 
 	# Cleaning up and returning the correlations.
