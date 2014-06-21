@@ -2,7 +2,7 @@
 
 extern "C" {
 
-SEXP R_best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
+SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 	if (!IS_NUMERIC(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
 	const double *pptr=NUMERIC_POINTER(pval);
 	const int n=LENGTH(pval);
@@ -15,6 +15,7 @@ SEXP R_best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 
 	// Checking that the 'by' is sorted, counting the number of elements.
 	int total=1;
+	if (n==0) { throw std::runtime_error("no p-values supplied to identify the best test"); }
 	for (int i=1; i<n; ++i) { 
 		if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
 		else if (bptr[i]!=bptr[i-1]) { ++total; }

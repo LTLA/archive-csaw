@@ -20,7 +20,7 @@ getBestTest <- function(ids, tab, mode=c("PValue", "logCPM"), weight=rep(1, leng
 		weight <- weight[id.order]
 			
 		# Identifying the minimum P-value.
-		out<-.Call("R_best_in_cluster", tab$PValue, ids, weight, PACKAGE="csaw")
+		out<-.Call(cxx_best_in_cluster, tab$PValue, ids, weight)
 		if (is.character(out)) { stop(out) }
 		result<-data.frame(best=id.order[out[[2]]], PValue=out[[1]], FDR=p.adjust(out[[1]], method="BH"))
 
@@ -29,7 +29,7 @@ getBestTest <- function(ids, tab, mode=c("PValue", "logCPM"), weight=rep(1, leng
 		weight <- rep(1, length(ids))
 
 		# Identifying the maximum logCPM.
-		out<-.Call("R_best_in_cluster", -tab$logCPM, ids, weight, PACKAGE="csaw")
+		out<-.Call(cxx_best_in_cluster, -tab$logCPM, ids, weight)
 		if (is.character(out)) { stop(out) }
 		pval <- tab$PValue[out[[2]]]
 		result<-data.frame(best=id.order[out[[2]]], PValue=pval, FDR=p.adjust(pval, method="BH"))

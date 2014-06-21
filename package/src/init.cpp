@@ -5,6 +5,7 @@ extern "C" {
 static const R_CallMethodDef all_call_entries[] = {
 	{"collate_exon_data", (DL_FUNC) &collate_exon_data, 4},
 	{"annotate_overlaps", (DL_FUNC) &annotate_overlaps, 13},
+	{"best_in_cluster", (DL_FUNC) &best_in_cluster, 3},
 	{NULL, NULL, 0}
 };
 
