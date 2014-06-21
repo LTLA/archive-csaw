@@ -139,7 +139,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 
 extern "C" {
 
-SEXP R_correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist, SEXP chrlen) try {
+SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist, SEXP chrlen) try {
     // Prepping up the R input data.
     if (!IS_INTEGER(pos1)) { throw std::runtime_error("forward positions must be an integer vector"); }
     if (!IS_INTEGER(num1)) { throw std::runtime_error("forward counts must be an integer vector"); }

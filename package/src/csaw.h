@@ -27,6 +27,12 @@ SEXP get_cluster_stats(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 SEXP merge_windows(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
+/* correlate_reads.cpp */
+
+SEXP correlate_reads(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+
+/* get_rle_counts.cpp */
+
 }
 
 #include <stdexcept>
