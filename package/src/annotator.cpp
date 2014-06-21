@@ -1,6 +1,7 @@
 #include "csaw.h"
+
 #include <string>
-#include <sstream>
+#include <cstdio>
 #include <map>
 
 extern "C" {
@@ -86,7 +87,7 @@ try {
 	}
 } catch (std::exception& e) {
 	UNPROTECT(1);
-	throw e;
+	throw;
 }
 	UNPROTECT(1);
 	return output;
@@ -105,23 +106,41 @@ try {
  * feature (i.e., collate exon-level overlaps to a gene-level string).
  */
 
+#define BUFSIZE 100
+char make_int_box [BUFSIZE];
+int errcode=0;
+char * ssfake (const int& x) { // Don't want to load sstream because of Rf_length conflict.
+//	if (x==NA_INTEGER || x==0) { // Had all these checks, but what kind of integer would have over 100 digits anyway? ~10 (+1 for the null, and another for the strand) would be the max.
+//		;
+//	} else if (x>0) { 
+//		if (int(std::ceil(std::log10(double(x)))) + 2 > BUFSIZE) { // Checking for safety. 
+//			throw std::runtime_error("insufficient space in the buffer for integer conversion"); 
+//		}
+//	} else {
+//		throw std::runtime_error("negative integers should not present during annotation"); 
+//	}
+	errcode=std::sprintf(make_int_box, "%d", x); // Don't want to use snprintf, avoid C++11. 
+	if (errcode >= 0) { return make_int_box; }
+	throw std::runtime_error("error in string to integer conversion for annotation");
+}
+
 std::string digest2string (const int start, const int end, const int* indices, const int* dists, SEXP symbols, const int* features, const int* strand) {
-	std::stringstream ss;
-	ss << CHAR(STRING_ELT(symbols, indices[start])) << '|'; 
+	std::string ss(CHAR(STRING_ELT(symbols, indices[start])));
+	ss += '|'; 
 
 	// Deciding what to print.
 	if (end==start) {
 		throw std::runtime_error("empty vector of collected exon numbers"); 
 	} else if (end==start+1) {
 		if (features[indices[start]]==-1) {
-			ss << "I"; 
+			ss += "I"; 
 		} else {
-			ss << features[indices[start]];
+			ss += ssfake(features[indices[start]]);
 		}
 	} else {		
 		int index=start;
 		if (features[indices[index]]==-1) { ++index; } 
-		ss << features[indices[index]];
+		ss += ssfake(features[indices[index]]);
 		bool wasokay=false;
 
 		// Running through and printing all stretches of contiguous exons.
@@ -129,26 +148,34 @@ std::string digest2string (const int start, const int end, const int* indices, c
 			if (features[indices[index]]==features[indices[index-1]]+1) { 
 				wasokay=true;
 			} else {
-				if (wasokay) { 
-					ss << "-" << features[indices[index-1]];
+				if (wasokay) {
+					ss += '-';
+ 				    ss += ssfake(features[indices[index-1]]);
 					wasokay=false;
 				}
-				ss << "," << features[indices[index]];
+				ss += ',';
+ 			    ss += ssfake(features[indices[index]]);
 			}
 		}
-		if (wasokay) { ss << "-" << features[indices[end-1]]; }
+		if (wasokay) {
+ 		    ss += '-';
+			ss += ssfake(features[indices[end-1]]); 
+		}
 	}
 	
 	// Adding the strand and distance information.	
-	ss << '|' << (strand[indices[start]] ? '+' : '-');
+	ss += '|';
+    ss += (strand[indices[start]] ? '+' : '-');
 	if (dists!=NULL) {
 		int lowest=dists[start];
 		for (int index=start+1; index < end; ++index) {
 			if (lowest > dists[index]) { lowest=dists[index]; }
 		}
-		ss << "[" << lowest << "]";
+		ss += '[';
+		ss += ssfake(lowest);
+		ss += ']';
 	}
-	return ss.str();
+	return ss;
 }
 
 SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
@@ -188,7 +215,7 @@ SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, 
 		  * giptr=INTEGER_POINTER(geneid),
 		  * gfptr=INTEGER_POINTER(genefeature),
 		  * gsptr=LOGICAL_POINTER(genestr);
-
+	
 	// Okay, now going through them and assembling the output vectors. 
 	SEXP output=PROTECT(NEW_LIST(3));
 try {
@@ -253,7 +280,7 @@ try {
 	}
 } catch (std::exception& e) {
 	UNPROTECT(1);
-	throw e;
+	throw;
 }
 	UNPROTECT(1);
 	return output;
