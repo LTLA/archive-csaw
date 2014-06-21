@@ -1,5 +1,5 @@
 #  Calling the dynamic library
-useDynLib(csaw)
+useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 
 #  All functions exported other than those starting with "."
 exportPattern("^[^\\.]")

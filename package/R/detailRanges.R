@@ -36,7 +36,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	# Assembling exon counts. Note that everything is sorted within each gene 
 	# by exon start. We resort by exon end for the reverse strand to ensure
 	# that '1' is the first exon in pathological cases. 
-	output <- .Call("R_collate_exon_data", gene.id, gene.str, start(curex), end(curex), PACKAGE="csaw")
+	output <- .Call(cxx_collate_exon_data, gene.id, gene.str, start(curex), end(curex))
 	if (is.character(output)) { stop(output) }
 	ex.num <- output[[1]]
 
@@ -96,10 +96,10 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	right.nolap <- right.dist > 0L
 	
 	# Collating the left-overs.
-	all.strs <- .Call("R_annotate", length(incoming), queryHits(full.lap)-1L, subjectHits(full.lap)-1L,
+	all.strs <- .Call(cxx_annotate_overlaps, length(incoming), queryHits(full.lap)-1L, subjectHits(full.lap)-1L,
 			queryHits(left.lap)[left.nolap]-1L, which(flank.only)[subjectHits(left.lap)][left.nolap]-1L, left.dist[left.nolap],
 			queryHits(right.lap)[right.nolap]-1L, which(flank.only)[subjectHits(right.lap)][right.nolap]-1L, right.dist[right.nolap],
-			gene.name, ex.num, gene.id, gene.str, PACKAGE="csaw")
+			gene.name, ex.num, gene.id, gene.str)
 	if (is.character(all.strs)) { stop(all.strs) }
 	names(all.strs) <- c("overlap", "left", "right")
 	return(all.strs)

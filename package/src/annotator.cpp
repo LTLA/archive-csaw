@@ -10,7 +10,7 @@ extern "C" {
  * are assumed to be stored in genomic order so we just label them as-is.
  */
 
-SEXP R_collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
+SEXP collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
 	// Checking inputs.
 	if (!IS_INTEGER(geneid)) { throw std::runtime_error("gene ID vector should be integer"); }
 	if (!IS_LOGICAL(strand)) { throw std::runtime_error("vector of strands should be logical"); }
@@ -25,6 +25,7 @@ SEXP R_collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
 	sort_row_index<int> endcomp(endptr);
 	
 	// Scanning through to determine the number of unique genes.
+	if (n==0) { throw std::runtime_error("no genes supplied for exonic aggregation"); }
 	int nuniq=1;
 	for (int x=1; x<n; ++x) {
 		if (gixptr[x]!=gixptr[x-1]) { 
@@ -150,7 +151,7 @@ std::string digest2string (const int start, const int end, const int* indices, c
 	return ss.str();
 }
 
-SEXP R_annotate (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
+SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
 		SEXP rightQ, SEXP rightS, SEXP rightDist, 
 		SEXP symbol, SEXP genefeature, SEXP geneid, SEXP genestr) try {
 	if (!IS_INTEGER(N) || LENGTH(N)!=1) { throw std::runtime_error("N should be a integer scalar"); }
