@@ -48,7 +48,7 @@ Also note that the read pair information in each BAM file \emph{must} be synchro
 }
 
 \examples{
-bamFile<-system.file("exdata", "pet", "pet_sort.bam", package="csaw")
+bamFile<-system.file("exdata", "pet.bam", package="csaw")
 out<-getPETSizes(bamFile)
 out<-getPETSizes(bamFile, restrict="chrA")
 out<-getPETSizes(bamFile, discard=GRanges("chrA", IRanges(1, 50)))

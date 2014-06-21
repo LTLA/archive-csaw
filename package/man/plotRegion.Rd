@@ -59,7 +59,7 @@ A plot is produced on the current graphics device. A \code{NULL} value is invisi
 \author{Aaron Lun}
 
 \examples{
-bamFiles<-system.file("exdata", "chip", c("rep1_sort.bam", "rep2_sort.bam"), package="csaw")
+bamFiles<-system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 
 # Normalization factors are set to 1, so library sizes are unaffected.
 require(Rsamtools)
@@ -76,7 +76,7 @@ plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], max.depth=constant*l
 plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2], max.depth=constant*lib.sizes[2]/mlib, discard=GRanges("chrA", IRanges(250, 500)))
 
 # Considering paired-read data.
-bamFile <-system.file("exdata", "pet", c("pet_sort.bam"), package="csaw")
+bamFile <-system.file("exdata", "pet.bam", package="csaw")
 plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both")
 plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both", max.frag=50)
 plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both", max.frag=50, rescue.ext=40)

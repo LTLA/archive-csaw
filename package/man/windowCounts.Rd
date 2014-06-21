@@ -130,7 +130,7 @@ those specified in \code{param}.
 
 \examples{
 # A low filter is only used here as the examples have very few reads.
-bamFiles <- system.file("exdata", "chip", c("rep1_sort.bam", "rep2_sort.bam"), package="csaw")
+bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, width=100, filter=1)
 windowCounts(bamFiles, spacing=100, filter=1)
@@ -144,7 +144,7 @@ countWindows(param, restrict="chrB", filter=3)
 countWindows(param, filter=3, discard=GRanges("chrA", IRanges(1, 100)))
 
 # Loading PET data.
-bamFile <- system.file("exdata", "pet", "pet_sort.bam", package="csaw")
+bamFile <- system.file("exdata", "pet.bam", package="csaw")
 windowCounts(bamFile, pet="both", filter=1)
 windowCounts(bamFile, pet="first", filter=1)
 windowCounts(bamFile, max.frag=100, pet="both", filter=1)

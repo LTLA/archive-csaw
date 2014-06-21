@@ -52,7 +52,7 @@ Note that any duplicate read must be marked in the bit field of the BAM file usi
 
 \examples{
 n<-20
-bamFile<-system.file("exdata", "chip", "rep1_sort.bam", package="csaw")
+bamFile<-system.file("exdata", "rep1.bam", package="csaw")
 par(mfrow=c(2,2))
 
 x<-correlateReads(bamFile, max.dist=n)
