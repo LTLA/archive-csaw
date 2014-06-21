@@ -160,8 +160,7 @@ countWindows <- function(param, ...)
 	
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
 	if (!is.null(discard)) {
- 	   	require(GenomicAlignments)	
-		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
+		awidth <- GenomicAlignments::cigarWidthAlongReferenceSpace(reads$cigar)
 		keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), discard, type="within")
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 		if (!"cigar" %in% extras) { reads$cigar <- NULL }

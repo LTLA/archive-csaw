@@ -10,10 +10,8 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 # written by Aaron Lun
 # 23 November, 2013
 {
-
 	# Obtain exons, and cleaning out the annotation.
-	require(GenomicFeatures)
-	curex <- exonsBy(txdb, by="gene")
+	curex <- GenomicFeatures::exonsBy(txdb, by="gene")
 	curex <- GenomicRanges::unlist(curex)
 	gene.id <- names(curex)
 	gene.str <- as.logical(strand(curex)=="+")
@@ -21,7 +19,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	curex$exon_name <- NULL
 
 	# Getting name annotation.
-	anno <- select(orgdb, keys=gene.id, columns=c("SYMBOL"), keytype="ENTREZID")
+	anno <- AnnotationDbi::select(orgdb, keys=gene.id, columns=c("SYMBOL"), keytype="ENTREZID")
 	gene.name <- ifelse(is.na(anno$SYMBOL), paste0("ID:", anno$ENTREZID), anno$SYMBOL)
 	
 	# Splitting IDs, to avoid problems when genes are assigned to multiple locations.
