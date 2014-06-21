@@ -6,6 +6,8 @@ static const R_CallMethodDef all_call_entries[] = {
 	{"collate_exon_data", (DL_FUNC) &collate_exon_data, 4},
 	{"annotate_overlaps", (DL_FUNC) &annotate_overlaps, 13},
 	{"best_in_cluster", (DL_FUNC) &best_in_cluster, 3},
+	{"get_cluster_stats", (DL_FUNC) &get_cluster_stats, 6},
+	{"merge_windows", (DL_FUNC) &merge_windows, 6},
 	{NULL, NULL, 0}
 };
 

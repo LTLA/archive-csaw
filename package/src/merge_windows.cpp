@@ -8,7 +8,7 @@ extern "C" {
  * between the first start and the last end is greater than 'max_size'.
  */
 
-SEXP R_merge(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP max_size) try {
+SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP max_size) try {
 	if (!IS_INTEGER(chrs)) { throw std::runtime_error("chromosomes should be a integer vector"); }
 	if (!IS_INTEGER(start)) { throw std::runtime_error("start vector should be integer"); }
 	if (!IS_INTEGER(end)) { throw std::runtime_error("end vector should be integer"); }
@@ -30,17 +30,7 @@ SEXP R_merge(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP ma
 	// Providing some protection against an input empty list.
 	const int n = LENGTH(chrs);
 	if (n!=LENGTH(start) || n!=LENGTH(end) || n!=LENGTH(sign)) { throw std::runtime_error("lengths of vectors are not equal"); 	}
-	if (!n) { 
-		SEXP output=PROTECT(NEW_LIST(4));
-		try {
-			for (int x=0; x<4; ++x) { SET_VECTOR_ELT(output, x, NEW_INTEGER(0)); }
-		} catch (std::exception& e) {
-			UNPROTECT(1);
-			throw;
-		}
-		UNPROTECT(1);
-		return output;
-	}
+	if (n==0) { throw std::runtime_error("no elements provided for clustering"); }
 		
 	// Proceeding with the merge operation.
 	SEXP output=PROTECT(NEW_LIST(4));

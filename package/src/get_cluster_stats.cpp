@@ -2,8 +2,7 @@
 
 extern "C" {
 
-
-SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
+SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
 	// Checking indices.
 	if (!IS_INTEGER(fcdex) || !IS_INTEGER(cpmdex) || !IS_INTEGER(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
 	if (LENGTH(cpmdex)!=1 || LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for log-CPM and p-value columns"); }
@@ -11,6 +10,7 @@ SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP 
 	const int fcn=LENGTH(fcdex);
 	if (!LENGTH(fcdex)) { throw std::runtime_error("at least one index should be supplied for log-FC columns"); }
 	const int* fcdptr=INTEGER_POINTER(fcdex);
+	if (fcn==0) { throw std::runtime_error("no log-FC columns supplied for clustering"); }
 
 	// Setting up the columns.
 	if (!isNewList(tab)) { throw std::runtime_error("data values should be supplied as a list or dataframe"); }
@@ -29,6 +29,7 @@ SEXP R_get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP 
 	    if (n!=LENGTH(fc)) { throw std::runtime_error("vector lengths are not equal"); }
 		fcptrs[i]=NUMERIC_POINTER(fc);
 	}
+	if (n==0) { throw std::runtime_error("no elements supplied to compute cluster statistics"); }
 
 	// Setting up the remaining inputs. 
 	if (!IS_INTEGER(by)) { throw std::runtime_error("vector of cluster ids should be integer"); }

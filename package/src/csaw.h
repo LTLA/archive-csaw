@@ -7,7 +7,7 @@ extern "C" {
 #include "R_ext/Rdynload.h"
 #include "R_ext/Visibility.h"
 
-/* From annotator.cpp */
+/* annotator.cpp */
 
 SEXP collate_exon_data (SEXP, SEXP, SEXP, SEXP);
 
@@ -15,9 +15,17 @@ SEXP annotate_overlaps (SEXP, SEXP, SEXP, SEXP, SEXP, SEXP,
      SEXP, SEXP, SEXP,
 	 SEXP, SEXP, SEXP, SEXP); 
 
-/* From best_in_cluster.cpp */
+/* best_in_cluster.cpp */
 
 SEXP best_in_cluster(SEXP, SEXP, SEXP);
+
+/* get_cluster_stats.cpp */
+
+SEXP get_cluster_stats(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+
+/* merge_windows.cpp */
+
+SEXP merge_windows(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 }
 

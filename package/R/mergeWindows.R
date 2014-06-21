@@ -7,8 +7,8 @@ mergeWindows <- function(regions, tol, sign=NULL, max.width=NULL)
 # written by Aaron Lun
 # 30 July 2013
 {
-	tol<-as.integer(tol+0.5)
-	max.width<-as.integer(max.width+0.5)
+	tol<-as.integer(tol)
+	max.width<-as.integer(max.width)
 	o<-GenomicRanges::order(regions)
 	regions<-regions[o]
 	if (is.null(sign)) { 
@@ -18,8 +18,7 @@ mergeWindows <- function(regions, tol, sign=NULL, max.width=NULL)
 	}
 
 	# Running the merge.
-	out<-.Call("R_merge", as.integer(seqnames(regions)), start(regions), end(regions), sign, 
-			tol, max.width, PACKAGE="csaw")
+	out<-.Call(cxx_merge_windows, as.integer(seqnames(regions)), start(regions), end(regions), sign, tol, max.width)
 	if (is.character(out)) { stop(out) }
 	
 	# Reporting. Indices correspond with positions in 'clustered'.
