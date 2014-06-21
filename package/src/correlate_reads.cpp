@@ -55,7 +55,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 		std::deque<double> jumptab(1, -1);
 		for (int index=start; index!=temp_end; index+=step) { 
 			const int& curcount=cnt_ptr[index];
-			if (jumptab.size() <= curcount) { jumptab.resize(curcount+1, -1); } 
+			if (int(jumptab.size()) <= curcount) { jumptab.resize(curcount+1, -1); } 
 			if (jumptab[curcount]<0) {
 				jumptab[curcount]=curcount-curmean;
 				jumptab[curcount]*=jumptab[curcount];
@@ -75,7 +75,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 			++counted;
 			present[0]=true;
 		}
-		for (int i=1; i<jumptab.size(); ++i) { 
+		for (size_t i=1; i<jumptab.size(); ++i) { 
 			if (jumptab[i]>0) { 
 				++counted; 
 				if (counted>=2) { 
@@ -112,7 +112,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 		 * in terms of decreasing delay distance; it'll be the last delay distance for
 		 * which correlation calculations are valid.
 		 */
-		if (first_pos_sd < 0 && (current_count>=present.size() || !present[current_count])) { 
+		if (first_pos_sd < 0 && (current_count>=int(present.size()) || !present[current_count])) { 
 			first_pos_sd=i; }
 	}
 
