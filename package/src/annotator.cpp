@@ -106,12 +106,15 @@ try {
  * feature (i.e., collate exon-level overlaps to a gene-level string).
  */
 
-#define BUFSIZE 100
+#define BUFSIZE 25
 char make_int_box [BUFSIZE];
 int errcode=0;
 char * ssfake (const int& x) { // Don't want to load sstream because of Rf_length conflict.
-//	if (x==NA_INTEGER || x==0) { // Had all these checks, but what kind of integer would have over 100 digits anyway? ~10 (+1 for the null, and another for the strand) would be the max.
-//		;
+	/* No integer should be larger than 25 digits for 32-bit R. Not even for
+ 	 * 64-bit implementations where 'x' is 8 bytes, even if you add 1 for the
+ 	 * sign and another for the null termination.
+ 	 */ 
+//	if (x==NA_INTEGER || x==0) { 
 //	} else if (x>0) { 
 //		if (int(std::ceil(std::log10(double(x)))) + 2 > BUFSIZE) { // Checking for safety. 
 //			throw std::runtime_error("insufficient space in the buffer for integer conversion"); 

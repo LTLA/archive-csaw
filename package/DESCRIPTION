@@ -6,7 +6,7 @@ Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: R (>= 3.1.0), GenomicRanges
 Imports: Rsamtools, edgeR, limma
-Suggests: GenomicAlignments, GenomicFeatures, org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.knownGene
+Suggests: GenomicAlignments, GenomicFeatures, org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.knownGene, AnnotationDbi
 biocViews: Bioinformatics, HighThroughputSequencing, ChIP-Seq
 Description: Efficient counts for sliding windows in ChIP-seq data
 License: GPL (>= 2)
