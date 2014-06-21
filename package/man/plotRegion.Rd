@@ -62,6 +62,7 @@ A plot is produced on the current graphics device. A \code{NULL} value is invisi
 bamFiles<-system.file("exdata", "chip", c("rep1_sort.bam", "rep2_sort.bam"), package="csaw")
 
 # Normalization factors are set to 1, so library sizes are unaffected.
+require(Rsamtools)
 lib.sizes<-c(countBam(bamFiles[1])$records, countBam(bamFiles[2])$records)
 mlib<-mean(lib.sizes)
 
