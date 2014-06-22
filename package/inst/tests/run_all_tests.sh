@@ -1,3 +1,5 @@
+set -u
+set -e
 if [[ $# -eq 0 ]]
 then
 	RCMD=R
