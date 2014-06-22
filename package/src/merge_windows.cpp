@@ -88,10 +88,12 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 		while (i<n) {
 			const int& curgroup=optr[i];
 			ocptr[curgroup-1]=cptr[i];
-			osptr[curgroup-1]=sptr[i];
+			osptr[curgroup-1]=sptr[i]; // Sorted by sign, remember.
 			int& curend=(oeptr[curgroup-1]=eptr[i]);
-			while (curgroup==optr[++i]) {
+			++i;
+			while (i < n && curgroup==optr[i]) {
 				if (curend < eptr[i]) { curend=eptr[i]; }
+				++i;
 			}
 		}
 	} catch (std::exception& e){
