@@ -1,11 +1,11 @@
-set -u
-set -e
 if [[ $# -eq 0 ]]
 then
 	RCMD=R
 else
 	RCMD=$1
 fi
+
+trap exit SIGINT SIGTERM
 for x in `ls test-*.R`
 do
 	echo Running $x...
