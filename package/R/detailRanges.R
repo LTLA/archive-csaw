@@ -48,7 +48,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 
 	# Adding the promoter regions, based on the start/end of the gene bodies.
 	if (length(promoter)!=2L) {  stop("need upstream/downstream specification in promoter argument") }
-	prom.ranges <- suppressWarnings(promoters(gb.ranges, upstream=promoter[1], downstream=promoter[2]))
+	prom.ranges <- suppressWarnings(trim(promoters(gb.ranges, upstream=promoter[1], downstream=promoter[2])))
 	names(prom.ranges) <- names(gb.ranges)
 
 	# Expanding everything to account for the gene body and promoters.

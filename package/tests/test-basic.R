@@ -71,8 +71,8 @@ head(getBestTest(merged$id, tabled, weight=weighting))
 head(getBestTest(merged$id, tabled, mode="logCPM"))
 
 # Pulling out some diagnostics.
-require(org.Mm.eg.db)
-require(TxDb.Mmusculus.UCSC.mm10.knownGene)
+suppressPackageStartupMessages(require(org.Mm.eg.db))
+suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene))
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
 output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)

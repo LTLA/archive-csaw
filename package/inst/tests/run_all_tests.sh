@@ -1,6 +1,12 @@
+if [[ $# -eq 0 ]]
+then
+	RCMD=R
+else
+	RCMD=$1
+fi
 for x in `ls test-*.R`
 do
 	echo Running $x...
-	R CMD BATCH --no-save --no-restore $x ${x}out
-	R CMD Rdiff ${x}out ${x}out.save
+	$RCMD CMD BATCH --no-save --no-restore $x ${x}out
+	$RCMD CMD Rdiff ${x}out ${x}out.save
 done

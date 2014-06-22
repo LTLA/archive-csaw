@@ -42,7 +42,7 @@ simsam<-function(f.out, pos.chr, pos.pos, strands, chromosomes, mapq=199, is.dup
 	close(out);
 
     # We sort and compress to BAM as well.
-	require(Rsamtools)
+	suppressPackageStartupMessages(require(Rsamtools))
 	tempName<-paste(f.out, "_temp", sep="")
 	tempName<-asBam(samFile, destination=tempName, overwrite=TRUE, indexDestination=FALSE);
     newName<-sortBam(tempName, destination=f.out);

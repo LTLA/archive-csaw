@@ -380,21 +380,8 @@ GRanges with 43 ranges and 0 metadata columns:
 6   10 0.01949563 0.2567606
 > 
 > # Pulling out some diagnostics.
-> require(org.Mm.eg.db)
-Loading required package: org.Mm.eg.db
-Loading required package: AnnotationDbi
-Loading required package: Biobase
-Welcome to Bioconductor
-
-    Vignettes contain introductory material; view with
-    'browseVignettes()'. To cite Bioconductor, see
-    'citation("Biobase")', and for packages 'citation("pkgname")'.
-
-Loading required package: DBI
-
-> require(TxDb.Mmusculus.UCSC.mm10.knownGene)
-Loading required package: TxDb.Mmusculus.UCSC.mm10.knownGene
-Loading required package: GenomicFeatures
+> suppressPackageStartupMessages(require(org.Mm.eg.db))
+> suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene))
 > 
 > current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
 > output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
@@ -446,4 +433,4 @@ null device
 > 
 > proc.time()
    user  system elapsed 
- 34.502   0.535  35.096 
+ 33.035   0.540  33.635 
