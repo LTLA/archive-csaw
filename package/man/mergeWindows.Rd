@@ -64,3 +64,5 @@ mergeWindows(gr, 100, sign=rep(c(TRUE, FALSE), 5))
 }
 
 \author{Aaron Lun}
+
+\keyword{clustering}

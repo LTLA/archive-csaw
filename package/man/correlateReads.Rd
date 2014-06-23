@@ -6,8 +6,9 @@
 \description{Computes the auto- or cross-correlation coefficients between read positions across a set of delay intervals.}
 
 \usage{
-correlateReads(bam.files, max.dist=1000, dedup=FALSE, minq=0, cross=TRUE, restrict=NULL, 
-	discard=NULL, pet=c("none", "first", "second"))
+correlateReads(bam.files, max.dist=1000, dedup=FALSE, 
+    minq=0, cross=TRUE, restrict=NULL, discard=NULL, 
+    pet=c("none", "first", "second"))
 }
 
 \arguments{
@@ -58,7 +59,8 @@ par(mfrow=c(2,2))
 x<-correlateReads(bamFile, max.dist=n)
 plot(0:n, x, xlab="delay (bp)", ylab="ccf")
 
-x<-correlateReads(bamFile, max.dist=n, discard=GRanges("chrB", IRanges(1, 100)))
+x<-correlateReads(bamFile, max.dist=n, 
+    discard=GRanges("chrB", IRanges(1, 100)))
 plot(0:n, x, xlab="delay (bp)", ylab="ccf")
 
 x<-correlateReads(bamFile, max.dist=n, restrict="chrA")
@@ -77,3 +79,5 @@ Kharchenko PV, Tolstorukov MY  and Park, PJ (2008). Design and analysis of ChIP-
 }
 
 \author{Aaron Lun}
+
+\keyword{diagnostics}

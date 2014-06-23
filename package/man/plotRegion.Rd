@@ -7,9 +7,9 @@
 
 \usage{
 plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL,
-  pet=c("none", "both", "first", "second"), max.frag=500, rescue.ext=NULL,
-  max.depth=NULL, fcol = "blue", rcol="red", 
-  xlab="Genomic position (bp)", ylab="Read depth", ...)
+    pet=c("none", "both", "first", "second"), max.frag=500, 
+    rescue.ext=NULL, max.depth=NULL, fcol = "blue", rcol="red", 
+    xlab="Genomic position (bp)", ylab="Read depth", ...)
 }
 
 \arguments{
@@ -69,17 +69,26 @@ mlib<-mean(lib.sizes)
 # Plotting to an adjusted max.depth for (effective) library sizes. 
 constant<-5
 par(mfrow=c(1,2))
-plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], max.depth=constant*lib.sizes[1]/mlib)
-plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2], max.depth=constant*lib.sizes[2]/mlib)
+plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], 
+    max.depth=constant*lib.sizes[1]/mlib)
+plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2], 
+    max.depth=constant*lib.sizes[2]/mlib)
 
-plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], max.depth=constant*lib.sizes[1]/mlib, discard=GRanges("chrA", IRanges(100, 250)))
-plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2], max.depth=constant*lib.sizes[2]/mlib, discard=GRanges("chrA", IRanges(250, 500)))
+plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], 
+    max.depth=constant*lib.sizes[1]/mlib, 
+    discard=GRanges("chrA", IRanges(100, 250)))
+plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2], 
+    max.depth=constant*lib.sizes[2]/mlib, 
+    discard=GRanges("chrA", IRanges(250, 500)))
 
 # Considering paired-read data.
 bamFile <-system.file("exdata", "pet.bam", package="csaw")
-plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both")
-plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both", max.frag=50)
-plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), bam.file=bamFile, pet="both", max.frag=50, rescue.ext=40)
+plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), 
+    bam.file=bamFile, pet="both")
+plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), 
+    bam.file=bamFile, pet="both", max.frag=50)
+plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), 
+    bam.file=bamFile, pet="both", max.frag=50, rescue.ext=40)
 }
 
 \references{
@@ -89,3 +98,5 @@ Carlson M and Aboyoun P (2013). GenomicRanges Use Cases. \emph{Bioconductor} (ve
 \seealso{
 \code{\link{windowCounts}}
 }
+
+\keyword{visualization}

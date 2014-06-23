@@ -23,7 +23,7 @@ The user's guide is not a true vignette as it is not generated using
 \code{\link{Sweave}} when the package is built. This is due to the
 time-consuming nature of the code when run on realistic case studies.
 
-For non-Windows operating systems, the PDF viewer to be used is that defined in
+For non-Windows operating systems, the PDF viewer is taken from
 \code{Sys.getenv("R_PDFVIEWER")}. This can be changed to \code{x} by using
 \code{Sys.putenv(R_PDFVIEWER=x)}. For Windows, the default viewer will be
 selected to open the file. Note that for Windows, the user's guide can

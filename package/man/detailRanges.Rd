@@ -5,7 +5,8 @@
 \description{Add detailed exon-based annotation to specified regions}
 
 \usage{
-detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), max.intron=1e6)
+detailRanges(incoming, txdb, orgdb, dist=5000, 
+    promoter=c(3000, 1000), max.intron=1e6)
 }
 
 \arguments{
@@ -83,15 +84,19 @@ require(org.Mm.eg.db)
 require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
+output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, 
+    org.Mm.eg.db)
 head(output$overlap)
 head(output$right)
 head(output$left)
 
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, promoter=c(2000, 1000))
+output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, 
+    org.Mm.eg.db, promoter=c(2000, 1000))
 head(output$overlap)
 head(output$right)
 head(output$left)
 
 detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db)
 }
+
+\keyword{annotation}

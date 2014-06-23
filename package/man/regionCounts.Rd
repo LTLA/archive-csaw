@@ -6,8 +6,10 @@
 \description{Count the number of extended reads overlapping pre-specified regions}
 
 \usage{
-regionCounts(bam.files, regions, ext=100, pet=c("none", "both", "first", "second"), 
-   max.frag=500, rescue.pairs=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+regionCounts(bam.files, regions, ext=100, 
+    pet=c("none", "both", "first", "second"), max.frag=500, 
+    rescue.pairs=FALSE, dedup=FALSE, minq=0, restrict=NULL, 
+    discard=NULL)
 }
 
 \arguments{
@@ -48,13 +50,18 @@ the same is strongly recommended.
 \examples{
 # A low filter is only used here as the examples have very few reads.
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
-incoming <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'), IRanges(c(1, 500, 100, 1000), c(200, 1000, 700, 1500)))
+incoming <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'), 
+    IRanges(c(1, 500, 100, 1000), c(200, 1000, 700, 1500)))
 regionCounts(bamFiles, regions=incoming)
 regionCounts(bamFiles, regions=incoming, restrict="chrB")
 
 # Loading PET data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 regionCounts(bamFile, pet="both", regions=incoming)
-regionCounts(bamFile, max.frag=100, pet="first", regions=incoming, restrict="chrA")
-regionCounts(bamFile, max.frag=100, pet="both", regions=incoming, restrict="chrA", rescue.pairs=TRUE)
+regionCounts(bamFile, max.frag=100, pet="first", 
+    regions=incoming, restrict="chrA")
+regionCounts(bamFile, max.frag=100, pet="both", 
+    regions=incoming, restrict="chrA", rescue.pairs=TRUE)
 }
+
+\keyword{counting}

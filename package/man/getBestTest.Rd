@@ -6,7 +6,8 @@
 \description{Find the test with the strongest evidence for rejection of the null in each cluster}
 
 \usage{
-getBestTest(ids, tab, mode=c("PValue", "logCPM"), weight=rep(1, length(ids)))
+getBestTest(ids, tab, mode=c("PValue", "logCPM"), 
+    weight=rep(1, length(ids)))
 }
 
 \arguments{
@@ -54,7 +55,8 @@ high-abundance regions that are more likely to contain peaks.
 
 \examples{ 
 ids<-round(runif(100, 1, 10))
-tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
+tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), 
+    PValue=rbeta(100, 1, 2))
 combined<-getBestTest(ids, tab)
 head(combined)
 
@@ -69,7 +71,7 @@ head(combined)
 }
 
 \seealso{
-\code{\link{combineTests}}, \code{\link{mergeWindows}}, 
+\code{\link{combineTests}}, \code{\link{mergeWindows}} 
 }
 
 \author{Aaron Lun}
@@ -77,3 +79,5 @@ head(combined)
 \references{
 Genovese CR, Roeder K and Wasserman L (2006). False discovery control with p-value weighting. \emph{Biometrika} 93, 509-524.
 }
+
+\keyword{testing}

@@ -6,14 +6,16 @@
 \description{Calculate normalization factors to scale the raw library sizes using a modified TMM implementation.}
 
 \usage{
-normalizeChIP(counts, lib.sizes=colSums(counts), type=c("scaling", "loess"), weighted=FALSE, dispersion=0.05, ...)
+normalizeChIP(counts, lib.sizes=colSums(counts), 
+    type=c("scaling", "loess"), weighted=FALSE, 
+    dispersion=0.05, ...)
 }
 
 \arguments{
   \item{counts}{a matrix of integer counts with one column per library}
   \item{lib.sizes}{a numeric vector specifying the total number of reads per library}
   \item{type}{a character string indicating what type of normalization is to be performed}
-  \item{weighted}{a logical scalar indicating whether precision weights should be used for \code{type="scaling"}}
+  \item{weighted}{a logical scalar indicating whether precision weights should be used for TMM normalization}
   \item{dispersion}{a numeric scalar specifying the NB dispersion for calculation of the average count in \code{type="loess"}}
   \item{...}{other arguments to be passed to \code{\link{calcNormFactors}} for \code{type="scaling"}, or \code{\link{loessFit}} for \code{type="loess"}}
 }
@@ -74,7 +76,7 @@ normalizeChIP(counts)
 normalizeChIP(counts, logratioTrim=0.4)
 normalizeChIP(counts, sumTrim=0.3)
 
-# An example with and without weighting, in the presence of high-abundance spike-ins.
+# With and without weighting, for high-abundance spike-ins.
 n<-100000
 blah<-matrix(rnbinom(2*n, mu=10, size=20), ncol=2)
 tospike<-10000
@@ -99,3 +101,5 @@ offsets <- normalizeChIP(counts, type="loess", iterations=1)
 \code{\link{loessFit}},
 \code{\link{normalizeCyclicLoess}}
 }
+
+\keyword{normalization}

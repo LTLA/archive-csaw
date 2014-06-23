@@ -74,3 +74,5 @@ Benjamini Y and Hochberg Y (1995). Controlling the false discovery rate: a pract
 
 Lun ATL and Smyth GK (2014). De novo detection of differentially bound regions for ChIP-seq data using peaks and windows: controlling error rates correctly. \emph{Nucleic Acids Res.} 42, e95
 }
+
+\keyword{testing}

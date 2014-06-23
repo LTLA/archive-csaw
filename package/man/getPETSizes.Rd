@@ -6,7 +6,8 @@
 \description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PET) data.}
 
 \usage{
-getPETSizes(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+getPETSizes(bam.file, dedup=FALSE, minq=0, restrict=NULL, 
+    discard=NULL)
 }
 
 \arguments{
@@ -48,9 +49,10 @@ Also note that the read pair information in each BAM file \emph{must} be synchro
 }
 
 \examples{
-bamFile<-system.file("exdata", "pet.bam", package="csaw")
-out<-getPETSizes(bamFile)
-out<-getPETSizes(bamFile, restrict="chrA")
-out<-getPETSizes(bamFile, discard=GRanges("chrA", IRanges(1, 50)))
+bamFile <- system.file("exdata", "pet.bam", package="csaw")
+out <- getPETSizes(bamFile)
+out <- getPETSizes(bamFile, restrict="chrA")
+out <- getPETSizes(bamFile, discard=GRanges("chrA", IRanges(1, 50)))
 }
 
+\keyword{diagnostics}

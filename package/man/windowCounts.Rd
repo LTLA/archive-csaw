@@ -8,8 +8,9 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
-	pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
-	filter=NULL, bin=FALSE, dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+    pet=c("none", "both", "first", "second"), max.frag=500, 
+    rescue.pairs=FALSE, filter=NULL, bin=FALSE, dedup=FALSE, 
+    minq=0, restrict=NULL, discard=NULL)
 countWindows(param, ...)
 }
 
@@ -42,7 +43,7 @@ A list is returned containing:
 
 \section{The sliding window strategy}{
 Each window is defined as the interval \code{[x-shift, x+width-1-shift]} for
-\code{x=1, 1+spacing, 1+2*spacing, ...}, etc.  The value of \code{width} can be
+\code{x=1}, \code{1+spacing}, \code{1+2*spacing}, etc.  The value of \code{width} can be
 interpreted as the width of the contact area between the DNA and protein. In
 practical terms, it determines the spatial resolution of the analysis. Larger
 windows count reads over a larger region which results in larger counts. This 
@@ -153,5 +154,8 @@ windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA")
 # Running rescues of PET data (use -1 to coerce single-endedness).
 windowCounts(bamFile, max.frag=50, pet="both", filter=1, rescue.pairs=TRUE)
 windowCounts(bamFile, max.frag=-1, pet="both", filter=1, rescue.pairs=TRUE)
-windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA", rescue.pairs=TRUE)
+windowCounts(bamFile, max.frag=100, pet="both", filter=1, restrict="chrA", 
+    rescue.pairs=TRUE)
 }
+
+\keyword{counting}
