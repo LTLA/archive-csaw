@@ -16,7 +16,6 @@
 \title{Introducing the csaw package}
 \author{Aaron Lun}
 \date{First edition 21 June 2014\\
-\vspace{6pt}
 Last revised 23 June 2014}
 \maketitle
 
