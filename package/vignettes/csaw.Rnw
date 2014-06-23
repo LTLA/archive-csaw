@@ -15,8 +15,9 @@
 
 \title{Introducing the csaw package}
 \author{Aaron Lun}
-\date{Written 21 June 2014\\
-Last modified 21 June 2014}
+\date{First edition 21 June 2014\\
+\vspace{6pt}
+Last revised 23 June 2014}
 \maketitle
 
 The csaw package is designed for \textit{de novo} detection of differentially
