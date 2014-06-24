@@ -6,9 +6,8 @@
 \description{Calculate normalization factors to scale the raw library sizes using a modified TMM implementation.}
 
 \usage{
-normalizeChIP(counts, lib.sizes=colSums(counts), 
-    type=c("scaling", "loess"), weighted=FALSE, 
-    dispersion=0.05, ...)
+normalizeChIP(counts, lib.sizes, type=c("scaling", "loess"), 
+    weighted=FALSE, dispersion=0.05, ...)
 }
 
 \arguments{
@@ -42,6 +41,12 @@ fitted value for each bin pair is used as the generalized linear model
 offset for that sample. The use of the average count provides more
 stability than the average log-count when low counts are present for
 differentially bound regions.
+
+If \code{lib.sizes} is not specified, the column sums of \code{counts} is used
+instead and a warning will be issued. Specification of \code{lib.sizes} is
+recommended to ensure consistency between this function and
+\code{\link{DGEList}}, the latter of which being the function that generates
+the object where the normalization factors will ultimately be stored.
 }
 
 \value{
@@ -72,9 +77,10 @@ mu2<-mu1
 mu2[1:100]<-100
 mu2<-mu2/sum(mu2)*sum(mu1)
 counts<-cbind(rnbinom(n, mu=mu1, size=20), rnbinom(n, mu=mu2, size=20))
-normalizeChIP(counts)
-normalizeChIP(counts, logratioTrim=0.4)
-normalizeChIP(counts, sumTrim=0.3)
+actual.lib.size <- rep(sum(mu1), 2)
+normalizeChIP(counts, lib.sizes=actual.lib.size)
+normalizeChIP(counts, logratioTrim=0.4, lib.sizes=actual.lib.size)
+normalizeChIP(counts, sumTrim=0.3, lib.size=actual.lib.size)
 
 # With and without weighting, for high-abundance spike-ins.
 n<-100000
@@ -82,18 +88,22 @@ blah<-matrix(rnbinom(2*n, mu=10, size=20), ncol=2)
 tospike<-10000
 blah[1:tospike,1]<-rnbinom(tospike, mu=1000, size=20)
 blah[1:tospike,2]<-rnbinom(tospike, mu=2000, size=20)
+full.lib.size <- colSums(blah)
 
-normalizeChIP(blah, weighted=TRUE)
-normalizeChIP(blah)
+normalizeChIP(blah, weighted=TRUE, lib.sizes=full.lib.size)
+normalizeChIP(blah, lib.sizes=full.lib.size)
 true.value<-colSums(blah[(tospike+1):n,])/colSums(blah)
 true.value<-true.value/exp(mean(log(true.value)))
 true.value
 
 # Using loess-based normalization, instead.
-offsets <- normalizeChIP(counts, type="loess")
+offsets <- normalizeChIP(counts, type="loess", 
+    lib.size=full.lib.size)
 head(offsets)
-offsets <- normalizeChIP(counts, type="loess", span=0.4)
-offsets <- normalizeChIP(counts, type="loess", iterations=1)
+offsets <- normalizeChIP(counts, type="loess", span=0.4,
+    lib.size=full.lib.size)
+offsets <- normalizeChIP(counts, type="loess", iterations=1,
+    lib.size=full.lib.size)
 }
 
 \seealso{
