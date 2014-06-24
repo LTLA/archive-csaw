@@ -1,4 +1,4 @@
-plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL, 
+plotRegion <- function(cur.region, bam.file, dedup=FALSE, minq=NULL, discard=NULL, 
 	pet=c("none", "both", "first", "second"), max.frag=500,	rescue.ext=NULL,
 	max.depth=NULL, fcol="blue", rcol="red", 
 	xlab="Genomic position (bp)", ylab="Read depth", ...)

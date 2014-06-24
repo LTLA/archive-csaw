@@ -6,7 +6,7 @@
 \description{Plot the depth on each strand for all reads from a BAM file in a specified genomic region}
 
 \usage{
-plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL,
+plotRegion(cur.region, bam.file, dedup=FALSE, minq=NULL, discard=NULL,
     pet=c("none", "both", "first", "second"), max.frag=500, 
     rescue.ext=NULL, max.depth=NULL, fcol = "blue", rcol="red", 
     xlab="Genomic position (bp)", ylab="Read depth", ...)
@@ -16,7 +16,7 @@ plotRegion(cur.region, bam.file, dedup=FALSE, minq=0, discard=NULL,
 	\item{cur.region}{a \code{GRanges} object of length 1 describing the region of interest}
 	\item{bam.file}{a character string containing the path to a sorted and indexed BAM file}
 	\item{dedup}{a logical scalar specifying whether duplicates should be removed}
-    \item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}	
+    \item{minq}{an integer scalar defining the minimum threshold for the mapping quality score, none by default}
     \item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
     \item{pet}{a character string specifying whether the data involves paired end tags}
 	\item{max.frag}{an integer scalar, specifying the maximum allowable fragment size for PET data}

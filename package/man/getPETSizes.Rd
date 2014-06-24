@@ -6,14 +6,14 @@
 \description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PET) data.}
 
 \usage{
-getPETSizes(bam.file, dedup=FALSE, minq=0, restrict=NULL, 
+getPETSizes(bam.file, dedup=FALSE, minq=NULL, restrict=NULL, 
     discard=NULL)
 }
 
 \arguments{
 	\item{bam.file}{a character string containing the file path to a sorted and indexed BAM file}
 	\item{dedup}{a boolean scalar specifying whether or not marked duplicates should be removed}
-    \item{minq}{an integer scalar defining the minimum threshold for the mapping quality score when computing sizes}
+    \item{minq}{an integer scalar defining the minimum threshold for the mapping quality score when computing sizes, none by default}
     \item{restrict}{a character vector specifying chromosomes from which fragment sizes should be extracted}
     \item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
 }

@@ -1,4 +1,4 @@
-getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NULL) 
+getPETSizes <- function(bam.file, dedup=FALSE, minq=NULL, restrict=NULL, discard=NULL) 
 # This function takes a BAM file and reads it to parse the size of the PET fragments. It then
 # returns a vector of sizes which can be plotted for diagnostics. The length of the vector
 # will also tell you how many read pairs were considered valid. The total number of reads, the
@@ -68,7 +68,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 ##################################
 
-.extractPET <- function(bam.file, where, dedup=FALSE, minq=0, max.frag=Inf, discard=NULL)
+.extractPET <- function(bam.file, where, dedup, minq, max.frag=Inf, discard=NULL)
 # A function to extract PET data for a particular chromosome. Synchronisation is expected.
 # We avoid sorting by name  as it'd mean we have to process the entire genome at once 
 # (can't go chromosome-by-chromosome).  This probably results in increased memory usage 
@@ -145,7 +145,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 
 ##################################
 
-.extractBrokenPET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL, use.first=TRUE) 
+.extractBrokenPET <- function(bam.file, where, dedup, minq, discard=NULL, use.first=TRUE) 
 # A function to extract PET data, but as single-end data (i.e. only using one
 # of the reads).  Useful when paired-end data has gone completely off the
 # rails.
@@ -154,7 +154,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=0, restrict=NULL, discard=NU
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }
 
-.rescuePET <- function(bam.file, where, dedup=FALSE, minq=0, discard=NULL, ext=100, max.frag=Inf) 
+.rescuePET <- function(bam.file, where, dedup, minq, discard=NULL, ext=100, max.frag=Inf) 
 # A function to extract PET data where possible, but to rescue those that
 # are invalid by using them as single-end data with read extension. Those
 # reads that form invalid pairs are broken up and the read with the better

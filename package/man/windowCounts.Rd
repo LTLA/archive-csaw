@@ -10,7 +10,7 @@
 windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
     pet=c("none", "both", "first", "second"), max.frag=500, 
     rescue.pairs=FALSE, filter=NULL, bin=FALSE, dedup=FALSE, 
-    minq=0, restrict=NULL, discard=NULL)
+    minq=NULL, restrict=NULL, discard=NULL)
 countWindows(param, ...)
 }
 
@@ -85,9 +85,10 @@ supplied ranges. This is useful for removing reads in repeat regions.
 
 Marked duplicate reads can be removed with \code{dedup=TRUE}, though the
 duplicate field must be properly set beforehand. Reads can also be filtered by
-mapping quality score if \code{minq!=0}. This is generally recommended to
-remove low-confidence alignments.  The exact threshold for \code{minq} will
-depend on the range of scores provided by the aligner. 
+mapping quality score if \code{minq} is specified. This is generally
+recommended to remove low-confidence alignments.  The exact threshold for
+\code{minq} will depend on the range of scores provided by the aligner. 
+By default, no filtering on the score will be performed.
 }
 
 \section{Additional advice for paired-end data}{

@@ -7,7 +7,7 @@
 
 \usage{
 correlateReads(bam.files, max.dist=1000, dedup=FALSE, 
-    minq=0, cross=TRUE, restrict=NULL, discard=NULL, 
+    minq=NULL, cross=TRUE, restrict=NULL, discard=NULL, 
     pet=c("none", "first", "second"))
 }
 
@@ -15,7 +15,7 @@ correlateReads(bam.files, max.dist=1000, dedup=FALSE,
 	\item{bam.files}{character vectors containing paths to sorted and indexed BAM files}
 	\item{max.dist}{integer scalar specifying the maximum delay distance over which correlation coefficients will be calculated}
 	\item{dedup}{a logical scalar specifying whether or not marked duplicate reads should be removed}
-	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
+	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score, none by default}
 	\item{cross}{a logical scalar specifying whether cross-correlations should be computed}
 	\item{restrict}{a character vector specifying chromosomes for which correlations should be computed}
     \item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
