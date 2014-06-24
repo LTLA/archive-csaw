@@ -1,4 +1,4 @@
-getPETSizes <- function(bam.file, dedup=FALSE, minq=NULL, restrict=NULL, discard=NULL) 
+getPETSizes <- function(bam.file, dedup=FALSE, minq=NA, restrict=NULL, discard=NULL) 
 # This function takes a BAM file and reads it to parse the size of the PET fragments. It then
 # returns a vector of sizes which can be plotted for diagnostics. The length of the vector
 # will also tell you how many read pairs were considered valid. The total number of reads, the

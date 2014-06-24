@@ -7,7 +7,7 @@
 
 \usage{
 correlateReads(bam.files, max.dist=1000, dedup=FALSE, 
-    minq=NULL, cross=TRUE, restrict=NULL, discard=NULL, 
+    minq=NA, cross=TRUE, restrict=NULL, discard=NULL, 
     pet=c("none", "first", "second"))
 }
 

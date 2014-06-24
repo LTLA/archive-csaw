@@ -10,7 +10,7 @@
 windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
     pet=c("none", "both", "first", "second"), max.frag=500, 
     rescue.pairs=FALSE, filter=NULL, bin=FALSE, dedup=FALSE, 
-    minq=NULL, restrict=NULL, discard=NULL)
+    minq=NA, restrict=NULL, discard=NULL)
 countWindows(param, ...)
 }
 

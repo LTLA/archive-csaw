@@ -1,4 +1,4 @@
-correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=NULL, cross=TRUE, restrict=NULL, 
+correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=NA, cross=TRUE, restrict=NULL, 
 	discard=NULL, pet=c("none", "first", "second")) 
 # This is just a function to calculate the autocorrelation between reads of different strands (or
 # between reads in general). Note that the BAM files must be sorted. It will calculate the values 

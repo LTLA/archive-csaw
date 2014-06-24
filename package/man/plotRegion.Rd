@@ -6,7 +6,7 @@
 \description{Plot the depth on each strand for all reads from a BAM file in a specified genomic region}
 
 \usage{
-plotRegion(cur.region, bam.file, dedup=FALSE, minq=NULL, discard=NULL,
+plotRegion(cur.region, bam.file, dedup=FALSE, minq=NA, discard=NULL,
     pet=c("none", "both", "first", "second"), max.frag=500, 
     rescue.ext=NULL, max.depth=NULL, fcol = "blue", rcol="red", 
     xlab="Genomic position (bp)", ylab="Read depth", ...)

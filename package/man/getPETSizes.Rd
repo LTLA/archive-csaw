@@ -6,7 +6,7 @@
 \description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PET) data.}
 
 \usage{
-getPETSizes(bam.file, dedup=FALSE, minq=NULL, restrict=NULL, 
+getPETSizes(bam.file, dedup=FALSE, minq=NA, restrict=NULL, 
     discard=NULL)
 }
 

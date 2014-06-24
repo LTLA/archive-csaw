@@ -1,6 +1,6 @@
 windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
-	filter=NULL, bin=FALSE, dedup=FALSE, minq=NULL, restrict=NULL, discard=NULL)
+	filter=NULL, bin=FALSE, dedup=FALSE, minq=NA, restrict=NULL, discard=NULL)
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -147,7 +147,7 @@ countWindows <- function(param, ...)
 # should be reported as within but the read length will put them out).
 {
 	all.fields <- c("pos", "qwidth", extras)
-	if (length(minq)) { all.fields <- c(all.fields, "mapq") }
+	if (!is.na(minq)) { all.fields <- c(all.fields, "mapq") }
 	if (!is.null(discard)) { all.fields <- c(all.fields, "cigar") }	
 	all.fields <- unique(all.fields)
 	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
@@ -155,7 +155,7 @@ countWindows <- function(param, ...)
 		isDuplicate=ifelse(dedup, FALSE, NA), ...)))[[1]]
    
 	# Filtering by MAPQ.
-	if (length(minq)) { 
+	if (!is.na(minq)) { 
 		keep<-reads$mapq >= minq & !is.na(reads$mapq) 
 		if (!"mapq" %in% extras) { reads$mapq <- NULL }
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }

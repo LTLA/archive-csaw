@@ -1,6 +1,6 @@
 regionCounts <- function(bam.files, regions,  ext=100, 
     pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
-	dedup=FALSE, minq=0, restrict=NULL, discard=NULL)
+	dedup=FALSE, minq=NA, restrict=NULL, discard=NULL)
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values

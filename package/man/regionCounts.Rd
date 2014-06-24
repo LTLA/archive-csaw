@@ -8,7 +8,7 @@
 \usage{
 regionCounts(bam.files, regions, ext=100, 
     pet=c("none", "both", "first", "second"), max.frag=500, 
-    rescue.pairs=FALSE, dedup=FALSE, minq=0, restrict=NULL, 
+    rescue.pairs=FALSE, dedup=FALSE, minq=NA, restrict=NULL, 
     discard=NULL)
 }
 
@@ -20,7 +20,7 @@ regionCounts(bam.files, regions, ext=100,
 	\item{max.frag}{an integer scalar, specifying the maximum allowable fragment size for PET data}
 	\item{rescue.pairs}{a logical scalar indicating whether invalid read pairs should be counted}
 	\item{dedup}{a boolean specifying whether marked duplicates should be removed}
-	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score}
+	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score, none by default}
     \item{restrict}{a character vector specifying which chromosomes should be used for read counting}
 	\item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
 }
