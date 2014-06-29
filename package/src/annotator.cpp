@@ -1,6 +1,6 @@
+#include <sstream> // Before R.h in csaw.h, to resolve remapping issues (see Section 6, Writing R extensions).
 #include "csaw.h"
 #include <string>
-#include <cstdio>
 #include <map>
 
 /* This function spits out the ID for each exon, with some degree of strand-awareness, 
@@ -103,44 +103,23 @@ try {
  * feature (i.e., collate exon-level overlaps to a gene-level string).
  */
 
-#define BUFSIZE 25
-char make_int_box [BUFSIZE];
-int errcode=0;
-char * ssfake (const int& x) { // Don't want to load sstream because of Rf_length conflict.
-	/* No integer should be larger than 25 digits for 32-bit R. Not even for
- 	 * 64-bit implementations where 'x' is 8 bytes, even if you add 1 for the
- 	 * sign and another for the null termination.
- 	 */ 
-//	if (x==NA_INTEGER || x==0) { 
-//	} else if (x>0) { 
-//		if (int(std::ceil(std::log10(double(x)))) + 2 > BUFSIZE) { // Checking for safety. 
-//			throw std::runtime_error("insufficient space in the buffer for integer conversion"); 
-//		}
-//	} else {
-//		throw std::runtime_error("negative integers should not present during annotation"); 
-//	}
-	errcode=std::sprintf(make_int_box, "%d", x); // Don't want to use snprintf, avoid C++11. 
-	if (errcode >= 0) { return make_int_box; }
-	throw std::runtime_error("error in string to integer conversion for annotation");
-}
-
 std::string digest2string (const int start, const int end, const int* indices, const int* dists, SEXP symbols, const int* features, const int* strand) {
-	std::string ss(CHAR(STRING_ELT(symbols, indices[start])));
-	ss += '|'; 
+	std::stringstream ss;
+	ss << CHAR(STRING_ELT(symbols, indices[start])) << '|'; 
 
 	// Deciding what to print.
 	if (end==start) {
 		throw std::runtime_error("empty vector of collected exon numbers"); 
 	} else if (end==start+1) {
 		if (features[indices[start]]==-1) {
-			ss += "I"; 
+			ss << "I"; 
 		} else {
-			ss += ssfake(features[indices[start]]);
+			ss << features[indices[start]];
 		}
 	} else {		
 		int index=start;
 		if (features[indices[index]]==-1) { ++index; } 
-		ss += ssfake(features[indices[index]]);
+		ss << features[indices[index]];
 		bool wasokay=false;
 
 		// Running through and printing all stretches of contiguous exons.
@@ -149,33 +128,25 @@ std::string digest2string (const int start, const int end, const int* indices, c
 				wasokay=true;
 			} else {
 				if (wasokay) {
-					ss += '-';
- 				    ss += ssfake(features[indices[index-1]]);
+					ss << '-' << features[indices[index-1]];
 					wasokay=false;
 				}
-				ss += ',';
- 			    ss += ssfake(features[indices[index]]);
+				ss << ',' << features[indices[index]];
 			}
 		}
-		if (wasokay) {
- 		    ss += '-';
-			ss += ssfake(features[indices[end-1]]); 
-		}
+		if (wasokay) { ss << '-' << features[indices[end-1]]; }
 	}
 	
 	// Adding the strand and distance information.	
-	ss += '|';
-    ss += (strand[indices[start]] ? '+' : '-');
+	ss << '|' << (strand[indices[start]] ? '+' : '-');
 	if (dists!=NULL) {
 		int lowest=dists[start];
 		for (int index=start+1; index < end; ++index) {
 			if (lowest > dists[index]) { lowest=dists[index]; }
 		}
-		ss += '[';
-		ss += ssfake(lowest);
-		ss += ']';
+		ss << '[' << lowest << ']';
 	}
-	return ss;
+	return ss.str();
 }
 
 SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
