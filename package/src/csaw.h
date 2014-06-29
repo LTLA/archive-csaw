@@ -13,11 +13,12 @@ private:
 	const T* ptr;
 };
 
-extern "C" {
 #include "R.h"
 #include "Rdefines.h"
 #include "R_ext/Rdynload.h"
 #include "R_ext/Visibility.h"
+
+extern "C" {
 
 /* annotator.cpp */
 

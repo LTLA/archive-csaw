@@ -1,10 +1,7 @@
 #include "csaw.h"
-
 #include <string>
 #include <cstdio>
 #include <map>
-
-extern "C" {
 
 /* This function spits out the ID for each exon, with some degree of strand-awareness, 
  * such that the first exon in the gene is labelled as exon 1, then 2, 3, etc. They
@@ -291,4 +288,3 @@ try {
 	return mkString(e.what());
 }
 
-}

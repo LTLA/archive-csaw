@@ -1,7 +1,5 @@
 #include "csaw.h"
 
-extern "C" {
-
 SEXP get_rle_counts(SEXP start, SEXP end, SEXP nr, SEXP space, SEXP first) try {
 	if (!IS_INTEGER(nr) || LENGTH(nr)!=1) {  throw std::runtime_error("number of rows must be an integer scalar"); }
 	if (!IS_INTEGER(space) || LENGTH(space)!=1) { throw std::runtime_error("spacing must be an integer scalar"); }
@@ -49,6 +47,4 @@ SEXP get_rle_counts(SEXP start, SEXP end, SEXP nr, SEXP space, SEXP first) try {
 	return output;
 } catch (std::exception& e){
 	return mkString(e.what());
-}
-
 }

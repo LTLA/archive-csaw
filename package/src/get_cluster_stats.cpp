@@ -1,7 +1,5 @@
 #include "csaw.h"
 
-extern "C" {
-
 SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
 	// Checking indices.
 	if (!IS_INTEGER(fcdex) || !IS_INTEGER(cpmdex) || !IS_INTEGER(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
@@ -112,6 +110,3 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by
 } catch (std::exception& e) {
 	return mkString(e.what());
 }
-
-}
-

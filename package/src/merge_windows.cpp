@@ -1,7 +1,5 @@
 #include "csaw.h"
 
-extern "C" {
-
 /* We assume that incoming elements are sorted by chr -> start -> end. We then proceed 
  * to aggregate elements by chaining together elements that are less than 'tolerance'
  * apart and, if required, have the same 'sign'. We also split them if the difference
@@ -105,6 +103,4 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 	return output;		
 } catch (std::exception& e) {
 	return mkString(e.what());
-}
-
 }

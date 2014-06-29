@@ -1,7 +1,5 @@
 #include "csaw.h"
 
-extern "C" {
-
 SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 	if (!IS_NUMERIC(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
 	const double *pptr=NUMERIC_POINTER(pval);
@@ -71,6 +69,3 @@ SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 } catch (std::exception& e) {
 	return mkString(e.what());
 }
-
-}
-
