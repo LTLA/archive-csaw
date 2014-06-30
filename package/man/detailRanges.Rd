@@ -34,10 +34,10 @@ annotated feature is also included.
 \details{
 This function adds exon-based annotations to a given set of genomic regions, in
 the form of compact character strings specifying the features overlapping and
-flanking each region. The aim is to relate empirically identified regions in
-the genome to the locations of genes for simpler biological interpretation. 
-All genes within a specified range are reported rather than just the closest
-feature.
+flanking each region. The aim is to determine the genic context of empirically
+identified regions. This allows some basic biological interpretation of
+binding/marking in those regions. All neighbouring genes within a specified
+range are reported, rather than just the closest gene to the region.
 
 For annotated features overlapping a region, the character string in the
 \code{overlap} output vector will be of the form \code{GENE|EXONS|STRAND}. The
