@@ -7,23 +7,23 @@
  */
 
 SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, SEXP max_size) try {
-	if (!IS_INTEGER(chrs)) { throw std::runtime_error("chromosomes should be a integer vector"); }
-	if (!IS_INTEGER(start)) { throw std::runtime_error("start vector should be integer"); }
-	if (!IS_INTEGER(end)) { throw std::runtime_error("end vector should be integer"); }
-	if (!IS_LOGICAL(sign)) { throw std::runtime_error("sign vector should be logical"); }
-	if (!IS_INTEGER(tolerance) || LENGTH(tolerance)!=1) { throw std::runtime_error("tolerance should be an integer scalar"); }
+	if (!isInteger(chrs)) { throw std::runtime_error("chromosomes should be a integer vector"); }
+	if (!isInteger(start)) { throw std::runtime_error("start vector should be integer"); }
+	if (!isInteger(end)) { throw std::runtime_error("end vector should be integer"); }
+	if (!isLogical(sign)) { throw std::runtime_error("sign vector should be logical"); }
+	if (!isInteger(tolerance) || LENGTH(tolerance)!=1) { throw std::runtime_error("tolerance should be an integer scalar"); }
 
 	// Setting up pointers.
-	const int* cptr=INTEGER_POINTER(chrs);
-	const int* sptr=INTEGER_POINTER(start);
-	const int* eptr=INTEGER_POINTER(end);
-	const int* lptr=LOGICAL_POINTER(sign);
-	const int tol=INTEGER_VALUE(tolerance);
+	const int* cptr=INTEGER(chrs);
+	const int* sptr=INTEGER(start);
+	const int* eptr=INTEGER(end);
+	const int* lptr=LOGICAL(sign);
+	const int tol=asInteger(tolerance);
 	
 	// Checking whether we need to supply a maximum size.
-	if (!IS_INTEGER(max_size) || LENGTH(max_size) > 1) { throw std::runtime_error("maximum size should be an integer scalar"); }
+	if (!isInteger(max_size) || LENGTH(max_size) > 1) { throw std::runtime_error("maximum size should be an integer scalar"); }
 	const bool limit_size=(LENGTH(max_size)==1);
-	const int maxs=(limit_size ? INTEGER_VALUE(max_size) : 0);
+	const int maxs=(limit_size ? asInteger(max_size) : 0);
 	
 	// Providing some protection against an input empty list.
 	const int n = LENGTH(chrs);
@@ -31,10 +31,10 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 	if (n==0) { throw std::runtime_error("no elements provided for clustering"); }
 		
 	// Proceeding with the merge operation.
-	SEXP output=PROTECT(NEW_LIST(4));
+	SEXP output=PROTECT(allocVector(VECSXP, 4));
 	try {
-		SET_VECTOR_ELT(output, 0, NEW_INTEGER(n));
-		int* optr=INTEGER_POINTER(VECTOR_ELT(output, 0));
+		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, n));
+		int* optr=INTEGER(VECTOR_ELT(output, 0));
 		*optr=1;
 		int current_start=*sptr, last_end=*eptr;
 		bool diffchr, diffsign;
@@ -76,12 +76,12 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 
 		// Now, identifying the chromosome, start and end of each region.
 		const int ngroups=optr[n-1];
-		SET_VECTOR_ELT(output, 1, NEW_INTEGER(ngroups));
-		int* ocptr=INTEGER_POINTER(VECTOR_ELT(output, 1));
-		SET_VECTOR_ELT(output, 2, NEW_INTEGER(ngroups));
-		int* osptr=INTEGER_POINTER(VECTOR_ELT(output, 2));
-		SET_VECTOR_ELT(output, 3, NEW_INTEGER(ngroups));
-		int* oeptr=INTEGER_POINTER(VECTOR_ELT(output, 3));
+		SET_VECTOR_ELT(output, 1, allocVector(INTSXP, ngroups));
+		int* ocptr=INTEGER(VECTOR_ELT(output, 1));
+		SET_VECTOR_ELT(output, 2, allocVector(INTSXP, ngroups));
+		int* osptr=INTEGER(VECTOR_ELT(output, 2));
+		SET_VECTOR_ELT(output, 3, allocVector(INTSXP, ngroups));
+		int* oeptr=INTEGER(VECTOR_ELT(output, 3));
 		int i=0; 
 		while (i<n) {
 			const int& curgroup=optr[i];

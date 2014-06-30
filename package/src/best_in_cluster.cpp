@@ -1,13 +1,13 @@
 #include "csaw.h"
 
 SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
-	if (!IS_NUMERIC(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
-	const double *pptr=NUMERIC_POINTER(pval);
+	if (!isNumeric(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
+	const double *pptr=REAL(pval);
 	const int n=LENGTH(pval);
-	if (!IS_INTEGER(by)) { throw std::runtime_error("vector of cluster ids should be integer"); }
-	if (!IS_NUMERIC(weight)) { throw std::runtime_error("vector of weights should be double precision"); }
-	const double *wptr=NUMERIC_POINTER(weight);
-	const int* bptr=INTEGER_POINTER(by);
+	if (!isInteger(by)) { throw std::runtime_error("vector of cluster ids should be integer"); }
+	if (!isNumeric(weight)) { throw std::runtime_error("vector of weights should be double precision"); }
+	const double *wptr=REAL(weight);
+	const int* bptr=INTEGER(by);
 	if (!n) { throw std::runtime_error("nothing to cluster"); }
 	if (n!=LENGTH(by) || n!=LENGTH(weight)) { throw std::runtime_error("vector lengths are not equal"); }
 
@@ -20,12 +20,12 @@ SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 	}
 
 	// Pulling out results.
-	SEXP output=PROTECT(NEW_LIST(2));
+	SEXP output=PROTECT(allocVector(VECSXP, 2));
 	try {
-		SET_VECTOR_ELT(output, 0, NEW_NUMERIC(total));
-		double* opptr=NUMERIC_POINTER(VECTOR_ELT(output, 0));
-		SET_VECTOR_ELT(output, 1, NEW_INTEGER(total));
-		int* oiptr=INTEGER_POINTER(VECTOR_ELT(output, 1));
+		SET_VECTOR_ELT(output, 0, allocVector(REALSXP, total));
+		double* opptr=REAL(VECTOR_ELT(output, 0));
+		SET_VECTOR_ELT(output, 1, allocVector(INTSXP, total));
+		int* oiptr=INTEGER(VECTOR_ELT(output, 1));
 	
 		int i=0;
 		while (i<n) {

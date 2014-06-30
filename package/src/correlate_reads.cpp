@@ -139,25 +139,24 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 
 SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist, SEXP chrlen) try {
     // Prepping up the R input data.
-    if (!IS_INTEGER(pos1)) { throw std::runtime_error("forward positions must be an integer vector"); }
-    if (!IS_INTEGER(num1)) { throw std::runtime_error("forward counts must be an integer vector"); }
-    if (!IS_INTEGER(pos2)) { throw std::runtime_error("reverse positions must be an integer vector"); }
-    if (!IS_INTEGER(num2)) { throw std::runtime_error("reverse counts must be an integer vector"); }
-    const int * fpptr=INTEGER_POINTER(pos1);
-    const int * rpptr=INTEGER_POINTER(pos2);
-    const int * fcptr=INTEGER_POINTER(num1);
-    const int * rcptr=INTEGER_POINTER(num2);
+    if (!isInteger(pos1)) { throw std::runtime_error("forward positions must be an integer vector"); }
+    if (!isInteger(num1)) { throw std::runtime_error("forward counts must be an integer vector"); }
+    if (!isInteger(pos2)) { throw std::runtime_error("reverse positions must be an integer vector"); }
+    if (!isInteger(num2)) { throw std::runtime_error("reverse counts must be an integer vector"); }
+    const int * fpptr=INTEGER(pos1);
+    const int * rpptr=INTEGER(pos2);
+    const int * fcptr=INTEGER(num1);
+    const int * rcptr=INTEGER(num2);
     const int fLen=LENGTH(pos1), rLen=LENGTH(pos2);
     if (fLen!=LENGTH(num1) || rLen!=LENGTH(num2)) { 
        	throw std::runtime_error("lengths of position vectors do not correspond to frequency vectors"); }
 
 	// Checking other scalars.
-    if (!IS_INTEGER(max_dist) || LENGTH(max_dist)!=1) { throw std::runtime_error("maximum distance should be an integer scalar"); }	
-    const int mdist=INTEGER_VALUE(max_dist);
+    if (!isInteger(max_dist) || LENGTH(max_dist)!=1) { throw std::runtime_error("maximum distance should be an integer scalar"); }	
+    const int mdist=asInteger(max_dist);
 	if (mdist <= 0) { throw std::runtime_error("maximum distance should be a positive integer"); }
-	if (!IS_INTEGER(chrlen) || LENGTH(chrlen)!=1) { throw std::runtime_error("length of chromosome must be an integer scalar");} 
-	const int clen=INTEGER_VALUE(chrlen);
-
+	if (!isInteger(chrlen) || LENGTH(chrlen)!=1) { throw std::runtime_error("length of chromosome must be an integer scalar");} 
+	const int clen=asInteger(chrlen);
 
 	// Computing the mean and variance.
 	std::deque<double> fmean, rmean, fsd, rsd;
@@ -167,7 +166,7 @@ SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist,
     // Setting up to go through the forwards.
     SEXP sumOut=PROTECT(allocVector(REALSXP, mdist+1));
 	try {
-    	double* sumptr=NUMERIC_POINTER(sumOut);
+    	double* sumptr=REAL(sumOut);
     	for (int i=0; i<=mdist; ++i) { sumptr[i]=0; }
 		std::deque<double> sumfdiff(mdist+1), sumrdiff(mdist+1);
 		std::deque<int> nonempty(mdist+1);

@@ -1,23 +1,23 @@
 #include "csaw.h"
 
 SEXP get_rle_counts(SEXP start, SEXP end, SEXP nr, SEXP space, SEXP first) try {
-	if (!IS_INTEGER(nr) || LENGTH(nr)!=1) {  throw std::runtime_error("number of rows must be an integer scalar"); }
-	if (!IS_INTEGER(space) || LENGTH(space)!=1) { throw std::runtime_error("spacing must be an integer scalar"); }
-	if (!IS_LOGICAL(first) || LENGTH(first)!=1) { throw std::runtime_error("decision to use first point must be a logical scalar"); }
-	if (!IS_INTEGER(start))  { throw std::runtime_error("start vector must be integer"); }
-	if (!IS_INTEGER(end))  { throw std::runtime_error("start vector must be integer"); }
+	if (!isInteger(nr) || LENGTH(nr)!=1) {  throw std::runtime_error("number of rows must be an integer scalar"); }
+	if (!isInteger(space) || LENGTH(space)!=1) { throw std::runtime_error("spacing must be an integer scalar"); }
+	if (!isLogical(first) || LENGTH(first)!=1) { throw std::runtime_error("decision to use first point must be a logical scalar"); }
+	if (!isInteger(start))  { throw std::runtime_error("start vector must be integer"); }
+	if (!isInteger(end))  { throw std::runtime_error("start vector must be integer"); }
 
 	const int n=LENGTH(start);
 	if (n!=LENGTH(end)) { throw std::runtime_error("start/end vectors must have equal length"); }
-	const int nrows=INTEGER_VALUE(nr);
-	const int usefirst=LOGICAL_VALUE(first);
-	const int spacing=INTEGER_VALUE(space);
-	const int* sptr=INTEGER_POINTER(start);
-	const int* eptr=INTEGER_POINTER(end);	
+	const int nrows=asInteger(nr),
+	  usefirst=asLogical(first),
+	  spacing=asInteger(space);
+	const int* sptr=INTEGER(start);
+	const int* eptr=INTEGER(end);	
 
-	SEXP output=PROTECT(NEW_INTEGER(nrows));
+	SEXP output=PROTECT(allocVector(INTSXP, nrows));
 	try {
-		int* optr=INTEGER_POINTER(output);
+		int* optr=INTEGER(output);
 		for (int i=0; i<nrows; ++i) { optr[i]=0; }
 		int left, right;
 		for (int i=0; i<n; ++i) {

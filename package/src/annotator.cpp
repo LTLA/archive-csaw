@@ -10,16 +10,16 @@
 
 SEXP collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
 	// Checking inputs.
-	if (!IS_INTEGER(geneid)) { throw std::runtime_error("gene ID vector should be integer"); }
-	if (!IS_LOGICAL(strand)) { throw std::runtime_error("vector of strands should be logical"); }
-	if (!IS_INTEGER(start) || !IS_INTEGER(end)) { throw std::runtime_error("start/end positions and indices should be integer vectors"); }
+	if (!isInteger(geneid)) { throw std::runtime_error("gene ID vector should be integer"); }
+	if (!isLogical(strand)) { throw std::runtime_error("vector of strands should be logical"); }
+	if (!isInteger(start) || !isInteger(end)) { throw std::runtime_error("start/end positions and indices should be integer vectors"); }
 	const int n=LENGTH(geneid);
 	if (n!=LENGTH(strand)) { throw std::runtime_error("strand/ID vectors should have same length"); }
 	if (n!=LENGTH(start) || n!=LENGTH(end)) { throw std::runtime_error("start/end/index vectors should have the same length"); }
-	const int* gixptr=INTEGER_POINTER(geneid),
-		* strptr=LOGICAL_POINTER(strand),
-		* staptr=INTEGER_POINTER(start),
-		* endptr=INTEGER_POINTER(end);
+	const int* gixptr=INTEGER(geneid),
+		* strptr=LOGICAL(strand),
+		* staptr=INTEGER(start),
+		* endptr=INTEGER(end);
 	sort_row_index<int> endcomp(endptr);
 	
 	// Scanning through to determine the number of unique genes.
@@ -36,18 +36,18 @@ SEXP collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
 	}
 
 	// Setting up output structures.
-	SEXP output=PROTECT(NEW_LIST(2));
+	SEXP output=PROTECT(allocVector(VECSXP, 2));
 try {
-	SET_VECTOR_ELT(output, 0, NEW_INTEGER(n));
-	int* eiptr=INTEGER_POINTER(VECTOR_ELT(output, 0));
-	SET_VECTOR_ELT(output, 1, NEW_LIST(3));
+	SET_VECTOR_ELT(output, 0, allocVector(INTSXP, n));
+	int* eiptr=INTEGER(VECTOR_ELT(output, 0));
+	SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 3));
 	SEXP genebody=VECTOR_ELT(output, 1);
-	SET_VECTOR_ELT(genebody, 0, NEW_INTEGER(nuniq));
-	SET_VECTOR_ELT(genebody, 1, NEW_INTEGER(nuniq));
-	SET_VECTOR_ELT(genebody, 2, NEW_INTEGER(nuniq));
-	int * oiptr=INTEGER_POINTER(VECTOR_ELT(genebody, 0)),
-		* osptr=INTEGER_POINTER(VECTOR_ELT(genebody, 1)),
-		* oeptr=INTEGER_POINTER(VECTOR_ELT(genebody, 2));
+	SET_VECTOR_ELT(genebody, 0, allocVector(INTSXP, nuniq));
+	SET_VECTOR_ELT(genebody, 1, allocVector(INTSXP, nuniq));
+	SET_VECTOR_ELT(genebody, 2, allocVector(INTSXP, nuniq));
+	int * oiptr=INTEGER(VECTOR_ELT(genebody, 0)),
+		* osptr=INTEGER(VECTOR_ELT(genebody, 1)),
+		* oeptr=INTEGER(VECTOR_ELT(genebody, 2));
 
 	int curex=0, counter=0, ngene=0;
 	std::deque<int> current_indices;
@@ -152,49 +152,49 @@ std::string digest2string (const int start, const int end, const int* indices, c
 SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
 		SEXP rightQ, SEXP rightS, SEXP rightDist, 
 		SEXP symbol, SEXP genefeature, SEXP geneid, SEXP genestr) try {
-	if (!IS_INTEGER(N) || LENGTH(N)!=1) { throw std::runtime_error("N should be a integer scalar"); }
-	const int nin=INTEGER_VALUE(N);
-	if (!IS_INTEGER(fullQ) || !IS_INTEGER(fullS)) { throw std::runtime_error("full overlap query/subject IDs should be integer vectors"); }
+	if (!isInteger(N) || LENGTH(N)!=1) { throw std::runtime_error("N should be a integer scalar"); }
+	const int nin=asInteger(N);
+	if (!isInteger(fullQ) || !isInteger(fullS)) { throw std::runtime_error("full overlap query/subject IDs should be integer vectors"); }
 	const int nfull=LENGTH(fullQ);
 	if (nfull!=LENGTH(fullS)) { throw std::runtime_error("full overlap vectors should have equal length"); }
-	if (!IS_INTEGER(leftQ) || !IS_INTEGER(leftS) || !IS_INTEGER(leftDist)) { throw std::runtime_error("left overlap query/subject/distances should be integer vectors"); }
+	if (!isInteger(leftQ) || !isInteger(leftS) || !isInteger(leftDist)) { throw std::runtime_error("left overlap query/subject/distances should be integer vectors"); }
 	const int nleft=LENGTH(leftQ);
 	if (nleft!=LENGTH(leftS) || nleft!=LENGTH(leftDist)) { throw std::runtime_error("left overlap vectors should have equal length"); }
-	if (!IS_INTEGER(rightQ) || !IS_INTEGER(rightS) || !IS_INTEGER(rightDist)) { throw std::runtime_error("right overlap query/subject/distances should be integer vectors"); }
+	if (!isInteger(rightQ) || !isInteger(rightS) || !isInteger(rightDist)) { throw std::runtime_error("right overlap query/subject/distances should be integer vectors"); }
 	const int nright=LENGTH(rightQ);
 	if (nright!=LENGTH(rightS) || nright!=LENGTH(rightDist)) { throw std::runtime_error("right overlap vectors should have equal length"); }
 
 	// Declaring metafeatures.
-	if (!IS_CHARACTER(symbol)) { throw std::runtime_error("symbols should be a character vector"); }
+	if (!isString(symbol)) { throw std::runtime_error("symbols should be a character vector"); }
 	const int nsym=LENGTH(symbol);
-	if (!IS_INTEGER(geneid)) { throw std::runtime_error("gene IDs should be an integer vector"); }
-	if (!IS_INTEGER(genefeature)) { throw std::runtime_error("gene feature should be an integer vector"); }
-	if (!IS_LOGICAL(genestr)) {throw std::runtime_error("gene strand should be a logical vector"); }
+	if (!isInteger(geneid)) { throw std::runtime_error("gene IDs should be an integer vector"); }
+	if (!isInteger(genefeature)) { throw std::runtime_error("gene feature should be an integer vector"); }
+	if (!isLogical(genestr)) {throw std::runtime_error("gene strand should be a logical vector"); }
 	if (nsym!=LENGTH(geneid) || nsym!=LENGTH(genefeature) || nsym!=LENGTH(genestr)) { 
 		throw std::runtime_error("gene data vectors should have the same length"); 
 	}
 
 	// Setting up pointers.
-	const int * fqptr=INTEGER_POINTER(fullQ),
-		  * fsptr=INTEGER_POINTER(fullS),
-		  * lqptr=INTEGER_POINTER(leftQ),
-		  * lsptr=INTEGER_POINTER(leftS),
-		  * ldptr=INTEGER_POINTER(leftDist),
-		  * rqptr=INTEGER_POINTER(rightQ),
-		  * rsptr=INTEGER_POINTER(rightS),
-		  * rdptr=INTEGER_POINTER(rightDist),
-		  * giptr=INTEGER_POINTER(geneid),
-		  * gfptr=INTEGER_POINTER(genefeature),
-		  * gsptr=LOGICAL_POINTER(genestr);
+	const int * fqptr=INTEGER(fullQ),
+		  * fsptr=INTEGER(fullS),
+		  * lqptr=INTEGER(leftQ),
+		  * lsptr=INTEGER(leftS),
+		  * ldptr=INTEGER(leftDist),
+		  * rqptr=INTEGER(rightQ),
+		  * rsptr=INTEGER(rightS),
+		  * rdptr=INTEGER(rightDist),
+		  * giptr=INTEGER(geneid),
+		  * gfptr=INTEGER(genefeature),
+		  * gsptr=LOGICAL(genestr);
 	
 	// Okay, now going through them and assembling the output vectors. 
-	SEXP output=PROTECT(NEW_LIST(3));
+	SEXP output=PROTECT(allocVector(VECSXP, 3));
 try {
-	SET_VECTOR_ELT(output, 0, NEW_CHARACTER(nin));
+	SET_VECTOR_ELT(output, 0, allocVector(STRSXP, nin));
 	SEXP full_out=VECTOR_ELT(output, 0);
-	SET_VECTOR_ELT(output, 1, NEW_CHARACTER(nin));
+	SET_VECTOR_ELT(output, 1, allocVector(STRSXP, nin));
 	SEXP left_out=VECTOR_ELT(output, 1);
-	SET_VECTOR_ELT(output, 2, NEW_CHARACTER(nin));
+	SET_VECTOR_ELT(output, 2, allocVector(STRSXP, nin));
 	SEXP right_out=VECTOR_ELT(output, 2);
 
 	int fullx=0, leftx=0, rightx=0;
