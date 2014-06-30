@@ -8,5 +8,5 @@ Depends: R (>= 3.1.0), GenomicRanges
 Imports: Rsamtools, edgeR, limma
 Suggests: GenomicAlignments, GenomicFeatures, org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.knownGene, AnnotationDbi
 biocViews: Bioinformatics, HighThroughputSequencing, ChIP-Seq
-Description: Efficient counts for sliding windows in ChIP-seq data
-License: GPL (>= 2)
+Description: Detection of differentially bound regions in ChIP-seq data with sliding windows, with methods for normalization and proper FDR control.
+License: GPL-3
