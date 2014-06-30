@@ -12,13 +12,13 @@ correlateReads(bam.files, max.dist=1000, dedup=FALSE,
 }
 
 \arguments{
-	\item{bam.files}{character vectors containing paths to sorted and indexed BAM files}
+	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{max.dist}{integer scalar specifying the maximum delay distance over which correlation coefficients will be calculated}
 	\item{dedup}{a logical scalar specifying whether or not marked duplicate reads should be removed}
-	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score, none by default}
+	\item{minq}{an integer scalar defining the minimum threshold for the mapping quality score, no filtering by default}
 	\item{cross}{a logical scalar specifying whether cross-correlations should be computed}
 	\item{restrict}{a character vector specifying chromosomes for which correlations should be computed}
-    \item{discard}{a \code{GRanges} object specifying the regions in which reads are to be ignored}
+    \item{discard}{a \code{GRanges} object specifying the regions in which alignments are to be ignored}
     \item{pet}{a character string specifying whether the data involves paired end tags}
 }
 
@@ -27,28 +27,41 @@ A numeric vector of length \code{max.dist+1} containing the correlation coeffici
 }
 
 \details{
-If \code{cross=TRUE}, reads are separated into those mapping on the forward and reverse strands. Positions on the forward strand are shifted 
-forward by a delay interval and the chromosome-wide correlation coefficients between the shifted forward positions and the original reverse 
-positions are computed. This is repeated for all delay intervals less than \code{maxDist}. A weighted mean value for the cross-correlation
-is taken across all chromosomes.
+If \code{cross=TRUE}, reads are separated into those mapping on the forward and
+reverse strands. Positions on the forward strand are shifted forward by a delay
+interval and the chromosome-wide correlation coefficients between the shifted
+forward positions and the original reverse positions are computed. This is
+repeated for all delay intervals less than \code{maxDist}. A weighted mean
+value for the cross-correlation is taken across all chromosomes.
 
-Cross-correlation plots are designed to identify the quality of immunoprecipitation for ChIP-Seq experiments involving transcription factors or
-punctate histone marks. Strong immunoprecipitation should result in a peak at a delay corresponding to the fragment length. A spike may also be observed 
-at the delay corresponding to the read length. This is probably an artefact of the mapping process where unique mapping occurs to the same sequence on each strand. 
+Cross-correlation plots can be used to check the quality of immunoprecipitation
+for ChIP-Seq experiments involving transcription factors or punctate histone
+marks. Strong immunoprecipitation should result in a peak at a delay
+corresponding to the fragment length. A spike may also be observed at the delay
+corresponding to the read length. This is probably an artefact of the mapping
+process where unique mapping occurs to the same sequence on each strand. 
 
-The construction of cross-correlation plots is usually uninformative for full paired-end data as the frequency of valid pairs will inevitably result
-in a strong peak at the fragment length. Nonetheless, IP efficiency can be diagnosed by treating paired-end data as single end data. This is done
-by using only the first or second read based on the value of \code{pet}.
+The construction of cross-correlation plots is usually uninformative for full
+paired-end data as the presence of valid pairs will inevitably result in a
+strong peak at the fragment length. Nonetheless, IP efficiency can be diagnosed
+by treating paired-end data as single end data. This is done by using only the
+first or second read based on the value of \code{pet}.
 
-If multiple BAM files are specified in \code{bam.files}, the reads from all libraries are pooled prior to calculation of the correlation coefficients.
-This is convenient for determining the average correlation profile across an entire dataset. Separate calculations for each file will require multiple 
-calls to \code{correlateChIP}.
+If multiple BAM files are specified in \code{bam.files}, the reads from all
+libraries are pooled prior to calculation of the correlation coefficients.
+This is convenient for determining the average correlation profile across an
+entire dataset. Separate calculations for each file will require multiple calls
+to \code{correlateChIP}.
 
-If \code{cross=FALSE}, auto-correlation coefficients are computed without use of strand information. This is designed to guide estimation of the 
-average width of enrichment for diffuse histone marks. For example, the width can be defined as the delay distance at which the autocorrelations become negligble.
-However, this tends to be ineffective in practice as diffuse marks tend to have very weak correlations to begin with.
+If \code{cross=FALSE}, auto-correlation coefficients are computed without use
+of strand information. This is designed to guide estimation of the average
+width of enrichment for diffuse histone marks. For example, the width can be
+defined as the delay distance at which the autocorrelations become negligble.
+However, this tends to be ineffective in practice as diffuse marks tend to have
+very weak correlations to begin with.
 
-Note that any duplicate read must be marked in the bit field of the BAM file using a tool like Picard if it is to be removed with \code{dedup=TRUE}.
+Note that any duplicate read must be marked in the bit field of the BAM file
+using a tool like Picard if it is to be removed with \code{dedup=TRUE}.
 }
 
 \examples{
@@ -75,7 +88,9 @@ plot(0:n, x, xlab="delay (bp)", ylab="acf")
 }
 
 \references{
-Kharchenko PV, Tolstorukov MY  and Park, PJ (2008). Design and analysis of ChIP-seq experiments for DNA-binding proteins. \emph{Nature Biotechnology} 26, 1351-1359.
+Kharchenko PV, Tolstorukov MY  and Park, PJ (2008). Design and analysis of
+ChIP-seq experiments for DNA-binding proteins. \emph{Nat. Biotechnol.} 26,
+1351-1359.
 }
 
 \author{Aaron Lun}

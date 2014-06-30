@@ -44,9 +44,9 @@ rescued reads are extended and plotted in the same manner.
 
 The maximum depth should be scaled by the relative library size. For example,
 smaller libraries should have a smaller \code{max.depth} to account for the
-reduced total number of reads. If \code{max.depth=NULL}, the ideal height of
-the plot is estimated from the maximum base coverage within the specified
-region.
+reduced total number of reads. If \code{max.depth} is \code{NULL}, the ideal
+height of the plot is estimated from the maximum base coverage within the
+specified region.
 
 As always, the \code{dedup} argument only works if duplicate reads have been
 marked with the appropriate flag in the BAM file.
@@ -59,15 +59,15 @@ A plot is produced on the current graphics device. A \code{NULL} value is invisi
 \author{Aaron Lun}
 
 \examples{
-bamFiles<-system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
+bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 
 # Normalization factors are set to 1, so library sizes are unaffected.
 require(Rsamtools)
-lib.sizes<-c(countBam(bamFiles[1])$records, countBam(bamFiles[2])$records)
-mlib<-mean(lib.sizes)
+lib.sizes <- c(countBam(bamFiles[1])$records, countBam(bamFiles[2])$records)
+mlib <- mean(lib.sizes)
 
 # Plotting to an adjusted max.depth for (effective) library sizes. 
-constant<-5
+constant <- 5
 par(mfrow=c(1,2))
 plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[1], 
     max.depth=constant*lib.sizes[1]/mlib)
@@ -82,7 +82,7 @@ plotRegion(GRanges("chrA", IRanges(100, 500)), bamFiles[2],
     discard=GRanges("chrA", IRanges(250, 500)))
 
 # Considering paired-read data.
-bamFile <-system.file("exdata", "pet.bam", package="csaw")
+bamFile <- system.file("exdata", "pet.bam", package="csaw")
 plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), 
     bam.file=bamFile, pet="both")
 plotRegion(cur.region=GRanges("chrA", IRanges(0, 200)), 

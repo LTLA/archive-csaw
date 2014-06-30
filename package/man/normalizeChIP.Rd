@@ -1,7 +1,7 @@
 \name{normalizeChIP}
 \alias{normalizeChIP}
 
-\title{Normalize for undersampling in ChIP-seq data}
+\title{Normalize between libraries in a ChIP-seq dataset}
 
 \description{Calculate normalization factors to scale the raw library sizes using a modified TMM implementation.}
 
@@ -23,9 +23,11 @@ normalizeChIP(counts, lib.sizes, type=c("scaling", "loess"),
 If \code{type="scaling"}, this function provides a convenience wrapper for the
 \code{\link{calcNormFactors}} function in the \code{edgeR} package.
 Specifically, it uses the trimmed mean of M-values (TMM) method to perform
-normalization.  Precision weighting is turned off by default so as to avoid
-upweighting high-abundance regions that are more likely to be differentially
-bound.
+normalization. Precision weighting is turned off by default so as to avoid
+upweighting high-abundance regions. These are more likely to be bound and thus
+more likely to be differentially bound. Assigning excessive weight to such
+regions will defeat the purpose of trimming when normalizing the coverage of
+background regions.
 
 % We can't min/maximize some quantity with regards to the estimated normalization factors, and then choose a reference
 % from that, as that would bias the resulting estimates (or at least, interact with existing bias unpredictably).
@@ -35,33 +37,35 @@ bound.
 % can be performed with a larger bin size in \code{windowCounts} to obtain proportionally larger counts.
 
 If \code{type="loess"}, this function performs non-linear normalization similar
-to the fast loess type in \code{\link{normalizeCyclicLoess}}.  For each sample,
-a lowess curve is fitted to the log-counts against the log-average count.  The
-fitted value for each bin pair is used as the generalized linear model
-offset for that sample. The use of the average count provides more
+to the fast loess algorithm in \code{\link{normalizeCyclicLoess}}.  For each
+sample, a lowess curve is fitted to the log-counts against the log-average
+count.  The fitted value for each bin pair is used as the generalized linear
+model offset for that sample. The use of the average count provides more
 stability than the average log-count when low counts are present for
 differentially bound regions.
 
 If \code{lib.sizes} is not specified, the column sums of \code{counts} is used
 instead and a warning will be issued. Specification of \code{lib.sizes} is
-recommended to ensure consistency between this function and
-\code{\link{DGEList}}, the latter of which being the function that generates
-the object where the normalization factors will ultimately be stored.
+recommended to ensure consistency throughout the pipeline, especially after 
+filtering steps where the column sums may not be equal to the library size.
 }
 
 \value{
-For \code{type="scaling"}, a numeric vector containing the relative normalization factors for each library.
+For \code{type="scaling"}, a numeric vector containing the relative
+normalization factors for each library.
 
-For \code{type="loess"}, a numeric matrix of the same dimensions as \code{counts}, containing the log-based
-offsets for use in GLM fitting.
+For \code{type="loess"}, a numeric matrix of the same dimensions as
+\code{counts}, containing the log-based offsets for use in GLM fitting.
 }
 
 \author{Aaron Lun}
 
 \references{
-Robinson MD, Oshlack A (2010). A scaling normalization method for differential expression analysis of RNA-seq data. \emph{Genome Biology} 11, R25.
+Robinson MD, Oshlack A (2010). A scaling normalization method for differential
+expression analysis of RNA-seq data. \emph{Genome Biology} 11, R25.
 
-Ballman KV, Grill DE, Oberg AL, Therneau TM (2004). Faster cyclic loess: normalizing RNA arrays via linear models. \emph{Bioinformatics} 20, 2778-86.
+Ballman KV, Grill DE, Oberg AL, Therneau TM (2004). Faster cyclic loess:
+normalizing RNA arrays via linear models. \emph{Bioinformatics} 20, 2778-86.
 }
 
 \examples{

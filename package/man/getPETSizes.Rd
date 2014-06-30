@@ -26,20 +26,30 @@ A list containing:
 }
 
 \details{
-Each read pair corresponds to a DNA fragment where both ends are sequenced. The size of the fragment can be determined by the distance between the 5' ends 
-of the mapped reads. The distribution of sizes is useful for assessing the quality of the library preparation. Some diagnostics are also returned to 
-provide some indication of the quality of the paired-end sequencing and alignment.
+Each read pair corresponds to a DNA fragment where both ends are sequenced. The
+size of the fragment can be determined by the distance between the 5' ends of
+the mapped reads. The distribution of sizes is useful for assessing the quality
+of the library preparation. Some diagnostics are also returned to provide some
+indication of the quality of the paired-end sequencing and alignment.
 		
-Only the sizes of valid read pairs are considered. The read with the lower genomic coordinate must map to the forward strand and the read with the higher 
-genomic coordinate must map to the reverse strand. The distance between the positions of the mapped 5' ends of each read must also be equal to or greater 
-than the read lengths. Otherwise, the read pair will be considered as improperly orientated.
+Only the sizes of valid read pairs are considered. The read with the lower
+genomic coordinate must map to the forward strand and the read with the higher
+genomic coordinate must map to the reverse strand. The distance between the
+positions of the mapped 5' ends of each read must also be equal to or greater
+than the read lengths. Otherwise, the read pair will be considered as
+improperly orientated.
 
-The combined effects of \code{dedup}, \code{minq}, \code{restrict} and \code{discard} will define the total number of reads that are considered mapped.
-Read pairs must pass all criteria and be successfully mapped on two separate chromosomes in order to be considered as interchromosomal. Otherwise, 
-the read pair will be recorded as having one unmapped mate as the alignment is not reliable if it fails any of the criteria.
+The combined effects of \code{dedup}, \code{minq}, \code{restrict} and
+\code{discard} will define the total number of reads that are considered
+mapped.  Read pairs must pass all criteria and be successfully mapped on two
+separate chromosomes in order to be considered as interchromosomal. Otherwise,
+the read pair will be recorded as having one unmapped mate as the alignment is
+not reliable if it fails any of the criteria.
 
-Note that any duplicate read must be marked in the bit field of the BAM file using a tool like Picard if it is to be removed with \code{dedup=TRUE}.
-Also note that the read pair information in each BAM file \emph{must} be synchronized.
+Note that any duplicate read must be marked in the bit field of the BAM file
+using a tool like Picard if it is to be removed with \code{dedup=TRUE}.  Also
+note that the read pair information in each BAM file \emph{must} be
+synchronized.
 }
 
 \author{Aaron Lun}

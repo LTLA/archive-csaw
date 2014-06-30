@@ -42,19 +42,19 @@ A list is returned containing:
 
 
 \section{The sliding window strategy}{
-Each window is defined as the interval \code{[x-shift, x+width-1-shift]} for
-\code{x=1}, \code{1+spacing}, \code{1+2*spacing}, etc.  The value of \code{width} can be
-interpreted as the width of the contact area between the DNA and protein. In
-practical terms, it determines the spatial resolution of the analysis. Larger
-windows count reads over a larger region which results in larger counts. This 
-results in greater detection power at the cost of resolution.
+A window is defined as a genomic interval of size equal to \code{width}. The
+value of \code{width} can be interpreted as the width of the contact area
+between the DNA and protein. In practical terms, it determines the spatial
+resolution of the analysis. Larger windows count reads over a larger region
+which results in larger counts. This results in greater detection power at the
+cost of resolution.
 
-New windows are found by sliding the current window in the 3' direction by
-\code{spacing}. Increasing the value of \code{spacing} will reduce the number
-of counts which are extracted. This results in some loss of resolution but it
-may be necessary when machine memory is limited. The location of each window
-can be also tweaked by using \code{shift} to move all windows left (positive values)
-or right (negative values).
+By default, the first window on a chromosome starts at base position \code{1}
+but this can be shifted to the left by \code{shift}. New windows are found by
+sliding the current window in the 3' direction by \code{spacing}. Increasing
+\code{spacing} will reduce the number of counts which are extracted. This
+results in some loss of resolution but it may be necessary when machine memory
+is limited. 
 
 Each read in \code{bam.files} is extended by \code{ext} in the direction of the
 read to obtain a rough estimate of the fragment boundaries.  The number of
@@ -65,15 +65,15 @@ For paired-end data, the fragment boundaries can be computed exactly with
 \code{pet="both"} for proper pairs.
 
 If \code{bin} is set, settings are internally adjusted so that all reads are
-counted into non-overlapping adjacent bins of size \code{width}.  Specifically,
-\code{spacing} is set to \code{bin} and \code{filter} is set to 1.  Only the 5'
+counted into non-overlapping adjacent bins of size \code{width}. Specifically,
+\code{spacing} is set to \code{bin} and \code{filter} is set to 1. Only the 5'
 end of each read or fragment (for paired-end data) is used in counting.
 }
 
 \section{Filtering and pruning}{
 Windows will be removed if the count sum across all libraries is below
 \code{filter}.  This reduces the size of the output by not returning empty or
-near-empty windows, which are not usually interesting anyway. If
+near-empty windows, which are usually uninteresting anyway. If
 \code{filter=NULL}, the count sum filter threshold is automatically defined as
 the number of libraries multiplied by 5. 
 
@@ -85,10 +85,10 @@ supplied ranges. This is useful for removing reads in repeat regions.
 
 Marked duplicate reads can be removed with \code{dedup=TRUE}, though the
 duplicate field must be properly set beforehand. Reads can also be filtered by
-mapping quality score if \code{minq} is specified. This is generally
-recommended to remove low-confidence alignments.  The exact threshold for
-\code{minq} will depend on the range of scores provided by the aligner. 
-By default, no filtering on the score will be performed.
+mapping quality score if \code{minq} is specified at a non-\code{NA} value.
+This is generally recommended to remove low-confidence alignments.  The exact
+threshold for \code{minq} will depend on the range of scores provided by the
+aligner. By default, no filtering on the score will be performed.
 }
 
 \section{Additional advice for paired-end data}{
@@ -118,10 +118,10 @@ The \code{countWindows} function is a wrapper which allows users to pass in a
 list of non-default arguments. This ensures that multiple calls to
 \code{windowCounts} can be synchronised easily by passing in the same list in
 \code{param}. In particular, users should use the same values for \code{pet},
-\code{dedup}, \code{minq}, \code{bam.files} and (for paired-end data)
-\code{max.frag}. This ensures that the same reads are being counted in each
-call. Note that any additional arguments to \code{countWindows} will override
-those specified in \code{param}.
+\code{dedup}, \code{minq}, \code{bam.files}, \code{restrict}, \code{discard}
+and (for paired-end data) \code{rescue.pairs} and \code{max.frag}. This ensures
+that the same reads are being counted in each call. Note that any additional
+arguments to \code{countWindows} will override those specified in \code{param}.
 }
 
 \author{Aaron Lun}
