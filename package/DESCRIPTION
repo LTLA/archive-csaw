@@ -7,6 +7,6 @@ Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: R (>= 3.1.0), GenomicRanges
 Imports: Rsamtools, edgeR, limma
 Suggests: GenomicAlignments, GenomicFeatures, org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.knownGene, AnnotationDbi
-biocViews: Bioinformatics, HighThroughputSequencing, ChIP-Seq
+biocViews: MultipleComparison, ChIPSeq, Normalization, Sequencing, Coverage, Genetics, Annotation
 Description: Detection of differentially bound regions in ChIP-seq data with sliding windows, with methods for normalization and proper FDR control.
 License: GPL-3
