@@ -36,15 +36,18 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 # Checking the extension and spacing parameters. We've reparameterised it so
 # that 'left' and 'right' refer to the extension of the window from a nominal
 # 'center' point. This simplifies read counting as we just measure read
-# overlaps to those center points, spaced at regular intervals. However, we do
-# need to account for loss of a point from the front when shift/left is
-# non-zero. There's also a possible gain but that's dealt with later.
+# overlaps to those center points, spaced at regular intervals. 
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
 	if (left + right < 0L) { stop("width must be a positive integer") }
 	if (spacing <= 0L) { stop("spacing must be a positive integer") }
 	if (ext <= 0L) { stop("extension width must be a positive integer") }
-	at.start <- right >= 0L
+
+# Need to account for the possible loss of a centre point from the front when
+# the shift is non-zero, because the corresponding window is wholly outside the
+# chromosome (i.e., shifted so that the width of the window is before position
+# 1, so width > shift; left+right+1 > left; right+1 > 0; right >= 0).
+	at.start <- right >= 0L 
 	first.pt <- ifelse(at.start, 1L, spacing+1L)
 
 	# Initializing various collectable containers (non-empty so it'll work if no chromosomes are around).
@@ -56,7 +59,11 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	for (chr in names(extracted$chrs)) {
 		outlen<-extracted$chrs[[chr]]		
 		where<-GRanges(chr, IRanges(1, outlen))
-		# Accounting for the gain of a point from the back when shift/left is non-zero. 
+
+		# Accounting for the possible gain of a centrepoint from the back when
+		# shift/left is non-zero, i.e., does the shift bring the next centre point
+		# (floor((outlen-1)/spacing)*spacing+1+spacing) under outlen?  [note that 
+		# floor - original for a float is equal to the negative remainder].
 		at.end <- spacing - (outlen - 1L) %% spacing <= left
 		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
 		outcome <- matrix(0L, total.pts, nbam) 
