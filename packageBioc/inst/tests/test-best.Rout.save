@@ -1,0 +1,221 @@
+
+R version 3.0.3 (2014-03-06) -- "Warm Puppy"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This tests the correctness of the getBestTest function.
+> 
+> suppressPackageStartupMessages(require(csaw))
+> comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
++ 	n <- 10000
++     ids<-round(runif(n, 1, nids))
++ 	tab <- data.frame(logFC=rnorm(n), logCPM=rnorm(n), PValue=rbeta(n, alpha, beta))
++ 	best<-getBestTest(ids, tab)
++ 
++ 	ref <- aggregate(tab$PValue ~ ids, FUN=function(x) { min(1, x*length(x)) }, data=NULL)	
++ 	xref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.min(tab$PValue[x])] }, data=NULL)	
++ 	if (any(abs(best$PValue - ref[,2]) > 1e-6 * (ref[,2] + best$PValue)) ||
++ 			!identical(best$best, xref[,2]) ) {
++ 		stop("best p-value doesn't match reference") 
++ 	}
++ 
++ 	# With window weighting.
++ 	w<-round(runif(n, 1, max.weight))
++ 	best<-getBestTest(ids, tab, weight=w)
++ 	ref <- aggregate(1:n ~ ids, FUN=function(x) { min(1, tab$PValue[x]/w[x]*sum(w[x])) }, data=NULL)	
++ 	xref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.min(tab$PValue[x]/w[x])] }, data=NULL)	
++ 	if (any(abs(best$PValue - ref[,2]) > 1e-6 * (ref[,2] + best$PValue)) ||
++ 			!identical(best$best, xref[,2]) ) {
++ 		stop("best p-value doesn't match reference after weighting") 
++ 	}
++ 
++ 	# Now, searching for the max log-CPM.
++ 	almostbest <- getBestTest(ids, tab, mode="logCPM")
++     ref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.max(tab$logCPM[x])] }, data=NULL)
++ 	if (!identical(ref[,2], almostbest$best)) { stop("tests with the highest log-CPMs don't match reference") }
++ 	
++ 	return(head(best))	
++ }
+> 
+> set.seed(3479102)
+> 
+> comp()
+  best     PValue       FDR
+1  746 0.80500348 0.8944483
+2 9699 0.26237982 0.4574503
+3 2328 0.13894364 0.4574503
+4 8771 0.07312957 0.4574503
+5 2878 0.19128435 0.4574503
+6 2827 0.31580730 0.4574503
+> comp(1,1)
+  best PValue FDR
+1  333      1   1
+2 5929      1   1
+3 5638      1   1
+4 3753      1   1
+5 3140      1   1
+6 4082      1   1
+> comp(1,3)
+  best     PValue       FDR
+1 9679 0.87848671 0.8784867
+2   90 0.19945123 0.6648374
+3 7436 0.60139164 0.7574883
+4 5218 0.45480158 0.7574883
+5 6171 0.53381035 0.7574883
+6 4305 0.09086183 0.4574250
+> comp(1,5)
+  best      PValue       FDR
+1 2534 0.145123618 0.2418727
+2 1642 0.247822827 0.2527344
+3 2432 0.201098305 0.2527344
+4 7128 0.004217110 0.0218982
+5 3670 0.007400870 0.0218982
+6 3727 0.007759908 0.0218982
+> comp(2,1)
+  best PValue FDR
+1 8927      1   1
+2 6612      1   1
+3 8194      1   1
+4 9420      1   1
+5  672      1   1
+6  934      1   1
+> comp(2,3)
+  best PValue FDR
+1 1078      1   1
+2  506      1   1
+3 8572      1   1
+4 6069      1   1
+5 4866      1   1
+6 8432      1   1
+> comp(2,5)
+  best PValue FDR
+1 8893      1   1
+2 8804      1   1
+3 6177      1   1
+4 1005      1   1
+5 9396      1   1
+6 3514      1   1
+> 
+> comp(nids=1000)
+  best     PValue       FDR
+1  748 0.65803533 0.8977290
+2 3916 0.82785700 1.0000000
+3 6491 0.03640623 0.4874649
+4 8185 0.42426718 0.7469493
+5 1717 1.00000000 1.0000000
+6 8899 0.50904441 0.8080070
+> comp(1,1, nids=100)
+  best    PValue       FDR
+1 6121 1.0000000 1.0000000
+2 5473 0.1678605 0.7993355
+3 7273 1.0000000 1.0000000
+4 9482 1.0000000 1.0000000
+5 1921 0.5688276 1.0000000
+6 7700 0.3456679 0.9586458
+> comp(1,3, nids=1000)
+  best    PValue       FDR
+1 8230 0.9383050 0.9876895
+2 6922 0.1370245 0.3921613
+3 6331 0.2813732 0.4766101
+4 5411 0.1682361 0.4153978
+5 5028 0.4245874 0.5840266
+6   40 0.2452787 0.4492220
+> comp(1,5, nids=5000)
+  best      PValue       FDR
+1 7435 0.001057483 0.1911400
+2 6716 0.078283917 0.2441511
+4 2877 0.001998058 0.1947019
+5 7162 0.127185881 0.2655920
+6 2129 0.172705813 0.2876714
+8  461 0.016094528 0.2159349
+> comp(2,1, nids=50)
+  best PValue FDR
+1 6859      1   1
+2 2638      1   1
+3  806      1   1
+4 7817      1   1
+5 8869      1   1
+6 8744      1   1
+> comp(2,3, nids=100)
+  best PValue FDR
+1 4048      1   1
+2 7828      1   1
+3 7269      1   1
+4 4031      1   1
+5 8302      1   1
+6 4803      1   1
+> comp(2,5, nids=500)
+  best    PValue FDR
+1 9668 0.9181660   1
+2 6160 0.6248771   1
+3 8062 0.6103466   1
+4 4398 0.5543248   1
+5 3949 1.0000000   1
+6 6281 1.0000000   1
+> 
+> comp(1,1, nids=1000, max.weight=2)
+  best    PValue       FDR
+1 3465 0.6479608 1.0000000
+2 8620 1.0000000 1.0000000
+3 2438 0.0947298 0.9746678
+4  781 1.0000000 1.0000000
+5 2962 1.0000000 1.0000000
+6 7583 0.4201112 1.0000000
+> comp(1,3, nids=1000, max.weight=5)
+  best      PValue       FDR
+1 9411 0.150147514 0.4113631
+2 8857 0.517964037 0.6399353
+3 7922 0.170202717 0.4259164
+4 1672 0.030059023 0.3495235
+5 6899 0.313464154 0.4884513
+6  787 0.002713117 0.2248846
+> comp(1,5, nids=5000, max.weight=10)
+  best      PValue       FDR
+2 2735 0.016546953 0.2077088
+3 5147 0.205660397 0.3121531
+4 5160 0.208579332 0.3137399
+5 2568 0.076634231 0.2419739
+6  689 0.196833776 0.3075156
+7 2557 0.003700825 0.1811079
+> comp(2,1, nids=20, max.weight=20)
+  best PValue FDR
+1 6759      1   1
+2 8843      1   1
+3 4294      1   1
+4 4247      1   1
+5 3845      1   1
+6  518      1   1
+> comp(2,3, nids=30, max.weight=50)
+  best PValue FDR
+1 9187      1   1
+2 6324      1   1
+3 4720      1   1
+4 7275      1   1
+5 3786      1   1
+6 2649      1   1
+> comp(2,5, nids=50, max.weight=100)
+  best PValue FDR
+1 7239      1   1
+2 3549      1   1
+3 6434      1   1
+4  695      1   1
+5 5734      1   1
+6 9796      1   1
+> 
+> ##################################################################
+> 
+> proc.time()
+   user  system elapsed 
+ 11.617   0.062  11.705 
