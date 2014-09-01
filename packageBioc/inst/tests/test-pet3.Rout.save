@@ -32,7 +32,6 @@ Type 'q()' to quit R.
 + 	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
 + }
 > 
-> 
 > checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 + 	stuff<-file.path(dir, paste("x", 1:2, sep=""))
 + 	firsts <- seconds <- singles <- list()
@@ -95,7 +94,8 @@ Type 'q()' to quit R.
 + 	}
 + 	
 + 	# Looping through a number of possible filters.
-+ 	discard <- restrict <- NULL
++ 	discard <- GRanges()
++ 	restrict <- NULL
 + 	fnames <- paste0(stuff, ".bam")
 + 	for (filter in 1:4) {
 + 		if (filter==1L) {
@@ -107,7 +107,7 @@ Type 'q()' to quit R.
 + 		} else if (filter==3L) {
 + 			discard <- makeDiscard(10, 50, chromosomes)
 + 		} else {
-+ 			discard <- NULL
++ 			discard <- GRanges()
 + 			restrict <- "chrA"
 + 		}
 + 
@@ -121,9 +121,10 @@ Type 'q()' to quit R.
 + 			} else if (mode==3L) {
 + 				pet <- "first"
 + 			}
-+ 			x <- windowCounts(fnames, spacing=spacing, max.frag=max.frag, shift=left, width=right+left+1, pet=pet,
-+ 				filter=0, rescue.pairs=rescue, ext=ext, discard=discard, minq=minq, dedup=dedup, restrict=restrict)
-+ 			counts <- matrix(0L, nrow=length(x$region), ncol=length(fnames))
++ 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, filter=0, 
++ 				param=readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
++ 					discard=discard, minq=minq, dedup=dedup, restrict=restrict))
++ 			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 + 			totals <- integer(length(fnames))
 + 
 + 			for (lib in 1:length(fnames)) { 
@@ -142,7 +143,7 @@ Type 'q()' to quit R.
 + 				# Checking which ones are lost.
 + 				keep1 <- (!dedup | !firsts[[lib]]$dup) & firsts[[lib]]$mapq >= minq
 + 				keep2 <- (!dedup | !seconds[[lib]]$dup) & seconds[[lib]]$mapq >= minq
-+ 				if (!is.null(discard)) { 
++ 				if (length(discard)) { 
 + 					keep1 <- keep1 & !overlapsAny(firsts[[lib]], discard, type="within")
 + 					keep2 <- keep2 & !overlapsAny(seconds[[lib]], discard, type="within")
 + 				} 
@@ -164,7 +165,7 @@ Type 'q()' to quit R.
 + 				###############################################
 + 				# Checking diagnostics.
 + 				if (mode==1L) { 
-+ 		        	stuff<-getPETSizes(fnames[lib], minq=minq, dedup=dedup, restrict=restrict, discard=discard)
++ 		        	stuff<-getPETSizes(fnames[lib], readParam(pet="both", minq=minq, dedup=dedup, restrict=restrict, discard=discard))
 + 					if (stuff$diagnostics[["single"]]!=sum(skeep)) { 
 + 						stop("mismatch in number of singles")
 + 					} else if (stuff$diagnostics[["total"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
@@ -197,7 +198,7 @@ Type 'q()' to quit R.
 + 				} else {
 + 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 + 				}
-+ 				counts[,lib] <- countOverlaps(x$region, pairedness)
++ 				counts[,lib] <- countOverlaps(rowData(x), pairedness)
 + 				totals[lib] <- length(pairedness)					
 + 			}
 + #			print(c(totals, x$totals))
@@ -206,11 +207,14 @@ Type 'q()' to quit R.
 + #			print(is.integer(x$counts))
 + #			print(head(counts))
 + #			print(head(x$counts))
-+ 			if (!identical(counts, x$counts)) { stop('mismatches in counts for paired data') }
++ 
++ 			curcounts <- assay(x)
++ 			attributes(curcounts)$dimnames <- NULL
++ 			if (!identical(counts, curcounts)) { stop('mismatches in counts for paired data') }
 + 			if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
 + 		}
 + 	}
-+ 	return(x$region)
++ 	return(rowData(x))
 + }
 > 
 > # Running through a bunch of tests.
@@ -221,8 +225,6 @@ Type 'q()' to quit R.
          1088            24           109           506           134 
         total        single    unoriented mate.unmapped     inter.chr 
          2050            50           357             0           506 
-Loading required package: GenomicAlignments
-Loading required package: BSgenome
         total        single    unoriented mate.unmapped     inter.chr 
          1839            45           292           182           400 
         total        single    unoriented mate.unmapped     inter.chr 
@@ -654,4 +656,4 @@ GRanges with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 96.879   0.389  97.462 
+108.134   0.839 109.240 

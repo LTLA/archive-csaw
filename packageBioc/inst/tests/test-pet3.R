@@ -13,7 +13,6 @@ makeDiscard <- function(ndisc, sizeof, chromos) {
 	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
 }
 
-
 checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 	stuff<-file.path(dir, paste("x", 1:2, sep=""))
 	firsts <- seconds <- singles <- list()
@@ -76,7 +75,8 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 	}
 	
 	# Looping through a number of possible filters.
-	discard <- restrict <- NULL
+	discard <- GRanges()
+	restrict <- NULL
 	fnames <- paste0(stuff, ".bam")
 	for (filter in 1:4) {
 		if (filter==1L) {
@@ -88,7 +88,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 		} else if (filter==3L) {
 			discard <- makeDiscard(10, 50, chromosomes)
 		} else {
-			discard <- NULL
+			discard <- GRanges()
 			restrict <- "chrA"
 		}
 
@@ -102,9 +102,10 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			} else if (mode==3L) {
 				pet <- "first"
 			}
-			x <- windowCounts(fnames, spacing=spacing, max.frag=max.frag, shift=left, width=right+left+1, pet=pet,
-				filter=0, rescue.pairs=rescue, ext=ext, discard=discard, minq=minq, dedup=dedup, restrict=restrict)
-			counts <- matrix(0L, nrow=length(x$region), ncol=length(fnames))
+			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, filter=0, 
+				param=readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
+					discard=discard, minq=minq, dedup=dedup, restrict=restrict))
+			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 			totals <- integer(length(fnames))
 
 			for (lib in 1:length(fnames)) { 
@@ -123,7 +124,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				# Checking which ones are lost.
 				keep1 <- (!dedup | !firsts[[lib]]$dup) & firsts[[lib]]$mapq >= minq
 				keep2 <- (!dedup | !seconds[[lib]]$dup) & seconds[[lib]]$mapq >= minq
-				if (!is.null(discard)) { 
+				if (length(discard)) { 
 					keep1 <- keep1 & !overlapsAny(firsts[[lib]], discard, type="within")
 					keep2 <- keep2 & !overlapsAny(seconds[[lib]], discard, type="within")
 				} 
@@ -145,7 +146,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				###############################################
 				# Checking diagnostics.
 				if (mode==1L) { 
-		        	stuff<-getPETSizes(fnames[lib], minq=minq, dedup=dedup, restrict=restrict, discard=discard)
+		        	stuff<-getPETSizes(fnames[lib], readParam(pet="both", minq=minq, dedup=dedup, restrict=restrict, discard=discard))
 					if (stuff$diagnostics[["single"]]!=sum(skeep)) { 
 						stop("mismatch in number of singles")
 					} else if (stuff$diagnostics[["total"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
@@ -178,7 +179,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				} else {
 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 				}
-				counts[,lib] <- countOverlaps(x$region, pairedness)
+				counts[,lib] <- countOverlaps(rowData(x), pairedness)
 				totals[lib] <- length(pairedness)					
 			}
 #			print(c(totals, x$totals))
@@ -187,11 +188,14 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 #			print(is.integer(x$counts))
 #			print(head(counts))
 #			print(head(x$counts))
-			if (!identical(counts, x$counts)) { stop('mismatches in counts for paired data') }
+
+			curcounts <- assay(x)
+			attributes(curcounts)$dimnames <- NULL
+			if (!identical(counts, curcounts)) { stop('mismatches in counts for paired data') }
 			if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
 		}
 	}
-	return(x$region)
+	return(rowData(x))
 }
 
 # Running through a bunch of tests.

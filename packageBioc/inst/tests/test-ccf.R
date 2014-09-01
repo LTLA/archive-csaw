@@ -82,7 +82,7 @@ comp<-function(bamFiles, n, cross=TRUE) {
             minq <- 0
         }
 		out<-manualcor(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
-		out2<-correlateReads(bamFiles, n, cross=cross, minq=minq, dedup=dedup)
+		out2<-correlateReads(bamFiles, n, cross=cross, readParam(minq=minq, dedup=dedup))
 		if (length(out)!=length(out2)) { stop("mismatch in length of output vector"); }
 		if (any( abs((out-out2)/(abs(out)+precision)) > precision ))  { stop("mismatch in correlation coefficients"); }
 	}

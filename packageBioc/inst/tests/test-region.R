@@ -22,7 +22,7 @@ regen <- function(nreads, chromos, outfname) {
 
 # We compare windowCounts and regionCounts directly.
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=NULL, restrict=NULL) {
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL) {
 	for (type in 1:3) {
 		if (type==1) {
 			dedup<- FALSE
@@ -35,12 +35,13 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 			minq <- 100
 		}
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			discard=discard, restrict=restrict, minq=minq, dedup=dedup)
-		y <- regionCounts(bamFiles, regions=x$region, ext=fraglen, discard=discard, restrict=restrict, minq=minq, dedup=dedup)
-		if (!identical(y$counts, x$counts)) { stop("mismatch in count matrices") }
+			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+		y <- regionCounts(bamFiles, regions=rowData(x), ext=fraglen, 
+			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+		if (!identical(assay(y), assay(x))) { stop("mismatch in count matrices") }
 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
 	}
-	return(head(y$counts))
+	return(head(assay(y)))
 }
 
 ###################################################################################################

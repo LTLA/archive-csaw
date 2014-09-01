@@ -55,7 +55,7 @@ compare2Ranges <- function(left, right) {
 
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=NULL, restrict=NULL) {
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
 	for (type in 1:3) {
 		if (type==1) {
 			dedup<- FALSE
@@ -68,11 +68,11 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			minq <- 100
 		}
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			discard=discard, restrict=restrict, minq=minq, dedup=dedup)
+			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
 
 		# Checking with countOverlaps.
 		totals<-integer(length(bamFiles))
-		out<-matrix(0L, length(x$region), length(bamFiles))
+		out<-matrix(0L, nrow(x), length(bamFiles))
 		for (i in 1:length(bamFiles)) {
 	        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth", "mapq"), 
 						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
@@ -90,13 +90,15 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			frags <- GRanges(reads$rname, IRanges(read.starts, read.ends))
 
 			# Discarding. No variable read lengths here, so no need to use alignment width.			
-			if (!is.null(discard)) { frags <- frags[!overlapsAny(GRanges(reads$rname, IRanges(reads$pos, reads$pos+reads$qwidth-1L)), discard, type="within")] }
+			if (length(discard)) { frags <- frags[!overlapsAny(GRanges(reads$rname, IRanges(reads$pos, reads$pos+reads$qwidth-1L)), discard, type="within")] }
 			if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
-			out[,i]<-countOverlaps(x$region, frags)
+			out[,i]<-countOverlaps(rowData(x), frags)
 			totals[i]<-length(frags)
 		}
-
-		if (!identical(out, x$counts)) { stop("mismatch in count matrices") }
+		
+		curcounts <- assay(x)	
+		attributes(curcounts)$dimnames <- NULL
+		if (!identical(out, curcounts)) { stop("mismatch in count matrices") }
 		if (!identical(totals, x$totals)) { stop("mismatch in total counts") }
 
 		# Checking the filter. We need to do this separately as the check above is not filter-aware.
@@ -104,19 +106,19 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			x2 <- x
 		} else {
 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-				discard=discard, restrict=restrict, dedup=dedup, minq=minq)
-			keep<-rowSums(x2$counts)>=filter
-			if (!identical(x$counts, x2$count[keep,])) { stop("mismatch in filtered counts") }
-			if (sum(keep)==0 && length(x$region)==0) { } 
-			else if (compare2Ranges(x2$region[keep], x$region)) { stop("mismatch in filtered regions") }
+				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
+			keep<-rowSums(assay(x2))>=filter
+			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
+			if (sum(keep)==0 && nrow(x)==0) { } 
+			else if (compare2Ranges(rowData(x2)[keep], rowData(x))) { stop("mismatch in filtered regions") }
 		}
 		if (type==1) { 
 			expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
-			if (compare2Ranges(expected, x2$region)) { stop("mismatch in expected and unfiltered regions") }
+			if (compare2Ranges(expected, rowData(x2))) { stop("mismatch in expected and unfiltered regions") }
 		}
 	}
 
-	return(x$region);
+	return(rowData(x))
 }
 
 # Bin count checker.
@@ -124,13 +126,14 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 bincomp <- function(bamFiles, binsize=1000L) {
 	binsize<-as.integer(binsize+0.5)
 	blah<-windowCounts(bamFiles, width=binsize, bin=TRUE)	
-	if (!identical(blah$totals, as.integer(colSums(blah$counts)+0.5))) { stop("totals do not match up") }
+	if (!identical(blah$totals, as.integer(colSums(assay(blah)) ) ) ) { stop("totals do not match up") }
 	expected<-expectedRanges(binsize, 0L, binsize, bamFiles)
 	chrs<-scanBamHeader(bamFiles)[[1]][[1]]
 
 	# Counting reads into bins.
 	total.out<-list()
-    for (x in runValue(seqnames(blah$region))){
+	regions <- rowData(blah)
+    for (x in runValue(seqnames(regions))) {
     	out<-matrix(0L, ceiling(chrs[[x]]/binsize), length(bamFiles))
 		for (i in 1:length(bamFiles)) { 
 			reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth"),
@@ -141,14 +144,18 @@ bincomp <- function(bamFiles, binsize=1000L) {
 		}
 
 		keep<-rowSums(out)>0L
-		testing<-blah$region[seqnames(blah$region)==x]
+		testing <- regions[seqnames(regions)==x]
 		expect<-expected[seqnames(expected)==x]
 		if (compare2Ranges(testing, expect[keep])) { 
 			stop("bins do not match up after filtering") }
 		total.out[[x]]<-out[keep,]
    	}
+
+	# Comparing counts.
 	total.out<-do.call(rbind, total.out)
-	if (!identical(total.out, blah$counts)) { stop("binned counts do not match up") }
+	curcounts <- assay(blah)
+	attributes(curcounts)$dimnames <- NULL
+	if (!identical(total.out, curcounts)) { stop("binned counts do not match up") }
 	return(blah$totals)
 }
 
