@@ -1,5 +1,4 @@
-correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=NA, cross=TRUE, restrict=NULL, 
-	discard=NULL, pet=c("none", "first", "second")) 
+correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam()) 
 # This is just a function to calculate the autocorrelation between reads of different strands (or
 # between reads in general). Note that the BAM files must be sorted. It will calculate the values 
 # required for computation of the correlation function across all chromosomes, then it will crunch all 
@@ -7,13 +6,19 @@ correlateReads <- function(bam.files, max.dist=1000, dedup=FALSE, minq=NA, cross
 # acf/ccf() function because it doesn't handle the large inputs from BAM efficiently.
 #
 # written by Aaron Lun
+# 2 July 2012
+# modified 1 September, 2014
 {
-    extracted <- .processIncoming(bam.files, restrict, discard)
+    extracted <- .processIncoming(bam.files, param$restrict, param$discard)
 	max.dist<-as.integer(max.dist)
     if (max.dist <=0 ) { stop("maximum distance must be positive") }
     total.cor <- numeric(max.dist+1L)
-    total.read.num <- 0L;
-	pet <- match.arg(pet)
+    total.read.num <- 0L
+
+	pet <- param$pet
+	if (pet=="both") { stop("paired-end read extraction not supported") }
+	minq <- param$minq
+	dedup <- param$dedup
 
     for (i in 1:length(extracted$chrs)) {
 		if (extracted$chrs[i]<2L) { next } # No way to compute variance if there's only one base.

@@ -1,21 +1,21 @@
-getPETSizes <- function(bam.file, dedup=FALSE, minq=NA, restrict=NULL, discard=NULL) 
+getPETSizes <- function(bam.file, param=readParam(pet="both")) 
 # This function takes a BAM file and reads it to parse the size of the PET fragments. It then
 # returns a vector of sizes which can be plotted for diagnostics. The length of the vector
 # will also tell you how many read pairs were considered valid. The total number of reads, the
 # number of singletons and the number of interchromosomal pairs is also reported.
 # 
 # written by Aaron Lun
-# a long long time ago, in a galaxy far far away.
+# a long long time ago
+# modified 1 September 2014
 {
-	norm.list<-list()
-	singles<-0L
-	totals<-0L
-	others<-0L
+	if (param$pet!="both") { stop("paired-end inputs required") }
+	dedup <- param$dedup
+	minq <- param$minq
+    extracted <- .processIncoming(bam.file, param$restrict, param$discard)
+
+	singles <- totals <- others <- one.unmapped <- 0L
 	stopifnot(length(bam.file)==1L)
-    extracted <- .processIncoming(bam.file, restrict, discard)
-	loose.names.1 <- list()
-	loose.names.2 <- list()
-	one.unmapped <- 0L
+	norm.list <- loose.names.1 <- loose.names.2 <- list()
 
 	for (i in 1:length(extracted$chrs)) {
 		chr <- names(extracted$chrs)[i]
@@ -184,7 +184,7 @@ getPETSizes <- function(bam.file, dedup=FALSE, minq=NA, restrict=NULL, discard=N
 	additor[nok.first][first.paired][is.better] <- TRUE
 	additor[nok.second][second.paired][!is.better] <- TRUE
 
-	# Returning the loot. Yar!	
+	# Returning the loot.
 	return( list( pos=c(output$pos, ifelse(bitwAnd(reads$flag[additor], 0x10)==0L, reads$pos[additor], 
 					reads$pos[additor]+reads$qwidth[additor]-ext)),
 		      size=c(output$size, rep(ext, sum(additor))) ) )
