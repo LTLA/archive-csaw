@@ -1,6 +1,5 @@
 windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
-	pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
-	filter=NULL, bin=FALSE, dedup=FALSE, minq=NA, restrict=NULL, discard=NULL)
+	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -8,9 +7,16 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # ages ago.
+# last modified 1 September 2014
 {   
 	nbam<-length(bam.files)
-	extracted <- .processIncoming(bam.files, restrict, discard)
+	extracted <- .processIncoming(bam.files, param$restrict, param$discard)
+	pet <- param$pet
+	max.frag <- param$max.frag
+	minq <- param$minq
+	dedup <- param$dedup
+	rescue.pairs <- param$rescue.pairs
+	rescue.ext <- param$rescue.ext
 
 	# Processing input parameters.
 	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
@@ -28,10 +34,6 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 		ext <- 1L
 		filter <- 1
 	}
-	pet <- match.arg(pet)
-	max.frag <- as.integer(max.frag)
-	minq <- as.integer(minq)
-	dedup <- as.logical(dedup)
 
 # Checking the extension and spacing parameters. We've reparameterised it so
 # that 'left' and 'right' refer to the extension of the window from a nominal
@@ -83,7 +85,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 			} else {
 				if (rescue.pairs) { 
 					out<-.rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-						max.frag=max.frag, ext=ext, discard=extracted$discard[[chr]])
+						max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
 				} else {
 					out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						discard=extracted$discard[[chr]], max.frag=max.frag)
@@ -125,22 +127,10 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	all.regions<-suppressWarnings(do.call(c, all.regions))
 	seqlevels(all.regions) <- names(extracted$chrs)
 	seqlengths(all.regions) <- extracted$chrs
-	return(list(counts=do.call(rbind, all.out), totals=totals, region=all.regions))
-}
 
-########################################################
-
-countWindows <- function(param, ...) 
-# This is a wrapper for windowCounts which accepts a named parameter list and other
-# non-default arguments. The latter will overwrite the former, if there are any 
-# conflicts. The idea is to improve the re-callability of windowCounts.
-#
-# written by Aaron Lun
-# 8 December, 2013
-{
-	other <- list(...)
-	for (x in names(other)) { param[[x]]<-other[[x]] }
-	do.call(windowCounts, param)
+	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
+		rowData=all.regions, colData=DataFrame(totals=totals),
+		exptData=do.call(SimpleList, as.list(match.call())[-1])))
 }
 
 ########################################################
@@ -195,8 +185,8 @@ countWindows <- function(param, ...)
 		}
 	}
 
-	if (!is.null(restrict)) { originals <- originals[names(originals) %in% restrict] }
-	if (!is.null(discard)) {
+	if (length(restrict)) { originals <- originals[names(originals) %in% restrict] }
+	if (length(discard)) {
 		discard <- split(ranges(discard), seqnames(discard), drop=TRUE)
 		for (x in names(discard)) { 
 			if (x %in% names(originals)) { 
@@ -205,7 +195,8 @@ countWindows <- function(param, ...)
 				discard[[x]] <- NULL 
 			}
 		}
-	} 
+	} else { discard <- NULL }
+
 	return(list(discard=discard, chrs=originals))
 }
 

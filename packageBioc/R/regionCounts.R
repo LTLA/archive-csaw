@@ -1,6 +1,4 @@
-regionCounts <- function(bam.files, regions,  ext=100, 
-    pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
-	dedup=FALSE, minq=NA, restrict=NULL, discard=NULL)
+regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
@@ -10,11 +8,13 @@ regionCounts <- function(bam.files, regions,  ext=100,
 # 14th May 2014
 {
     nbam<-length(bam.files)
-	extracted <- .processIncoming(bam.files, restrict, discard)
-    pet <- match.arg(pet)
-    max.frag <- as.integer(max.frag)
-	minq <- as.integer(minq)
-	dedup <- as.logical(dedup)
+	extracted <- .processIncoming(bam.files, param$restrict, param$discard)
+    pet <- param$pet
+    max.frag <- param$max.frag
+	minq <- param$minq
+	dedup <- param$dedup
+	rescue.pairs <- param$rescue.pairs
+	rescue.ext <- param$rescue.ext
 	ext <- as.integer(ext)
 
     totals <- integer(nbam)
@@ -44,7 +44,7 @@ regionCounts <- function(bam.files, regions,  ext=100,
             } else {
                 if (rescue.pairs) {
                     out<-.rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq,
-                        max.frag=max.frag, ext=ext, discard=extracted$discard[[chr]])
+                        max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
                 } else {
                     out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq,
                         discard=extracted$discard[[chr]], max.frag=max.frag)
@@ -58,5 +58,6 @@ regionCounts <- function(bam.files, regions,  ext=100,
 			counts[chosen,bf] <- countOverlaps(ranges(regions[chosen]), IRanges(frag.start, frag.end))
 		}
 	}
-	return(list(counts=counts, totals=totals))
+	return(SummarizedExperiment(assays=counts, 
+			rowData=regions, colData=DataFrame(totals=totals)))
 }
