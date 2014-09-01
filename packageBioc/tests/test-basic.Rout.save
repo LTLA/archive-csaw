@@ -45,7 +45,7 @@ $diagnostics
 > 
 > # Trying to count some single-end data.
 > data <- windowCounts(both.files, ext=100)
-> head(data$counts)
+> head(assay(data))
      [,1] [,2]
 [1,]   23   41
 [2,]   33   48
@@ -53,7 +53,7 @@ $diagnostics
 [4,]   35   92
 [5,]   28  101
 [6,]   30  101
-> data$region
+> rowData(data)
 GRanges with 71 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
@@ -73,10 +73,10 @@ GRanges with 71 ranges and 0 metadata columns:
    chrA chrB chrC
    1298  870 1345
 > data$total
-[1] 1349 3291
+NULL
 > 
 > data <- windowCounts(both.files, width=500, spacing=200)
-> head(data$counts)
+> head(assay(data))
      [,1] [,2]
 [1,]  204  455
 [2,]  195  510
@@ -84,7 +84,7 @@ GRanges with 71 ranges and 0 metadata columns:
 [4,]  200  501
 [5,]  187  468
 [6,]  127  311
-> data$region
+> rowData(data)
 GRanges with 19 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
@@ -106,31 +106,22 @@ GRanges with 19 ranges and 0 metadata columns:
 > data$totals
 [1] 1349 3291
 > 
-> data <- windowCounts(both.files, ext=100, minq=100)
+> data <- windowCounts(both.files, ext=100, param=readParam(minq=100))
 > data$totals
 [1]  914 2152
-> data <- windowCounts(both.files, ext=100, dedup=TRUE)
+> data <- windowCounts(both.files, ext=100, param=readParam(dedup=TRUE))
 > data$totals
 [1] 1056 2582
-> data <- windowCounts(both.files, ext=100, discard=GRanges("chrA", IRanges(50, 500)))
+> data <- windowCounts(both.files, ext=100, param=readParam(discard=GRanges("chrA", IRanges(50, 500))))
 > data$totals
 [1] 1186 2916
-> data <- windowCounts(both.files, ext=100, restrict="chrA")
+> data <- windowCounts(both.files, ext=100, param=readParam(restrict="chrA"))
 > data$totals
 [1]  451 1093
 > 
-> param <- list(bam.files=both.files, ext=100, minq=100, dedup=TRUE)
-> data <- windowCounts(both.files, ext=100, minq=100, dedup=TRUE)
-> identical(countWindows(param), data) 
-[1] TRUE
-> identical(countWindows(param, ext=200), windowCounts(both.files, ext=200, minq=100, dedup=TRUE))
-[1] TRUE
-> identical(countWindows(param, ext=50, minq=0, dedup=FALSE), windowCounts(both.files, ext=50, minq=0, dedup=FALSE))
-[1] TRUE
-> 
 > # Trying to count some paired-end data.
-> windowCounts(pet.file, pet="both", width=100, filter=1L)
-$counts
+> out <- windowCounts(pet.file, param=readParam(pet="both"), width=100, filter=1L)
+> assay(out)
      [,1]
 [1,]    3
 [2,]    4
@@ -138,11 +129,9 @@ $counts
 [4,]    1
 [5,]    3
 [6,]    2
-
-$totals
+> out$totals
 [1] 7
-
-$region
+> rowData(out)
 GRanges with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -156,9 +145,8 @@ GRanges with 6 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB
     200  100
-
-> windowCounts(pet.file, pet="both", width=100, filter=1L, rescue.pairs=TRUE)
-$counts
+> out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE), width=100, filter=1L)
+> assay(out)
      [,1]
 [1,]    3
 [2,]    4
@@ -166,11 +154,9 @@ $counts
 [4,]    1
 [5,]    6
 [6,]    5
-
-$totals
+> out$totals
 [1] 10
-
-$region
+> rowData(out)
 GRanges with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -184,9 +170,8 @@ GRanges with 6 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB
     200  100
-
-> windowCounts(pet.file, pet="first", width=100, filter=1L)
-$counts
+> out <- windowCounts(pet.file, param=readParam(pet="first"), width=100, filter=1L)
+> assay(out)
      [,1]
 [1,]    3
 [2,]    4
@@ -194,11 +179,9 @@ $counts
 [4,]    2
 [5,]    6
 [6,]    6
-
-$totals
+> out$totals
 [1] 10
-
-$region
+> rowData(out)
 GRanges with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -212,16 +195,18 @@ GRanges with 6 ranges and 0 metadata columns:
   seqlengths:
    chrA chrB
     200  100
-
 > 
 > # Running some basic normalization.
-> normalizeChIP(data$counts, lib.size=data$totals)
+> data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
+> normalizeCounts(assay(data), lib.size=data$totals)
 [1] 0.990009 1.010092
-> normalizeChIP(data$counts, lib.size=data$totals, logratioTrim=.2)
+> normalizeCounts(data)
+[1] 0.990009 1.010092
+> normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
 [1] 0.9901379 1.0099603
-> normalizeChIP(data$counts, lib.size=data$totals, method="RLE")
+> normalizeCounts(assay(data), lib.size=data$totals, method="RLE")
 [1] 0.983910 1.016353
-> head(normalizeChIP(data$counts, lib.size=data$totals, type="loess"))
+> head(normalizeCounts(assay(data), lib.size=data$totals, type="loess"))
            [,1]      [,2]
 [1,] -0.4264274 0.4264274
 [2,] -0.4085916 0.4085916
@@ -229,7 +214,15 @@ GRanges with 6 ranges and 0 metadata columns:
 [4,] -0.3857622 0.3857622
 [5,] -0.3718120 0.3718120
 [6,] -0.3717137 0.3717137
-> head(normalizeChIP(data$counts, lib.size=data$totals, type="loess", span=0.7))
+> head(normalizeCounts(data, type="loess"))
+           [,1]      [,2]
+[1,] -0.4264274 0.4264274
+[2,] -0.4085916 0.4085916
+[3,] -0.3807671 0.3807671
+[4,] -0.3857622 0.3857622
+[5,] -0.3718120 0.3718120
+[6,] -0.3717137 0.3717137
+> head(normalizeCounts(assay(data), lib.size=data$totals, type="loess", span=0.7))
            [,1]      [,2]
 [1,] -0.4423041 0.4423041
 [2,] -0.4392041 0.4392041
@@ -240,11 +233,11 @@ GRanges with 6 ranges and 0 metadata columns:
 > 
 > # Assuming someone went around and pulled out some p-values for everybody.
 > set.seed(128145-19238)
-> nr <- nrow(data$counts)
+> nr <- nrow(data)
 > tabled <- data.frame(logFC=rnorm(nr), logCPM=rnorm(nr), PValue=rbeta(nr, 1, 2))
 > weighting <- rgamma(nr, 2, 1)
 > 
-> mergeWindows(data$region, 10)
+> mergeWindows(rowData(data), 10)
 $id
  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
 [26] 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50
@@ -270,7 +263,7 @@ GRanges with 71 ranges and 0 metadata columns:
    chrA chrB chrC
    1298  870 1345
 
-> mergeWindows(data$region, 100)
+> mergeWindows(rowData(data), 100)
 $id
  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2
 [39] 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
@@ -287,7 +280,7 @@ GRanges with 3 ranges and 0 metadata columns:
    chrA chrB chrC
    1298  870 1345
 
-> mergeWindows(data$region, 100, max.width=500)
+> mergeWindows(rowData(data), 100, max.width=500)
 $id
  [1] 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4 5 5
 [39] 5 5 5 5 5 5 6 6 6 6 6 6 6 6 6 6 7 7 7 7 7 7 7 7 7 7 8 8 8 8 8 8 8
@@ -309,7 +302,7 @@ GRanges with 8 ranges and 0 metadata columns:
    chrA chrB chrC
    1298  870 1345
 
-> merged <- mergeWindows(data$region, 100, sign=tabled$logFC > 0)
+> merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
 > merged
 $id
  [1]  1  2  2  3  4  4  4  5  5  6  7  8  9  9  9  9 10 10 11 12 13 14 15 15 15
@@ -420,17 +413,88 @@ GRanges with 43 ranges and 0 metadata columns:
 [3] ""                        "1700007G11Rik|5|+[2890]"
 [5] ""                        ""                       
 > 
-> # Here's a pretty plot.
-> pdf("tracktest.pdf")
-> plotRegion(GRanges("chrA", IRanges(100, 500)), both.files[1])
-> plotRegion(GRanges("chrA", IRanges(50, 100)), both.files[1])
-> plotRegion(GRanges("chrB", IRanges(50, 100)), pet.file)
-> dev.off()
-null device 
-          1 
+> # Pulling out some reads. 
+> extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
+GRanges with 143 ranges and 0 metadata columns:
+        seqnames     ranges strand
+           <Rle>  <IRanges>  <Rle>
+    [1]     chrA [ 93, 102]      -
+    [2]     chrA [ 94, 103]      +
+    [3]     chrA [106, 115]      +
+    [4]     chrA [106, 115]      -
+    [5]     chrA [107, 116]      -
+    ...      ...        ...    ...
+  [139]     chrA [490, 499]      -
+  [140]     chrA [491, 500]      -
+  [141]     chrA [499, 508]      -
+  [142]     chrA [500, 509]      +
+  [143]     chrA [500, 509]      +
+  ---
+  seqlengths:
+   chrA
+   1298
+> extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
+GRanges with 27 ranges and 0 metadata columns:
+       seqnames    ranges strand
+          <Rle> <IRanges>  <Rle>
+   [1]     chrA  [43, 52]      +
+   [2]     chrA  [44, 53]      -
+   [3]     chrA  [51, 60]      +
+   [4]     chrA  [52, 61]      -
+   [5]     chrA  [57, 66]      +
+   ...      ...       ...    ...
+  [23]     chrA [88,  97]      -
+  [24]     chrA [89,  98]      -
+  [25]     chrA [90,  99]      +
+  [26]     chrA [93, 102]      -
+  [27]     chrA [94, 103]      +
+  ---
+  seqlengths:
+   chrA
+   1298
+> extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
+GRanges with 19 ranges and 0 metadata columns:
+       seqnames    ranges strand
+          <Rle> <IRanges>  <Rle>
+   [1]     chrA  [51, 60]      +
+   [2]     chrA  [57, 66]      +
+   [3]     chrA  [57, 66]      -
+   [4]     chrA  [59, 68]      -
+   [5]     chrA  [62, 71]      +
+   ...      ...       ...    ...
+  [15]     chrA [88,  97]      +
+  [16]     chrA [88,  97]      -
+  [17]     chrA [89,  98]      -
+  [18]     chrA [90,  99]      +
+  [19]     chrA [93, 102]      -
+  ---
+  seqlengths:
+   chrA
+   1298
+> extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="both"))
+GRanges with 2 ranges and 0 metadata columns:
+      seqnames    ranges strand
+         <Rle> <IRanges>  <Rle>
+  [1]     chrB [50,  79]      *
+  [2]     chrB [99, 100]      *
+  ---
+  seqlengths:
+   chrB
+    100
+> extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="second"))
+GRanges with 4 ranges and 0 metadata columns:
+      seqnames    ranges strand
+         <Rle> <IRanges>  <Rle>
+  [1]     chrB [70,  79]      -
+  [2]     chrB [75,  84]      +
+  [3]     chrB [90,  99]      +
+  [4]     chrB [99, 100]      -
+  ---
+  seqlengths:
+   chrB
+    100
 > 
-> unlink("tracktest.pdf")
 > 
 > proc.time()
    user  system elapsed 
- 36.262   0.573  37.024 
+ 33.311   0.572  33.958 

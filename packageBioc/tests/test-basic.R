@@ -15,52 +15,58 @@ getPETSizes(pet.file)
 
 # Trying to count some single-end data.
 data <- windowCounts(both.files, ext=100)
-head(data$counts)
-data$region
+head(assay(data))
+rowData(data)
 data$total
 
 data <- windowCounts(both.files, width=500, spacing=200)
-head(data$counts)
-data$region
+head(assay(data))
+rowData(data)
 data$totals
 
-data <- windowCounts(both.files, ext=100, minq=100)
+data <- windowCounts(both.files, ext=100, param=readParam(minq=100))
 data$totals
-data <- windowCounts(both.files, ext=100, dedup=TRUE)
+data <- windowCounts(both.files, ext=100, param=readParam(dedup=TRUE))
 data$totals
-data <- windowCounts(both.files, ext=100, discard=GRanges("chrA", IRanges(50, 500)))
+data <- windowCounts(both.files, ext=100, param=readParam(discard=GRanges("chrA", IRanges(50, 500))))
 data$totals
-data <- windowCounts(both.files, ext=100, restrict="chrA")
+data <- windowCounts(both.files, ext=100, param=readParam(restrict="chrA"))
 data$totals
-
-param <- list(bam.files=both.files, ext=100, minq=100, dedup=TRUE)
-data <- windowCounts(both.files, ext=100, minq=100, dedup=TRUE)
-identical(countWindows(param), data) 
-identical(countWindows(param, ext=200), windowCounts(both.files, ext=200, minq=100, dedup=TRUE))
-identical(countWindows(param, ext=50, minq=0, dedup=FALSE), windowCounts(both.files, ext=50, minq=0, dedup=FALSE))
 
 # Trying to count some paired-end data.
-windowCounts(pet.file, pet="both", width=100, filter=1L)
-windowCounts(pet.file, pet="both", width=100, filter=1L, rescue.pairs=TRUE)
-windowCounts(pet.file, pet="first", width=100, filter=1L)
+out <- windowCounts(pet.file, param=readParam(pet="both"), width=100, filter=1L)
+assay(out)
+out$totals
+rowData(out)
+out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE), width=100, filter=1L)
+assay(out)
+out$totals
+rowData(out)
+out <- windowCounts(pet.file, param=readParam(pet="first"), width=100, filter=1L)
+assay(out)
+out$totals
+rowData(out)
 
 # Running some basic normalization.
-normalizeChIP(data$counts, lib.size=data$totals)
-normalizeChIP(data$counts, lib.size=data$totals, logratioTrim=.2)
-normalizeChIP(data$counts, lib.size=data$totals, method="RLE")
-head(normalizeChIP(data$counts, lib.size=data$totals, type="loess"))
-head(normalizeChIP(data$counts, lib.size=data$totals, type="loess", span=0.7))
+data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
+normalizeCounts(assay(data), lib.size=data$totals)
+normalizeCounts(data)
+normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
+normalizeCounts(assay(data), lib.size=data$totals, method="RLE")
+head(normalizeCounts(assay(data), lib.size=data$totals, type="loess"))
+head(normalizeCounts(data, type="loess"))
+head(normalizeCounts(assay(data), lib.size=data$totals, type="loess", span=0.7))
 
 # Assuming someone went around and pulled out some p-values for everybody.
 set.seed(128145-19238)
-nr <- nrow(data$counts)
+nr <- nrow(data)
 tabled <- data.frame(logFC=rnorm(nr), logCPM=rnorm(nr), PValue=rbeta(nr, 1, 2))
 weighting <- rgamma(nr, 2, 1)
 
-mergeWindows(data$region, 10)
-mergeWindows(data$region, 100)
-mergeWindows(data$region, 100, max.width=500)
-merged <- mergeWindows(data$region, 100, sign=tabled$logFC > 0)
+mergeWindows(rowData(data), 10)
+mergeWindows(rowData(data), 100)
+mergeWindows(rowData(data), 100, max.width=500)
+merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
 merged
 
 head(combineTests(merged$id, tabled))
@@ -90,11 +96,10 @@ head(output$overlap)
 head(output$right)
 head(output$left)
 
-# Here's a pretty plot.
-pdf("tracktest.pdf")
-plotRegion(GRanges("chrA", IRanges(100, 500)), both.files[1])
-plotRegion(GRanges("chrA", IRanges(50, 100)), both.files[1])
-plotRegion(GRanges("chrB", IRanges(50, 100)), pet.file)
-dev.off()
+# Pulling out some reads. 
+extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
+extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
+extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
+extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="both"))
+extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="second"))
 
-unlink("tracktest.pdf")
