@@ -62,6 +62,7 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		}
 	}
 			
+	# Returning an empty set, otherwise.
 	return(GRanges(seqinfo=sqi))
 }
 

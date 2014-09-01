@@ -16,7 +16,7 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 		counts <- assay(counts)
 	} 
 	if (missing(lib.sizes)) { 
-		lib.sizes  <- colSums(counts)
+		lib.sizes <- colSums(counts)
 		warning("library sizes not specified, column sums used instead")
 	}
 
