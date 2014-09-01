@@ -3,11 +3,25 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 
 #  All functions exported, arranged by sequence of usage.
 export(csawUsersGuide,
-    correlateReads, getPETSizes,
-    regionCounts,windowCounts,countWindows,
-    normalizeChIP,
-    combineTests, getBestTest,mergeWindows,
-    plotRegion, detailRanges)
+	correlateReads, getPETSizes,
+	regionCounts, windowCounts,
+	normalizeCounts, 
+	combineTests, getBestTest, mergeWindows,
+	detailRanges,
+	extractReads, readParam)
 
 #  Importing required packages
-import(GenomicRanges,Rsamtools,edgeR,limma)
+import(GenomicRanges,Rsamtools,
+	edgeR,limma,
+	GenomicFeatures,AnnotationDbi,
+	methods)
+
+#  Exporting classes and methods
+exportClasses(
+	readParam
+)
+
+exportMethods(
+	show, "$", "$<-"
+)
+
