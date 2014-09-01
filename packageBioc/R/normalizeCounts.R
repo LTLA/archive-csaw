@@ -1,17 +1,25 @@
-normalizeChIP <- function(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, dispersion=0.05, ...) 
+normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, dispersion=0.05, ...) 
 # This provides a wrapper to perform TMM normalization with non-standard
 # library sizes (e.g. due to filtering) and weighting turned off.
 # Alternatively, it can do a form a fast loess-like normalization which uses
 # the average count as the covariate, rather than the typical A-value-based
-# shenanigans,
+# shenanigans. This avoids instability at low counts.
 #
 # written by Aaron Lun
 # 19 November, 2013
+# modified 1 September, 2014
 {
+	if (is(counts, "SummarizedExperiment")) {
+		if (missing(lib.sizes)) { 
+			if (!is.null(counts$totals)) { lib.sizes <- counts$totals }
+		}
+		counts <- assay(counts)
+	} 
 	if (missing(lib.sizes)) { 
 		lib.sizes  <- colSums(counts)
 		warning("library sizes not specified, column sums used instead")
 	}
+
 	type <- match.arg(type)
 	if (type=="scaling") { 
 		y<-DGEList(counts, lib.size=lib.sizes)
@@ -25,3 +33,4 @@ normalizeChIP <- function(counts, lib.sizes, type=c("scaling", "loess"), weighte
 		return(offs)
 	}
 }
+
