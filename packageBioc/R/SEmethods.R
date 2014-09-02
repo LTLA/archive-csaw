@@ -11,7 +11,7 @@ setMethod("average", "SummarizedExperiment", function(object, ...) {
 	if (is.null(object$totals)) { 
 		warning("no library sizes found in totals for column data")
 	}
-	aveLogCPM(assay(object), lib.sizes=object$totals, ...)
+	aveLogCPM(assay(object), lib.size=object$totals, ...)
 })
 
 setMethod("normalize", "SummarizedExperiment", function(object, ...) {

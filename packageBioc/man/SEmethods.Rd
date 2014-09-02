@@ -55,7 +55,7 @@ asDGEList(data, norm.factors=c("a", "b"))
 \seealso{
 \code{\link{normalizeCounts}},
 \code{\link{aveLogCPM}},
-\code{\link{asDGEList}},
+\code{\link{DGEList}},
 \code{\link{windowCounts}}
 }
 
