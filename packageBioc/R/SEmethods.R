@@ -6,14 +6,6 @@
 # written by Aaron Lun
 # 2 September, 2014
 
-setGeneric("average", function(object, ...) { standardGeneric("average") })
-setMethod("average", "SummarizedExperiment", function(object, ...) {
-	if (is.null(object$totals)) { 
-		warning("no library sizes found in totals for column data")
-	}
-	aveLogCPM(assay(object), lib.size=object$totals, ...)
-})
-
 setMethod("normalize", "SummarizedExperiment", function(object, ...) {
 	if (is.null(object$totals)) { 
 		return(normalizeCounts(counts=assay(object), ...))

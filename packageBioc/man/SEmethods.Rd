@@ -12,8 +12,7 @@
 
 \usage{
 normalize(object, ...)
-average(object, ...)
-
+asDGEList(object, ...)
 }
 
 \arguments{
@@ -24,15 +23,12 @@ average(object, ...)
 \details{
 Counts are extracted using the matrix corresponding to the first assay in the \code{SummarizedExperiment} object.
 The total library size is taken from the \code{totals} entry in the column data; warnings will be generated if this entry is not present.
-In \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normalizeCounts}}.
-The \code{average} method does the same for \code{\link{aveLogCPM}}.
+In the \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normalizeCounts}}, along wth arguments in \code{...}.
 Similarly, the \code{asDGEList} method wraps the \code{\link{DGEList}} constructor.
 }
 
 \value{
 For \code{normalize}, either a numeric matrix or vector is returned; see \code{\link{normalizeCounts}}.
-
-For \code{average}, a numeric vector of average log-CPMs is returned.
 
 For \code{asDGEList}, a \code{DGEList} object is returned.
 }
@@ -45,16 +41,12 @@ data <- windowCounts(bamFiles, width=100, filter=1)
 normalize(data)
 head(normalize(data, type="loess"))
 
-head(average(data))
-head(average(data, prior.count=5))
-
 asDGEList(data)
-asDGEList(data, norm.factors=c("a", "b"))
+asDGEList(data, norm.factors=c(1.11, 2.23), group=c("a", "b"))
 }
 
 \seealso{
 \code{\link{normalizeCounts}},
-\code{\link{aveLogCPM}},
 \code{\link{DGEList}},
 \code{\link{windowCounts}}
 }

@@ -22,6 +22,6 @@ exportClasses(
 )
 
 exportMethods(
-	show, "$", reform, normalize, average, asDGEList
+	show, "$", reform, normalize, asDGEList
 )
 
