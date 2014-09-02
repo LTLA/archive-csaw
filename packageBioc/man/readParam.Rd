@@ -4,8 +4,9 @@
 \alias{readParam}
 \alias{readParam-class}
 \alias{$,readParam-method}
-\alias{$<-,readParam-method}
 \alias{show,readParam-method}
+\alias{reform}
+\alias{reform,readParam-method}
 
 \title{readParam class and methods}
 \description{Class to specify read loading parameters}
@@ -68,9 +69,7 @@ In all cases, users should ensure that each BAM file containing paired-end data 
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pet=c("none", "both", "first", "second"), 
-		max.frag=500, rescue.pairs=FALSE, rescue.ext=200, dedup=FALSE, 
-		minq=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=200, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}
@@ -83,9 +82,6 @@ In the code snippets below, \code{x} is a readParam object.
 	\item{}{\code{x$name}: 
 	Returns the value in slot \code{name}.
 	}
-	\item{}{\code{x$name <- value}:
-	Assigns \code{value} into slot \code{name}, with appropriate checking of the type and value of \code{value}.
-	}
 }
 }
 
@@ -95,6 +91,10 @@ In the code snippets below, \code{x} is a readParam object.
     \item{}{\code{show(x)}:
 	Describes the parameter settings in plain English.
   	}
+	\item{}{\code{reform(x, ...)}:
+		Creates a new readParam object, based on the existing \code{x}.
+		Any named arguments in \code{...} are used to modify the values of the slots in the new object, with type coercion as necessary.
+	}
 }	
 }
 
@@ -114,11 +114,12 @@ blah <- readParam()
 blah <- readParam(discard=GRanges("chrA", IRanges(1, 10)))
 blah <- readParam(restrict='chr2')
 blah$pet
-blah$pet <- "first"
+blah$dedup
 
-# Use the copy constructor if only some arguments need to be changed.
+# Use 'reform' if only some arguments need to be changed.
 blah
-initialize(blah, dedup=TRUE)
+reform(blah, dedup=TRUE)
+reform(blah, pet="both", max.frag=212.0)
 }
 
 \keyword{counting}

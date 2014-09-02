@@ -39,45 +39,39 @@ setMethod("$", signature("readParam"), function(x, name) {
 	slot(x, name)
 })
 
-setMethod("$<-", signature("readParam"), function(x, name, value) {
-	slot(x, name) <- value
-	validObject(x)
-	x	
-})
-
 setMethod("show", signature("readParam"), function(object) {
-	cat(switch(object@pet,
+	cat("    ", switch(object@pet,
  	   none="Extracting reads in single-end mode",
 	   both="Extracting reads in paired-end mode",
 	   first="Extracting the first read of each pair",
-	   second="Extracting the second read of each pair"), "\n")
+	   second="Extracting the second read of each pair"), "\n", sep="")
 	if (object@pet=="both") { 
-		cat("  Maximum allowed distance between paired reads is", object@max.frag, "\n")
-		cat("  Rescuing of improperly paired reads is", 
+		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
+		cat("        Rescuing of improperly paired reads is", 
 			ifelse(object@rescue.pairs, "enabled", "disabled"), "\n")
 		if (object@rescue.pairs) {
-			cat("    Extension length for rescued reads is", object@rescue.ext, "\n")
+			cat("            Extension length for rescued reads is", object@rescue.ext, "bp\n")
 		}
 	}
-	cat("Duplicate removal is turned", ifelse(object@dedup, "on", "off"), "\n")
+	cat("    Duplicate removal is turned", ifelse(object@dedup, "on", "off"), "\n")
 	if (is.na(object@minq)) { 
-		cat("No minimum threshold is set on the mapping score\n")
+		cat("    No minimum threshold is set on the mapping score\n")
 	} else {
-		cat("Minimum allowed mapping score is", object@minq, "\n")
+		cat("    Minimum allowed mapping score is", object@minq, "\n")
 	}
 	if (length(object@restrict)) { 
-		cat("Read extraction is limited to", length(object@restrict), "sequences\n")
+		cat("    Read extraction is limited to", length(object@restrict), "sequences\n")
 	} else {
-		cat("No restrictions are placed on read extraction\n")
+		cat("    No restrictions are placed on read extraction\n")
 	}
 	if (length(object@discard)) { 
-		cat("Reads in", length(object@discard), "regions will be discarded\n")
+		cat("    Reads in", length(object@discard), "regions will be discarded\n")
 	} else {
-		cat("No regions are specified to discard reads\n")
+		cat("    No regions are specified to discard reads\n")
 	}
 })
 
-readParam <- function(pet=c("none", "both", "first", "second"), max.frag=500, rescue.pairs=FALSE,
+readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
 	rescue.ext=200, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
@@ -87,7 +81,6 @@ readParam <- function(pet=c("none", "both", "first", "second"), max.frag=500, re
 # written by Aaron Lun
 # 1 September 2014
 {
-	pet <- match.arg(pet)
 	max.frag <- as.integer(max.frag)
 	rescue.pairs <- as.logical(rescue.pairs)
 	rescue.ext <- as.integer(rescue.ext)
@@ -99,3 +92,21 @@ readParam <- function(pet=c("none", "both", "first", "second"), max.frag=500, re
 		discard=discard)
 }
 
+setGeneric("reform", function(x, ...) { standardGeneric("reform") })
+setMethod("reform", signature("readParam"), function(x, ...) {
+	incoming <- list(...)
+	sn <- slotNames(x)
+	for (sx in names(incoming)) {
+		val <- incoming[[sx]]
+		sx <- match.arg(sx, sn)
+		incoming[[sx]] <- switch(sx, 
+			max.frag=as.integer(val),
+			rescue.pairs=as.logical(val),
+			rescue.ext=as.integer(val),
+			dedup=as.logical(val),
+			minq=as.integer(val),
+			restrict=as.character(restrict),
+			val)
+	}
+	do.call(initialize, c(x, incoming))
+})
