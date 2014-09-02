@@ -28,11 +28,3 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 	}
 }
 
-# Writing a wrapper for SummarizedExperiment inputs.
-setMethod("normalize", "SummarizedExperiment", function(object, ...) {
-	if (is.null(object$totals)) { 
-		return(normalizeCounts(counts=assay(object), ...))
-	}
-	normalizeCounts(counts=assay(object), lib.sizes=object$totals, ...)
-})
-
