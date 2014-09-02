@@ -50,11 +50,11 @@ rowData(out)
 # Running some basic normalization.
 data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
 normalizeCounts(assay(data), lib.size=data$totals)
-normalizeCounts(data)
+normalize(data)
 normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
 normalizeCounts(assay(data), lib.size=data$totals, method="RLE")
 head(normalizeCounts(assay(data), lib.size=data$totals, type="loess"))
-head(normalizeCounts(data, type="loess"))
+head(normalize(data, type="loess"))
 head(normalizeCounts(assay(data), lib.size=data$totals, type="loess", span=0.7))
 
 # Assuming someone went around and pulled out some p-values for everybody.

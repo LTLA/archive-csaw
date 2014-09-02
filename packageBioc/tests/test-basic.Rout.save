@@ -200,7 +200,7 @@ GRanges with 6 ranges and 0 metadata columns:
 > data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
 > normalizeCounts(assay(data), lib.size=data$totals)
 [1] 0.990009 1.010092
-> normalizeCounts(data)
+> normalize(data)
 [1] 0.990009 1.010092
 > normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
 [1] 0.9901379 1.0099603
@@ -214,7 +214,7 @@ GRanges with 6 ranges and 0 metadata columns:
 [4,] -0.3857622 0.3857622
 [5,] -0.3718120 0.3718120
 [6,] -0.3717137 0.3717137
-> head(normalizeCounts(data, type="loess"))
+> head(normalize(data, type="loess"))
            [,1]      [,2]
 [1,] -0.4264274 0.4264274
 [2,] -0.4085916 0.4085916
@@ -497,4 +497,4 @@ GRanges with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 33.311   0.572  33.958 
+ 33.486   0.655  40.568 
