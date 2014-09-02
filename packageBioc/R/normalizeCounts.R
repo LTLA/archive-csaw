@@ -9,12 +9,6 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 # 19 November, 2013
 # modified 1 September, 2014
 {
-	if (is(counts, "SummarizedExperiment")) {
-		if (missing(lib.sizes)) { 
-			if (!is.null(counts$totals)) { lib.sizes <- counts$totals }
-		}
-		counts <- assay(counts)
-	} 
 	if (missing(lib.sizes)) { 
 		lib.sizes <- colSums(counts)
 		warning("library sizes not specified, column sums used instead")
@@ -33,4 +27,12 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 		return(offs)
 	}
 }
+
+# Writing a wrapper for SummarizedExperiment inputs.
+setMethod("normalize", "SummarizedExperiment", function(object, ...) {
+	if (is.null(object$totals)) { 
+		return(normalizeCounts(counts=assay(object), ...))
+	}
+	normalizeCounts(counts=assay(object), lib.sizes=object$totals, ...)
+})
 

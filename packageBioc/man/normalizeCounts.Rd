@@ -11,7 +11,7 @@ normalizeCounts(counts, lib.sizes, type=c("scaling", "loess"),
 }
 
 \arguments{
-  \item{counts}{a matrix of integer counts with one column per library, or a \code{SummarizedExperiment} object}
+  \item{counts}{a matrix of integer counts with one column per library}
   \item{lib.sizes}{a numeric vector specifying the total number of reads per library}
   \item{type}{a character string indicating what type of normalization is to be performed}
   \item{weighted}{a logical scalar indicating whether precision weights should be used for TMM normalization}
@@ -38,10 +38,9 @@ For each sample, a lowess curve is fitted to the log-counts against the log-aver
 The fitted value for each bin pair is used as the generalized linear model offset for that sample. 
 The use of the average count provides more stability than the average log-count when low counts are present for differentially bound regions.
 
-If \code{counts} is a \code{SummarizedExperiment} object, the counts are extracted using the matrix corresponding to the first assay.
-The total library size is taken from the \code{totals} entry in the column data, if available.
-Generally, if \code{lib.sizes} is not specified, the column sums of \code{counts} are used instead and a warning is issued. 
+If \code{lib.sizes} is not specified, the column sums of \code{counts} are used instead and a warning is issued. 
 The same \code{lib.sizes} should be used throughout the analysis if multiple \code{\link{normalizeCounts}} calls are involved.
+This ensures that the normalization factors or offsets are comparable.
 }
 
 \value{
@@ -97,11 +96,6 @@ offsets <- normalizeCounts(counts, type="loess", lib.size=full.lib.size)
 head(offsets)
 offsets <- normalizeCounts(counts, type="loess", span=0.4, lib.size=full.lib.size)
 offsets <- normalizeCounts(counts, type="loess", iterations=1, lib.size=full.lib.size)
-
-# Attempting with a SummarizedExperiment object.
-bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
-data <- windowCounts(bamFiles, width=100, filter=1)
-normalizeCounts(data)
 }
 
 \seealso{
