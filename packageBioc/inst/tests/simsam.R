@@ -53,3 +53,27 @@ simsam<-function(f.out, pos.chr, pos.pos, strands, chromosomes, mapq=199, is.dup
 
 ###################################################################################################
 
+regen <- function(nreads, chromos, outfname) {
+	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
+	pos.pos<-rep(0, nreads)
+	str<-rep(0, nreads)
+	for (i in 1:length(chromos)) {
+		current<-pos.chr==i
+		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
+		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
+	}
+	isdup <- rbinom(nreads, 1, 0.8)==0L
+    mapq <- round(runif(nreads, 50, 199))
+	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup, mapq=mapq)
+}
+
+###################################################################################################
+
+makeDiscard <- function(ndisc, sizeof, chromos) {
+	chosen <- sample(length(chromos), ndisc, replace=TRUE)
+	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
+	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
+}
+
+###################################################################################################
+
