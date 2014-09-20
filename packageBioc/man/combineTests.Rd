@@ -59,8 +59,8 @@ combined <- combineTests(ids, tab)
 head(combined)
 
 # With window weighting.
-w<-round(runif(100, 1, 5))
-combined<-combineTests(ids, tab, weight=w)
+w <- round(runif(100, 1, 5))
+combined <- combineTests(ids, tab, weight=w)
 head(combined)
 
 # With multiple log-FCs.

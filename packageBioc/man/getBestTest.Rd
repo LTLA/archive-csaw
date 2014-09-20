@@ -59,19 +59,19 @@ high-abundance regions that are more likely to contain peaks.
 }
 
 \examples{ 
-ids<-round(runif(100, 1, 10))
+ids <- round(runif(100, 1, 10))
 tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), 
     PValue=rbeta(100, 1, 2))
-combined<-getBestTest(ids, tab)
+combined <- getBestTest(ids, tab)
 head(combined)
 
 # With window weighting.
-w<-round(runif(100, 1, 5))
-combined<-getBestTest(ids, tab, weight=w)
+w <- round(runif(100, 1, 5))
+combined <- getBestTest(ids, tab, weight=w)
 head(combined)
 
 # By logCPM.
-combined<-getBestTest(ids, tab, mode="logCPM")
+combined <- getBestTest(ids, tab, mode="logCPM")
 head(combined)
 }
 

@@ -24,7 +24,7 @@ The aim is to supply the raw data for visualization, in a manner that maintains 
 \value{
 A \code{GRanges} object is returned.
 If \code{pet="both"} in \code{param}, intervals are unstranded and correspond to fragments.
-Otherwise, strand-aware reads are returned.
+Otherwise, strand-specific intervals that represent reads are returned.
 }
 
 \author{Aaron Lun}

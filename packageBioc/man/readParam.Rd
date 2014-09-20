@@ -57,11 +57,11 @@ If \code{rescue.pairs=FALSE}, only reads in proper pairs are used to construct a
 Otherwise, if \code{rescue.pairs=TRUE}, the function will first attempt to assign reads into proper pairs.
 For the remaining reads in improper pairs, the read with the higher MAPQ score will be taken and directionally extended to a length of \code{rescue.ext}.
 The extended read will then be used as the fragment interval.
-This may be useful in cases where only one read can be mapped from a pair (e.g., if \code{minq} or \code{discard} is too stringent). 
-Note that both reads will be extended for interchromosomal read pairs.
+Similarly, any reads without a mapped mate will be extended. 
+Note that both reads will be rescued and extended for interchromosomal read pairs.
 
 Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pet="first"} or \code{"second"}.  
-This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., many interchromosomal read pairs or pairs with large fragment lengths.
+This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.
 Treating the data as single-end may allow the analysis to be salvaged.
 
 In all cases, users should ensure that each BAM file containing paired-end data is properly synchronized prior to count loading.

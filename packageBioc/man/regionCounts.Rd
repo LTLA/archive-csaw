@@ -27,7 +27,7 @@ The total number of reads in each library are stored as \code{totals} in the \co
 This function simply provides a wrapper around \code{\link{countOverlaps}} for read counting into specified regions. 
 It is provided so as to allow for counting with awareness of the other parameters, e.g., \code{ext}, \code{pet}.
 This allows users to coordinate region-based counts with those from \code{\link{windowCounts}}. 
-Checking that the output \code{totals} are the same is strongly recommended.
+Checking that the output \code{totals} are the same between the two calls is strongly recommended.
 }
 
 \author{Aaron Lun}

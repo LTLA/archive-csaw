@@ -14,7 +14,7 @@ detailRanges(incoming, txdb, orgdb, dist=5000,
 \item{txdb}{a \code{TranscriptDb} object for the genome of interest}
 \item{orgdb}{a genome wide annotation object for the genome of interest}
 \item{dist}{an integer scalar specifying the flanking distance to annotate}
-\item{promoter}{an integer vector of length 2 defining the promoter as some distance upstream and downstream from the TSS}
+\item{promoter}{an integer vector of length 2, where first and second values define the promoter as some distance upstream and downstream from the TSS, respectively}
 \item{max.intron}{an integer scalar indicating the maximum distance between exons}
 }
 

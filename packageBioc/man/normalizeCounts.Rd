@@ -40,7 +40,7 @@ The use of the average count provides more stability than the average log-count 
 
 If \code{lib.sizes} is not specified, the column sums of \code{counts} are used instead and a warning is issued. 
 The same \code{lib.sizes} should be used throughout the analysis if multiple \code{\link{normalizeCounts}} calls are involved.
-This ensures that the normalization factors or offsets are comparable.
+This ensures that the normalization factors or offsets are comparable between calls.
 }
 
 \value{
@@ -61,34 +61,34 @@ normalizing RNA arrays via linear models. \emph{Bioinformatics} 20, 2778-86.
 
 \examples{
 # A trivial example
-counts<-matrix(rnbinom(400, mu=10, size=20), ncol=4)
+counts <- matrix(rnbinom(400, mu=10, size=20), ncol=4)
 normalizeCounts(counts)
 normalizeCounts(counts, lib.sizes=rep(400, 4))
 
 # Adding undersampling
-n<-1000L
-mu1<-rep(10, n)
-mu2<-mu1
-mu2[1:100]<-100
-mu2<-mu2/sum(mu2)*sum(mu1)
-counts<-cbind(rnbinom(n, mu=mu1, size=20), rnbinom(n, mu=mu2, size=20))
+n <- 1000L
+mu1 <- rep(10, n)
+mu2 <- mu1
+mu2[1:100] <- 100
+mu2 <- mu2/sum(mu2)*sum(mu1)
+counts <- cbind(rnbinom(n, mu=mu1, size=20), rnbinom(n, mu=mu2, size=20))
 actual.lib.size <- rep(sum(mu1), 2)
 normalizeCounts(counts, lib.sizes=actual.lib.size)
 normalizeCounts(counts, logratioTrim=0.4, lib.sizes=actual.lib.size)
 normalizeCounts(counts, sumTrim=0.3, lib.size=actual.lib.size)
 
 # With and without weighting, for high-abundance spike-ins.
-n<-100000
-blah<-matrix(rnbinom(2*n, mu=10, size=20), ncol=2)
-tospike<-10000
-blah[1:tospike,1]<-rnbinom(tospike, mu=1000, size=20)
-blah[1:tospike,2]<-rnbinom(tospike, mu=2000, size=20)
+n <- 100000
+blah <- matrix(rnbinom(2*n, mu=10, size=20), ncol=2)
+tospike <- 10000
+blah[1:tospike,1] <- rnbinom(tospike, mu=1000, size=20)
+blah[1:tospike,2] <- rnbinom(tospike, mu=2000, size=20)
 full.lib.size <- colSums(blah)
 
 normalizeCounts(blah, weighted=TRUE, lib.sizes=full.lib.size)
 normalizeCounts(blah, lib.sizes=full.lib.size)
-true.value<-colSums(blah[(tospike+1):n,])/colSums(blah)
-true.value<-true.value/exp(mean(log(true.value)))
+true.value <- colSums(blah[(tospike+1):n,])/colSums(blah)
+true.value <- true.value/exp(mean(log(true.value)))
 true.value
 
 # Using loess-based normalization, instead.

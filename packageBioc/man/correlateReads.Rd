@@ -54,17 +54,17 @@ The fragment length peak will no longer be easily visible.
 }
 
 \examples{
-n<-20
-bamFile<-system.file("exdata", "rep1.bam", package="csaw")
+n <- 20
+bamFile <- system.file("exdata", "rep1.bam", package="csaw")
 par(mfrow=c(2,2))
 
-x<-correlateReads(bamFile, max.dist=n)
+x <- correlateReads(bamFile, max.dist=n)
 plot(0:n, x, xlab="delay (bp)", ylab="ccf")
 
-x<-correlateReads(bamFile, max.dist=n, param=readParam(dedup=TRUE))
+x <- correlateReads(bamFile, max.dist=n, param=readParam(dedup=TRUE))
 plot(0:n, x, xlab="delay (bp)", ylab="ccf")
 
-x<-correlateReads(bamFile, max.dist=n, cross=FALSE)
+x <- correlateReads(bamFile, max.dist=n, cross=FALSE)
 plot(0:n, x, xlab="delay (bp)", ylab="acf")
 }
 

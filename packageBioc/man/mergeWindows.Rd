@@ -51,8 +51,8 @@ the index of the cluster coordinates in the input \code{region}.
 }
 
 \examples{
-x<-round(runif(10, 100, 1000))
-gr<-GRanges(rep("chrA", 10), IRanges(x, x+40))
+x <- round(runif(10, 100, 1000))
+gr <- GRanges(rep("chrA", 10), IRanges(x, x+40))
 mergeWindows(gr, 1)
 mergeWindows(gr, 10)
 mergeWindows(gr, 100)
