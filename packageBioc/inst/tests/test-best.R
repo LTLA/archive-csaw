@@ -1,6 +1,6 @@
 # This tests the correctness of the getBestTest function.
 
-suppressPackageStartupMessages(require(csaw))
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 	n <- 10000
     ids<-round(runif(n, 1, nids))

@@ -1,7 +1,7 @@
 ###################################################################################################
 # This script tests the PET-analysis capabilities of the 'csaw' package.
 
-suppressPackageStartupMessages(library(csaw))
+suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 
 source("simsam.R")
 dir<-"pet-test"

@@ -96,7 +96,7 @@ generateWindows <- function(chrs, nwin, winsize) {
 ###################################################################################################
 
 set.seed(2135045)
-suppressPackageStartupMessages(require(csaw))
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
 chrs<-c(chrA=1000, chrB=2000, chrC=5000)
 blah<-generateWindows(chrs, 200, 1)

@@ -3,7 +3,7 @@
 # and comparison. The separation into two folders is necessary to keep R CMD check
 # running with reasonable speed.
 
-suppressPackageStartupMessages(require(csaw))
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 both.files <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 pet.file <- system.file("exdata", "pet.bam", package="csaw")
 

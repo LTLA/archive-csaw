@@ -1,7 +1,7 @@
 ###################################################################################################
 # This script tests the region-counting capabilities of the 'csaw' package.
 
-suppressPackageStartupMessages(library(csaw))
+suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
 # First, we set up some functions to generate some random SAM files.

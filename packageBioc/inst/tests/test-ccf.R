@@ -23,7 +23,7 @@ regen <- function(nreads, chromos) {
 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, mapq=mapq, is.dup=isdup)
 }
 
-suppressPackageStartupMessages(library(csaw))
+suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 
 manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) { 
 	chromos<-scanBamHeader(bamx)[[1]][[1]]
