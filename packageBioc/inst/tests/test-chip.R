@@ -4,22 +4,6 @@
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
-# First, we set up some functions to generate some random SAM files.
-
-regen <- function(nreads, chromos, outfname) {
-	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
-	pos.pos<-rep(0, nreads)
-	str<-rep(0, nreads)
-	for (i in 1:length(chromos)) {
-		current<-pos.chr==i
-		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
-		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
-	}
-	isdup <- rbinom(nreads, 1, 0.8)==0L
-	mapq <- round(runif(nreads, 50, 199))
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup, mapq=mapq)
-}
-
 expectedRanges <- function(width, offset, spacing, bam.files, restrict=NULL) {
 	spacing<-as.integer(spacing)
 	width<-as.integer(width)
@@ -264,25 +248,20 @@ comp(bamFiles, right=max(chromos), spacing=max(chromos))
 ###################################################################################################
 # Restricted and/or discarded.
 
-makeDiscard <- function(ndisc, sizeof) {
-	chosen <- sample(length(chromos), ndisc, replace=T)
-	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
-	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
-}
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200))
-comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
-comp(bamFiles, fraglen=100, left=30, spacing=50, discard=makeDiscard(50, 20))
-comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
+comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200, chromos))
+comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100, chromos), restrict="chrA")
+comp(bamFiles, fraglen=100, left=30, spacing=50, discard=makeDiscard(50, 20, chromos))
+comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200, chromos), restrict=c("chrA", "chrB"))
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=200, left=20, spacing=50, discard=makeDiscard(20, 200))
-comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000))
-comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500))
-comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
-comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
+comp(bamFiles, fraglen=200, left=20, spacing=50, discard=makeDiscard(20, 200, chromos))
+comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000, chromos))
+comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500, chromos))
+comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), restrict=c("chrC", "chrA"))
+comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
 
 ###################################################################################################
 # Cleaning up.
