@@ -24,7 +24,6 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 
     for (chr in names(extracted$chrs)) {
 		chosen <- indices[[chr]]
-		if (length(chosen)==0L) { next }
         outlen <- extracted$chrs[[chr]]
         where <- GRanges(chr, IRanges(1, outlen))
 
@@ -55,6 +54,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		
 			# Counting the number of overlaps of any type with the known regions.
 			totals[bf] <- totals[bf] + length(frag.start)
+			if (length(chosen)==0L) { next }
 			counts[chosen,bf] <- countOverlaps(ranges(regions[chosen]), IRanges(frag.start, frag.end))
 		}
 	}
