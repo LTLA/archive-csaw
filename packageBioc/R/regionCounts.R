@@ -24,7 +24,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 
     for (chr in names(extracted$chrs)) {
 		chosen <- indices[[chr]]
-		if (is.null(chosen)) { next }
+		if (length(chosen)==0L) { next }
         outlen <- extracted$chrs[[chr]]
         where <- GRanges(chr, IRanges(1, outlen))
 
