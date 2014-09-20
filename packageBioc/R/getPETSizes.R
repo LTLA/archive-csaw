@@ -62,8 +62,8 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
 	# Returning sizes and some diagnostic data.
-    return(list(sizes=unlist(norm.list), diagnostics=c(total=totals, single=singles, unoriented=others,
-			mate.unmapped=one.unmapped, inter.chr=inter.chr)))
+    return(list(sizes=unlist(norm.list), diagnostics=c(total=totals, single=singles, 
+		mate.unmapped=one.unmapped, unoriented=others, inter.chr=inter.chr)))
 }
 
 ##################################
