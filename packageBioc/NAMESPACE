@@ -11,9 +11,11 @@ export(csawUsersGuide,
 	extractReads, readParam)
 
 #  Importing required packages
-import(GenomicRanges,Rsamtools,
-	edgeR,limma,
-	GenomicFeatures,AnnotationDbi,
+import(GenomicRanges, Rsamtools,
+	S4Vectors, IRanges, GenomeInfoDb,
+	edgeR, limma,
+	GenomicFeatures, AnnotationDbi,
+	GenomicAlignments,
 	methods)
 
 #  Exporting classes and methods
