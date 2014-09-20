@@ -8,25 +8,25 @@ combineTests <- function(ids, tab, weight=rep(1, length(ids)))
 # written by Aaron Lun
 # 30 July 2013
 {
-	if (!is.integer(ids)) { ids<-as.integer(ids+0.5) }
-	if (!is.double(weight)) { weight<-as.double(weight) }
-	id.order<-order(ids)
-	ids<-ids[id.order]
-	tab<-tab[id.order,]
-	weight <- weight[id.order]
+	if (!is.integer(ids)) { ids <- as.integer(ids+0.5) }
+	if (!is.double(weight)) { weight <- as.double(weight) }
+	id.order <- order(ids)
+	ids <- ids[id.order]
+	tab <- tab[id.order,]
+	weight  <-  weight[id.order]
 
 	# Saying which columns are what.
-	is.fcs<-grep("logFC", colnames(tab))-1L	
+	is.fcs <- grep("logFC", colnames(tab))-1L	
 	if (!length(is.fcs)) { stop("result table should have at least one logFC field") }
-	is.cpm<-which(colnames(tab)=="logCPM")-1L		
+	is.cpm <- which(colnames(tab)=="logCPM")-1L		
 	if (length(is.cpm)!=1L) { stop("result table should have one logCPM field") }
-	is.pval<-which(colnames(tab)=="PValue")-1L
+	is.pval <- which(colnames(tab)=="PValue")-1L
 	if (length(is.pval)!=1L) { stop("result table should have one PValue field") }
  
 	# Running the clustering procedure.
-	out<-.Call(cxx_get_cluster_stats, is.fcs, is.cpm, is.pval, tab, ids, weight)
+	out <- .Call(cxx_get_cluster_stats, is.fcs, is.cpm, is.pval, tab, ids, weight)
 	if (is.character(out)) { stop(out) }
-	combined<-data.frame(out[[1]], logCPM=out[[2]], PValue=out[[3]], FDR=p.adjust(out[[3]], method="BH"), row.names=ids[c(TRUE, diff(ids)!=0L)])
+	combined <- data.frame(out[[1]], logCPM=out[[2]], PValue=out[[3]], FDR=p.adjust(out[[3]], method="BH"), row.names=ids[c(TRUE, diff(ids)!=0L)])
 	colnames(combined)[1:length(is.fcs)] <- colnames(tab)[is.fcs+1L]
 	return(combined)
 }

@@ -16,14 +16,14 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 
 	type <- match.arg(type)
 	if (type=="scaling") { 
-		y<-DGEList(counts, lib.size=lib.sizes)
-		y<-calcNormFactors(y, doWeighting=weighted, ...)
+		y <- DGEList(counts, lib.size=lib.sizes)
+		y <- calcNormFactors(y, doWeighting=weighted, ...)
 		return(y$samples$norm.factors)
 	} else if (type=="loess") { 
 	    ab <- aveLogCPM(counts, lib.size=lib.sizes, dispersion=dispersion)
 		offs <- matrix(0, nrow(counts), ncol(counts), byrow=TRUE)
-		for (x in 1:ncol(counts)) { offs[,x]<-loessFit(log(counts[,x]+0.5), ab, ...)$fitted }
-		offs<-offs-rowMeans(offs)
+		for (x in 1:ncol(counts)) { offs[,x] <- loessFit(log(counts[,x]+0.5), ab, ...)$fitted }
+		offs <- offs-rowMeans(offs)
 		return(offs)
 	}
 }

@@ -1,4 +1,4 @@
-windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
+windowCounts <- function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
@@ -9,7 +9,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 # ages ago.
 # last modified 1 September 2014
 {   
-	nbam<-length(bam.files)
+	nbam <- length(bam.files)
 	extracted <- .processIncoming(bam.files, param$restrict, param$discard)
 	pet <- param$pet
 	max.frag <- param$max.frag
@@ -53,14 +53,14 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	first.pt <- ifelse(at.start, 1L, spacing+1L)
 
 	# Initializing various collectable containers (non-empty so it'll work if no chromosomes are around).
-	totals<-integer(nbam)	
-	all.out<-list(matrix(0L, ncol=nbam, nrow=0))
-	all.regions<-list(GRanges())
-	ix<-1
+	totals <- integer(nbam)	
+	all.out <- list(matrix(0L, ncol=nbam, nrow=0))
+	all.regions <- list(GRanges())
+	ix <- 1
 
 	for (chr in names(extracted$chrs)) {
-		outlen<-extracted$chrs[[chr]]		
-		where<-GRanges(chr, IRanges(1, outlen))
+		outlen <- extracted$chrs[[chr]]		
+		where <- GRanges(chr, IRanges(1, outlen))
 
 		# Accounting for the possible gain of a centrepoint from the back when
 		# shift/left is non-zero, i.e., does the shift bring the next centre point
@@ -73,38 +73,38 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 		for (bf in 1:nbam) {
 			if (pet!="both") {
 				if (pet=="none") { 
-   					reads<-.extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+   					reads <- .extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						discard=extracted$discard[[chr]])
 				} else {
 					reads <- .extractBrokenPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						discard=extracted$discard[[chr]], use.first=(pet=="first"))
 				}
-				frag.start<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
-				if (length(frag.start)) { frag.start<-pmin(frag.start, outlen) }
-				frag.end<-frag.start+ext-1L
+				frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
+				if (length(frag.start)) { frag.start <- pmin(frag.start, outlen) }
+				frag.end <- frag.start+ext-1L
 			} else {
 				if (rescue.pairs) { 
-					out<-.rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+					out <- .rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
 				} else {
-					out<-.extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
+					out <- .extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						discard=extracted$discard[[chr]], max.frag=max.frag)
 				}
-				frag.start<-out$pos
+				frag.start <- out$pos
 
 				# Only want to record each pair once in a bin, so forcing it to only use the 5' end.
-				if (bin) { frag.end<-frag.start }
-				else { frag.end<-frag.start+out$size-1L }
+				if (bin) { frag.end <- frag.start }
+				else { frag.end <- frag.start+out$size-1L }
 			}
 
 # Extending reads to account for window sizes > 1 bp. The start of each read
 # must be extended by 'right' and the end of each read must be extended by
 # 'left'. We then pull out counts at the specified spacing. We do have to 
 # keep track of whether or not we want to use the first point, though.
-			out<-.Call(cxx_get_rle_counts, frag.start-right, frag.end+left, total.pts, spacing, at.start)
+			out <- .Call(cxx_get_rle_counts, frag.start-right, frag.end+left, total.pts, spacing, at.start)
 			if (is.character(out)) { stop(out) }
-			outcome[,bf]<-out
-			totals[bf]<-totals[bf]+length(frag.start)
+			outcome[,bf] <- out
+			totals[bf] <- totals[bf]+length(frag.start)
 		}
 
 # Filtering on row sums (for memory efficiency). Note that redundant windows
@@ -119,12 +119,12 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
 		center <- (which(keep)-1L)*spacing + first.pt
 		reg.start <- pmax(1L, center-left)
 		reg.end <- pmin(outlen, center+right)
-		all.regions[[ix]]<-GRanges(chr, IRanges(reg.start, reg.end))
-		ix<-ix+1L
+		all.regions[[ix]] <- GRanges(chr, IRanges(reg.start, reg.end))
+		ix <- ix+1L
 	}
 
 	# Generating the remaining GRanges for output (suppressing numerous warnings).
-	all.regions<-suppressWarnings(do.call(c, all.regions))
+	all.regions <- suppressWarnings(do.call(c, all.regions))
 	seqlevels(all.regions) <- names(extracted$chrs)
 	seqlengths(all.regions) <- extracted$chrs
 
@@ -152,7 +152,7 @@ windowCounts<-function(bam.files, spacing=50, width=1, ext=100, shift=0,
    
 	# Filtering by MAPQ.
 	if (!is.na(minq)) { 
-		keep<-reads$mapq >= minq & !is.na(reads$mapq) 
+		keep <- reads$mapq >= minq & !is.na(reads$mapq) 
 		if (!"mapq" %in% extras) { reads$mapq <- NULL }
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	}

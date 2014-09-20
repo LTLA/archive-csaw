@@ -20,7 +20,7 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		expand <- param$max.frag
 		if (param$rescue.pairs && expand <= param$rescue.ext) { expand <- param$rescue.ext }
 	}
-	actual.region<-GRanges(cur.chr, IRanges(max(1L, start(cur.region)-expand),
+	actual.region <- GRanges(cur.chr, IRanges(max(1L, start(cur.region)-expand),
 		min(max.len, end(cur.region)+expand)))
 
 	# Dropping additional reads if required.
