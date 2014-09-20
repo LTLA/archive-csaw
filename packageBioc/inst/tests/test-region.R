@@ -4,24 +4,6 @@
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
-# First, we set up some functions to generate some random SAM files.
-
-regen <- function(nreads, chromos, outfname) {
-	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
-	pos.pos<-rep(0, nreads)
-	str<-rep(0, nreads)
-	for (i in 1:length(chromos)) {
-		current<-pos.chr==i
-		pos.pos[current]<-round(runif(sum(current), 1, chromos[i]))
-		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
-	}
-	isdup <- rbinom(nreads, 1, 0.8)==0L
-    mapq <- round(runif(nreads, 50, 199))
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, is.dup=isdup, mapq=mapq)
-}
-
-# We compare windowCounts and regionCounts directly.
-
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL) {
 	for (type in 1:3) {
 		if (type==1) {
@@ -34,13 +16,29 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 			dedup <- FALSE
 			minq <- 100
 		}
-		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
-		y <- regionCounts(bamFiles, regions=rowData(x), ext=fraglen, 
-			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+	
+		# We compare windowCounts and regionCounts directly.
+		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup)
+		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, 
+			filter=filter, param=repar)
+		y <- regionCounts(bamFiles, regions=rowData(x), ext=fraglen, param=repar)
 		if (!identical(assay(y), assay(x))) { stop("mismatch in count matrices") }
 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
+
+		# We also pick a region in the middle and we check it with extractReads.
+		chosen <- round(nrow(x)/2)
+		my.reg <- rowData(x)[chosen]
+		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+fraglen*2))
+		for (f in 1:length(bamFiles)) {
+			collected <- extractReads(my.reg2, bamFiles[f], param=repar)
+			collected <- suppressWarnings(resize(collected, width=fraglen))
+			strand(collected) <- "*"
+			if (!identical(assay(x)[chosen,f], suppressWarnings(countOverlaps(my.reg, collected)))) { 
+				stop("mismatch in the number of counts from extractReads")
+			}
+		}
 	}
+
 	return(head(assay(y)))
 }
 
@@ -107,22 +105,17 @@ comp(bamFiles, fraglen=200, right=50, filter=50)
 ###################################################################################################
 # Restricted and/or discarded.
 
-makeDiscard <- function(ndisc, sizeof) {
-	chosen <- sample(length(chromos), ndisc, replace=T)
-	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
-	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
-}
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200))
-comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100), restrict="chrA")
-comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200), restrict=c("chrA", "chrB"))
+comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200, chromos))
+comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100, chromos), restrict="chrA")
+comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200, chromos), restrict=c("chrA", "chrB"))
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-comp(bamFiles, fraglen=200, left=25, spacing=50, discard=makeDiscard(20, 200))
-comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000), restrict=c("chrC", "chrA"))
-comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100))
+comp(bamFiles, fraglen=200, left=25, spacing=50, discard=makeDiscard(20, 200, chromos))
+comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), restrict=c("chrC", "chrA"))
+comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
 
 ###################################################################################################
 # Cleaning up.
