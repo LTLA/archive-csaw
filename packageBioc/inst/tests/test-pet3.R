@@ -7,12 +7,6 @@ source("simsam.R")
 dir<-"pet-test"
 dir.create(dir)
 
-makeDiscard <- function(ndisc, sizeof, chromos) {
-    chosen <- sample(length(chromos), ndisc, replace=T)
-	chosen.pos <- runif(ndisc, 1, chromos[chosen]-sizeof)
-	reduce(GRanges(names(chromos)[chosen], IRanges(chosen.pos, chosen.pos+sizeof)))
-}
-
 checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 	stuff<-file.path(dir, paste("x", 1:2, sep=""))
 	firsts <- seconds <- singles <- list()
@@ -103,14 +97,11 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				pet <- "first"
 			}
 
+			# Loading windowCounts.
 			rpam <- readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 				width=right+left+1, filter=0, param=rpam)
-			x2 <- regionCounts(fnames, regions=rowData(x), ext=ext, param=rpam)
-			stopifnot(identical(assay(x), assay(x2)))
-			stopifnot(identical(colData(x), colData(x2)))
-			stopifnot(identical(rowData(x), rowData(x2)))
 
 			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 			totals <- integer(length(fnames))
@@ -199,6 +190,34 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			attributes(curcounts)$dimnames <- NULL
 			if (!identical(counts, curcounts)) { stop('mismatches in counts for paired data') }
 			if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
+
+			# Comparing windowCounts to regionCounts.
+			x2 <- regionCounts(fnames, regions=rowData(x), ext=ext, param=rpam)
+			stopifnot(identical(assay(x), assay(x2)))
+			stopifnot(identical(colData(x), colData(x2)))
+			stopifnot(identical(rowData(x), rowData(x2)))
+
+			# Comparing regionCounts to extractReads, using the middle region.
+			chosen <- round(nrow(x)/2)
+			my.reg <- rowData(x)[chosen]
+			if (rpam$pet=="both") {
+				for (f in 1:length(fnames)) {
+					collected <- extractReads(my.reg, fnames[f], param=rpam)
+					if (!identical(assay(x)[chosen,f], length(collected))) {
+						stop("mismatch in the number of fragments from extractReads")
+					}
+				}
+			} else {
+				my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+ext*2))
+				for (f in 1:length(fnames)) {
+					collected <- extractReads(my.reg2, fnames[f], param=rpam)
+					collected <- suppressWarnings(resize(collected, width=ext))
+					strand(collected) <- "*"
+					if (!identical(assay(x)[chosen,f], suppressWarnings(countOverlaps(my.reg, collected)))) {
+						stop("mismatch in the number of single reads from extractReads")
+					}
+				}
+			}
 		}
 	}
 	return(rowData(x))
