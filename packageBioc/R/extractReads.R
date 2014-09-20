@@ -14,20 +14,28 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 	max.len <- chrs[[cur.chr]]
 	sqi <- Seqinfo(cur.chr, max.len)
 
-	# Expanding the extracted region so that it will pull down relevant fragments.
+	# Extracting all-of-chromosome for paired-end rescue, as you need to find the read with the higher MAPQ.
 	expand <- 0L
-	if (param$pet=="both") {
-		expand <- param$max.frag
-		if (param$rescue.pairs && expand <= param$rescue.ext) { expand <- param$rescue.ext }
+	if (param$pet=="both" && param$rescue.pairs) {
+		actual.region <- GRanges(cur.chr, IRanges(1L, max.len)) 
+	} else {
+		if (param$pet=="both") {
+			actual.region <- GRanges(cur.chr, IRanges(max(1L, start(cur.region)-param$max.frag),
+				min(max.len, end(cur.region)+param$max.frag)))
+		} else {
+			actual.region <- cur.region
+			seqlevels(actual.region) <- cur.chr
+		}
 	}
-	actual.region <- GRanges(cur.chr, IRanges(max(1L, start(cur.region)-expand),
-		min(max.len, end(cur.region)+expand)))
 
 	# Dropping additional reads if required.
 	minq <- param$minq
 	dedup <- param$dedup
-    if (length(param$discard)) { discard <- ranges(param$discard[overlapsAny(param$discard, actual.region)]) }
-	else { discard <- NULL }
+    if (length(param$discard)) { 
+		cur.lost <- param$discard[seqnames(param$discard)==cur.chr]
+		seqlevels(cur.lost) <- cur.chr
+		discard <- ranges(cur.lost[overlapsAny(cur.lost, actual.region)]) 
+	} else { discard <- NULL }
 
 	# Pulling out reads from a region and setting up coverage RLE's.
 	if (param$pet!="both") {
@@ -40,7 +48,7 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		}
 
 		if (length(cur.reads$pos)) { 
-			return(GRanges(cur.chr, IRanges(cur.reads$pos, 
+			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$pos), 
 				pmin(max.len, cur.reads$pos + cur.reads$qwidth - 1L)),
 				strand=cur.reads$strand, seqinfo=sqi))
 		}
@@ -55,7 +63,7 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 
 		# Filtering to retain those that don't actually overlap.
 		if (length(cur.reads$pos)) { 
-			of.interest <- GRanges(cur.chr, IRanges(cur.reads$pos, 
+			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.reads$pos), 
 				pmin(max.len, cur.reads$pos + cur.reads$size - 1L)), seqinfo=sqi)
 			keep <- overlapsAny(of.interest, cur.region)
 			return(of.interest[keep])
