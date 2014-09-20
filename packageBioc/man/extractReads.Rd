@@ -19,6 +19,10 @@ extractReads(cur.region, bam.file, param=readParam())
 This function extracts the reads from a BAM file overlapping a given genomic interval. 
 The interpretation of the values in \code{param} is the same as that throughout the package.
 The aim is to supply the raw data for visualization, in a manner that maintains consistency with the rest of the analysis.
+
+Note that this does not account for any read extension that might have been performed during read counting.
+In such cases, users are advised to expand \code{cur.region} by the extension length on each side.
+Counted reads can then be extracted by identifying their extended counterparts that overlap with the original \code{cur.region}.
 }
 
 \value{
@@ -38,6 +42,18 @@ bamFile <- system.file("exdata", "pet.bam", package="csaw")
 extractReads(GRanges("chrB", IRanges(100, 500)), bamFile)
 extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pet="both"))
 extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pet="first"))
+
+# Dealing with the extension length.
+bamFile <- system.file("exdata", "rep1.bam", package="csaw")
+ext <- 100
+my.reg <- GRanges("chrA", IRanges(10, 200))
+my.reg2 <- resize(my.reg, fix="center", width=width(my.reg)+2*ext)
+collected <- extractReads(my.reg2, bamFile)
+
+expanded <- resize(collected, width=ext) 
+strand(expanded) <- "*"
+relevant <- overlapsAny(expanded, my.reg)
+collected[relevant,]
 }
 
 \seealso{
