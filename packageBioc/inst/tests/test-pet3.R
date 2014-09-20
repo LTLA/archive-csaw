@@ -102,12 +102,18 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			} else if (mode==3L) {
 				pet <- "first"
 			}
-			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, filter=0, 
-				param=readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
-					discard=discard, minq=minq, dedup=dedup, restrict=restrict))
+
+			rpam <- readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
+				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
+			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
+				width=right+left+1, filter=0, param=rpam)
+			x2 <- regionCounts(fnames, regions=rowData(x), ext=ext, param=rpam)
+			stopifnot(identical(assay(x), assay(x2)))
+			stopifnot(identical(colData(x), colData(x2)))
+			stopifnot(identical(rowData(x), rowData(x2)))
+
 			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 			totals <- integer(length(fnames))
-
 			for (lib in 1:length(fnames)) { 
 				pos1 <- start(firsts[[lib]])
 				chr1 <- as.character(seqnames(firsts[[lib]]))
