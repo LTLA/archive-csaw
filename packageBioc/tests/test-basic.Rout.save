@@ -39,8 +39,8 @@ $sizes
 [1]  90 150  70  20  10  30   2
 
 $diagnostics
-        total        single    unoriented mate.unmapped     inter.chr 
-           23             3             2             0             1 
+        total        single mate.unmapped    unoriented     inter.chr 
+           23             3             0             2             1 
 
 > 
 > # Trying to count some single-end data.
@@ -497,4 +497,4 @@ GRanges with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 33.798   0.561  34.427 
+ 35.267   0.588  35.955 
