@@ -59,13 +59,15 @@ setMethod("show", signature("readParam"), function(object) {
 	} else {
 		cat("    Minimum allowed mapping score is", object@minq, "\n")
 	}
-	if (length(object@restrict)) { 
-		cat("    Read extraction is limited to", length(object@restrict), "sequences\n")
+	rl <- length(object@restrict)
+	if (rl) { 
+		cat("    Read extraction is limited to", rl, ifelse(rl==1L, "sequence\n", "sequences\n"))
 	} else {
 		cat("    No restrictions are placed on read extraction\n")
 	}
-	if (length(object@discard)) { 
-		cat("    Reads in", length(object@discard), "regions will be discarded\n")
+	dl <- length(object@discard)
+	if (dl) { 
+		cat("    Reads in", dl, ifelse(dl==1L, "region", "regions"), "will be discarded\n")
 	} else {
 		cat("    No regions are specified to discard reads\n")
 	}
