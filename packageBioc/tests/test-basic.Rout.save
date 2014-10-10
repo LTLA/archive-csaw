@@ -54,7 +54,7 @@ $diagnostics
 [5,]   28  101
 [6,]   30  101
 > rowData(data)
-GRanges with 71 ranges and 0 metadata columns:
+GRanges object with 71 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA   [  1,   1]      *
@@ -68,10 +68,8 @@ GRanges with 71 ranges and 0 metadata columns:
   [69]     chrC [1201, 1201]      *
   [70]     chrC [1251, 1251]      *
   [71]     chrC [1301, 1301]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > data$total
 NULL
 > 
@@ -85,7 +83,7 @@ NULL
 [5,]  187  468
 [6,]  127  311
 > rowData(data)
-GRanges with 19 ranges and 0 metadata columns:
+GRanges object with 19 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA  [  1,  500]      *
@@ -99,10 +97,8 @@ GRanges with 19 ranges and 0 metadata columns:
   [17]     chrC [ 801, 1300]      *
   [18]     chrC [1001, 1345]      *
   [19]     chrC [1201, 1345]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > data$totals
 [1] 1349 3291
 > 
@@ -132,7 +128,7 @@ GRanges with 19 ranges and 0 metadata columns:
 > out$totals
 [1] 7
 > rowData(out)
-GRanges with 6 ranges and 0 metadata columns:
+GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
   [1]     chrA [  1, 100]      *
@@ -141,10 +137,8 @@ GRanges with 6 ranges and 0 metadata columns:
   [4]     chrA [151, 200]      *
   [5]     chrB [  1, 100]      *
   [6]     chrB [ 51, 100]      *
-  ---
-  seqlengths:
-   chrA chrB
-    200  100
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE), width=100, filter=1L)
 > assay(out)
      [,1]
@@ -157,7 +151,7 @@ GRanges with 6 ranges and 0 metadata columns:
 > out$totals
 [1] 10
 > rowData(out)
-GRanges with 6 ranges and 0 metadata columns:
+GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
   [1]     chrA [  1, 100]      *
@@ -166,10 +160,8 @@ GRanges with 6 ranges and 0 metadata columns:
   [4]     chrA [151, 200]      *
   [5]     chrB [  1, 100]      *
   [6]     chrB [ 51, 100]      *
-  ---
-  seqlengths:
-   chrA chrB
-    200  100
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > out <- windowCounts(pet.file, param=readParam(pet="first"), width=100, filter=1L)
 > assay(out)
      [,1]
@@ -182,7 +174,7 @@ GRanges with 6 ranges and 0 metadata columns:
 > out$totals
 [1] 10
 > rowData(out)
-GRanges with 6 ranges and 0 metadata columns:
+GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
   [1]     chrA [  1, 100]      *
@@ -191,10 +183,8 @@ GRanges with 6 ranges and 0 metadata columns:
   [4]     chrA [151, 200]      *
   [5]     chrB [  1, 100]      *
   [6]     chrB [ 51, 100]      *
-  ---
-  seqlengths:
-   chrA chrB
-    200  100
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > # Running some basic normalization.
 > data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
@@ -244,7 +234,7 @@ $id
 [51] 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
 
 $region
-GRanges with 71 ranges and 0 metadata columns:
+GRanges object with 71 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA   [  1,   1]      *
@@ -258,10 +248,8 @@ GRanges with 71 ranges and 0 metadata columns:
   [69]     chrC [1201, 1201]      *
   [70]     chrC [1251, 1251]      *
   [71]     chrC [1301, 1301]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 
 > mergeWindows(rowData(data), 100)
 $id
@@ -269,16 +257,14 @@ $id
 [39] 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
 
 $region
-GRanges with 3 ranges and 0 metadata columns:
+GRanges object with 3 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrA [1, 1251]      *
   [2]     chrB [1,  851]      *
   [3]     chrC [1, 1301]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 
 > mergeWindows(rowData(data), 100, max.width=500)
 $id
@@ -286,7 +272,7 @@ $id
 [39] 5 5 5 5 5 5 6 6 6 6 6 6 6 6 6 6 7 7 7 7 7 7 7 7 7 7 8 8 8 8 8 8 8
 
 $region
-GRanges with 8 ranges and 0 metadata columns:
+GRanges object with 8 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
   [1]     chrA [   1,  451]      *
@@ -297,10 +283,8 @@ GRanges with 8 ranges and 0 metadata columns:
   [6]     chrC [   1,  451]      *
   [7]     chrC [ 501,  951]      *
   [8]     chrC [1001, 1301]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 
 > merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
 > merged
@@ -310,7 +294,7 @@ $id
 [51] 31 31 31 31 32 33 34 34 34 34 35 36 37 37 38 39 40 41 41 42 43
 
 $region
-GRanges with 43 ranges and 0 metadata columns:
+GRanges object with 43 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA   [  1,   1]      *
@@ -324,10 +308,8 @@ GRanges with 43 ranges and 0 metadata columns:
   [41]     chrC [1151, 1201]      *
   [42]     chrC [1251, 1251]      *
   [43]     chrC [1301, 1301]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   1298  870 1345
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 
 > 
 > head(combineTests(merged$id, tabled))
@@ -380,7 +362,7 @@ GRanges with 43 ranges and 0 metadata columns:
 > output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
 > head(output$overlap)
 [1] "Nrxn3|8|+"         ""                  ""                 
-[4] "1700007G11Rik|I|+" ""                  ""                 
+[4] "1700007G11Rik|I|+" "Mannr|2|+"         ""                 
 > head(output$right)
 [1] "Nrxn3|9|+[3846]" "Rprm|1|-[2293]"  ""                ""               
 [5] ""                ""               
@@ -392,7 +374,7 @@ GRanges with 43 ranges and 0 metadata columns:
 > output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, promoter=c(2000, 500))
 > head(output$overlap)
 [1] "Nrxn3|8|+"         ""                  ""                 
-[4] "1700007G11Rik|I|+" ""                  ""                 
+[4] "1700007G11Rik|I|+" "Mannr|2|+"         ""                 
 > head(output$right)
 [1] "Nrxn3|9|+[3846]" "Rprm|1|-[2293]"  ""                ""               
 [5] ""                ""               
@@ -404,7 +386,7 @@ GRanges with 43 ranges and 0 metadata columns:
 > output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, dist=3000)
 > head(output$overlap)
 [1] "Nrxn3|8|+"         ""                  ""                 
-[4] "1700007G11Rik|I|+" ""                  ""                 
+[4] "1700007G11Rik|I|+" "Mannr|2|+"         ""                 
 > head(output$right)
 [1] ""               "Rprm|1|-[2293]" ""               ""              
 [5] ""               ""              
@@ -415,7 +397,7 @@ GRanges with 43 ranges and 0 metadata columns:
 > 
 > # Pulling out some reads. 
 > extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
-GRanges with 143 ranges and 0 metadata columns:
+GRanges object with 143 ranges and 0 metadata columns:
         seqnames     ranges strand
            <Rle>  <IRanges>  <Rle>
     [1]     chrA [ 93, 102]      -
@@ -429,12 +411,10 @@ GRanges with 143 ranges and 0 metadata columns:
   [141]     chrA [499, 508]      -
   [142]     chrA [500, 509]      +
   [143]     chrA [500, 509]      +
-  ---
-  seqlengths:
-   chrA
-   1298
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
-GRanges with 27 ranges and 0 metadata columns:
+GRanges object with 27 ranges and 0 metadata columns:
        seqnames    ranges strand
           <Rle> <IRanges>  <Rle>
    [1]     chrA  [43, 52]      +
@@ -448,12 +428,10 @@ GRanges with 27 ranges and 0 metadata columns:
   [25]     chrA [90,  99]      +
   [26]     chrA [93, 102]      -
   [27]     chrA [94, 103]      +
-  ---
-  seqlengths:
-   chrA
-   1298
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
-GRanges with 19 ranges and 0 metadata columns:
+GRanges object with 19 ranges and 0 metadata columns:
        seqnames    ranges strand
           <Rle> <IRanges>  <Rle>
    [1]     chrA  [51, 60]      +
@@ -467,34 +445,28 @@ GRanges with 19 ranges and 0 metadata columns:
   [17]     chrA [89,  98]      -
   [18]     chrA [90,  99]      +
   [19]     chrA [93, 102]      -
-  ---
-  seqlengths:
-   chrA
-   1298
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="both"))
-GRanges with 2 ranges and 0 metadata columns:
+GRanges object with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrB [50,  79]      *
   [2]     chrB [99, 100]      *
-  ---
-  seqlengths:
-   chrB
-    100
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="second"))
-GRanges with 4 ranges and 0 metadata columns:
+GRanges object with 4 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrB [70,  79]      -
   [2]     chrB [75,  84]      +
   [3]     chrB [90,  99]      +
   [4]     chrB [99, 100]      -
-  ---
-  seqlengths:
-   chrB
-    100
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > 
 > proc.time()
    user  system elapsed 
- 35.267   0.588  35.955 
+ 34.990   0.646  42.056 
