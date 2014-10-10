@@ -254,7 +254,7 @@ Type 'q()' to quit R.
          1839            45           182           292           400 
         total        single mate.unmapped    unoriented     inter.chr 
          1020            24           506           182             0 
-GRanges with 50 ranges and 0 metadata columns:
+GRanges object with 50 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA   [ 1,  1]      *
@@ -268,10 +268,8 @@ GRanges with 50 ranges and 0 metadata columns:
   [48]     chrA [941, 941]      *
   [49]     chrA [961, 961]      *
   [50]     chrA [981, 981]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(2000, 0, c(chrA=1000, chrB=2000), spacing=50)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -282,7 +280,7 @@ GRanges with 50 ranges and 0 metadata columns:
          3415             0           515           550           714 
         total        single mate.unmapped    unoriented     inter.chr 
          1978             0          1008           361             0 
-GRanges with 20 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -296,10 +294,8 @@ GRanges with 20 ranges and 0 metadata columns:
   [18]     chrA [851, 851]      *
   [19]     chrA [901, 901]      *
   [20]     chrA [951, 951]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(5000, 25, c(chrA=1000, chrB=2000), spacing=25)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -310,7 +306,7 @@ GRanges with 20 ranges and 0 metadata columns:
          8831            23          1056          1397          1957 
         total        single mate.unmapped    unoriented     inter.chr 
          4945            10          2537           874             0 
-GRanges with 40 ranges and 0 metadata columns:
+GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -324,10 +320,8 @@ GRanges with 40 ranges and 0 metadata columns:
   [38]     chrA [926, 926]      *
   [39]     chrA [951, 951]      *
   [40]     chrA [976, 976]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(5000, 10, c(chrA=1000, chrB=2000), spacing=25, max.frag=100)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -338,7 +332,7 @@ GRanges with 40 ranges and 0 metadata columns:
          8313             6          1395          1306          1722 
         total        single mate.unmapped    unoriented     inter.chr 
          5027             4          2467           952             0 
-GRanges with 40 ranges and 0 metadata columns:
+GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -352,10 +346,8 @@ GRanges with 40 ranges and 0 metadata columns:
   [38]     chrA [926, 926]      *
   [39]     chrA [951, 951]      *
   [40]     chrA [976, 976]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > # Checking out restrictions on the max size.
 > 
@@ -368,7 +360,7 @@ GRanges with 40 ranges and 0 metadata columns:
          1645             9           310           247           328 
         total        single mate.unmapped    unoriented     inter.chr 
          1016             6           520           182             0 
-GRanges with 20 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -382,10 +374,8 @@ GRanges with 20 ranges and 0 metadata columns:
   [18]     chrA [851, 851]      *
   [19]     chrA [901, 901]      *
   [20]     chrA [951, 951]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(1000, 20, c(chrA=1000, chrB=2000), spacing=100, right=20)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -396,7 +386,7 @@ GRanges with 20 ranges and 0 metadata columns:
          1732            19           251           281           366 
         total        single mate.unmapped    unoriented     inter.chr 
           979            15           510           176             0 
-GRanges with 10 ranges and 0 metadata columns:
+GRanges object with 10 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,  21]      *
@@ -409,10 +399,8 @@ GRanges with 10 ranges and 0 metadata columns:
    [8]     chrA [701, 721]      *
    [9]     chrA [801, 821]      *
   [10]     chrA [901, 921]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=100, right=10, max.frag=200)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -423,7 +411,7 @@ GRanges with 10 ranges and 0 metadata columns:
          3555            44           433           572           752 
         total        single mate.unmapped    unoriented     inter.chr 
          2000            21          1005           365             0 
-GRanges with 10 ranges and 0 metadata columns:
+GRanges object with 10 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,  11]      *
@@ -436,10 +424,8 @@ GRanges with 10 ranges and 0 metadata columns:
    [8]     chrA [701, 711]      *
    [9]     chrA [801, 811]      *
   [10]     chrA [901, 911]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > # Checking out window extension details.
 > 
@@ -452,7 +438,7 @@ GRanges with 10 ranges and 0 metadata columns:
          1837            89           222           299           347 
         total        single mate.unmapped    unoriented     inter.chr 
          1040            62           476           180             0 
-GRanges with 34 ranges and 0 metadata columns:
+GRanges object with 34 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
    [1]     chrA  [  1, 101]      *
@@ -466,10 +452,8 @@ GRanges with 34 ranges and 0 metadata columns:
   [32]     chrA [931, 1000]      *
   [33]     chrA [961, 1000]      *
   [34]     chrA [991, 1000]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, left=10)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -480,7 +464,7 @@ GRanges with 34 ranges and 0 metadata columns:
          1693             0           263           269           342 
         total        single mate.unmapped    unoriented     inter.chr 
           985             0           489           189             0 
-GRanges with 51 ranges and 0 metadata columns:
+GRanges object with 51 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
    [1]     chrA    [ 1,  1]      *
@@ -494,10 +478,8 @@ GRanges with 51 ranges and 0 metadata columns:
   [49]     chrA [951,  961]      *
   [50]     chrA [971,  981]      *
   [51]     chrA [991, 1000]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=-5, left=10)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -508,7 +490,7 @@ GRanges with 51 ranges and 0 metadata columns:
          3562            48           438           580           767 
         total        single mate.unmapped    unoriented     inter.chr 
          2058            27          1003           395             0 
-GRanges with 67 ranges and 0 metadata columns:
+GRanges object with 67 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
    [1]     chrA    [ 6, 11]      *
@@ -522,10 +504,8 @@ GRanges with 67 ranges and 0 metadata columns:
   [65]     chrA [966,  971]      *
   [66]     chrA [981,  986]      *
   [67]     chrA [996, 1000]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(2000, 25, c(chrA=1000, chrB=2000), spacing=15, right=10, left=10, max.frag=200)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -536,7 +516,7 @@ GRanges with 67 ranges and 0 metadata columns:
          3328            24           602           543           642 
         total        single mate.unmapped    unoriented     inter.chr 
          2002            13           989           382             0 
-GRanges with 68 ranges and 0 metadata columns:
+GRanges object with 68 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
    [1]     chrA    [ 1, 11]      *
@@ -550,10 +530,8 @@ GRanges with 68 ranges and 0 metadata columns:
   [66]     chrA [966,  986]      *
   [67]     chrA [981, 1000]      *
   [68]     chrA [996, 1000]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 	
 > # Checking out read extension for singles.
 > 
@@ -566,7 +544,7 @@ GRanges with 68 ranges and 0 metadata columns:
          1726             0           240           267           384 
         total        single mate.unmapped    unoriented     inter.chr 
           999             0           513           172             0 
-GRanges with 50 ranges and 0 metadata columns:
+GRanges object with 50 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA   [ 1,  1]      *
@@ -580,10 +558,8 @@ GRanges with 50 ranges and 0 metadata columns:
   [48]     chrA [941, 941]      *
   [49]     chrA [961, 961]      *
   [50]     chrA [981, 981]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=50, ext=50)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -594,7 +570,7 @@ GRanges with 50 ranges and 0 metadata columns:
          3544            41           445           573           773 
         total        single mate.unmapped    unoriented     inter.chr 
          2047            23           982           396             0 
-GRanges with 20 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -608,10 +584,8 @@ GRanges with 20 ranges and 0 metadata columns:
   [18]     chrA [851, 851]      *
   [19]     chrA [901, 901]      *
   [20]     chrA [951, 951]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(5000, 10, c(chrA=1000, chrB=2000), spacing=25, ext=20)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -622,7 +596,7 @@ GRanges with 20 ranges and 0 metadata columns:
          8532             9          1281          1365          1809 
         total        single mate.unmapped    unoriented     inter.chr 
          5055             7          2494           960             0 
-GRanges with 40 ranges and 0 metadata columns:
+GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -636,10 +610,8 @@ GRanges with 40 ranges and 0 metadata columns:
   [38]     chrA [926, 926]      *
   [39]     chrA [951, 951]      *
   [40]     chrA [976, 976]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 
 > checkcount(5000, 20, c(chrA=1000, chrB=2000), spacing=25, ext=200)
         total        single mate.unmapped    unoriented     inter.chr 
@@ -650,7 +622,7 @@ GRanges with 40 ranges and 0 metadata columns:
          8630            15          1227          1383          1810 
         total        single mate.unmapped    unoriented     inter.chr 
          5014             9          2491           962             0 
-GRanges with 40 ranges and 0 metadata columns:
+GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
    [1]     chrA [  1,   1]      *
@@ -664,10 +636,8 @@ GRanges with 40 ranges and 0 metadata columns:
   [38]     chrA [926, 926]      *
   [39]     chrA [951, 951]      *
   [40]     chrA [976, 976]      *
-  ---
-  seqlengths:
-   chrA
-   1000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > 	
 > ###################################################################################################
 > # Cleaning up.
@@ -681,4 +651,4 @@ GRanges with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-190.188   0.532 191.140 
+179.910   0.486 180.928 

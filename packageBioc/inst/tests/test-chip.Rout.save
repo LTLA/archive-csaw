@@ -175,7 +175,7 @@ Type 'q()' to quit R.
 > 
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, spacing=20)
-GRanges with 750 ranges and 0 metadata columns:
+GRanges object with 750 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -189,12 +189,10 @@ GRanges with 750 ranges and 0 metadata columns:
   [748]     chrB [4941, 4941]      *
   [749]     chrB [4961, 4961]      *
   [750]     chrB [4981, 4981]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, spacing=50)
-GRanges with 300 ranges and 0 metadata columns:
+GRanges object with 300 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
@@ -208,10 +206,8 @@ GRanges with 300 ranges and 0 metadata columns:
   [298]     chrB [4851, 4851]      *
   [299]     chrB [4901, 4901]      *
   [300]     chrB [4951, 4951]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 1000 1000
 > bincomp(bamFiles, 123)
@@ -223,7 +219,7 @@ GRanges with 300 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, right=30, spacing=20)
-GRanges with 750 ranges and 0 metadata columns:
+GRanges object with 750 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,  31]      *
@@ -237,12 +233,10 @@ GRanges with 750 ranges and 0 metadata columns:
   [748]     chrB [4941, 4971]      *
   [749]     chrB [4961, 4991]      *
   [750]     chrB [4981, 5000]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=20, spacing=25)
-GRanges with 602 ranges and 0 metadata columns:
+GRanges object with 602 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,   1]      *
@@ -256,12 +250,10 @@ GRanges with 602 ranges and 0 metadata columns:
   [600]     chrB [4931, 4951]      *
   [601]     chrB [4956, 4976]      *
   [602]     chrB [4981, 5000]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=150, right=10, left=10, spacing=30)
-GRanges with 501 ranges and 0 metadata columns:
+GRanges object with 501 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,  11]      *
@@ -275,12 +267,10 @@ GRanges with 501 ranges and 0 metadata columns:
   [499]     chrB [4911, 4931]      *
   [500]     chrB [4941, 4961]      *
   [501]     chrB [4971, 4991]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=150, right=-5, left=15)
-GRanges with 750 ranges and 0 metadata columns:
+GRanges object with 750 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 6, 16]      *
@@ -294,16 +284,14 @@ GRanges with 750 ranges and 0 metadata columns:
   [748]     chrB [4946, 4956]      *
   [749]     chrB [4966, 4976]      *
   [750]     chrB [4986, 4996]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > # Even more complex, with filtering arguments
 > 
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, filter=5)
-GRanges with 657 ranges and 0 metadata columns:
+GRanges object with 657 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 81,  81]      *
@@ -317,12 +305,10 @@ GRanges with 657 ranges and 0 metadata columns:
   [655]     chrB [4941, 4941]      *
   [656]     chrB [4961, 4961]      *
   [657]     chrB [4981, 4981]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=100, filter=10)
-GRanges with 297 ranges and 0 metadata columns:
+GRanges object with 297 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [301, 301]      *
@@ -336,12 +322,10 @@ GRanges with 297 ranges and 0 metadata columns:
   [295]     chrB [4881, 4881]      *
   [296]     chrB [4901, 4901]      *
   [297]     chrB [4921, 4921]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=15)
-GRanges with 469 ranges and 0 metadata columns:
+GRanges object with 469 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [201, 201]      *
@@ -355,17 +339,15 @@ GRanges with 469 ranges and 0 metadata columns:
   [467]     chrB [4901, 4901]      *
   [468]     chrB [4921, 4921]      *
   [469]     chrB [4941, 4941]      *
-  ---
-  seqlengths:
-    chrA  chrB
-   10000  5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > # And again, with a different chromosome set-up.
 > 
 > chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -379,12 +361,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -398,10 +378,8 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 3000 3000
 > bincomp(bamFiles, 123)
@@ -411,7 +389,7 @@ GRanges with 900 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, right=100)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1, 101]      *
@@ -425,12 +403,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 8000]      *
   [899]     chrC [7961, 8000]      *
   [900]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=10)
-GRanges with 903 ranges and 0 metadata columns:
+GRanges object with 903 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -444,12 +420,10 @@ GRanges with 903 ranges and 0 metadata columns:
   [901]     chrC [7951, 7961]      *
   [902]     chrC [7971, 7981]      *
   [903]     chrC [7991, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=-30, left=40, spacing=50)
-GRanges with 360 ranges and 0 metadata columns:
+GRanges object with 360 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 11,  21]      *
@@ -463,12 +437,10 @@ GRanges with 360 ranges and 0 metadata columns:
   [358]     chrC [7861, 7871]      *
   [359]     chrC [7911, 7921]      *
   [360]     chrC [7961, 7971]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=70, spacing=100)
-GRanges with 183 ranges and 0 metadata columns:
+GRanges object with 183 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
@@ -482,14 +454,12 @@ GRanges with 183 ranges and 0 metadata columns:
   [181]     chrC [7731, 7801]      *
   [182]     chrC [7831, 7901]      *
   [183]     chrC [7931, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, filter=20)
-GRanges with 549 ranges and 0 metadata columns:
+GRanges object with 549 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 61,  61]      *
@@ -503,12 +473,10 @@ GRanges with 549 ranges and 0 metadata columns:
   [547]     chrC [7681, 7681]      *
   [548]     chrC [7701, 7701]      *
   [549]     chrC [7721, 7721]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=40)
-GRanges with 509 ranges and 0 metadata columns:
+GRanges object with 509 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [121, 121]      *
@@ -522,12 +490,10 @@ GRanges with 509 ranges and 0 metadata columns:
   [507]     chrC [7741, 7741]      *
   [508]     chrC [7761, 7761]      *
   [509]     chrC [7781, 7781]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=60)
-GRanges with 96 ranges and 0 metadata columns:
+GRanges object with 96 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA   [201, 201]      *
@@ -541,17 +507,15 @@ GRanges with 96 ranges and 0 metadata columns:
   [94]     chrB [4361, 4361]      *
   [95]     chrB [4401, 4401]      *
   [96]     chrB [4421, 4421]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > # One more time; sparse across the genome, but three files.
 > 
 > chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -565,12 +529,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -584,10 +546,8 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 3000 3000 3000
 > bincomp(bamFiles, 123)
@@ -597,7 +557,7 @@ GRanges with 900 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, left=10)
-GRanges with 903 ranges and 0 metadata columns:
+GRanges object with 903 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -611,12 +571,10 @@ GRanges with 903 ranges and 0 metadata columns:
   [901]     chrC [7951, 7961]      *
   [902]     chrC [7971, 7981]      *
   [903]     chrC [7991, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=50)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,  51]      *
@@ -630,12 +588,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7991]      *
   [899]     chrC [7961, 8000]      *
   [900]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=-30, left=40, spacing=50)
-GRanges with 360 ranges and 0 metadata columns:
+GRanges object with 360 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 11,  21]      *
@@ -649,12 +605,10 @@ GRanges with 360 ranges and 0 metadata columns:
   [358]     chrC [7861, 7871]      *
   [359]     chrC [7911, 7921]      *
   [360]     chrC [7961, 7971]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=70, spacing=100)
-GRanges with 180 ranges and 0 metadata columns:
+GRanges object with 180 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,  71]      *
@@ -668,14 +622,12 @@ GRanges with 180 ranges and 0 metadata columns:
   [178]     chrC [7701, 7771]      *
   [179]     chrC [7801, 7871]      *
   [180]     chrC [7901, 7971]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, filter=0)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -689,12 +641,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=1)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -708,12 +658,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=50, filter=2)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,  51]      *
@@ -727,17 +675,15 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7991]      *
   [899]     chrC [7961, 8000]      *
   [900]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > ###################################################################################################
 > # We test with four files. Oh, the humanity.
 > 
 > bamFiles<-sapply(1:4, FUN=function(i) { regen(3000, chromos, file.path(dir, paste("A", i, sep=""))) })
 > comp(bamFiles, fraglen=100)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -751,12 +697,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -770,10 +714,8 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 3000 3000 3000 3000
 > bincomp(bamFiles, 123)
@@ -783,7 +725,7 @@ GRanges with 900 ranges and 0 metadata columns:
 > 
 > bamFiles<-sapply(1:4, FUN=function(i) { regen(3000, chromos, file.path(dir, paste("A", i, sep=""))) })
 > comp(bamFiles, fraglen=100, right=100)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1, 101]      *
@@ -797,12 +739,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 8000]      *
   [899]     chrC [7961, 8000]      *
   [900]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=50)
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,  51]      *
@@ -816,12 +756,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7991]      *
   [899]     chrC [7961, 8000]      *
   [900]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=20, right=-15, spacing=40)
-GRanges with 450 ranges and 0 metadata columns:
+GRanges object with 450 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 21,  26]      *
@@ -835,12 +773,10 @@ GRanges with 450 ranges and 0 metadata columns:
   [448]     chrC [7901, 7906]      *
   [449]     chrC [7941, 7946]      *
   [450]     chrC [7981, 7986]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=50, right=100, spacing=100)
-GRanges with 183 ranges and 0 metadata columns:
+GRanges object with 183 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1, 101]      *
@@ -854,12 +790,10 @@ GRanges with 183 ranges and 0 metadata columns:
   [181]     chrC [7751, 7901]      *
   [182]     chrC [7851, 8000]      *
   [183]     chrC [7951, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=100)
-GRanges with 358 ranges and 0 metadata columns:
+GRanges object with 358 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [201, 201]      *
@@ -873,18 +807,14 @@ GRanges with 358 ranges and 0 metadata columns:
   [356]     chrB [4841, 4841]      *
   [357]     chrB [4861, 4861]      *
   [358]     chrB [4881, 4881]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=150)
-GRanges with 0 ranges and 0 metadata columns:
+GRanges object with 0 ranges and 0 metadata columns:
    seqnames    ranges strand
       <Rle> <IRanges>  <Rle>
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > ###################################################################################################
 > # We try to do some crazy spacing and some crazy extension. We should see 1 combination per chromosome, consisting of all reads.
@@ -892,17 +822,15 @@ GRanges with 0 ranges and 0 metadata columns:
 > chromos<-c(chrA=8000, chrB=8000)
 > bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 > comp(bamFiles, spacing=max(chromos))
-GRanges with 2 ranges and 0 metadata columns:
+GRanges object with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrA    [1, 1]      *
   [2]     chrB    [1, 1]      *
-  ---
-  seqlengths:
-   chrA chrB
-   8000 8000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, right=max(chromos))
-GRanges with 800 ranges and 0 metadata columns:
+GRanges object with 800 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 1, 8000]      *
@@ -916,20 +844,16 @@ GRanges with 800 ranges and 0 metadata columns:
   [798]     chrB [7941, 8000]      *
   [799]     chrB [7961, 8000]      *
   [800]     chrB [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB
-   8000 8000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, right=max(chromos), spacing=max(chromos))
-GRanges with 2 ranges and 0 metadata columns:
+GRanges object with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrA [1, 8000]      *
   [2]     chrB [1, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB
-   8000 8000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > ###################################################################################################
 > # Restricted and/or discarded.
@@ -938,7 +862,7 @@ GRanges with 2 ranges and 0 metadata columns:
 > 
 > bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=100, discard=makeDiscard(10, 200, chromos))
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -952,12 +876,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, discard=makeDiscard(20, 100, chromos), restrict="chrA")
-GRanges with 250 ranges and 0 metadata columns:
+GRanges object with 250 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -971,12 +893,10 @@ GRanges with 250 ranges and 0 metadata columns:
   [248]     chrA [4941, 4941]      *
   [249]     chrA [4961, 4961]      *
   [250]     chrA [4981, 4981]      *
-  ---
-  seqlengths:
-   chrA
-   5000
+  -------
+  seqinfo: 1 sequence from an unspecified genome
 > comp(bamFiles, fraglen=100, left=30, spacing=50, discard=makeDiscard(50, 20, chromos))
-GRanges with 363 ranges and 0 metadata columns:
+GRanges object with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
@@ -990,12 +910,10 @@ GRanges with 363 ranges and 0 metadata columns:
   [361]     chrC [7871, 7901]      *
   [362]     chrC [7921, 7951]      *
   [363]     chrC [7971, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=50, discard=makeDiscard(10, 200, chromos), restrict=c("chrA", "chrB"))
-GRanges with 500 ranges and 0 metadata columns:
+GRanges object with 500 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA    [ 1,  51]      *
@@ -1009,14 +927,12 @@ GRanges with 500 ranges and 0 metadata columns:
   [498]     chrB [4941, 4991]      *
   [499]     chrB [4961, 5000]      *
   [500]     chrB [4981, 5000]      *
-  ---
-  seqlengths:
-   chrA chrB
-   5000 5000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
 > comp(bamFiles, fraglen=200, left=20, spacing=50, discard=makeDiscard(20, 200, chromos))
-GRanges with 363 ranges and 0 metadata columns:
+GRanges object with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1,   1]      *
@@ -1030,12 +946,10 @@ GRanges with 363 ranges and 0 metadata columns:
   [361]     chrC [7881, 7901]      *
   [362]     chrC [7931, 7951]      *
   [363]     chrC [7981, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000, chromos))
-GRanges with 180 ranges and 0 metadata columns:
+GRanges object with 180 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [  1, 101]      *
@@ -1049,12 +963,10 @@ GRanges with 180 ranges and 0 metadata columns:
   [178]     chrC [7701, 7801]      *
   [179]     chrC [7801, 7901]      *
   [180]     chrC [7901, 8000]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500, chromos))
-GRanges with 900 ranges and 0 metadata columns:
+GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA     [ 1,  1]      *
@@ -1068,12 +980,10 @@ GRanges with 900 ranges and 0 metadata columns:
   [898]     chrC [7941, 7941]      *
   [899]     chrC [7961, 7961]      *
   [900]     chrC [7981, 7981]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), restrict=c("chrC", "chrA"))
-GRanges with 343 ranges and 0 metadata columns:
+GRanges object with 343 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [ 21,  21]      *
@@ -1087,12 +997,10 @@ GRanges with 343 ranges and 0 metadata columns:
   [341]     chrC [7581, 7581]      *
   [342]     chrC [7601, 7601]      *
   [343]     chrC [7621, 7621]      *
-  ---
-  seqlengths:
-   chrA chrC
-   5000 8000
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
-GRanges with 479 ranges and 0 metadata columns:
+GRanges object with 479 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
     [1]     chrA   [141, 191]      *
@@ -1106,10 +1014,8 @@ GRanges with 479 ranges and 0 metadata columns:
   [477]     chrC [7281, 7331]      *
   [478]     chrC [7401, 7451]      *
   [479]     chrC [7421, 7471]      *
-  ---
-  seqlengths:
-   chrA chrB chrC
-   5000 5000 8000
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > 
 > ###################################################################################################
 > # Cleaning up.
@@ -1122,4 +1028,4 @@ GRanges with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-112.686   0.306 113.257 
+112.894   0.455 113.702 
