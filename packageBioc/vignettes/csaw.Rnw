@@ -15,23 +15,20 @@
 
 \title{Introducing the csaw package}
 \author{Aaron Lun}
-\date{First edition 21 June 2014\\
-Last revised 23 June 2014}
+\date{First edition 21 June 2014\\[0.05in]
+Last revised 10 October 2014}
 \maketitle
 
-The csaw package is designed for \textit{de novo} detection of differentially
-bound regions from ChIP-seq data sets. It uses a sliding window approach to
-count reads across the genome, and tests for significant differences within
-each window using the methods in the edgeR package. Though intended for
-ChIP-seq data, the methods in this package can also be applied to any type of
-sequencing data where changes in genomic coverage are of interest.
+The \texttt{csaw} package is designed for the \textit{de novo} detection of differentially bound regions from ChIP-seq data. 
+It uses a sliding window approach to count reads across the genome.
+Each window is then tested for significant differences between libraries, using the methods in the \texttt{edgeR} package. 
+\texttt{csaw} can be applied to any data set containing multiple conditions, though biological replication is strongly recommended for each condition.
+While intended for ChIP-seq data, the methods in this package can also be applied to any type of sequencing data where changes in genomic coverage are of interest.
 
-The csaw package provides methods for flexible counting of single- or
-paired-end reads within sorted and indexed BAM files. It implements statistical
-procedures that maintain control of the false discovery rate across aggregated
-windows. A range of options is also provided for normalization as well as
-visualization and annotation of the results. The full user's guide is available
-as part of the online documentation and can be obtained by typing:
+On a technical level, the \texttt{csaw} package provides methods for flexible counting of single- or paired-end reads within sorted and indexed BAM files. 
+It implements statistical procedures that maintain control of the false discovery rate across aggregated windows. 
+Procedures for normalization of window counts between libraries are described, along with methods for independent filtering of uninteresting windows.
+The full user's guide is available as part of the online documentation and can be obtained by typing:
 \begin{Schunk}
 \begin{Sinput}
 > library(csaw)
