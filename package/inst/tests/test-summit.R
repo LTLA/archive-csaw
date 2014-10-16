@@ -15,7 +15,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, min.depth=20, minq
 
 	# Running the profileSummits.
 	xparam <- readParam(minq=minq, dedup=dedup)
-	out <- profileSummit(bam, ext=ext, width=width, res=res, min.depth=min.depth, param=xparam)
+	out <- profileSummit(bam, ext=ext, width=width, res=res, min.depth=min.depth/res, param=xparam)
 
 	# Running the reference analysis.
 	res <- as.integer(res)

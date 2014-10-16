@@ -34,7 +34,7 @@ Type 'q()' to quit R.
 + 
 + 	# Running the profileSummits.
 + 	xparam <- readParam(minq=minq, dedup=dedup)
-+ 	out <- profileSummit(bam, ext=ext, width=width, res=res, min.depth=min.depth, param=xparam)
++ 	out <- profileSummit(bam, ext=ext, width=width, res=res, min.depth=min.depth/res, param=xparam)
 + 
 + 	# Running the reference analysis.
 + 	res <- as.integer(res)
@@ -131,4 +131,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 12.570   0.213  12.886 
+ 10.955   0.180  11.151 
