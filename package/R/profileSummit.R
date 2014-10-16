@@ -70,8 +70,6 @@ profileSummit <- function(bam.files, ext=100, width=10000, res=50, min.depth=20,
 		total.freq <- total.freq + cur.profile[[2]]
     }
 
-	print(total.freq)
-	print(total.profile)
 	# Cleaning up and returning the profiles.
     return(list(span=1:actual.width*res, coverage=(total.profile/total.freq)))
 }
