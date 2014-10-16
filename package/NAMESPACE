@@ -3,7 +3,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 
 #  All functions exported, arranged by sequence of usage.
 export(csawUsersGuide,
-	correlateReads, getPETSizes,
+	correlateReads, getPETSizes, profileSummit,
 	regionCounts, windowCounts,
 	normalizeCounts, 
 	combineTests, getBestTest, mergeWindows,
