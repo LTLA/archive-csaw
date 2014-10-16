@@ -90,14 +90,14 @@ windowCounts <- function(bam.files, spacing=50, width=1, ext=100, shift=0,
 					out <- .extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
 						discard=extracted$discard[[chr]], max.frag=max.frag)
 				}
-				frag.start <- out$pos
 
 				# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
 				if (bin) { 
-					mid <- as.integer(frag.start + (frag.end - frag.start)/2)
+					mid <- as.integer(out$pos + out$size/2)
 					frag.end <- frag.start <- mid
 				} else { 
-					frag.end <- frag.start+out$size-1L 
+					frag.start <- out$pos
+					frag.end <- frag.start + out$size - 1L 
 				}
 			}
 
