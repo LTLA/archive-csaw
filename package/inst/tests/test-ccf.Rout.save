@@ -1,5 +1,5 @@
 
-R version 3.1.0 (2014-04-10) -- "Spring Dance"
+R version 3.1.1 (2014-07-10) -- "Sock it to Me"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -20,27 +20,11 @@ Type 'q()' to quit R.
 > ###################################################################################################
 > # We test the correlateChIP function in 'csaw' against an equivalent version in R.
 > 
-> # We set up a function to generate a random SAM file.
+> source("simsam.R")
 > 
-> source("simsam.R");
-> 
-> fdir<-"ccf-test";
-> dir.create(fdir);
-> outfname<-file.path(fdir, "out")
-> 
-> regen <- function(nreads, chromos) {
-+ 	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
-+ 	pos.pos<-integer(nreads)
-+ 	str<-logical(nreads)
-+ 	for (i in 1:length(chromos)) {
-+ 		current<-pos.chr==i
-+ 		pos.pos[current]<-as.integer(round(runif(sum(current), 1, chromos[i])))
-+ 		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
-+ 	}
-+ 	isdup <- rbinom(nreads, 1, 0.8)==0L
-+ 	mapq <- round(runif(nreads, 50, 199))
-+ 	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, mapq=mapq, is.dup=isdup)
-+ }
+> fdir<-"ccf-test"
+> dir.create(fdir)
+> outfname<-file.path(fdir, "out.bam")
 > 
 > suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 > 
@@ -112,7 +96,7 @@ Type 'q()' to quit R.
 > # Testing with some data.
 > 
 > set.seed(10);
-> bamFile<-regen(1000, c(chrA=10000))
+> bamFile <- regen(1000, c(chrA=10000), outfname)
 > comp(bamFile, 50)
 [1] -5.824506e-03 -1.553824e-02 -8.933974e-06 -5.746695e-03 -7.695080e-03
 [6]  5.904627e-03
@@ -122,7 +106,7 @@ Type 'q()' to quit R.
 > 
 > # And again...
 > 
-> bamFile<-regen(1000, c(chrA=10000))
+> bamFile <- regen(1000, c(chrA=10000), outfname)
 > comp(bamFile, 50)
 [1]  0.016054018 -0.007900011 -0.009806199 -0.017802005  0.016153910
 [6] -0.011818996
@@ -132,7 +116,7 @@ Type 'q()' to quit R.
 > 
 > # Repeating with more reads.
 > 
-> bamFile<-regen(2000, c(chrA=10000))
+> bamFile <- regen(2000, c(chrA=10000), outfname)
 > comp(bamFile, 50)
 [1] -0.002004522 -0.003031676  0.010178818  0.006100802 -0.003062285
 [6] -0.002055485
@@ -142,7 +126,7 @@ Type 'q()' to quit R.
 > 
 > # Trying it out with multiple chromosomes.
 > 
-> bamFile<-regen(5000, c(chrA=10000, chrB=5000))
+> bamFile <- regen(5000, c(chrA=10000, chrB=5000), outfname)
 > comp(bamFile, 50)
 [1] -0.002777951  0.017666580  0.001279660  0.002706772 -0.008404466
 [6] -0.004900409
@@ -152,7 +136,7 @@ Type 'q()' to quit R.
 > 
 > # And again, with more reads.
 > 
-> bamFile<-regen(10000, c(chrA=10000, chrB=5000))
+> bamFile <- regen(10000, c(chrA=10000, chrB=5000), outfname)
 > comp(bamFile, 50)
 [1] -0.0041927894  0.0099575772 -0.0108393829 -0.0003031947  0.0208851271
 [6] -0.0036994382
@@ -162,7 +146,7 @@ Type 'q()' to quit R.
 > 
 > # Trying it out with multiple BAM files.
 > 
-> bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
+> bamFiles <- c(regen(500, c(chrA=1000, chrB=500), outfname), regen(500, c(chrA=1000, chrB=500), outfname))
 > comp(bamFiles, 50)
 [1]  0.038827106 -0.005894268  0.039078141  0.031593805  0.015864472
 [6]  0.033392710
@@ -172,7 +156,7 @@ Type 'q()' to quit R.
 > 
 > # And again, with more reads.
 > 
-> bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
+> bamFiles <- c(regen(5000, c(chrA=10000, chrB=5000), outfname), regen(5000, c(chrA=10000, chrB=5000), outfname))
 > comp(bamFiles, 50)
 [1]  2.120768e-03  1.171446e-02  8.534441e-05 -8.930186e-03  3.377820e-03
 [6]  1.768343e-02
@@ -184,7 +168,7 @@ Type 'q()' to quit R.
 > # Repeating; but this time, looking at autocorrelations.
 > 
 > set.seed(1034785)
-> bamFile<-regen(1000, c(chrA=10000))
+> bamFile <- regen(1000, c(chrA=10000), outfname)
 > comp(bamFile, 50, cross=FALSE)
 [1]  1.000000e+00 -1.388791e-02 -8.905914e-03  6.991125e-05  4.053701e-03
 [6] -9.485049e-04
@@ -194,7 +178,7 @@ Type 'q()' to quit R.
 > 
 > # And again...
 > 
-> bamFile<-regen(1000, c(chrA=10000))
+> bamFile <- regen(1000, c(chrA=10000), outfname)
 > comp(bamFile, 50, cross=FALSE)
 [1]  1.000000000 -0.010873174  0.015268929 -0.017934539 -0.002856624
 [6] -0.005786054
@@ -204,7 +188,7 @@ Type 'q()' to quit R.
 > 
 > # Repeating with more reads.
 > 
-> bamFile<-regen(2000, c(chrA=10000))
+> bamFile <- regen(2000, c(chrA=10000), outfname)
 > comp(bamFile, 50, cross=FALSE)
 [1]  1.000000000 -0.005230377  0.006272436 -0.007676681  0.004329367
 [6] -0.008218131
@@ -214,7 +198,7 @@ Type 'q()' to quit R.
 > 
 > # Trying it out with multiple chromosomes.
 > 
-> bamFile<-regen(5000, c(chrA=10000, chrB=5000))
+> bamFile <- regen(5000, c(chrA=10000, chrB=5000), outfname)
 > comp(bamFile, 50, cross=FALSE)
 [1]  1.0000000000  0.0038545617  0.0072358664  0.0069742394 -0.0008960064
 [6]  0.0013759728
@@ -224,7 +208,7 @@ Type 'q()' to quit R.
 > 
 > # And again, with more reads.
 > 
-> bamFile<-regen(10000, c(chrA=10000, chrB=5000))
+> bamFile <- regen(10000, c(chrA=10000, chrB=5000), outfname)
 > comp(bamFile, 50, cross=FALSE)
 [1]  1.0000000000 -0.0008178159  0.0085679119  0.0153257346 -0.0020366033
 [6]  0.0036763692
@@ -234,7 +218,7 @@ Type 'q()' to quit R.
 > 
 > # Trying it out with multiple BAM files.
 > 
-> bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
+> bamFiles <- c(regen(500, c(chrA=1000, chrB=500), outfname), regen(500, c(chrA=1000, chrB=500), outfname))
 > comp(bamFiles, 50, cross=FALSE)
 [1]  1.000000000 -0.007275493  0.017740259  0.020515912 -0.019760487
 [6] -0.039227615
@@ -244,7 +228,7 @@ Type 'q()' to quit R.
 > 
 > # And again, with more reads.
 > 
-> bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
+> bamFiles <- c(regen(5000, c(chrA=10000, chrB=5000), outfname), regen(5000, c(chrA=10000, chrB=5000), outfname))
 > comp(bamFiles, 50, cross=FALSE)
 [1]  1.000000000  0.007091897  0.004283831 -0.003042116  0.010984413
 [6] -0.001033001
@@ -259,7 +243,7 @@ Type 'q()' to quit R.
 > 
 > # Where distance exceeds chromosome length.	
 > 
-> bamFile<-regen(10, c(chrA=20))
+> bamFile <- regen(10, c(chrA=20), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] -0.12761066 -0.13528412 -0.14394032 -0.15378117 -0.16506802  0.07634799
 > comp(bamFile, 50, cross=FALSE)
@@ -267,7 +251,7 @@ Type 'q()' to quit R.
 > comp(bamFile, 100, cross=FALSE)
 [1]  1.00000000 -0.05123155 -0.14594386 -0.24474543 -0.26409597 -0.08558165
 > 
-> bamFile<-regen(10, c(chrA=50))
+> bamFile <- regen(10, c(chrA=50), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] -0.1019357 -0.1042572 -0.1066870 -0.1092329 -0.1119034  0.1310947
 > comp(bamFile, 50, cross=FALSE)
@@ -277,7 +261,7 @@ Type 'q()' to quit R.
 [1]  1.000000e+00  1.205128e-01  1.157895e-01 -2.530047e-01 -2.599376e-01
 [6]  9.960679e-21
 > 
-> bamFile<-regen(5, c(chrA=100))
+> bamFile <- regen(5, c(chrA=100), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -287,7 +271,7 @@ Type 'q()' to quit R.
 > 
 > # When the number of reads is zero in one chromosome.
 > 
-> bamFile<-regen(1, c(chrA=100, chrB=200))
+> bamFile <- regen(1, c(chrA=100, chrB=200), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -297,7 +281,7 @@ Type 'q()' to quit R.
 [1]  1.000000000 -0.005050505 -0.005076142 -0.005102041 -0.005128205
 [6] -0.005154639
 > 
-> bamFile<-regen(2, c(chrA=100, chrB=200, chrC=30))
+> bamFile <- regen(2, c(chrA=100, chrB=200, chrC=30), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -305,7 +289,7 @@ Type 'q()' to quit R.
 > comp(bamFile, 100, cross=FALSE)
 [1]  1.00000000 -0.02061856 -0.02083333 -0.02105263 -0.02127660 -0.02150538
 > 
-> bamFile<-regen(1, c(chrA=100, chrB=200, chrC=30))
+> bamFile <- regen(1, c(chrA=100, chrB=200, chrC=30), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -315,7 +299,7 @@ Type 'q()' to quit R.
 > 
 > # Where the chromosome length is literally too small to compute correlations.
 > 
-> bamFile<-regen(1, c(chrA=1, chrB=1))
+> bamFile <- regen(1, c(chrA=1, chrB=1), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -323,7 +307,7 @@ Type 'q()' to quit R.
 > comp(bamFile, 100, cross=FALSE)
 [1] 0 0 0 0 0 0
 > 
-> bamFile<-regen(10, c(chrA=1, chrB=1))
+> bamFile <- regen(10, c(chrA=1, chrB=1), outfname)
 > comp(bamFile, 50, cross=TRUE)
 [1] 0 0 0 0 0 0
 > comp(bamFile, 50, cross=FALSE)
@@ -341,4 +325,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 32.279   0.288  32.690 
+ 30.330   0.225  30.720 

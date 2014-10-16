@@ -1,27 +1,11 @@
 ###################################################################################################
 # We test the correlateChIP function in 'csaw' against an equivalent version in R.
 
-# We set up a function to generate a random SAM file.
+source("simsam.R")
 
-source("simsam.R");
-
-fdir<-"ccf-test";
-dir.create(fdir);
-outfname<-file.path(fdir, "out")
-
-regen <- function(nreads, chromos) {
-	pos.chr<-sample(length(chromos), nreads, replace=TRUE)
-	pos.pos<-integer(nreads)
-	str<-logical(nreads)
-	for (i in 1:length(chromos)) {
-		current<-pos.chr==i
-		pos.pos[current]<-as.integer(round(runif(sum(current), 1, chromos[i])))
-		str[current]<-(rbinom(sum(current), 1, 0.5)==1)
-	}
-	isdup <- rbinom(nreads, 1, 0.8)==0L
-	mapq <- round(runif(nreads, 50, 199))
-	simsam(outfname, names(chromos)[pos.chr], pos.pos, str, chromos, mapq=mapq, is.dup=isdup)
-}
+fdir<-"ccf-test"
+dir.create(fdir)
+outfname<-file.path(fdir, "out.bam")
 
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 
@@ -93,43 +77,43 @@ comp<-function(bamFiles, n, cross=TRUE) {
 # Testing with some data.
 
 set.seed(10);
-bamFile<-regen(1000, c(chrA=10000))
+bamFile <- regen(1000, c(chrA=10000), outfname)
 comp(bamFile, 50)
 comp(bamFile, 100)
 
 # And again...
 
-bamFile<-regen(1000, c(chrA=10000))
+bamFile <- regen(1000, c(chrA=10000), outfname)
 comp(bamFile, 50)
 comp(bamFile, 100)
 
 # Repeating with more reads.
 
-bamFile<-regen(2000, c(chrA=10000))
+bamFile <- regen(2000, c(chrA=10000), outfname)
 comp(bamFile, 50)
 comp(bamFile, 100)
 
 # Trying it out with multiple chromosomes.
 
-bamFile<-regen(5000, c(chrA=10000, chrB=5000))
+bamFile <- regen(5000, c(chrA=10000, chrB=5000), outfname)
 comp(bamFile, 50)
 comp(bamFile, 100)
 
 # And again, with more reads.
 
-bamFile<-regen(10000, c(chrA=10000, chrB=5000))
+bamFile <- regen(10000, c(chrA=10000, chrB=5000), outfname)
 comp(bamFile, 50)
 comp(bamFile, 100)
 
 # Trying it out with multiple BAM files.
 
-bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
+bamFiles <- c(regen(500, c(chrA=1000, chrB=500), outfname), regen(500, c(chrA=1000, chrB=500), outfname))
 comp(bamFiles, 50)
 comp(bamFiles, 100)
 
 # And again, with more reads.
 
-bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
+bamFiles <- c(regen(5000, c(chrA=10000, chrB=5000), outfname), regen(5000, c(chrA=10000, chrB=5000), outfname))
 comp(bamFiles, 50)
 comp(bamFiles, 100)
 
@@ -137,43 +121,43 @@ comp(bamFiles, 100)
 # Repeating; but this time, looking at autocorrelations.
 
 set.seed(1034785)
-bamFile<-regen(1000, c(chrA=10000))
+bamFile <- regen(1000, c(chrA=10000), outfname)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # And again...
 
-bamFile<-regen(1000, c(chrA=10000))
+bamFile <- regen(1000, c(chrA=10000), outfname)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # Repeating with more reads.
 
-bamFile<-regen(2000, c(chrA=10000))
+bamFile <- regen(2000, c(chrA=10000), outfname)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # Trying it out with multiple chromosomes.
 
-bamFile<-regen(5000, c(chrA=10000, chrB=5000))
+bamFile <- regen(5000, c(chrA=10000, chrB=5000), outfname)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # And again, with more reads.
 
-bamFile<-regen(10000, c(chrA=10000, chrB=5000))
+bamFile <- regen(10000, c(chrA=10000, chrB=5000), outfname)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # Trying it out with multiple BAM files.
 
-bamFiles<-c(regen(500, c(chrA=1000, chrB=500)), regen(500, c(chrA=1000, chrB=500)))
+bamFiles <- c(regen(500, c(chrA=1000, chrB=500), outfname), regen(500, c(chrA=1000, chrB=500), outfname))
 comp(bamFiles, 50, cross=FALSE)
 comp(bamFiles, 100, cross=FALSE)
 
 # And again, with more reads.
 
-bamFiles<-c(regen(5000, c(chrA=10000, chrB=5000)), regen(5000, c(chrA=10000, chrB=5000)))
+bamFiles <- c(regen(5000, c(chrA=10000, chrB=5000), outfname), regen(5000, c(chrA=10000, chrB=5000), outfname))
 comp(bamFiles, 50, cross=FALSE)
 comp(bamFiles, 100, cross=FALSE)
 
@@ -184,46 +168,46 @@ set.seed(789325)
 
 # Where distance exceeds chromosome length.	
 
-bamFile<-regen(10, c(chrA=20))
+bamFile <- regen(10, c(chrA=20), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
-bamFile<-regen(10, c(chrA=50))
+bamFile <- regen(10, c(chrA=50), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
-bamFile<-regen(5, c(chrA=100))
+bamFile <- regen(5, c(chrA=100), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # When the number of reads is zero in one chromosome.
 
-bamFile<-regen(1, c(chrA=100, chrB=200))
+bamFile <- regen(1, c(chrA=100, chrB=200), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
-bamFile<-regen(2, c(chrA=100, chrB=200, chrC=30))
+bamFile <- regen(2, c(chrA=100, chrB=200, chrC=30), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
-bamFile<-regen(1, c(chrA=100, chrB=200, chrC=30))
+bamFile <- regen(1, c(chrA=100, chrB=200, chrC=30), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
 # Where the chromosome length is literally too small to compute correlations.
 
-bamFile<-regen(1, c(chrA=1, chrB=1))
+bamFile <- regen(1, c(chrA=1, chrB=1), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
 
-bamFile<-regen(10, c(chrA=1, chrB=1))
+bamFile <- regen(10, c(chrA=1, chrB=1), outfname)
 comp(bamFile, 50, cross=TRUE)
 comp(bamFile, 50, cross=FALSE)
 comp(bamFile, 100, cross=FALSE)
