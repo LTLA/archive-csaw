@@ -8,7 +8,10 @@
 template <class T>
 struct sort_row_index {
 	sort_row_index(const T* p) : ptr(p) {}
-	bool operator() (const int& l, const int& r) const { return (ptr[l] < ptr[r]); }
+	bool operator() (const int& l, const int& r) const { 
+		if (ptr[l]==ptr[r]) { return (l < r); }
+		else { return (ptr[l] < ptr[r]); }
+	}
 private:
 	const T* ptr;
 };
