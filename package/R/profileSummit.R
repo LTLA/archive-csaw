@@ -1,4 +1,4 @@
-profileSummit <- function(bam.files, ext=100, width=10000, res=50, min.depth=20, param=readParam()) 
+profileSummit <- function(bam.files, ext=100, width=5000, res=50, min.depth=1, param=readParam()) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -12,8 +12,10 @@ profileSummit <- function(bam.files, ext=100, width=10000, res=50, min.depth=20,
 	pet <- param$pet
 	minq <- param$minq
 	dedup <- param$dedup
+	rescue.pairs <- param$rescue.pairs
+	rescue.ext <- param$rescue.ext
+	max.frag <- param$max.frag
 
-	min.depth <- as.integer(min.depth)
 	res <- as.integer(res)
 	actual.width <- as.integer(width/res)
 	ext <- as.integer(ext)
@@ -21,6 +23,7 @@ profileSummit <- function(bam.files, ext=100, width=10000, res=50, min.depth=20,
     if (actual.width <=0) { stop("smoothing width must be positive") }
     if (ext <=0) { stop("extension length must be positive") }
 
+	min.depth <- as.integer(ceiling(min.depth*res))
 	blen <- length(bam.files)
 	total.profile <- total.freq <- 0
 
@@ -47,10 +50,10 @@ profileSummit <- function(bam.files, ext=100, width=10000, res=50, min.depth=20,
 				positions <- as.integer(start.pos + ext/2)
 			} else {
                 if (rescue.pairs) {
-					out <- .rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq,
+					out <- .rescuePET(bam.files[b], where=where, dedup=dedup, minq=minq,
 						max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
 				} else {
-					out <- .extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq,
+					out <- .extractPET(bam.files[b], where=where, dedup=dedup, minq=minq,
 						discard=extracted$discard[[chr]], max.frag=max.frag)
 				}
 				positions <- as.integer(out$pos + out$size/2)
