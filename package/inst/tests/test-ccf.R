@@ -5,7 +5,7 @@ source("simsam.R")
 
 fdir<-"ccf-test"
 dir.create(fdir)
-outfname<-file.path(fdir, "out.bam")
+outfname<-file.path(fdir, "out")
 
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 
