@@ -92,9 +92,13 @@ windowCounts <- function(bam.files, spacing=50, width=1, ext=100, shift=0,
 				}
 				frag.start <- out$pos
 
-				# Only want to record each pair once in a bin, so forcing it to only use the 5' end.
-				if (bin) { frag.end <- frag.start }
-				else { frag.end <- frag.start+out$size-1L }
+				# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
+				if (bin) { 
+					mid <- as.integer(frag.start + (frag.end - frag.start)/2)
+					frag.end <- frag.start <- mid
+				} else { 
+					frag.end <- frag.start+out$size-1L 
+				}
 			}
 
 # Extending reads to account for window sizes > 1 bp. The start of each read

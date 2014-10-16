@@ -52,7 +52,7 @@ If \code{filter=NULL}, the count sum filter threshold is automatically defined a
  
 If \code{bin} is set, settings are internally adjusted so that all reads are counted into non-overlapping adjacent bins of size \code{width}. 
 Specifically, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
-Only the 5' end of each read or left-most position of each fragment (for paired-end data) is used in counting.
+Only the 5' end of each read or the midpoint of each fragment (for paired-end data) is used in counting.
 
 }
 
