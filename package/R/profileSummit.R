@@ -35,6 +35,7 @@ profileSummit <- function(bam.files, ext=100, width=5000, res=50, min.depth=1, p
 
 		total.pts <- as.integer((outlen-1)/res)+1L
 		total.cov <- integer(total.pts)
+		starts <- ends <- list()
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		for (b in 1:blen) {
@@ -47,7 +48,7 @@ profileSummit <- function(bam.files, ext=100, width=5000, res=50, min.depth=1, p
 						discard=extracted$discard[[chr]], use.first=(pet=="first"))
 				} 
 				start.pos <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
-				positions <- as.integer(start.pos + ext/2)
+				end.pos <- start.pos + ext - 1L
 			} else {
                 if (rescue.pairs) {
 					out <- .rescuePET(bam.files[b], where=where, dedup=dedup, minq=minq,
@@ -56,25 +57,31 @@ profileSummit <- function(bam.files, ext=100, width=5000, res=50, min.depth=1, p
 					out <- .extractPET(bam.files[b], where=where, dedup=dedup, minq=minq,
 						discard=extracted$discard[[chr]], max.frag=max.frag)
 				}
-				positions <- as.integer(out$pos + out$size/2)
+				start.pos <- out$pos
+				end.pos <- out$pos + out$size - 1L
 			}
-			if (!length(positions)) { next }
 
-			# Setting up the coverage track on each bin (pooling counts across files).
-			out <- .Call(cxx_get_rle_counts, positions-res+1L, positions, total.pts, res, TRUE)
-			if (is.character(out)) { stop(out) }
-			total.cov <- total.cov + out
+			if (!length(start.pos)) { next }
+			ix <- length(starts) + 1L
+			start.pos <- start.pos - res + 1L
+			starts[[ix]] <- start.pos 
+ 			ends[[ix]] <- end.pos
 		}
 		
-	    # We call the C++ function to aggregate profiles.
-		cur.profile <- .Call(cxx_get_profile, total.cov, actual.width, min.depth)
+	    # We call the C++ functions to aggregate profiles.
+		starts <- unlist(starts)
+		ends <- unlist(ends)
+		if (!length(starts)) { next }
+		cur.profile <- .Call(cxx_get_profile, starts, ends, total.pts, res, actual.width, min.depth)
 		if (is.character(cur.profile)) { stop(cur.profile) }
 		total.profile <- total.profile + cur.profile[[1]]
 		total.freq <- total.freq + cur.profile[[2]]
     }
 
-	# Cleaning up and returning the profiles.
-    return(list(span=1:actual.width*res, coverage=(total.profile/total.freq)))
+	# Cleaning up and returning the profiles. We multiply by 2 to get the span, as 
+	# we need to consider both sides of the summit. We multiply by 2 to get the coverage,
+	# as total.freq counts both sides of each summit (and is twice as large as it should be).
+    return(list(span=1:actual.width*res*2 + res, coverage=total.profile/total.freq*2))
 }
 
 
