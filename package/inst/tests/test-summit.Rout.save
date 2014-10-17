@@ -41,15 +41,16 @@ Type 'q()' to quit R.
 + 	actual.width <- as.integer(width/res)
 + 	min.depth <- as.integer(min.depth)
 + 	profile <- num <- numeric(actual.width)
-+ 	
-+ 	for (x in names(chromos)) { 
-+ 		recall <- extractReads(cur.region=GRanges(x, IRanges(1, chromos[[x]])),
-+ 			bam.file=bam, param=xparam)
-+ 		recall <- suppressWarnings(resize(recall, width=ext))
-+ 		new.pos <- as.integer((start(recall) + end(recall) + 1)/2)
++ 
++ 	data <- windowCounts(bam, param=xparam, ext=ext, width=res, spacing=res)
++ 	for (x in names(chromos)) {
++ 		nbins <- ceiling(chromos[[x]]/res)
++ 		track <- integer(nbins)
++ 		current <- as.logical(seqnames(rowData(data))==x)
++ 		track[(start(rowData(data))[current] - 1L)/res + 1L] <- assay(data)[current,]
 + 
 + 		# Identifying the local maxima.
-+ 		track <- tabulate(as.integer((new.pos-1L)/res) + 1L, nbins=ceiling(chromos[[x]]/res))
++ 		all.max <- list()
 + 		for (y in 1:length(track)) {
 + 			if (track[y]<min.depth) { next }
 + 
@@ -58,23 +59,30 @@ Type 'q()' to quit R.
 + 			cur.track <- track[lower:upper]
 + 
 + 			if (sum(cur.track>=track[y])==1L) {
-+ 				up.add <- upper-y
-+ 				if (up.add!=0L) { 
-+ 					profile[1:up.add] <- profile[1:up.add] + track[(y+1):upper]/track[y]
-+ 					num[1:up.add] <- num[1:up.add] + 1
-+ 				} 
-+ 
-+ 				down.add <- y-lower
-+ 				if (down.add!=0L) {
-+ 					profile[1:down.add] <- profile[1:down.add] + track[(y-1):lower]/track[y]
-+ 					num[1:down.add] <- num[1:down.add] + 1
-+ 				}
++ 				all.max[[length(all.max)+1L]] <- y
 + 			}
++ 		}
++ 
++ 		# Expanding windows and evaluating.
++ 		for (y in all.max) {
++ 			new.core <- y*res
++ 			new.starts <- new.core - 0:actual.width * res + 1L - res
++ 			no.start <- new.starts <= 0L
++ 			new.ends <- new.core + 0:actual.width*res
++ 			no.end <- new.ends > chromos[[x]]
++ 
++ 			new.ends[no.end] <- chromos[[x]]
++ 			new.starts[no.start] <- 1L
++ 			new.ranges <- GRanges(x, IRanges(new.starts, new.ends))
++ 			datax <- regionCounts(bam, new.ranges, ext=ext, param=xparam)
++ 
++ 			profile <- profile + diff(assay(datax)[,1]) / track[y]
++ 			num <- num + as.integer(!no.start[-1]) + as.integer(!no.end[-1])
 + 		}
 + 	}
 + 
 + 	# Evaluating the two methods.
-+ 	reference <- profile/num
++ 	reference <- profile/num * 2
 + 	if (length(reference)!=length(out$coverage)) { stop("vectors are of differing lengths") }
 + 	if (!identical(is.na(reference), is.na(out$coverage))) { stop("NA values are not identical") }
 + 	if (any(abs(reference - out$coverage) > (reference+1e-3)*1e-6, na.rm=TRUE)) { stop("summit profiles don't match up") }
@@ -87,40 +95,39 @@ Type 'q()' to quit R.
 > set.seed(123123)
 > nreads <- 5000
 > chromos <- c(chrA=10000, chrB=5000)
-> 
 > comp(nreads, chromos)
-[1] 0.6620276 0.6652476 0.6879066 0.6762943
+[1] 0.4858430 0.5231288 0.5384894 0.5579290
 > comp(nreads, chromos, minq=100)
-[1] 0.6741678 0.7227341 0.6577380 0.7501996
+[1] 0.4608371 0.4742164 0.5348265 0.4623773
 > comp(nreads, chromos, dedup=TRUE)
-[1] 0.7279774 0.7624093 0.6940741 0.6275799
+[1] 0.4573319 0.4969939 0.5114474 0.4977028
 > 
 > comp(nreads, chromos, ext=50)
-[1] 0.6775098 0.6869471 0.6863413 0.7091124
+[1] 0.6779713 0.7705741 0.7435018 0.7971252
 > comp(nreads, chromos, ext=200)
-[1] 0.6977756 0.6621894 0.6933661 0.6921925
+[1] 0.2873130 0.3234234 0.3346975 0.3307213
 > comp(nreads, chromos, width=100)
-[1] 0.6890742 0.6916746
+[1] 0.4949278 0.5213461
 > comp(nreads, chromos, width=500)
-[1] 0.6904740 0.6463335 0.7004013 0.6703946 0.7000139 0.6962351
+[1] 0.4962550 0.4884257 0.5434046 0.5687783 0.5547329 0.5137830
 > 
 > comp(nreads, chromos, res=20)
-[1] 0.4761905 0.4761905 0.6428571 0.4523810 0.4047619 0.4523810
+[1] 0.1922560 0.2371673 0.2262184 0.2227005 0.2505638 0.2393974
 > comp(nreads, chromos, res=20, width=100)
-[1] 0.3809524 0.5952381 0.4047619 0.4761905 0.3095238
+[1] 0.2113020 0.2402336 0.2842233 0.2699030 0.2898634
 > comp(nreads, chromos, res=100)
-[1] 0.7577181 0.7734952
+[1] 0.7838267 0.8573823
 > comp(nreads, chromos, res=100, width=500)
-[1] 0.7557137 0.7510778 0.7439727 0.7484574 0.7619980
+[1] 0.7665851 0.8481457 0.7765344 0.8207515 0.8527316
 > 
 > comp(nreads, chromos, res=20, min.depth=10)
-[1] 0.5228859 0.5104894 0.5116186 0.4868681 0.5468733 0.5627702
+[1] 0.2068337 0.2360644 0.2257977 0.2489543 0.2825685 0.2394976
 > comp(nreads, chromos, res=100, min.depth=50)
-[1] 0.8012396 0.8204691
+[1] 0.7601753 0.8552511
 > comp(nreads, chromos, min.depth=10)
-[1] 0.6548663 0.7093647 0.7145011 0.6723312
+[1] 0.4975792 0.5127012 0.5408465 0.5424041
 > comp(nreads, chromos, min.depth=50)
-[1] NaN NaN NaN NaN
+[1] 0.4797891 0.5474364 0.5657675 0.5155575
 > 
 > ############################################################
 > # Cleaning up.
@@ -131,4 +138,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 10.955   0.180  11.151 
+ 47.326   0.314  47.780 

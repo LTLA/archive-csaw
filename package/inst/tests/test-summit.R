@@ -22,15 +22,16 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, min.depth=20, minq
 	actual.width <- as.integer(width/res)
 	min.depth <- as.integer(min.depth)
 	profile <- num <- numeric(actual.width)
-	
-	for (x in names(chromos)) { 
-		recall <- extractReads(cur.region=GRanges(x, IRanges(1, chromos[[x]])),
-			bam.file=bam, param=xparam)
-		recall <- suppressWarnings(resize(recall, width=ext))
-		new.pos <- as.integer((start(recall) + end(recall) + 1)/2)
+
+	data <- windowCounts(bam, param=xparam, ext=ext, width=res, spacing=res)
+	for (x in names(chromos)) {
+		nbins <- ceiling(chromos[[x]]/res)
+		track <- integer(nbins)
+		current <- as.logical(seqnames(rowData(data))==x)
+		track[(start(rowData(data))[current] - 1L)/res + 1L] <- assay(data)[current,]
 
 		# Identifying the local maxima.
-		track <- tabulate(as.integer((new.pos-1L)/res) + 1L, nbins=ceiling(chromos[[x]]/res))
+		all.max <- list()
 		for (y in 1:length(track)) {
 			if (track[y]<min.depth) { next }
 
@@ -39,23 +40,30 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, min.depth=20, minq
 			cur.track <- track[lower:upper]
 
 			if (sum(cur.track>=track[y])==1L) {
-				up.add <- upper-y
-				if (up.add!=0L) { 
-					profile[1:up.add] <- profile[1:up.add] + track[(y+1):upper]/track[y]
-					num[1:up.add] <- num[1:up.add] + 1
-				} 
-
-				down.add <- y-lower
-				if (down.add!=0L) {
-					profile[1:down.add] <- profile[1:down.add] + track[(y-1):lower]/track[y]
-					num[1:down.add] <- num[1:down.add] + 1
-				}
+				all.max[[length(all.max)+1L]] <- y
 			}
+		}
+
+		# Expanding windows and evaluating.
+		for (y in all.max) {
+			new.core <- y*res
+			new.starts <- new.core - 0:actual.width * res + 1L - res
+			no.start <- new.starts <= 0L
+			new.ends <- new.core + 0:actual.width*res
+			no.end <- new.ends > chromos[[x]]
+
+			new.ends[no.end] <- chromos[[x]]
+			new.starts[no.start] <- 1L
+			new.ranges <- GRanges(x, IRanges(new.starts, new.ends))
+			datax <- regionCounts(bam, new.ranges, ext=ext, param=xparam)
+
+			profile <- profile + diff(assay(datax)[,1]) / track[y]
+			num <- num + as.integer(!no.start[-1]) + as.integer(!no.end[-1])
 		}
 	}
 
 	# Evaluating the two methods.
-	reference <- profile/num
+	reference <- profile/num * 2
 	if (length(reference)!=length(out$coverage)) { stop("vectors are of differing lengths") }
 	if (!identical(is.na(reference), is.na(out$coverage))) { stop("NA values are not identical") }
 	if (any(abs(reference - out$coverage) > (reference+1e-3)*1e-6, na.rm=TRUE)) { stop("summit profiles don't match up") }
@@ -68,7 +76,6 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, min.depth=20, minq
 set.seed(123123)
 nreads <- 5000
 chromos <- c(chrA=10000, chrB=5000)
-
 comp(nreads, chromos)
 comp(nreads, chromos, minq=100)
 comp(nreads, chromos, dedup=TRUE)
