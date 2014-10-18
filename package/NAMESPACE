@@ -5,7 +5,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 export(csawUsersGuide,
 	correlateReads, getPETSizes, profileSummit,
 	regionCounts, windowCounts,
-	normalizeCounts, 
+	normalizeCounts, apkb,
 	combineTests, getBestTest, mergeWindows,
 	detailRanges,
 	extractReads, readParam)
