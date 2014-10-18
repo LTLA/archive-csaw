@@ -26,6 +26,7 @@ A \code{\link{SummarizedExperiment}} object is returned containing one integer m
 Each entry of the matrix contains the count for each library (column) at each window (row).
 The coordinates of each window are stored as the \code{rowData}.
 The total number of reads in each library are stored as \code{totals} in the \code{colData}.
+Other read counting parameters (e.g., \code{ext}, \code{param}) are stored in the \code{exptData}.
 }
 
 \details{
