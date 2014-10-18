@@ -24,8 +24,8 @@ windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
 \value{
 A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each window (row).
-The coordinates of each window are stored as the \code{\link{rowData}}.
-The total number of reads in each library are stored as \code{totals} in the \code{\link{colData}}.
+The coordinates of each window are stored as the \code{rowData}.
+The total number of reads in each library are stored as \code{totals} in the \code{colData}.
 }
 
 \details{

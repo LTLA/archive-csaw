@@ -21,6 +21,7 @@ getBestTest(ids, tab, mode=c("PValue", "logCPM"),
 A dataframe with one row per cluster and the numeric fields \code{best}, the
 index for the best test in the cluster; \code{PValue}, the adjusted p-value for
 that test; and \code{FDR}, the q-value corresponding to the adjusted p-value.
+Cluster IDs are stored as the row names.
 }
 
 \details{
