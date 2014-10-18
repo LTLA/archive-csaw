@@ -133,7 +133,9 @@ windowCounts <- function(bam.files, spacing=50, width=1, ext=100, shift=0,
 	seqlengths(all.regions) <- extracted$chrs
 
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
-		rowData=all.regions, colData=DataFrame(totals=totals)))
+		rowData=all.regions, colData=DataFrame(totals=totals),
+		exptData=SimpleList(ext=ext, spacing=spacing, width=width, 
+			shift=shift, param=param)))
 }
 
 ########################################################

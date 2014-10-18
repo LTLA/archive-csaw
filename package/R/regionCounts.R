@@ -59,5 +59,6 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		}
 	}
 	return(SummarizedExperiment(assays=counts, 
-			rowData=regions, colData=DataFrame(totals=totals)))
+		rowData=regions, colData=DataFrame(totals=totals),
+		exptData=SimpleList(ext=ext, param=param)))
 }
