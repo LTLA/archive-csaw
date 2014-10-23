@@ -6,7 +6,7 @@
 \description{Count the number of extended reads overlapping a sliding window at spaced positions across the genome.}
 
 \usage{
-windowCounts(bam.files, spacing=50, width=1, ext=100, shift=0,
+windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 }
 

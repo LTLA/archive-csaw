@@ -1,4 +1,4 @@
-windowCounts <- function(bam.files, spacing=50, width=1, ext=100, shift=0,
+windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
