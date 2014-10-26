@@ -1,5 +1,4 @@
 #include "csaw.h"
-#include <set>
 
 #ifdef DEBUG
 #include <map>

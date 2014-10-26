@@ -1,6 +1,7 @@
 #ifndef CSAW_H
 #define CSAW_H
 
+#include <set>
 #include <stdexcept>
 #include <deque>
 #include <algorithm>
