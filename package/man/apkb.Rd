@@ -40,6 +40,10 @@ Otherwise, the use of the same prior would incorrectly result in a smaller abund
 The \code{prior.count} value can thus be considered as a prior-count-per-kilobase.
 }
 
+\value{
+A numeric vector of abundance-per-kilobase values, with one entry for each row of \code{data}.
+}
+
 \seealso{
 \code{\link{windowCounts}},
 \code{\link{regionCounts}},
