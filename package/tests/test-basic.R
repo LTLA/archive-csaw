@@ -63,7 +63,7 @@ nr <- nrow(data)
 tabled <- data.frame(logFC=rnorm(nr), logCPM=rnorm(nr), PValue=rbeta(nr, 1, 2))
 weighting <- rgamma(nr, 2, 1)
 
-mergeWindows(rowData(data), 10)
+mergeWindows(rowData(data), -1)
 mergeWindows(rowData(data), 100)
 mergeWindows(rowData(data), 100, max.width=500)
 merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
