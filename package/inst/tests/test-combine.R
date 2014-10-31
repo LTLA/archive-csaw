@@ -218,32 +218,31 @@ maxcomp <- function(tol=1000, maxd=2000, ...) {
 	stuff<-generateWindows(...)
 	combo<-mergeWindows(stuff$region, tol=tol, max.width=maxd)
 	merged.ids<-nativemerge(stuff$region, tol=tol)
-	
+
 	# Parsing the merged.ids, and splitting them.
 	gunk <- split(1:length(merged.ids), merged.ids)
 	allstarts <- start(stuff$region)
 	allends <- end(stuff$region)
 	last.id <- 1L
-	for (x in gunk) {
-		curstarts <- allstarts[x]
-		curends <- allends[x]
-		o <- order(curstarts)
-		curstarts <- curstarts[o]
-		curends <- curends[o]
 
-		last.start <- curstarts[1]
-		new.ids <- integer(length(o))
-		for (y in 1:length(o)) {
-			if (curends[y]-last.start + 1L > maxd) {
-				last.id <- last.id + 1L
-				last.start <- curstarts[y]				
-			}
-			new.ids[y] <- last.id
-		}
-		last.id <- last.id + 1L
-		new.ids[o] <- new.ids
-		merged.ids[x] <- new.ids
+	for (x in names(gunk)) {
+		ix <- as.integer(x)
+		all.dexes <- gunk[[x]]
+		curstarts <- allstarts[all.dexes]
+		curends <- allends[all.dexes]
+		
+		full.width <- max(curends)-min(curstarts)+1L
+		mult <- round(full.width/maxd)
+		subwidth <- full.width/mult
+
+		mid.dist <- (curstarts + curends)*0.5 - min(curstarts)
+		subcluster <- floor(mid.dist / subwidth)
+		new.ids <- as.integer(factor(subcluster)) 
+
+		merged.ids[all.dexes] <- last.id + new.ids - 1L
+		last.id <- last.id + max(new.ids)
 	}
+
 	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match with maximum limit") }
 	head(combo$region)
 }

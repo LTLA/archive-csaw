@@ -1,5 +1,5 @@
 
-R version 3.1.0 (2014-04-10) -- "Spring Dance"
+R version 3.1.1 (2014-07-10) -- "Sock it to Me"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -607,32 +607,31 @@ Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) :
 + 	stuff<-generateWindows(...)
 + 	combo<-mergeWindows(stuff$region, tol=tol, max.width=maxd)
 + 	merged.ids<-nativemerge(stuff$region, tol=tol)
-+ 	
++ 
 + 	# Parsing the merged.ids, and splitting them.
 + 	gunk <- split(1:length(merged.ids), merged.ids)
 + 	allstarts <- start(stuff$region)
 + 	allends <- end(stuff$region)
 + 	last.id <- 1L
-+ 	for (x in gunk) {
-+ 		curstarts <- allstarts[x]
-+ 		curends <- allends[x]
-+ 		o <- order(curstarts)
-+ 		curstarts <- curstarts[o]
-+ 		curends <- curends[o]
 + 
-+ 		last.start <- curstarts[1]
-+ 		new.ids <- integer(length(o))
-+ 		for (y in 1:length(o)) {
-+ 			if (curends[y]-last.start + 1L > maxd) {
-+ 				last.id <- last.id + 1L
-+ 				last.start <- curstarts[y]				
-+ 			}
-+ 			new.ids[y] <- last.id
-+ 		}
-+ 		last.id <- last.id + 1L
-+ 		new.ids[o] <- new.ids
-+ 		merged.ids[x] <- new.ids
++ 	for (x in names(gunk)) {
++ 		ix <- as.integer(x)
++ 		all.dexes <- gunk[[x]]
++ 		curstarts <- allstarts[all.dexes]
++ 		curends <- allends[all.dexes]
++ 		
++ 		full.width <- max(curends)-min(curstarts)+1L
++ 		mult <- round(full.width/maxd)
++ 		subwidth <- full.width/mult
++ 
++ 		mid.dist <- (curstarts + curends)*0.5 - min(curstarts)
++ 		subcluster <- floor(mid.dist / subwidth)
++ 		new.ids <- as.integer(factor(subcluster)) 
++ 
++ 		merged.ids[all.dexes] <- last.id + new.ids - 1L
++ 		last.id <- last.id + max(new.ids)
 + 	}
++ 
 + 	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match with maximum limit") }
 + 	head(combo$region)
 + }
@@ -641,12 +640,12 @@ Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) :
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  40,  539]      *
-  [2]     chrA [ 582, 1047]      *
-  [3]     chrA [1087, 1579]      *
-  [4]     chrA [1624, 2119]      *
-  [5]     chrA [2163, 2659]      *
-  [6]     chrA [2670, 3137]      *
+  [1]     chrA [  40,  508]      *
+  [2]     chrA [ 539,  999]      *
+  [3]     chrA [1047, 1505]      *
+  [4]     chrA [1549, 1997]      *
+  [5]     chrA [2025, 2475]      *
+  [6]     chrA [2497, 2962]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=10)
@@ -657,20 +656,20 @@ GRanges object with 6 ranges and 0 metadata columns:
   [2]     chrA [ 530, 1013]      *
   [3]     chrA [1023, 1487]      *
   [4]     chrA [1521, 2009]      *
-  [5]     chrA [2042, 2541]      *
-  [6]     chrA [2552, 3038]      *
+  [5]     chrA [2042, 2516]      *
+  [6]     chrA [2532, 3038]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=100)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  39,  535]      *
-  [2]     chrA [ 471,  945]      *
-  [3]     chrA [ 890, 1376]      *
-  [4]     chrA [1300, 1788]      *
-  [5]     chrA [1739, 2234]      *
-  [6]     chrA [2151, 2638]      *
+  [1]     chrA [  39,  570]      *
+  [2]     chrA [ 516, 1053]      *
+  [3]     chrA [ 986, 1533]      *
+  [4]     chrA [1459, 1998]      *
+  [5]     chrA [1947, 2525]      *
+  [6]     chrA [2452, 2995]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
@@ -678,36 +677,36 @@ GRanges object with 6 ranges and 0 metadata columns:
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  17, 1013]      *
-  [2]     chrA [1025, 2012]      *
-  [3]     chrA [2032, 3028]      *
-  [4]     chrA [3046, 4041]      *
-  [5]     chrA [4049, 5045]      *
-  [6]     chrA [5056, 5090]      *
+  [1]     chrA [  17, 1025]      *
+  [2]     chrA [1033, 2040]      *
+  [3]     chrA [2047, 3058]      *
+  [4]     chrA [3067, 4067]      *
+  [5]     chrA [4085, 5090]      *
+  [6]     chrB [   5, 1018]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=10)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   2,  994]      *
-  [2]     chrA [1003, 2000]      *
-  [3]     chrA [2007, 3005]      *
-  [4]     chrA [3012, 3998]      *
-  [5]     chrA [4005, 4988]      *
-  [6]     chrA [4999, 5214]      *
+  [1]     chrA [   2, 1045]      *
+  [2]     chrA [1053, 2082]      *
+  [3]     chrA [2092, 3133]      *
+  [4]     chrA [3132, 4174]      *
+  [5]     chrA [4176, 5214]      *
+  [6]     chrB [   8,  983]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=100)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  12, 1010]      *
-  [2]     chrA [ 929, 1917]      *
-  [3]     chrA [1836, 2824]      *
-  [4]     chrA [2742, 3741]      *
-  [5]     chrA [3644, 4642]      *
-  [6]     chrA [4545, 5389]      *
+  [1]     chrA [  12, 1129]      *
+  [2]     chrA [1044, 2211]      *
+  [3]     chrA [2127, 3283]      *
+  [4]     chrA [3197, 4361]      *
+  [5]     chrA [4276, 5389]      *
+  [6]     chrB [  37, 1055]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
@@ -727,24 +726,24 @@ GRanges object with 6 ranges and 0 metadata columns:
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  14,  513]      *
-  [2]     chrA [ 518, 1014]      *
-  [3]     chrA [1015, 1506]      *
-  [4]     chrA [1512, 2008]      *
-  [5]     chrA [2017, 2508]      *
-  [6]     chrA [2514, 3013]      *
+  [1]     chrA [  14,  493]      *
+  [2]     chrA [ 499,  971]      *
+  [3]     chrA [ 979, 1467]      *
+  [4]     chrA [1465, 1949]      *
+  [5]     chrA [1960, 2438]      *
+  [6]     chrA [2442, 2906]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(1000, maxd=500, chrs=chrs, nwin=600, winsize=10)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   8,  504]      *
-  [2]     chrA [ 501,  992]      *
-  [3]     chrA [ 992, 1491]      *
-  [4]     chrA [1487, 1983]      *
-  [5]     chrA [1978, 2469]      *
-  [6]     chrA [2472, 2969]      *
+  [1]     chrA [   8,  515]      *
+  [2]     chrA [ 520, 1014]      *
+  [3]     chrA [1020, 1533]      *
+  [4]     chrA [1530, 2042]      *
+  [5]     chrA [2041, 2547]      *
+  [6]     chrA [2553, 3058]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
@@ -752,36 +751,36 @@ GRanges object with 6 ranges and 0 metadata columns:
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  35, 2014]      *
-  [2]     chrA [2043, 4036]      *
-  [3]     chrA [4058, 5309]      *
-  [4]     chrB [  17, 1997]      *
-  [5]     chrB [2032, 4012]      *
-  [6]     chrB [4032, 6012]      *
+  [1]     chrA [  35, 1796]      *
+  [2]     chrA [1834, 3510]      *
+  [3]     chrA [3550, 5309]      *
+  [4]     chrB [  17, 1936]      *
+  [5]     chrB [1988, 3848]      *
+  [6]     chrB [3904, 5744]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(1000, maxd=2000, chrs=chrs, nwin=500, winsize=10)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  14, 2008]      *
-  [2]     chrA [2012, 3999]      *
-  [3]     chrA [4003, 5030]      *
-  [4]     chrB [  35, 2030]      *
-  [5]     chrB [2042, 4021]      *
-  [6]     chrB [4036, 6020]      *
+  [1]     chrA [  14, 1684]      *
+  [2]     chrA [1693, 3360]      *
+  [3]     chrA [3356, 5030]      *
+  [4]     chrB [  35, 2051]      *
+  [5]     chrB [2069, 4075]      *
+  [6]     chrB [4082, 6094]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(1000, maxd=2000, chrs=chrs, nwin=600, winsize=10)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames       ranges strand
          <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   1, 1996]      *
-  [2]     chrA [2001, 3996]      *
-  [3]     chrA [3993, 4959]      *
-  [4]     chrB [  26, 2012]      *
-  [5]     chrB [2021, 4001]      *
-  [6]     chrB [4018, 6002]      *
+  [1]     chrA [   1, 2476]      *
+  [2]     chrA [2482, 4959]      *
+  [3]     chrB [  26, 2086]      *
+  [4]     chrB [2097, 4157]      *
+  [5]     chrB [4171, 6237]      *
+  [6]     chrB [6236, 8307]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
@@ -790,4 +789,4 @@ GRanges object with 6 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 14.783   0.162  14.994 
+ 14.790   0.125  14.938 
