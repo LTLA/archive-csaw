@@ -3,12 +3,14 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 
 #  All functions exported, arranged by sequence of usage.
 export(csawUsersGuide,
+	readParam,
 	correlateReads, getPETSizes, profileSummit,
 	regionCounts, windowCounts,
-	normalizeCounts, apkb,
+	getWidths,
+	normalizeCounts, scaledAverage,
 	combineTests, getBestTest, mergeWindows,
 	detailRanges,
-	extractReads, readParam)
+	extractReads)
 
 #  Importing required packages
 import(GenomicRanges, Rsamtools,
