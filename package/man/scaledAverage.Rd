@@ -30,10 +30,11 @@ Note that the adjustment for width assumes that reads are uniformly distributed 
 This is reasonable for most background regions, but may not be for enriched regions.
 When the distribution is highly heterogeneous, the downscaled abundance of a large region will not be an accurate representation of the abundance of the smaller regions nested within.
 
-% It's advisable to set scale=1 for the larger region, and make it <1 for the smaller region.
-% This avoids cases where you get massive added priors for very large regions, which distorts the data.
-% You'll end up getting very small priors for the smaller regions, but that's okay, because you'll be using the larger region as the denominator for most fold-change calculations.
-% A small prior in the numerator won't be problematic.
+% It's advisable to set scale>1 for the larger region, and make it equal to 1 for the smaller region.
+% This means that a non-tiny prior will actually be added.
+% While you will get massive priors for the larger region, keep in mind that this is scaled down again.
+% So, if you interpret it from the POV of the abundances after scaling, the added prior is just prior.count.
+% You need this to avoid getting crazy fold changes in the comparisons.
 
 For consistency, the \code{prior.count} is set to the default value of \code{\link{aveLogCPM.DGEList}}, if it is not otherwise specified.
 If a non-default value is used, make sure that it is the same for all calls to \code{scaledAverage}.
@@ -60,20 +61,20 @@ data1 <- windowCounts(bamFiles, width=size1, filter=1)
 size2 <- 500
 data2 <- windowCounts(bamFiles, width=size2, filter=1)
 
-# Adjusting by `scale`, based on sizes.
-relative <- median(getWidths(data1))/median(getWidths(data2))
-head(scaledAverage(asDGEList(data1), scale=relative))
-head(scaledAverage(asDGEList(data2), scale=1))
+# Adjusting by `scale`, based on median sizes.
+head(scaledAverage(asDGEList(data1)))
+relative <- median(getWidths(data2))/median(getWidths(data1))
+head(scaledAverage(asDGEList(data2), scale=relative))
 
 # Need to make sure the same prior is used, if non-default.
 pc <- 5
-scaledAverage(asDGEList(data1), prior.count=pc)
-scaledAverage(asDGEList(data2), scale=relative, prior.count=pc)
+head(scaledAverage(asDGEList(data1), prior.count=pc))
+head(scaledAverage(asDGEList(data2), scale=relative, prior.count=pc))
 
 # Different way to compute sizes, for 1-to-1 relations.
 data3 <- regionCounts(bamFiles, filter=1,
     regions=resize(rowData(data1), fix="center", width=size2))
+head(scaledAverage(asDGEList(data1)))
 relative.2 <- getWidths(data1)/getWidths(data2)
-head(scaledAverage(asDGEList(data1), scale=relative.2))
-head(scaledAverage(asDGEList(data3), scale=1))
+head(scaledAverage(asDGEList(data3), scale=relative.2))
 }
