@@ -7,6 +7,7 @@ scaledAverage <- function(y, scale=1, prior.count=NULL, ...)
 # written by Aaron Lun
 # 5 November 2014
 {
+	if (any(scale <= 0)) { stop("scaling factor should be positive") }
 	if (is.null(prior.count)) { prior.count <- formals(aveLogCPM.DGEList)$prior.count }
 	aveLogCPM(y, prior.count=scale*prior.count, ...) - log2(scale)
 }
