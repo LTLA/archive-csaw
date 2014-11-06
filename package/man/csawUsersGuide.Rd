@@ -40,7 +40,7 @@ also be accessed from the `Vignettes' drop-down menu in the R GUI.
 # To get the location:
 csawUsersGuide(view=FALSE)
 # To open in pdf viewer:
-\dontrun{csawRUsersGuide()}
+\dontrun{csawUsersGuide()}
 }
 
 \keyword{documentation}
