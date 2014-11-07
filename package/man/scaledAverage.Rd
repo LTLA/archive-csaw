@@ -72,8 +72,8 @@ head(scaledAverage(asDGEList(data1), prior.count=pc))
 head(scaledAverage(asDGEList(data2), scale=relative, prior.count=pc))
 
 # Different way to compute sizes, for 1-to-1 relations.
-data3 <- regionCounts(bamFiles, filter=1,
-    regions=resize(rowData(data1), fix="center", width=size2))
+data3 <- regionCounts(bamFiles, regions=resize(rowData(data1),   
+    fix="center", width=size2))
 head(scaledAverage(asDGEList(data1)))
 relative.2 <- getWidths(data1)/getWidths(data2)
 head(scaledAverage(asDGEList(data3), scale=relative.2))
