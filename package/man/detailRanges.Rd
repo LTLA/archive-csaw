@@ -91,14 +91,8 @@ require(org.Mm.eg.db)
 require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, 
-    org.Mm.eg.db)
-head(output$overlap)
-head(output$right)
-head(output$left)
-
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, 
-    org.Mm.eg.db, promoter=c(2000, 1000))
+output <- detailRanges(current, orgdb=org.Mm.eg.db,
+    txdb=TxDb.Mmusculus.UCSC.mm10.knownGene) 
 head(output$overlap)
 head(output$right)
 head(output$left)
