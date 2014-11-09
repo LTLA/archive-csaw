@@ -77,3 +77,20 @@ makeDiscard <- function(ndisc, sizeof, chromos) {
 
 ###################################################################################################
 
+generateWindows <- function(chrs, nwin, winsize) {
+	allregs<-GRanges()
+	for (x in names(chrs)) {
+		max.step<-floor(chrs[[x]]/nwin)
+		stopifnot(max.step >= 1)
+		pos<-cumsum(round(runif(nwin, 1, max.step)))
+		suppressWarnings(allregs<-c(allregs, GRanges(x, IRanges(pos, 
+			pmin(chrs[[x]], pos+winsize-1L)))))
+	}
+	total.n<-nwin*length(chrs)
+	tab<-data.frame(logFC=runif(total.n, -1, 1), logCPM=runif(total.n, -2, 1),
+		PValue=rbeta(total.n, 1, 10))
+	return(list(region=allregs, table=tab))
+}
+
+###################################################################################################
+
