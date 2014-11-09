@@ -5,27 +5,27 @@
 \description{Find the local maxima for a given set of genomic regions.}
 
 \usage{
-findMaxima(data, range, metric=NULL)
+findMaxima(regions, range, metric)
 }
 
 \arguments{
-\item{data}{a \code{SummarizedExperiment} object, produced by \code{\link{windowCounts}}}
+\item{regions}{a \code{GRanges} object}
 \item{range}{an integer scalar specifying the range of surrounding regions to consider as local}
 \item{metric}{a numeric vector of values for which the local maxima is found, defaults to the average count}
 }
 
 \details{
-For each region in \code{data}, this function will examine all regions within \code{range} on either side.
+For each region in \code{regions}, this function will examine all regions within \code{range} on either side.
 It will then determine if the current region has the maximum value of \code{metric} across this range.
-By default, \code{metric} is set to the average abundance (as computed by \code{\link{aveLogCPM}}) if not otherwise specified.
+A typical metric to maximize might be the sum of counts or the average abundance across all libraries.
 
-Preferably, \code{data} should be constructed using regularly sized and spaced windows or bins, e.g., from \code{\link{windowCounts}}.
+Preferably, \code{regions} should contain regularly sized and spaced windows or bins, e.g., from \code{\link{windowCounts}}.
 The sensibility of using this function for arbitrary regions is left to the user.
-The algorithm will not support nested regions and will fail correspondingly if any are detected.
+In particular, the algorithm will not support nested regions and will fail correspondingly if any are detected.
 }
 
 \value{
-A logical vector indicating whether each region in \code{data} is a local maxima.
+A logical vector indicating whether each region in \code{regions} is a local maxima.
 }
 
 \seealso{
@@ -40,11 +40,13 @@ Aaron Lun
 \examples{
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, filter=1)
-findMaxima(data, range=10)
-findMaxima(data, range=50)
-findMaxima(data, range=100)
+regions <- rowData(data)
+metric <- aveLogCPM(asDGEList(data))
+findMaxima(regions, range=10, metric=metric)
+findMaxima(regions, range=50, metric=metric)
+findMaxima(regions, range=100, metric=metric)
 
-findMaxima(data, range=10, metric=runif(nrow(data)))
-findMaxima(data, range=50, metric=runif(nrow(data)))
-findMaxima(data, range=100, metric=runif(nrow(data)))
+findMaxima(regions, range=10, metric=runif(nrow(regions)))
+findMaxima(regions, range=50, metric=runif(nrow(regions)))
+findMaxima(regions, range=100, metric=runif(nrow(regions)))
 }

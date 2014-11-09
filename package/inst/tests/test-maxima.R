@@ -5,13 +5,11 @@ source("simsam.R")
 
 comp <- function(nregs, chromos, winsize, range) {
 	reg.data <- generateWindows(chromos, nregs, winsize)
-	reg.data$region <- reg.data$region[sample(nregs)]
+	reg.data$region <- reg.data$region[sample(length(reg.data$region))]
 	metric <- reg.data$table$logCPM
 
 	# Getting max.
-	obj <- SummarizedExperiment(matrix(0L, nregs, 1), rowData=reg.data$region,
-		colData=DataFrame(row.names="A", whee=1))
-	is.max <- findMaxima(obj, range=range, metric=metric)
+	is.max <- findMaxima(reg.data$region, range=range, metric=metric)
 
 	# Finding our own maxima.
 	for (x in 1:length(nregs)) {

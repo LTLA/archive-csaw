@@ -1,4 +1,4 @@
-findMaxima <- function(data, range, metric=NULL)
+findMaxima <- function(regions, range, metric)
 # This function finds the maximum window in 'data', given a range
 # around which the maxima is to be considered. The 'metric' is,
 # by default, the average count, but others can be used if supplied.
@@ -6,13 +6,12 @@ findMaxima <- function(data, range, metric=NULL)
 # written by Aaron Lun
 # Created 9 November 2014.
 {
-	regions <- rowData(data)
 	chrs <- as.integer(seqnames(regions))
 	starts <- start(regions)
 	ends <- end(regions)
 	o <- order(chrs, starts, ends)
 
-	if (is.null(metric)) { metric <- aveLogCPM(asDGEList(data)) }
+	if (length(metric)!=length(regions)) { stop("one metric must be supplied per region") }
 	if (!is.double(metric)) { metric <- as.double(metric) }
 	stopifnot(!any(is.na(metric)))
 	if (!is.integer(range)) { range <- as.integer(range) }
