@@ -78,3 +78,5 @@ head(scaledAverage(asDGEList(data1)))
 relative.2 <- getWidths(data1)/getWidths(data2)
 head(scaledAverage(asDGEList(data3), scale=relative.2))
 }
+
+\keyword{filtering}

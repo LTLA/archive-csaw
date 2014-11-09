@@ -50,3 +50,5 @@ findMaxima(regions, range=10, metric=runif(nrow(regions)))
 findMaxima(regions, range=50, metric=runif(nrow(regions)))
 findMaxima(regions, range=100, metric=runif(nrow(regions)))
 }
+
+\keyword{filtering}

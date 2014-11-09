@@ -50,3 +50,5 @@ bamFile <- system.file("exdata", "pet.bam", package="csaw")
 data <- windowCounts(bamFile, param=readParam(pet="both"), filter=1)
 getWidths(data, pet.len=200)
 }
+
+\keyword{filtering}
