@@ -1,0 +1,125 @@
+
+R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This script tests the ability to identify local maxima from arbitary regions.
+> 
+> require(csaw)
+Loading required package: csaw
+Loading required package: GenomicRanges
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
+    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist, unsplit
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Warning message:
+replacing previous import by ‘AnnotationDbi::species’ when loading ‘csaw’ 
+> source("simsam.R")
+> 
+> comp <- function(nregs, chromos, winsize, range) {
++ 	reg.data <- generateWindows(chromos, nregs, winsize)
++ 	reg.data$region <- reg.data$region[sample(nregs)]
++ 	metric <- reg.data$table$logCPM
++ 
++ 	# Getting max.
++ 	obj <- SummarizedExperiment(matrix(0L, nregs, 1), rowData=reg.data$region,
++ 		colData=DataFrame(row.names="A", whee=1))
++ 	is.max <- findMaxima(obj, range=range, metric=metric)
++ 
++ 	# Finding our own maxima.
++ 	for (x in 1:length(nregs)) {
++ 		new.reg <- reg.data$region[x]
++ 		start(new.reg) <- start(new.reg) - range
++ 		end(new.reg) <- end(new.reg) + range
++ 		all.lap <- overlapsAny(reg.data$region, new.reg)
++ 		
++ 		check.max <- (metric[x] >= max(metric[all.lap]))
++ 		if (!identical(check.max, is.max[x])) { stop("mismatch in max truths") }
++ 	}
++ 
++ 	return(sum(is.max))
++ }
+> 
+> #######################################################################################
+> 
+> set.seed(2394234)
+> comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=50)
+[1] 4
+> comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=100)
+[1] 3
+> comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=200)
+[1] 2
+> comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=500)
+[1] 1
+> 
+> comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=50)
+[1] 3
+> comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=100)
+[1] 2
+> comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=200)
+[1] 2
+> comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=500)
+[1] 1
+> 
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=50)
+[1] 38
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=100)
+[1] 23
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=200)
+[1] 11
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=500)
+[1] 6
+> 
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=50)
+[1] 18
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=100)
+[1] 16
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=200)
+[1] 10
+> comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=500)
+[1] 6
+> 
+> #######################################################################################
+> 
+> 
+> proc.time()
+   user  system elapsed 
+ 10.137   0.134  10.275 
