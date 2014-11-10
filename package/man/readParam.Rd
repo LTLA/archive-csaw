@@ -46,6 +46,10 @@ Each read will then be processed on its own merits.
 The other settings for \code{pet} and the values of \code{max.frag} and \code{rescue.pairs} describe the treatment of paired-end data; see below for more information.
 }
 
+% I don't put 'ext' in here, because it's conceivable that you'd want to try
+% different extension lengths, e.g., with and without binning, or if the
+% specified regions from peak-calling already include the fragment length.
+
 \section{Additional advice for paired-end data}{
 Reads are first extracted in a single-end manner, using the parameters described above, e.g., \code{discard}, \code{minq}, \code{dedup}.
 For \code{pet="both"}, the extracted reads are grouped into proper pairs.
