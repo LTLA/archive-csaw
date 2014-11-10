@@ -52,7 +52,7 @@ try{
 		while (ptr!=terminal_s) { 
 			dist = *ptr - curend - 1;
 			if (dist >= maxrange) { break; }
-			optr[dist] += 1/wptr[osptr[ptr-rsptr]];
+			optr[dist] += wptr[osptr[ptr-rsptr]];
 			++ptr;
 		}
 
@@ -70,7 +70,7 @@ try{
 		while (end_rank >= 0) {
 			dist = curstart - reptr[end_rank] - 1;
 			if (dist >= maxrange) { break; }
-			optr[dist] += 1/wptr[oeptr[end_rank]];
+			optr[dist] += wptr[oeptr[end_rank]];
 			--end_rank;
 		}
 	}

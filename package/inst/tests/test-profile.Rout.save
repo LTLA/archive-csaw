@@ -43,7 +43,7 @@ Type 'q()' to quit R.
 + 	} else {
 + 		metric <- rep(1, nwin)
 + 	}
-+ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=metric)
++ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
 + 
 + 	# Running the reference analysis.
 + 	totally <- list()
@@ -116,4 +116,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 19.082   0.184  19.302 
+ 20.241   0.151  20.438 

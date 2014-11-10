@@ -24,7 +24,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=metric)
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
 
 	# Running the reference analysis.
 	totally <- list()
