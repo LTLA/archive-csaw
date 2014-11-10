@@ -16,9 +16,11 @@ export(csawUsersGuide,
 import(GenomicRanges, Rsamtools,
 	S4Vectors, IRanges, GenomeInfoDb,
 	edgeR, limma,
-	GenomicFeatures, AnnotationDbi,
-	GenomicAlignments,
 	methods)
+
+importFrom("GenomicAlignments", cigarWidthAlongReferenceSpace)
+importFrom("GenomicFeatures", exonsBy)
+importFrom("AnnotationDbi", select)
 
 #  Exporting classes and methods
 exportClasses(

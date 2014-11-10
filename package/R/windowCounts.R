@@ -165,7 +165,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
 	if (!is.null(discard)) {
-		awidth <- GenomicAlignments::cigarWidthAlongReferenceSpace(reads$cigar)
+		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
 		keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), discard, type="within")
 		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 		if (!"cigar" %in% extras) { reads$cigar <- NULL }
