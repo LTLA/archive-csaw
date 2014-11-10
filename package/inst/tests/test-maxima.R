@@ -1,6 +1,6 @@
 # This script tests the ability to identify local maxima from arbitary regions.
 
-require(csaw)
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 source("simsam.R")
 
 comp <- function(nregs, chromos, winsize, range) {

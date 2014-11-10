@@ -19,39 +19,7 @@ Type 'q()' to quit R.
 
 > # This script tests the ability to identify local maxima from arbitary regions.
 > 
-> require(csaw)
-Loading required package: csaw
-Loading required package: GenomicRanges
-Loading required package: BiocGenerics
-Loading required package: parallel
-
-Attaching package: ‘BiocGenerics’
-
-The following objects are masked from ‘package:parallel’:
-
-    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
-    clusterExport, clusterMap, parApply, parCapply, parLapply,
-    parLapplyLB, parRapply, parSapply, parSapplyLB
-
-The following object is masked from ‘package:stats’:
-
-    xtabs
-
-The following objects are masked from ‘package:base’:
-
-    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
-    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
-    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
-    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
-    rownames, sapply, setdiff, sort, table, tapply, union, unique,
-    unlist, unsplit
-
-Loading required package: S4Vectors
-Loading required package: stats4
-Loading required package: IRanges
-Loading required package: GenomeInfoDb
-Warning message:
-replacing previous import by ‘AnnotationDbi::species’ when loading ‘csaw’ 
+> suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > source("simsam.R")
 > 
 > comp <- function(nregs, chromos, winsize, range) {
@@ -120,4 +88,4 @@ replacing previous import by ‘AnnotationDbi::species’ when loading ‘csaw�
 > 
 > proc.time()
    user  system elapsed 
-  9.717   0.156   9.892 
+  9.536   0.117   9.677 
