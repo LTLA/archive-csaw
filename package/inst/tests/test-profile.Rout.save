@@ -18,11 +18,11 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > ############################################################
-> # This tests the profileSummit command, to ensure that it's actually giving proper advice.
+> # This tests the profileSites command, to ensure that it's actually giving proper advice.
 > 
 > source("simsam.R")
 > 
-> sdir<-"summit-test"
+> sdir<-"profile-test"
 > dir.create(sdir)
 > outfname <- file.path(sdir, "out")
 > 
@@ -63,7 +63,7 @@ Type 'q()' to quit R.
 + 	# Evaluating the two methods.
 + 	reference <- totes.prof/nwin/2
 + 	if (length(reference)!=length(observed)) { stop("vectors are of differing lengths") }
-+ 	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("summit profiles don't match up") }
++ 	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("coverage profiles don't match up") }
 + 	return(head(observed))
 + }
 > 
@@ -116,4 +116,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 18.107   0.174  18.335 
+ 19.082   0.184  19.302 

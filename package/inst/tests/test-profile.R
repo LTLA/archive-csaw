@@ -1,9 +1,9 @@
 ############################################################
-# This tests the profileSummit command, to ensure that it's actually giving proper advice.
+# This tests the profileSites command, to ensure that it's actually giving proper advice.
 
 source("simsam.R")
 
-sdir<-"summit-test"
+sdir<-"profile-test"
 dir.create(sdir)
 outfname <- file.path(sdir, "out")
 
@@ -44,7 +44,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	# Evaluating the two methods.
 	reference <- totes.prof/nwin/2
 	if (length(reference)!=length(observed)) { stop("vectors are of differing lengths") }
-	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("summit profiles don't match up") }
+	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("coverage profiles don't match up") }
 	return(head(observed))
 }
 
