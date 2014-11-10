@@ -41,14 +41,14 @@ Aaron Lun
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, filter=1)
 regions <- rowData(data)
-metric <- aveLogCPM(asDGEList(data))
+metric <- edgeR::aveLogCPM(asDGEList(data))
 findMaxima(regions, range=10, metric=metric)
 findMaxima(regions, range=50, metric=metric)
 findMaxima(regions, range=100, metric=metric)
 
-findMaxima(regions, range=10, metric=runif(nrow(regions)))
-findMaxima(regions, range=50, metric=runif(nrow(regions)))
-findMaxima(regions, range=100, metric=runif(nrow(regions)))
+findMaxima(regions, range=10, metric=runif(length(regions)))
+findMaxima(regions, range=50, metric=runif(length(regions)))
+findMaxima(regions, range=100, metric=runif(length(regions)))
 }
 
 \keyword{filtering}
