@@ -28,65 +28,43 @@ Type 'q()' to quit R.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> comp <- function(nreads, chromos, ext=100, width=200, res=50, min.depth=20, minq=NA, dedup=FALSE) { 
+> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE) { 
 + 	# Simulating first.
 + 	bam <- regen(nreads, chromos, outfname)
++ 	win.data <- generateWindows(chrs=chromos, winsize=res, nwin=20)
++ 	windows <- win.data$region
++ 	nwin <- length(windows)
 + 
-+ 	# Running the profileSummits.
++ 	# Running profileSites.
 + 	xparam <- readParam(minq=minq, dedup=dedup)
-+ 	out <- profileSummit(bam, ext=ext, width=width, res=res, min.depth=min.depth/res, param=xparam)
++ 	if (weight) {
++ 		by.win <- regionCounts(bam, windows, ext=ext, param=xparam)
++ 		metric <- rowSums(assay(by.win))
++ 	} else {
++ 		metric <- rep(1, nwin)
++ 	}
++ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=metric)
 + 
 + 	# Running the reference analysis.
-+ 	res <- as.integer(res)
-+ 	actual.width <- as.integer(width/res)
-+ 	min.depth <- as.integer(min.depth)
-+ 	profile <- num <- numeric(actual.width)
-+ 
-+ 	data <- windowCounts(bam, param=xparam, ext=ext, width=res, spacing=res)
-+ 	for (x in names(chromos)) {
-+ 		nbins <- ceiling(chromos[[x]]/res)
-+ 		track <- integer(nbins)
-+ 		current <- as.logical(seqnames(rowData(data))==x)
-+ 		track[(start(rowData(data))[current] - 1L)/res + 1L] <- assay(data)[current,]
-+ 
-+ 		# Identifying the local maxima.
-+ 		all.max <- list()
-+ 		for (y in 1:length(track)) {
-+ 			if (track[y]<min.depth) { next }
-+ 
-+ 			lower <- max(1L, y-actual.width)
-+ 			upper <- min(y+actual.width, length(track))
-+ 			cur.track <- track[lower:upper]
-+ 
-+ 			if (sum(cur.track>=track[y])==1L) {
-+ 				all.max[[length(all.max)+1L]] <- y
-+ 			}
-+ 		}
-+ 
-+ 		# Expanding windows and evaluating.
-+ 		for (y in all.max) {
-+ 			new.core <- y*res
-+ 			new.starts <- new.core - 0:actual.width * res + 1L - res
-+ 			no.start <- new.starts <= 0L
-+ 			new.ends <- new.core + 0:actual.width*res
-+ 			no.end <- new.ends > chromos[[x]]
-+ 
-+ 			new.ends[no.end] <- chromos[[x]]
-+ 			new.starts[no.start] <- 1L
-+ 			new.ranges <- GRanges(x, IRanges(new.starts, new.ends))
-+ 			datax <- regionCounts(bam, new.ranges, ext=ext, param=xparam)
-+ 
-+ 			profile <- profile + diff(assay(datax)[,1]) / track[y]
-+ 			num <- num + as.integer(!no.start[-1]) + as.integer(!no.end[-1])
-+ 		}
++ 	totally <- list()
++ 	for (chr in names(chromos)) {
++ 		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam)
++ 		totally[[chr]] <- suppressWarnings(resize(out, width=ext))
++ 	} 
++ 	totes.prof <- 0
++ 	for (x in 1:nwin) {
++ 		curwin <- windows[x]
++ 		all.reads <- totally[[as.character(seqnames(curwin))]]
++ 		dist.back <- start(all.reads) - end(curwin)
++ 		dist.front <- start(curwin) - end(all.reads)
++ 		totes.prof <- totes.prof + (tabulate(dist.back, nbin=width) + tabulate(dist.front, nbin=width))/metric[x]
 + 	}
 + 
 + 	# Evaluating the two methods.
-+ 	reference <- profile/num * 2
-+ 	if (length(reference)!=length(out$coverage)) { stop("vectors are of differing lengths") }
-+ 	if (!identical(is.na(reference), is.na(out$coverage))) { stop("NA values are not identical") }
-+ 	if (any(abs(reference - out$coverage) > (reference+1e-3)*1e-6, na.rm=TRUE)) { stop("summit profiles don't match up") }
-+ 	return(head(out$coverage))
++ 	reference <- totes.prof/nwin/2
++ 	if (length(reference)!=length(observed)) { stop("vectors are of differing lengths") }
++ 	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("summit profiles don't match up") }
++ 	return(head(observed))
 + }
 > 
 > ############################################################
@@ -96,38 +74,38 @@ Type 'q()' to quit R.
 > nreads <- 5000
 > chromos <- c(chrA=10000, chrB=5000)
 > comp(nreads, chromos)
-[1] 0.4858430 0.5231288 0.5384894 0.5579290
+[1] 0.005909831 0.010478646 0.008146176 0.006816865 0.006026170 0.006775294
 > comp(nreads, chromos, minq=100)
-[1] 0.4608371 0.4742164 0.5348265 0.4623773
+[1] 0.005461853 0.004723068 0.008829185 0.008055782 0.007775885 0.007506467
 > comp(nreads, chromos, dedup=TRUE)
-[1] 0.4573319 0.4969939 0.5114474 0.4977028
+[1] 0.006007977 0.009314962 0.008076691 0.007444186 0.006662113 0.003800911
 > 
 > comp(nreads, chromos, ext=50)
-[1] 0.6779713 0.7705741 0.7435018 0.7971252
+[1] 0.013046071 0.008899633 0.012985819 0.008752288 0.009921970 0.012375635
 > comp(nreads, chromos, ext=200)
-[1] 0.2873130 0.3234234 0.3346975 0.3307213
+[1] 0.004634274 0.004020004 0.003321206 0.003110115 0.004988791 0.004362438
 > comp(nreads, chromos, width=100)
-[1] 0.4949278 0.5213461
+[1] 0.008431367 0.007476433 0.008331271 0.007296050 0.005954891 0.011521462
 > comp(nreads, chromos, width=500)
-[1] 0.4962550 0.4884257 0.5434046 0.5687783 0.5547329 0.5137830
+[1] 0.006677101 0.004388466 0.006949152 0.005817934 0.006889918 0.006296864
 > 
 > comp(nreads, chromos, res=20)
-[1] 0.1922560 0.2371673 0.2262184 0.2227005 0.2505638 0.2393974
+[1] 0.009082736 0.008899174 0.007821430 0.007689056 0.006661635 0.009443421
 > comp(nreads, chromos, res=20, width=100)
-[1] 0.2113020 0.2402336 0.2842233 0.2699030 0.2898634
+[1] 0.010155074 0.009923813 0.008456297 0.007912799 0.010275517 0.010135788
 > comp(nreads, chromos, res=100)
-[1] 0.7838267 0.8573823
+[1] 0.005347887 0.004451068 0.007752424 0.004202977 0.006595615 0.004840423
 > comp(nreads, chromos, res=100, width=500)
-[1] 0.7665851 0.8481457 0.7765344 0.8207515 0.8527316
+[1] 0.006116413 0.003832466 0.004283825 0.004346437 0.003156520 0.005176635
 > 
-> comp(nreads, chromos, res=20, min.depth=10)
-[1] 0.2068337 0.2360644 0.2257977 0.2489543 0.2825685 0.2394976
-> comp(nreads, chromos, res=100, min.depth=50)
-[1] 0.7601753 0.8552511
-> comp(nreads, chromos, min.depth=10)
-[1] 0.4975792 0.5127012 0.5408465 0.5424041
-> comp(nreads, chromos, min.depth=50)
-[1] 0.4797891 0.5474364 0.5657675 0.5155575
+> comp(nreads, chromos, res=20, weight=FALSE)
+[1] 0.4500 0.4250 0.3250 0.3125 0.3500 0.4000
+> comp(nreads, chromos, res=100, weight=FALSE)
+[1] 0.3500 0.2875 0.4250 0.3750 0.3875 0.4000
+> comp(nreads, chromos, weight=FALSE)
+[1] 0.3500 0.4625 0.3250 0.3375 0.4625 0.4625
+> comp(nreads, chromos, weight=FALSE)
+[1] 0.4000 0.2875 0.3625 0.3500 0.3750 0.2125
 > 
 > ############################################################
 > # Cleaning up.
@@ -138,4 +116,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 47.326   0.314  47.780 
+ 18.107   0.174  18.335 

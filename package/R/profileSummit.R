@@ -84,8 +84,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 		total.profile <- total.profile + cur.profile
     }
 
-	# Cleaning up and returning the profiles. We multiply by 2 to get the span, as 
-	# we need to consider both sides of the summit. We multiply by 2 to get the coverage,
-	# as total.freq counts both sides of each summit (and is twice as large as it should be).
-    return(total.profile/length(regions))
+	# Cleaning up and returning the profiles. We divide by 2 to get the coverage,
+	# as total.profile counts both sides of each summit (and is twice as large as it should be).
+    return(total.profile/length(regions)/2)
 }

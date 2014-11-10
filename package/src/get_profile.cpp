@@ -47,7 +47,6 @@ try{
 	for (int frag=0; frag<nfrags; ++frag) {
 
 		// Getting all regions starting after the fragment.
-		Rprintf("Aggregating start:\n");
 		const int& curend=feptr[frag];
 		ptr_copy=ptr=std::upper_bound(rsptr, terminal_s, curend);
 		while (ptr!=terminal_s) { 
@@ -58,7 +57,6 @@ try{
 		}
 
 		// Getting the first region ending before the fragment.
-		Rprintf("Jumping to end:\n");
 		counter=ptr_copy-rsptr;
 		if (counter==nregs) { --counter; }		
 		end_rank=erptr[osptr[counter]];
@@ -69,7 +67,6 @@ try{
 		}
 
 		// Adding all regions ending before the fragment.
-		Rprintf("Aggregating ends:\n");
 		while (end_rank >= 0) {
 			dist = curstart - reptr[end_rank] - 1;
 			if (dist >= maxrange) { break; }
