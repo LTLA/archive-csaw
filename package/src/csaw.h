@@ -54,7 +54,7 @@ SEXP get_rle_counts(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 /* get_profile.cpp */
 
-SEXP get_profile(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP get_profile(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 /* find_maxima.cpp */
 

@@ -4,7 +4,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 #  All functions exported, arranged by sequence of usage.
 export(csawUsersGuide,
 	readParam,
-	correlateReads, getPETSizes, profileSummit,
+	correlateReads, getPETSizes, profileSites,
 	regionCounts, windowCounts,
 	normalizeCounts, 
 	getWidths, scaledAverage, findMaxima,
