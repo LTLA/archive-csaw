@@ -17,27 +17,29 @@ getPETSizes(bam.file, param=readParam(pet="both"))
 \value{
 A list containing:
 \item{sizes}{an integer vector of fragment lengths for all valid read pairs in the library}
-\item{diagnostics}{an integer vector containing the total number of reads, number of singleton reads, pairs with one unmapped read,
+\item{diagnostics}{an integer vector containing the total number of mapped reads, number of mapped singleton reads, pairs with exactly one unmapped read,
 	number of improperly orientated read pairs and interchromosomal pairs}
 }
 
 \details{
 This function assembles a number of paired-end diagnostics.
-First, any read pairs with one or more unmapped reads are ignored.
-A read is only mapped if it is not removed by \code{dedup}, \code{minq}, \code{restrict} or \code{discard} in \code{\link{readParam}}.
+For starters, a read is only mapped if it is not removed by \code{dedup}, \code{minq}, \code{restrict} or \code{discard} in \code{\link{readParam}}.
 Otherwise, the alignment is not considered to be reliable.
-The total number of read pairs with one unmapped read is recorded.
+Any read pair with exactly one unmapped read is discarded, and the number of read pairs lost in this manner is recorded.
+Obviously, read pairs with both reads unmapped will be ignored completely.
 
 Of the mapped pairs, the valid (i.e., proper) read pairs are identified.
-These refer to intrachromosomal read pairs where the reads with the lower and higher genomic coordinate map to the forward and reverse strand, respectively.
+These refer to intrachromosomal read pairs where the reads with the lower and higher genomic coordinates map to the forward and reverse strand, respectively.
 The distance between the positions of the mapped 5' ends of the two reads must also be equal to or greater than the read lengths. 
-Any intrachromosomal read pair that fails these criteria will be considered as improperly orientated.
+Any intrachromosomal read pair that fails these criteria will be considered as improperly oriented.
 If the reads are on different chromosomes, the read pair will be recorded as being interchromosomal.
 
 Each valid read pair corresponds to a DNA fragment where both ends are sequenced. 
 The size of the fragment can be determined by calculating the distance between the 5' ends of the mapped reads. 
 The distribution of sizes is useful for assessing the quality of the library preparation, along with all of the recorded diagnostics. 
 }
+
+% Note; length(out$sizes)*2 == out$diagnostics[1] - out$diagnostics[3] - sum(out$diagnostics[-c(1,3)])*2. Because, read pairs with one mapped = 1 read in total.
 
 \author{Aaron Lun}
 
