@@ -489,7 +489,7 @@ Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) :
 + 		curends <- allends[all.dexes]
 + 		
 + 		full.width <- max(curends)-min(curstarts)+1L
-+ 		mult <- round(full.width/maxd)
++ 		mult <- ceiling(full.width/maxd)
 + 		if (mult >= 2L) { has.split <- TRUE }
 + 		subwidth <- full.width/mult
 + 
@@ -507,7 +507,7 @@ Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) :
 + }
 > 
 > maxcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=1)
-GRanges object with 18 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [  39,  489]      *
@@ -516,15 +516,15 @@ GRanges object with 18 ranges and 0 metadata columns:
    [4]     chrA [1478, 1931]      *
    [5]     chrA [1967, 2403]      *
    ...      ...          ...    ...
-  [14]     chrB [1102, 1624]      *
-  [15]     chrB [1644, 2152]      *
-  [16]     chrB [2175, 2711]      *
-  [17]     chrC [   9,  531]      *
-  [18]     chrC [ 540, 1069]      *
+  [16]     chrB [1831, 2250]      *
+  [17]     chrB [2264, 2711]      *
+  [18]     chrC [   9,  358]      *
+  [19]     chrC [ 364,  708]      *
+  [20]     chrC [ 717, 1069]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 18 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [  14,  485]      *
@@ -533,15 +533,15 @@ GRanges object with 18 ranges and 0 metadata columns:
    [4]     chrA [1504, 1979]      *
    [5]     chrA [1993, 2465]      *
    ...      ...          ...    ...
-  [14]     chrB [1062, 1565]      *
-  [15]     chrB [1579, 2085]      *
-  [16]     chrB [2093, 2605]      *
-  [17]     chrC [   9,  526]      *
-  [18]     chrC [ 526, 1039]      *
+  [16]     chrB [1738, 2163]      *
+  [17]     chrB [2170, 2605]      *
+  [18]     chrC [   9,  350]      *
+  [19]     chrC [ 351,  699]      *
+  [20]     chrC [ 693, 1039]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=500, chrs=chrs, nwin=200, winsize=100)
-GRanges object with 19 ranges and 0 metadata columns:
+GRanges object with 21 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [  28,  553]      *
@@ -550,50 +550,50 @@ GRanges object with 19 ranges and 0 metadata columns:
    [4]     chrA [1461, 2004]      *
    [5]     chrA [1943, 2499]      *
    ...      ...          ...    ...
-  [15]     chrB [1015, 1631]      *
-  [16]     chrB [1549, 2146]      *
-  [17]     chrB [2067, 2640]      *
-  [18]     chrC [   4,  607]      *
-  [19]     chrC [ 517, 1123]      *
+  [17]     chrB [1728, 2235]      *
+  [18]     chrB [2158, 2640]      *
+  [19]     chrC [   4,  422]      *
+  [20]     chrC [ 328,  800]      *
+  [21]     chrC [ 705, 1123]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > maxcomp(50, chrs=chrs, nwin=500, winsize=1)
-GRanges object with 47 ranges and 0 metadata columns:
+GRanges object with 50 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [ 10,  201]      *
-   [2]     chrA  [217,  410]      *
-   [3]     chrA  [429,  604]      *
-   [4]     chrA  [619,  812]      *
-   [5]     chrA  [820, 1013]      *
+   [1]     chrA   [ 10, 201]      *
+   [2]     chrA   [217, 398]      *
+   [3]     chrA   [410, 581]      *
+   [4]     chrA   [596, 772]      *
+   [5]     chrA   [788, 978]      *
    ...      ...          ...    ...
-  [43]     chrC [ 206,  405]      *
-  [44]     chrC [ 408,  606]      *
-  [45]     chrC [ 609,  809]      *
-  [46]     chrC [ 812, 1011]      *
-  [47]     chrC [1014, 1212]      *
+  [46]     chrC [ 349,  521]      *
+  [47]     chrC [ 522,  694]      *
+  [48]     chrC [ 697,  867]      *
+  [49]     chrC [ 869, 1040]      *
+  [50]     chrC [1043, 1212]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(50, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 46 ranges and 0 metadata columns:
+GRanges object with 48 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [ 14,  218]      *
-   [2]     chrA  [223,  421]      *
-   [3]     chrA  [423,  618]      *
-   [4]     chrA  [628,  808]      *
-   [5]     chrA  [818, 1025]      *
+   [1]     chrA   [ 14, 201]      *
+   [2]     chrA   [209, 402]      *
+   [3]     chrA   [412, 600]      *
+   [4]     chrA   [609, 780]      *
+   [5]     chrA   [789, 985]      *
    ...      ...          ...    ...
-  [42]     chrC [ 210,  424]      *
-  [43]     chrC [ 418,  634]      *
-  [44]     chrC [ 628,  845]      *
-  [45]     chrC [ 838, 1053]      *
-  [46]     chrC [1047, 1260]      *
+  [44]     chrC [ 360,  546]      *
+  [45]     chrC [ 539,  723]      *
+  [46]     chrC [ 718,  903]      *
+  [47]     chrC [ 897, 1083]      *
+  [48]     chrC [1077, 1260]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, chrs=chrs, nwin=500, winsize=100)
-GRanges object with 48 ranges and 0 metadata columns:
+GRanges object with 49 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA  [ 18,  257]      *
@@ -602,16 +602,16 @@ GRanges object with 48 ranges and 0 metadata columns:
    [4]     chrA  [564,  855]      *
    [5]     chrA  [768, 1056]      *
    ...      ...          ...    ...
-  [44]     chrC [ 339,  626]      *
-  [45]     chrC [ 528,  817]      *
-  [46]     chrC [ 720, 1008]      *
-  [47]     chrC [ 913, 1199]      *
-  [48]     chrC [1103, 1342]      *
+  [45]     chrC [ 339,  626]      *
+  [46]     chrC [ 528,  817]      *
+  [47]     chrC [ 720, 1008]      *
+  [48]     chrC [ 913, 1199]      *
+  [49]     chrC [1103, 1342]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > maxcomp(10, maxd=500, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
-GRanges object with 21 ranges and 0 metadata columns:
+GRanges object with 26 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [  44,  417]      *
@@ -620,11 +620,11 @@ GRanges object with 21 ranges and 0 metadata columns:
    [4]     chrA [1210, 1258]      *
    [5]     chrA [1282, 1399]      *
    ...      ...          ...    ...
-  [17]     chrB [1032, 1557]      *
-  [18]     chrB [1534, 2109]      *
-  [19]     chrB [2060, 2585]      *
-  [20]     chrC [   3,  649]      *
-  [21]     chrC [ 583, 1223]      *
+  [22]     chrB [1691, 2167]      *
+  [23]     chrB [2140, 2585]      *
+  [24]     chrC [   3,  416]      *
+  [25]     chrC [ 369,  840]      *
+  [26]     chrC [ 807, 1223]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=500, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
@@ -645,7 +645,7 @@ GRanges object with 20 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=500, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
-GRanges object with 19 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [   1,  511]      *
@@ -654,29 +654,29 @@ GRanges object with 19 ranges and 0 metadata columns:
    [4]     chrA [1418, 1955]      *
    [5]     chrA [1906, 2449]      *
    ...      ...          ...    ...
-  [15]     chrB [1599, 2198]      *
-  [16]     chrB [2126, 2701]      *
-  [17]     chrC [   2,  468]      *
-  [18]     chrC [ 389,  901]      *
-  [19]     chrC [ 826, 1291]      *
+  [16]     chrB [1776, 2284]      *
+  [17]     chrB [2226, 2701]      *
+  [18]     chrC [   2,  468]      *
+  [19]     chrC [ 389,  901]      *
+  [20]     chrC [ 826, 1291]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > maxcomp(10, maxd=500, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
-GRanges object with 27 ranges and 0 metadata columns:
+GRanges object with 32 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA [  46,  366]      *
    [2]     chrA [ 392,  784]      *
    [3]     chrA [ 782, 1222]      *
-   [4]     chrA [1243, 1922]      *
-   [5]     chrA [1937, 1952]      *
+   [4]     chrA [1243, 1597]      *
+   [5]     chrA [1566, 1922]      *
    ...      ...          ...    ...
-  [23]     chrB [1019, 1588]      *
-  [24]     chrB [1517, 2070]      *
-  [25]     chrB [2032, 2587]      *
-  [26]     chrC [   8,  643]      *
-  [27]     chrC [ 569, 1200]      *
+  [28]     chrB [1689, 2149]      *
+  [29]     chrB [2142, 2587]      *
+  [30]     chrC [   8,  432]      *
+  [31]     chrC [ 378,  839]      *
+  [32]     chrC [ 775, 1200]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=500, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
@@ -697,25 +697,25 @@ GRanges object with 20 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=500, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
-GRanges object with 18 ranges and 0 metadata columns:
+GRanges object with 20 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
-   [1]     chrA [   8,  539]      *
-   [2]     chrA [ 484, 1028]      *
-   [3]     chrA [1002, 1561]      *
-   [4]     chrA [1479, 2065]      *
-   [5]     chrA [1982, 2570]      *
+   [1]     chrA [   8,  510]      *
+   [2]     chrA [ 442,  962]      *
+   [3]     chrA [ 903, 1399]      *
+   [4]     chrA [1337, 1861]      *
+   [5]     chrA [1817, 2314]      *
    ...      ...          ...    ...
-  [14]     chrB [1603, 2226]      *
-  [15]     chrB [2165, 2739]      *
-  [16]     chrC [   2,  467]      *
-  [17]     chrC [ 391,  898]      *
-  [18]     chrC [ 824, 1291]      *
+  [16]     chrB [1792, 2313]      *
+  [17]     chrB [2253, 2739]      *
+  [18]     chrC [   2,  467]      *
+  [19]     chrC [ 391,  898]      *
+  [20]     chrC [ 824, 1291]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > maxcomp(10, maxd=200, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 175 ranges and 0 metadata columns:
+GRanges object with 176 ranges and 0 metadata columns:
         seqnames      ranges strand
            <Rle>   <IRanges>  <Rle>
     [1]     chrA  [  8,  17]      *
@@ -724,15 +724,15 @@ GRanges object with 175 ranges and 0 metadata columns:
     [4]     chrA  [125, 137]      *
     [5]     chrA  [178, 187]      *
     ...      ...         ...    ...
-  [171]     chrC [  2,  218]      *
-  [172]     chrC [211,  428]      *
-  [173]     chrC [425,  639]      *
-  [174]     chrC [639,  858]      *
-  [175]     chrC [851, 1067]      *
+  [172]     chrC [178,  360]      *
+  [173]     chrC [359,  538]      *
+  [174]     chrC [532,  715]      *
+  [175]     chrC [714,  894]      *
+  [176]     chrC [893, 1067]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=200, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 47 ranges and 0 metadata columns:
+GRanges object with 48 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA  [  4,  202]      *
@@ -741,67 +741,67 @@ GRanges object with 47 ranges and 0 metadata columns:
    [4]     chrA  [604,  801]      *
    [5]     chrA  [802, 1003]      *
    ...      ...          ...    ...
-  [43]     chrC [ 210,  429]      *
-  [44]     chrC [ 424,  640]      *
-  [45]     chrC [ 633,  851]      *
-  [46]     chrC [ 843, 1061]      *
-  [47]     chrC [1056, 1268]      *
+  [44]     chrC [ 363,  549]      *
+  [45]     chrC [ 544,  730]      *
+  [46]     chrC [ 724,  911]      *
+  [47]     chrC [ 903, 1091]      *
+  [48]     chrC [1084, 1268]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=10)
-GRanges object with 45 ranges and 0 metadata columns:
+GRanges object with 47 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
-   [1]     chrA [ 12,  213]      *
-   [2]     chrA [217,  412]      *
-   [3]     chrA [411,  616]      *
-   [4]     chrA [617,  809]      *
-   [5]     chrA [813, 1015]      *
+   [1]     chrA  [ 12, 206]      *
+   [2]     chrA  [204, 393]      *
+   [3]     chrA  [396, 593]      *
+   [4]     chrA  [592, 782]      *
+   [5]     chrA  [780, 975]      *
    ...      ...         ...    ...
-  [41]     chrC [196,  403]      *
-  [42]     chrC [395,  601]      *
-  [43]     chrC [595,  801]      *
-  [44]     chrC [794,  999]      *
-  [45]     chrC [992, 1194]      *
+  [43]     chrC [196,  403]      *
+  [44]     chrC [395,  601]      *
+  [45]     chrC [595,  801]      *
+  [46]     chrC [794,  999]      *
+  [47]     chrC [992, 1194]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > maxcomp(10, maxd=200, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
-GRanges object with 49 ranges and 0 metadata columns:
+GRanges object with 53 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
-   [1]     chrA [ 20,  238]      *
-   [2]     chrA [208,  453]      *
-   [3]     chrA [399,  645]      *
-   [4]     chrA [642,  883]      *
-   [5]     chrA [857, 1042]      *
+   [1]     chrA  [ 20, 195]      *
+   [2]     chrA  [186, 420]      *
+   [3]     chrA  [399, 564]      *
+   [4]     chrA  [574, 727]      *
+   [5]     chrA  [720, 937]      *
    ...      ...         ...    ...
-  [45]     chrC [152,  423]      *
-  [46]     chrC [371,  605]      *
-  [47]     chrC [571,  826]      *
-  [48]     chrC [751, 1015]      *
-  [49]     chrC [975, 1174]      *
+  [49]     chrC [152,  423]      *
+  [50]     chrC [371,  605]      *
+  [51]     chrC [571,  826]      *
+  [52]     chrC [751, 1015]      *
+  [53]     chrC [975, 1174]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=200, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
-GRanges object with 47 ranges and 0 metadata columns:
+GRanges object with 49 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [ 20,  266]      *
-   [2]     chrA  [208,  443]      *
-   [3]     chrA  [412,  644]      *
-   [4]     chrA  [579,  848]      *
-   [5]     chrA  [808, 1068]      *
+   [1]     chrA  [ 20,  250]      *
+   [2]     chrA  [174,  426]      *
+   [3]     chrA  [381,  644]      *
+   [4]     chrA  [569,  831]      *
+   [5]     chrA  [761, 1019]      *
    ...      ...          ...    ...
-  [43]     chrC [ 360,  616]      *
-  [44]     chrC [ 548,  808]      *
-  [45]     chrC [ 732, 1011]      *
-  [46]     chrC [ 928, 1197]      *
-  [47]     chrC [1122, 1354]      *
+  [45]     chrC [ 360,  616]      *
+  [46]     chrC [ 548,  808]      *
+  [47]     chrC [ 732, 1011]      *
+  [48]     chrC [ 928, 1197]      *
+  [49]     chrC [1122, 1354]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > maxcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
-GRanges object with 46 ranges and 0 metadata columns:
+GRanges object with 48 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
    [1]     chrA  [ 15,  233]      *
@@ -810,11 +810,11 @@ GRanges object with 46 ranges and 0 metadata columns:
    [4]     chrA  [583,  831]      *
    [5]     chrA  [774, 1035]      *
    ...      ...          ...    ...
-  [42]     chrC [ 179,  460]      *
-  [43]     chrC [ 389,  680]      *
-  [44]     chrC [ 604,  882]      *
-  [45]     chrC [ 822, 1086]      *
-  [46]     chrC [1022, 1275]      *
+  [44]     chrC [ 324,  582]      *
+  [45]     chrC [ 501,  756]      *
+  [46]     chrC [ 690,  948]      *
+  [47]     chrC [ 865, 1140]      *
+  [48]     chrC [1060, 1275]      *
   -------
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
@@ -823,4 +823,4 @@ GRanges object with 46 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 12.303   0.149  12.475 
+ 12.946   0.149  13.118 

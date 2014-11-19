@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <deque>
 #include <algorithm>
+#include <cmath>
 
 template <class T>
 struct sort_row_index {

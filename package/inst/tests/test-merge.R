@@ -149,7 +149,7 @@ maxcomp <- function(tol=100, maxd=200, ...) {
 		curends <- allends[all.dexes]
 		
 		full.width <- max(curends)-min(curstarts)+1L
-		mult <- round(full.width/maxd)
+		mult <- ceiling(full.width/maxd)
 		if (mult >= 2L) { has.split <- TRUE }
 		subwidth <- full.width/mult
 

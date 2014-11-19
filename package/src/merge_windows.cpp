@@ -116,12 +116,11 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 int split_cluster(const int* starts, const int* ends, const int& actual_end, const int& xs, const int& xe, const int& width, int* output) { 
 	double full_width=actual_end-starts[xs]+1;
 	if (full_width <= width) { return output[xs]; }
-	int mult=int(full_width/width+0.5);
-	if (mult==1) { return output[xs]; }
+	int mult=int(std::ceil(full_width/width));
 
 	/* There can only be `mult` subclusters. At the worst, `cur_diff`
 	   will be equal to `actual_end - starts[xs]`. Division by `subwidth` will
-	   give an expression of `(actual_end - starts[xs]) / [ actual_end - starts[xs] + 1) / mult ]`.
+	   give an expression of `(actual_end - starts[xs]) / [ (actual_end - starts[xs] + 1) / mult ]`.
 	   This will always be less than `mult`, so flooring it will give `mult-1`,
 	   i.e., the last index of `instantiated`.
 	 */
