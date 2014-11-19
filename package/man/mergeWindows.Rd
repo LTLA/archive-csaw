@@ -31,9 +31,10 @@ This can be useful to ensure consistent changes when summarizing adjacent DB reg
 However, it is not recommended for routine clustering in differential analyses as the resulting clusters will not be independent of the p-value.
 
 Specification of \code{max.width} prevents the formation of excessively large clusters when many adjacent regions are present. 
-Any cluster that is substantially wider than \code{max.width} is split into multiple subclusters of (roughly) equal size.
-Suggested values range from 2000 to 10000 bp. 
-If \code{NULL}, no limits are placed on the maximum size.
+Any cluster that is wider than \code{max.width} is split into multiple subclusters of (roughly) equal size.
+Specifically, the cluster interval is partitioned into the smallest number of equally-sized subintervals where each subinterval is smaller than \code{max.width}.
+Windows are then assigned to each subinterval based on the location of the window midpoints.
+Suggested values range from 2000 to 10000 bp, but no limits are placed on the maximum size if it is \code{NULL}, 
 
 The tolerance should reflect the minimum distance at which two regions of
 enrichment are considered separate. If two windows are more than \code{tol}
@@ -43,7 +44,8 @@ considered part of the same region.
 
 Arbitrary regions can also be used in this function.
 However, caution is required if any fully nested regions are present.
-Clustering with \code{sign!=NULL} will not behave properly, and splitting with \code{max.width!=NULL} may not actually reduce the size of the clusters.
+Clustering with \code{sign!=NULL} will throw an error as splitting by sign becomes undefined.
+Splitting with \code{max.width!=NULL} will not fail, but cluster sizes may not be reduced if very large regions are present.
 
 % For example, if you have a large region and lots of little nested regions within,
 % the large region will be assigned to the middle subcluster whereas the nested elements
