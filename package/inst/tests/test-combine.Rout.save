@@ -19,761 +19,213 @@ Type 'q()' to quit R.
 
 > # This tests the combining power of the combineTests function.
 > 
-> nativemerge <- function(reg, tol, sign=NULL) {
-+ 	n<-length(reg)
-+ 	o<-order(reg)
-+ 	reg<-reg[o]
-+ 	
-+ 	increment<-integer(n)
-+ 	chrends<-runLength(seqnames(reg))
-+ 	increment[c(1, cumsum(chrends[-length(chrends)])+1)]<-1L
-+ 	to.next<-c(0L, start(reg[-1])-end(reg[-n])-1)
-+ 	increment[to.next > tol]<-1L
-+ 
-+ 	# If a sign is supplied...
-+ 	if (!is.null(sign)) { 
-+ 		posfc<-sign[o]
-+ 		altered.sign<-c(TRUE, posfc[-1]!=posfc[-n])
-+ 		increment[altered.sign]<-1L
-+ 	}
-+ 
-+ 	merged.ids<-cumsum(increment)
-+ 	merged.ids[o]<-merged.ids
-+ 	return(merged.ids)
-+ }
+> suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> comp <- function(reg, tab, tol) {
-+ 	ids<-mergeWindows(reg, tol=tol)
-+ 	merged.ids<-nativemerge(reg, tol=tol)
-+ 	if (!identical(merged.ids, ids$id)) { stop("merging IDs are not identical") }
-+ 	out<-combineTests(ids$id, tab)
+> comp <- function(total.n, n.clusters, weights=NULL) {
++ 	merged.ids <- sample(n.clusters, total.n, replace=TRUE)
++ 	tab <- data.frame(logFC=runif(total.n, -1, 1), logCPM=runif(total.n, -2, 1),
++ 		PValue=rbeta(total.n, 1, 10))
++ 	if (is.null(weights)) { weights <- rep(1, length.out=total.n) }
++ 	out <- combineTests(merged.ids, tab, weight=weights)
 + 
-+ 	# Aggregating on the merging ID's to get average log-FC, average log-CPM, and Simes.
++ 	# Aggregating on the merging ID's to get average log-FC, average log-CPM.
 + 	almostidentical <- function(x, y, tol=1e-8) { 
 + 		if (length(x)!=length(y)) { return(FALSE) }
 + 		return(all(abs((x-y)/(x+y+1e-6)) < tol))
 + 	}
++ 	checker <- split(data.frame(tab, weight=weights), merged.ids)
++ 	ologfc <- sapply(checker, FUN=function(x) { weighted.mean(x$logFC, x$weight) })
++ 	if (!almostidentical(ologfc, out$logFC)) { stop("average log-FC's are not identical"); }
++ 	ologcpm <- sapply(checker, FUN=function(x) { weighted.mean(x$logCPM, x$weight) })
++ 	if (!almostidentical(ologcpm, out$logCPM)) { stop("average log-CPM's are not identical"); }
++    	
++ 	# Checking Simes.
++ 	osimes<-sapply(checker, FUN=function(x) {
++ 		o<-order(x$PValue)
++ 		min(x$PValue[o]/cumsum(x$weight[o])) * sum(x$weight)
++ 	})
++ 	if (!almostidentical(osimes, out$PValue)) { stop("combined p-values are not identical"); }
++ 	if (!almostidentical(p.adjust(osimes, method="BH"), out$FDR)) { stop("q-values are not identical"); }
 + 
-+ 	ologfc<-aggregate(tab$logFC~merged.ids, FUN=mean, data=NULL)
-+ 	if (!almostidentical(ologfc[,2], out$logFC)) { stop("average log-FC's are not identical"); }
-+ 	ologcpm<-aggregate(tab$logCPM~merged.ids, FUN=mean, data=NULL)
-+ 	if (!almostidentical(ologcpm[,2], out$logCPM)) { stop("average log-CPM's are not identical"); }
-+ 	osimes<-aggregate(tab$PValue~merged.ids, FUN=function(x) { min(p.adjust(x, method="BH")) }, data=NULL)
-+ 	if (!almostidentical(osimes[,2], out$PValue)) { stop("combined p-values are not identical"); }
-+ 	if (!almostidentical(p.adjust(osimes[,2], method="BH"), out$FDR)) { stop("q-values are not identical"); }
++ 	# Checking the rownames.
++ 	if (!identical(rownames(out), as.character(sort(unique(merged.ids))))) { stop("row names are not matched"); }
 + 
 + 	# Checking if we get the same results after reversing the ids (ensures internal re-ordering is active).
-+ 	re.o<-length(ids$id):1
-+ 	out2<-combineTests(ids$id[re.o], tab[re.o,])
++ 	re.o <- total.n:1
++ 	if (is.null(weights)) { 
++ 		out2<-combineTests(merged.ids[re.o], tab[re.o,])
++ 	} else {
++ 		out2<-combineTests(merged.ids[re.o], tab[re.o,], weight=weights[re.o])
++ 	}
 + 	if (!almostidentical(out$logFC, out2$logFC) || !almostidentical(out$logCPM, out2$logCPM)
-+ 			|| !almostidentical(out$PValue, out2$PValue)) { stop("values not preserved after shuffling"); }
++ 		|| !almostidentical(out$PValue, out2$PValue)) { stop("values not preserved after shuffling"); }
 + 
 + 	# Adding some tests if there's multiple log-FC's in 'tab'.
 + 	is.fc<-which(colnames(tab)=="logFC")
 + 	colnames(tab)[is.fc]<-"logFC.1"
 + 	tab$logFC.2<--tab$logFC.1
-+     out<-combineTests(ids$id, tab)
-+ 	if (!almostidentical(out$logFC.1, -out$logFC.2)) { stop("check failed for multiple log-FC columns") }
++     out<-combineTests(merged.ids, tab, weight=weights)
++ 	if (!almostidentical(ologfc, -out$logFC.2)) { stop("check failed for multiple log-FC columns") }
 + 
-+ 	# Also checking with weights for the Simes p-values.
-+ 	rand.weights<-runif(length(ids$id), 0, 1)
-+     out2<-combineTests(ids$id, tab, weight=rand.weights)
-+ 	checker<-split(data.frame(tab$PValue, rand.weights), merged.ids)
-+ 	wsimes<-sapply(checker, FUN=function(x) {
-+ 		o<-order(x[,1])
-+ 		min(x[o,1]*sum(x[,2])/cumsum(x[o,2]))
-+ 	})
-+ 	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up") }
-+     out2<-combineTests(ids$id[re.o], tab[re.o,], weight=rand.weights[re.o])
-+ 	if (!almostidentical(wsimes, out2$PValue)	) { stop("weighted combined p-values don't match up after shuffling") }
-+ 
-+ 	# Checking the reported value of each region.
-+ 	ostarts<-aggregate(start(reg)~ merged.ids, FUN=min, data=NULL)
-+ 	if (!identical(ostarts[,2], start(ids$region))) { stop("region starts do not match up") }
-+ 	oends<-aggregate(end(reg)~merged.ids, FUN=max, data=NULL)
-+ 	if (!identical(oends[,2], end(ids$region))) { stop("region ends do not match up") }
-+ 	to.use<-!duplicated(merged.ids)
-+ 	if (!identical(seqnames(reg)[to.use], seqnames(ids$region))) { stop("region chromosomes do not match up") }
-+ 	return(ids$region)
++ 	return(head(out))
 + }
-> 
-> source("simsam.R")
 > 
 > ###################################################################################################
 > 
 > set.seed(2135045)
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> chrs<-c(chrA=1000, chrB=2000, chrC=5000)
-> blah<-generateWindows(chrs, 200, 1)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames     ranges strand
-         <Rle>  <IRanges>  <Rle>
-  [1]     chrA [ 3,  606]      *
-  [2]     chrB [10, 1137]      *
-  [3]     chrC [12, 2523]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> comp(20, 5)
+     logFC.1    logFC.2      logCPM      PValue         FDR
+1 -0.2484611  0.2484611 -0.77191102 0.046895637 0.098599042
+2 -0.1664076  0.1664076 -0.01192032 0.090308125 0.112885156
+3 -0.1607317  0.1607317 -0.45691327 0.059159425 0.098599042
+4  0.1369093 -0.1369093 -0.72242504 0.001563347 0.007816734
+5 -0.6281226  0.6281226  0.63571913 0.158769678 0.158769678
+> comp(20, 10)
+      logFC.1      logFC.2     logCPM     PValue        FDR
+1 0.371500736 -0.371500736  0.3072375 0.08566207 0.13073335
+2 0.102348874 -0.102348874 -0.7052655 0.02123949 0.09879471
+3 0.769378738 -0.769378738 -0.5316614 0.02195438 0.09879471
+4 0.152077822 -0.152077822 -0.3913887 0.08715557 0.13073335
+5 0.014150564 -0.014150564 -1.1075002 0.05147780 0.13073335
+7 0.001258857 -0.001258857 -0.5130758 0.07291837 0.13073335
+> comp(20, 20)
+      logFC.1     logFC.2      logCPM       PValue         FDR
+1 -0.68673085  0.68673085 -0.24738576 0.0001792533 0.002330293
+2 -0.03245079  0.03245079 -1.38578188 0.0378314613 0.089264747
+4 -0.12785892  0.12785892  0.61970503 0.1254991203 0.156087234
+6  0.26001610 -0.26001610 -0.99417686 0.1688019017 0.182868727
+7  0.96384702 -0.96384702 -1.58000007 0.0558134032 0.103653463
+8  0.09383978 -0.09383978 -0.00646653 0.0342445869 0.089264747
+> comp(20, 5, weights=runif(20))
+     logFC.1    logFC.2       logCPM     PValue       FDR
+1 -0.5463791  0.5463791 -0.695881010 0.11236636 0.1872773
+2 -0.2265566  0.2265566 -1.909763102 0.04134577 0.1872773
+3  0.1033206 -0.1033206 -0.487461971 0.08815398 0.1872773
+4  0.6167912 -0.6167912  0.002988424 0.18933200 0.1893320
+5 -0.1196669  0.1196669 -1.261799416 0.18681023 0.1893320
+> comp(20, 10, weights=runif(20))
+     logFC.1    logFC.2     logCPM      PValue        FDR
+1 -0.5384310  0.5384310  0.1972271 0.006603425 0.04034856
+2 -0.3988949  0.3988949  0.5037433 0.281183454 0.28118345
+3  0.3498704 -0.3498704 -1.5138354 0.219478507 0.25083258
+4  0.5838569 -0.5838569 -0.8630313 0.084964294 0.16992859
+7  0.2045142 -0.2045142  0.8596573 0.074037904 0.16992859
+8  0.2180588 -0.2180588 -0.3455245 0.010087140 0.04034856
+> comp(20, 20, weights=runif(20))
+     logFC.1    logFC.2      logCPM     PValue        FDR
+1  0.7000281 -0.7000281  0.73118905 0.03246600 0.09823301
+2 -0.6119763  0.6119763 -0.82343098 0.02259435 0.09823301
+3  0.2771616 -0.2771616 -0.67152098 0.12052589 0.14417166
+4  0.5717632 -0.5717632 -0.60301060 0.01252971 0.08770799
+5  0.8770086 -0.8770086 -1.75246571 0.04524222 0.09823301
+7 -0.6594015  0.6594015 -0.01945981 0.13577439 0.14621857
 > 
-> blah<-generateWindows(chrs, 200, 1)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames     ranges strand
-         <Rle>  <IRanges>  <Rle>
-  [1]     chrA [ 2,  608]      *
-  [2]     chrB [ 5, 1098]      *
-  [3]     chrC [24, 2649]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> comp(100, 50)
+      logFC.1     logFC.2      logCPM      PValue        FDR
+1 -0.24104762  0.24104762 -0.44369972 0.089705475 0.13919815
+2  0.44591327 -0.44591327 -1.26811032 0.001842072 0.04269943
+3 -0.43414240  0.43414240 -1.08191381 0.035861917 0.10055887
+4  0.62649780 -0.62649780  0.04165325 0.111963357 0.15744847
+5  0.03212285 -0.03212285 -1.34266994 0.036241239 0.10055887
+6  0.28125304 -0.28125304 -1.16924060 0.101363739 0.14714091
+> comp(100, 100)
+      logFC.1     logFC.2     logCPM     PValue       FDR
+1  0.05275637 -0.05275637 -0.7709474 0.11865752 0.1480689
+2  0.71441025 -0.71441025 -1.3785686 0.01668844 0.1205360
+5  0.26399171 -0.26399171 -1.2352076 0.05135064 0.1297436
+6  0.89891833 -0.89891833 -0.3872641 0.16529938 0.1815583
+7  0.53794982 -0.53794982  0.1221685 0.04890242 0.1297436
+8 -0.85502755  0.85502755 -1.4670118 0.05965313 0.1297436
+> comp(100, 200)
+        logFC.1      logFC.2     logCPM      PValue       FDR
+4  -0.191162748  0.191162748  0.1876694 0.007479345 0.0817267
+8  -0.266704402  0.266704402  0.4492545 0.060360011 0.1222677
+11  0.471280159 -0.471280159  0.2015327 0.118006172 0.1631702
+12  0.190635123 -0.190635123 -0.8720322 0.047170549 0.1174263
+17 -0.009836053  0.009836053  0.4296132 0.028368229 0.1150337
+19  0.977950204 -0.977950204 -1.9214763 0.188204858 0.2036738
+> comp(100, 50, weights=runif(100))
+     logFC.1    logFC.2     logCPM       PValue          FDR
+1 -0.2839711  0.2839711 -0.4520745 1.916808e-02 0.0575042271
+2 -0.5998730  0.5998730 -0.4974020 6.913723e-03 0.0527901746
+3  0.2060324 -0.2060324 -0.3614897 4.434143e-03 0.0527901746
+4  0.4867522 -0.4867522 -0.4754546 1.818245e-05 0.0007636627
+5  0.2418806 -0.2418806 -0.6105290 1.335984e-01 0.1558648437
+6  0.3291481 -0.3291481 -0.5470106 1.251378e-02 0.0527901746
+> comp(100, 100, weights=runif(100))
+     logFC.1    logFC.2      logCPM     PValue        FDR
+1  0.5846380 -0.5846380 -0.71625995 0.19143405 0.20040752
+2  0.5878939 -0.5878939 -0.52558901 0.06482594 0.11738751
+3 -0.9905919  0.9905919 -1.23089331 0.03554859 0.09896519
+5  0.1598775 -0.1598775 -0.22711139 0.12830975 0.14821989
+6 -0.8520274  0.8520274  0.67809776 0.08487776 0.12278691
+9 -0.3802134  0.3802134 -0.03823043 0.03332139 0.09896519
+> comp(100, 200, weights=runif(100))
+      logFC.1   logFC.2      logCPM     PValue        FDR
+2  -0.6811963 0.6811963  0.33887710 0.30578131 0.32166606
+4  -0.5989850 0.5989850  0.66129609 0.03041033 0.09473986
+10 -0.7751920 0.7751920 -1.93874949 0.04269155 0.10918156
+14 -0.7437901 0.7437901 -0.05971616 0.38905122 0.39391436
+17 -0.2471966 0.2471966 -0.77262183 0.12005827 0.17917962
+18 -0.3230246 0.3230246  0.40137400 0.17451026 0.21097509
 > 
-> blah<-generateWindows(chrs, 200, 10)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames     ranges strand
-         <Rle>  <IRanges>  <Rle>
-  [1]     chrA [ 2,  596]      *
-  [2]     chrB [ 9, 1112]      *
-  [3]     chrC [20, 2463]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 50)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames     ranges strand
-         <Rle>  <IRanges>  <Rle>
-  [1]     chrA [ 7,  635]      *
-  [2]     chrB [ 5, 1185]      *
-  [3]     chrC [45, 2542]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 1)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 131 ranges and 0 metadata columns:
-        seqnames       ranges strand
-           <Rle>    <IRanges>  <Rle>
-    [1]     chrA    [ 1, 482]      *
-    [2]     chrB    [16,  31]      *
-    [3]     chrB    [43,  52]      *
-    [4]     chrB    [70,  70]      *
-    [5]     chrB    [85,  91]      *
-    ...      ...          ...    ...
-  [127]     chrC [2612, 2612]      *
-  [128]     chrC [2638, 2638]      *
-  [129]     chrC [2678, 2678]      *
-  [130]     chrC [2698, 2698]      *
-  [131]     chrC [2722, 2722]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 1)
-> comp(blah$region, blah$table, 20L)
-GRanges object with 62 ranges and 0 metadata columns:
-       seqnames       ranges strand
-          <Rle>    <IRanges>  <Rle>
-   [1]     chrA   [  6, 551]      *
-   [2]     chrB   [ 13, 989]      *
-   [3]     chrC   [ 19,  39]      *
-   [4]     chrC   [ 68,  74]      *
-   [5]     chrC   [107, 119]      *
-   ...      ...          ...    ...
-  [58]     chrC [2351, 2351]      *
-  [59]     chrC [2397, 2414]      *
-  [60]     chrC [2453, 2481]      *
-  [61]     chrC [2517, 2517]      *
-  [62]     chrC [2546, 2546]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 20)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 43 ranges and 0 metadata columns:
-       seqnames       ranges strand
-          <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [  7,  564]      *
-   [2]     chrB  [ 13, 1150]      *
-   [3]     chrC  [ 12,   74]      *
-   [4]     chrC  [105,  124]      *
-   [5]     chrC  [145,  230]      *
-   ...      ...          ...    ...
-  [39]     chrC [2316, 2335]      *
-  [40]     chrC [2353, 2417]      *
-  [41]     chrC [2443, 2506]      *
-  [42]     chrC [2521, 2540]      *
-  [43]     chrC [2570, 2589]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 1)
-> comp(blah$region, blah$table, 20L)
-GRanges object with 58 ranges and 0 metadata columns:
-       seqnames       ranges strand
-          <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [  6,  532]      *
-   [2]     chrB  [ 17, 1014]      *
-   [3]     chrC  [  8,   17]      *
-   [4]     chrC  [ 66,   80]      *
-   [5]     chrC  [106,  123]      *
-   ...      ...          ...    ...
-  [54]     chrC [2279, 2293]      *
-  [55]     chrC [2333, 2393]      *
-  [56]     chrC [2429, 2429]      *
-  [57]     chrC [2472, 2474]      *
-  [58]     chrC [2515, 2515]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 100, 1)
-> comp(blah$region, blah$table, 20L)
-GRanges object with 67 ranges and 0 metadata columns:
-       seqnames       ranges strand
-          <Rle>    <IRanges>  <Rle>
-   [1]     chrA  [  2,  525]      *
-   [2]     chrB  [ 13, 1027]      *
-   [3]     chrC  [ 43,   43]      *
-   [4]     chrC  [ 67,   67]      *
-   [5]     chrC  [109,  109]      *
-   ...      ...          ...    ...
-  [63]     chrC [2565, 2565]      *
-  [64]     chrC [2601, 2613]      *
-  [65]     chrC [2641, 2641]      *
-  [66]     chrC [2678, 2685]      *
-  [67]     chrC [2717, 2717]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> # Trying again with some larger chromosomes.
-> 
-> chrs<-c(chrA=10000, chrB=20000, chrC=50000)
-> blah<-generateWindows(chrs, 500, 1)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames      ranges strand
-         <Rle>   <IRanges>  <Rle>
-  [1]     chrA [ 2,  5156]      *
-  [2]     chrB [ 3,  9815]      *
-  [3]     chrC [48, 24961]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 200, 1)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames      ranges strand
-         <Rle>   <IRanges>  <Rle>
-  [1]     chrA [12,  4921]      *
-  [2]     chrB [28, 10212]      *
-  [3]     chrC [62, 23951]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 10)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames      ranges strand
-         <Rle>   <IRanges>  <Rle>
-  [1]     chrA [12,  5057]      *
-  [2]     chrB [25, 10309]      *
-  [3]     chrC [57, 25162]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 50)
-> comp(blah$region, blah$table, 1000L)
-GRanges object with 3 ranges and 0 metadata columns:
-      seqnames      ranges strand
-         <Rle>   <IRanges>  <Rle>
-  [1]     chrA [ 5,  5504]      *
-  [2]     chrB [30, 10102]      *
-  [3]     chrC [81, 25375]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 1)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 1023 ranges and 0 metadata columns:
-         seqnames         ranges strand
-            <Rle>      <IRanges>  <Rle>
-     [1]     chrA       [18, 26]      *
-     [2]     chrA       [42, 45]      *
-     [3]     chrA       [57, 57]      *
-     [4]     chrA       [75, 78]      *
-     [5]     chrA       [90, 90]      *
-     ...      ...            ...    ...
-  [1019]     chrC [24986, 24986]      *
-  [1020]     chrC [25009, 25009]      *
-  [1021]     chrC [25096, 25096]      *
-  [1022]     chrC [25182, 25182]      *
-  [1023]     chrC [25210, 25210]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 1)
-> comp(blah$region, blah$table, 20L)
-GRanges object with 661 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA    [  5, 5383]      *
-    [2]     chrB    [ 38,   48]      *
-    [3]     chrB    [ 85,  136]      *
-    [4]     chrB    [158,  158]      *
-    [5]     chrB    [191,  191]      *
-    ...      ...            ...    ...
-  [657]     chrC [25653, 25653]      *
-  [658]     chrC [25727, 25727]      *
-  [659]     chrC [25787, 25801]      *
-  [660]     chrC [25841, 25851]      *
-  [661]     chrC [25934, 25934]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 20)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 476 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA    [  7, 5195]      *
-    [2]     chrB    [ 17,  122]      *
-    [3]     chrB    [138,  157]      *
-    [4]     chrB    [173,  207]      *
-    [5]     chrB    [225,  269]      *
-    ...      ...            ...    ...
-  [472]     chrC [24705, 24724]      *
-  [473]     chrC [24780, 24799]      *
-  [474]     chrC [24870, 24889]      *
-  [475]     chrC [24911, 24930]      *
-  [476]     chrC [24960, 24979]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 20)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 476 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA    [ 14, 5313]      *
-    [2]     chrB    [  3,   87]      *
-    [3]     chrB    [106,  125]      *
-    [4]     chrB    [145,  164]      *
-    [5]     chrB    [182,  201]      *
-    ...      ...            ...    ...
-  [472]     chrC [24804, 24823]      *
-  [473]     chrC [24846, 24865]      *
-  [474]     chrC [24897, 24925]      *
-  [475]     chrC [24981, 25000]      *
-  [476]     chrC [25041, 25060]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> blah<-generateWindows(chrs, 500, 20)
-> comp(blah$region, blah$table, 10L)
-GRanges object with 456 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA    [  4, 5351]      *
-    [2]     chrB    [ 18,   97]      *
-    [3]     chrB    [110,  129]      *
-    [4]     chrB    [141,  160]      *
-    [5]     chrB    [172,  262]      *
-    ...      ...            ...    ...
-  [452]     chrC [23995, 24014]      *
-  [453]     chrC [24082, 24101]      *
-  [454]     chrC [24128, 24147]      *
-  [455]     chrC [24178, 24197]      *
-  [456]     chrC [24248, 24267]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> ###################################################################################################
-> ###################################################################################################
-> # Sticking some tests for merging of fixed-size windows with switched fold changes.
-> 
-> mcomp <- function(tol=1000, ...) {
-+ 	stuff<-generateWindows(...)
-+ 	posfc<-stuff$tab$logFC>0
-+ 	combo<-mergeWindows(stuff$region, tol=tol, sign=posfc)
-+ 	merged.ids<-nativemerge(stuff$region, tol=tol, sign=posfc)
-+ 	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match for variable sign") }
-+ 
-+ 	signs<-split(posfc, merged.ids)
-+ 	if (!all(sapply(signs, FUN=function(x) { length(unique(x))==1L }))) {
-+ 		stop("not all windows have the same sign") }
-+ 	return(combo$region)
-+ }
-> 
-> mcomp(100, chrs=chrs, nwin=200, winsize=1)
-GRanges object with 360 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [  6,  71]      *
-    [2]     chrA     [ 74,  74]      *
-    [3]     chrA     [ 83, 127]      *
-    [4]     chrA     [163, 182]      *
-    [5]     chrA     [229, 229]      *
-    ...      ...            ...    ...
-  [356]     chrC [25456, 25608]      *
-  [357]     chrC [25831, 25831]      *
-  [358]     chrC [26027, 26027]      *
-  [359]     chrC [26129, 26129]      *
-  [360]     chrC [26249, 26249]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(100, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 373 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [ 35,  71]      *
-    [2]     chrA     [ 67,  76]      *
-    [3]     chrA     [106, 132]      *
-    [4]     chrA     [127, 136]      *
-    [5]     chrA     [145, 154]      *
-    ...      ...            ...    ...
-  [369]     chrC [25723, 25732]      *
-  [370]     chrC [25756, 25765]      *
-  [371]     chrC [25966, 25975]      *
-  [372]     chrC [26113, 26215]      *
-  [373]     chrC [26419, 26428]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(100, chrs=chrs, nwin=200, winsize=100)
-GRanges object with 308 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [ 29, 191]      *
-    [2]     chrA     [ 96, 265]      *
-    [3]     chrA     [174, 287]      *
-    [4]     chrA     [224, 323]      *
-    [5]     chrA     [262, 393]      *
-    ...      ...            ...    ...
-  [304]     chrC [23508, 23837]      *
-  [305]     chrC [23896, 23995]      *
-  [306]     chrC [24031, 24130]      *
-  [307]     chrC [24085, 24191]      *
-  [308]     chrC [24130, 24229]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> mcomp(100, chrs=chrs, nwin=500, winsize=1)
-GRanges object with 776 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA       [10, 29]      *
-    [2]     chrA       [38, 38]      *
-    [3]     chrA       [45, 45]      *
-    [4]     chrA       [52, 83]      *
-    [5]     chrA       [86, 86]      *
-    ...      ...            ...    ...
-  [772]     chrC [24690, 24819]      *
-  [773]     chrC [24832, 24895]      *
-  [774]     chrC [24943, 24943]      *
-  [775]     chrC [24977, 24977]      *
-  [776]     chrC [25063, 25063]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(100, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 726 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA       [13, 41]      *
-    [2]     chrA       [49, 58]      *
-    [3]     chrA       [52, 61]      *
-    [4]     chrA       [65, 74]      *
-    [5]     chrA       [83, 92]      *
-    ...      ...            ...    ...
-  [722]     chrC [25480, 25542]      *
-  [723]     chrC [25619, 25628]      *
-  [724]     chrC [25671, 25761]      *
-  [725]     chrC [25785, 25794]      *
-  [726]     chrC [25830, 25910]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(100, chrs=chrs, nwin=500, winsize=100)
-GRanges object with 735 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [ 14, 162]      *
-    [2]     chrA     [ 68, 173]      *
-    [3]     chrA     [ 86, 203]      *
-    [4]     chrA     [116, 234]      *
-    [5]     chrA     [152, 275]      *
-    ...      ...            ...    ...
-  [731]     chrC [24390, 24489]      *
-  [732]     chrC [24397, 24628]      *
-  [733]     chrC [24603, 24702]      *
-  [734]     chrC [24604, 24703]      *
-  [735]     chrC [24646, 24745]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> mcomp(1000, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 300 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [ 36, 179]      *
-    [2]     chrA     [188, 197]      *
-    [3]     chrA     [233, 295]      *
-    [4]     chrA     [317, 326]      *
-    [5]     chrA     [336, 345]      *
-    ...      ...            ...    ...
-  [296]     chrC [23593, 23602]      *
-  [297]     chrC [23725, 24057]      *
-  [298]     chrC [24242, 24251]      *
-  [299]     chrC [24362, 24764]      *
-  [300]     chrC [24887, 24896]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(1000, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 742 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA     [  6,  15]      *
-    [2]     chrA     [ 20,  93]      *
-    [3]     chrA     [ 86,  95]      *
-    [4]     chrA     [100, 109]      *
-    [5]     chrA     [111, 120]      *
-    ...      ...            ...    ...
-  [738]     chrC [25021, 25030]      *
-  [739]     chrC [25038, 25047]      *
-  [740]     chrC [25048, 25057]      *
-  [741]     chrC [25075, 25084]      *
-  [742]     chrC [25146, 25155]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> mcomp(1000, chrs=chrs, nwin=600, winsize=10)
-GRanges object with 917 ranges and 0 metadata columns:
-        seqnames         ranges strand
-           <Rle>      <IRanges>  <Rle>
-    [1]     chrA       [ 9, 18]      *
-    [2]     chrA       [17, 28]      *
-    [3]     chrA       [32, 41]      *
-    [4]     chrA       [43, 52]      *
-    [5]     chrA       [49, 58]      *
-    ...      ...            ...    ...
-  [913]     chrC [25167, 25247]      *
-  [914]     chrC [25295, 25393]      *
-  [915]     chrC [25438, 25447]      *
-  [916]     chrC [25511, 25594]      *
-  [917]     chrC [25605, 25651]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> # Seeing what happens with nested windows of same and opposing sign.
-> 
-> gr <- GRanges("chrA", IRanges(c(1,1,1), c(100, 30, 50))) # should be okay, start point equality
-> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
-> x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
-> 
-> gr <- GRanges("chrA", IRanges(c(100, 20, 40), c(200, 200, 200))) # should be okay, end point equality
-> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE))
-> x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
-> 
-> gr <- GRanges("chrA", IRanges(c(1, 3, 50), c(200, 100, 80))) 
-> x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE)) # should be okay
-> try(x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))) # should fail.
-Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) : 
-  fully nested windows of opposite sign are not supported
-> gr2 <- GRanges(c("chrA", "chrB", "chrA"), IRanges(c(1, 3, 50), c(200, 100, 80))) 
-> x <- mergeWindows(gr2, tol=10, sign=c(TRUE, FALSE, TRUE)) # should be okay again
-> 
-> # In this case, we should see the use of the larger nested region to match to the nest window,
-> # as they should be exactly 99 bp apart.
-> gr <- c(gr, GRanges("chrA", IRanges(300, 400)))
-> x <- mergeWindows(gr, tol=99)
-> stopifnot(length(unique(x$id))==1L)
-> x <- mergeWindows(gr, tol=98)
-> stopifnot(length(unique(x$id))==2L)
+> comp(1000, 50)
+      logFC.1     logFC.2     logCPM     PValue       FDR
+1  0.13682366 -0.13682366 -0.1467003 0.01750715 0.1068241
+2  0.16733418 -0.16733418 -0.4398554 0.02350661 0.1068241
+3  0.06387312 -0.06387312 -0.6003121 0.08391142 0.1125694
+4 -0.18806714  0.18806714 -0.5990342 0.01691093 0.1068241
+5  0.12597999 -0.12597999 -0.7510115 0.06963214 0.1068241
+6 -0.12645747  0.12645747 -0.1926523 0.09005554 0.1125694
+> comp(1000, 100)
+       logFC.1      logFC.2     logCPM     PValue        FDR
+1  0.174120261 -0.174120261 -0.6738346 0.01562177 0.07090863
+2  0.168010883 -0.168010883 -0.6922139 0.07683830 0.10419117
+3  0.080601920 -0.080601920 -0.7507711 0.12468664 0.13552896
+4 -0.150350744  0.150350744 -0.6913354 0.07710147 0.10419117
+5 -0.069252211  0.069252211 -0.3723081 0.05258395 0.09263846
+6 -0.006396196  0.006396196 -0.3368472 0.03080045 0.08472832
+> comp(1000, 200)
+        logFC.1       logFC.2     logCPM      PValue       FDR
+1  0.0308734522 -0.0308734522 -0.4586882 0.059332835 0.1178462
+2 -0.0126538901  0.0126538901 -0.5437118 0.074244453 0.1197491
+3  0.0009290703 -0.0009290703 -0.5493148 0.071559901 0.1197491
+4 -0.0538280630  0.0538280630 -0.6108927 0.051208772 0.1178462
+5  0.2271845077 -0.2271845077 -0.5725624 0.053468067 0.1178462
+6  0.1803726591 -0.1803726591  0.5290900 0.006880156 0.1104780
+> comp(1000, 50, weights=runif(1000))
+       logFC.1      logFC.2     logCPM     PValue       FDR
+1  0.008725185 -0.008725185 -0.4951465 0.05347290 0.1098969
+2 -0.238999061  0.238999061 -0.5137052 0.20057417 0.2085245
+3  0.080476276 -0.080476276 -0.4557432 0.11570829 0.1328155
+4 -0.124759127  0.124759127 -0.2284316 0.02372177 0.1098969
+5  0.110846496 -0.110846496 -0.4685301 0.20707905 0.2085245
+6  0.132884483 -0.132884483 -0.2918869 0.05322306 0.1098969
+> comp(1000, 100, weights=runif(1000))
+      logFC.1     logFC.2      logCPM      PValue        FDR
+1  0.12689651 -0.12689651 -0.75952992 0.006971270 0.07201722
+2 -0.11127547  0.11127547 -0.66374927 0.007044645 0.07201722
+3 -0.03070684  0.03070684 -0.17476703 0.028432859 0.08905268
+4 -0.48351421  0.48351421 -0.36490293 0.097732381 0.13094819
+5 -0.41606233  0.41606233  0.04949216 0.041918991 0.09527043
+6  0.02562862 -0.02562862 -0.51676796 0.102139589 0.13094819
+> comp(1000, 200, weights=runif(1000))
+      logFC.1     logFC.2     logCPM     PValue       FDR
+1  0.20291978 -0.20291978 -0.5058035 0.03838360 0.1211986
+2 -0.01459244  0.01459244 -0.6673185 0.16941281 0.1837216
+3 -0.07181492  0.07181492 -0.3166304 0.03563950 0.1211986
+4  0.49259818 -0.49259818 -1.0823205 0.06549842 0.1241610
+5  0.05117542 -0.05117542 -0.5835729 0.06174217 0.1241610
+6 -0.53617856  0.53617856 -0.3117318 0.09502387 0.1434693
 > 
 > ###################################################################################################
 > ###################################################################################################
 > ###################################################################################################
-> # Testing the maximum limit.
-> 
-> maxcomp <- function(tol=1000, maxd=2000, ...) {
-+ 	stuff<-generateWindows(...)
-+ 	combo<-mergeWindows(stuff$region, tol=tol, max.width=maxd)
-+ 	merged.ids<-nativemerge(stuff$region, tol=tol)
-+ 
-+ 	# Parsing the merged.ids, and splitting them.
-+ 	gunk <- split(1:length(merged.ids), merged.ids)
-+ 	allstarts <- start(stuff$region)
-+ 	allends <- end(stuff$region)
-+ 	last.id <- 1L
-+ 
-+ 	for (x in names(gunk)) {
-+ 		ix <- as.integer(x)
-+ 		all.dexes <- gunk[[x]]
-+ 		curstarts <- allstarts[all.dexes]
-+ 		curends <- allends[all.dexes]
-+ 		
-+ 		full.width <- max(curends)-min(curstarts)+1L
-+ 		mult <- round(full.width/maxd)
-+ 		subwidth <- full.width/mult
-+ 
-+ 		mid.dist <- (curstarts + curends)*0.5 - min(curstarts)
-+ 		subcluster <- floor(mid.dist / subwidth)
-+ 		new.ids <- as.integer(factor(subcluster)) 
-+ 
-+ 		merged.ids[all.dexes] <- last.id + new.ids - 1L
-+ 		last.id <- last.id + max(new.ids)
-+ 	}
-+ 
-+ 	if (!identical(merged.ids, combo$id)) { stop("merging identities failed to match with maximum limit") }
-+ 	head(combo$region)
-+ }
-> 
-> maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=1)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  40,  508]      *
-  [2]     chrA [ 539,  999]      *
-  [3]     chrA [1047, 1505]      *
-  [4]     chrA [1549, 1997]      *
-  [5]     chrA [2025, 2475]      *
-  [6]     chrA [2497, 2962]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   6,  504]      *
-  [2]     chrA [ 530, 1013]      *
-  [3]     chrA [1023, 1487]      *
-  [4]     chrA [1521, 2009]      *
-  [5]     chrA [2042, 2516]      *
-  [6]     chrA [2532, 3038]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(100, maxd=500, chrs=chrs, nwin=200, winsize=100)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  39,  570]      *
-  [2]     chrA [ 516, 1053]      *
-  [3]     chrA [ 986, 1533]      *
-  [4]     chrA [1459, 1998]      *
-  [5]     chrA [1947, 2525]      *
-  [6]     chrA [2452, 2995]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=1)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  17, 1025]      *
-  [2]     chrA [1033, 2040]      *
-  [3]     chrA [2047, 3058]      *
-  [4]     chrA [3067, 4067]      *
-  [5]     chrA [4085, 5090]      *
-  [6]     chrB [   5, 1018]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   2, 1045]      *
-  [2]     chrA [1053, 2082]      *
-  [3]     chrA [2092, 3133]      *
-  [4]     chrA [3132, 4174]      *
-  [5]     chrA [4176, 5214]      *
-  [6]     chrB [   8,  983]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(100, maxd=1000, chrs=chrs, nwin=500, winsize=100)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  12, 1129]      *
-  [2]     chrA [1044, 2211]      *
-  [3]     chrA [2127, 3283]      *
-  [4]     chrA [3197, 4361]      *
-  [5]     chrA [4276, 5389]      *
-  [6]     chrB [  37, 1055]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> maxcomp(1000, maxd=500, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  46,  542]      *
-  [2]     chrA [ 563, 1052]      *
-  [3]     chrA [1085, 1576]      *
-  [4]     chrA [1599, 2085]      *
-  [5]     chrA [2108, 2581]      *
-  [6]     chrA [2611, 3096]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(1000, maxd=500, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  14,  493]      *
-  [2]     chrA [ 499,  971]      *
-  [3]     chrA [ 979, 1467]      *
-  [4]     chrA [1465, 1949]      *
-  [5]     chrA [1960, 2438]      *
-  [6]     chrA [2442, 2906]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(1000, maxd=500, chrs=chrs, nwin=600, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   8,  515]      *
-  [2]     chrA [ 520, 1014]      *
-  [3]     chrA [1020, 1533]      *
-  [4]     chrA [1530, 2042]      *
-  [5]     chrA [2041, 2547]      *
-  [6]     chrA [2553, 3058]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> maxcomp(1000, maxd=2000, chrs=chrs, nwin=200, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  35, 1796]      *
-  [2]     chrA [1834, 3510]      *
-  [3]     chrA [3550, 5309]      *
-  [4]     chrB [  17, 1936]      *
-  [5]     chrB [1988, 3848]      *
-  [6]     chrB [3904, 5744]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(1000, maxd=2000, chrs=chrs, nwin=500, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [  14, 1684]      *
-  [2]     chrA [1693, 3360]      *
-  [3]     chrA [3356, 5030]      *
-  [4]     chrB [  35, 2051]      *
-  [5]     chrB [2069, 4075]      *
-  [6]     chrB [4082, 6094]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> maxcomp(1000, maxd=2000, chrs=chrs, nwin=600, winsize=10)
-GRanges object with 6 ranges and 0 metadata columns:
-      seqnames       ranges strand
-         <Rle>    <IRanges>  <Rle>
-  [1]     chrA [   1, 2476]      *
-  [2]     chrA [2482, 4959]      *
-  [3]     chrB [  26, 2086]      *
-  [4]     chrB [2097, 4157]      *
-  [5]     chrB [4171, 6237]      *
-  [6]     chrB [6236, 8307]      *
-  -------
-  seqinfo: 3 sequences from an unspecified genome; no seqlengths
-> 
-> ###################################################################################################
+> # End.
 > 
 > 
 > proc.time()
    user  system elapsed 
- 15.350   0.149  15.560 
+  8.929   0.114   9.095 
