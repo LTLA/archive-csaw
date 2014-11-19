@@ -1,6 +1,6 @@
 #include "csaw.h"
 
-void split_cluster(const int*, const int*, const int&, const int&, const int&, int*);
+int split_cluster(const int*, const int*, const int&, const int&, const int&, const int&, int*);
 
 /* We assume that incoming elements are sorted by chr -> start -> end. We then proceed 
  * to aggregate elements by chaining together elements that are less than 'tolerance'
@@ -37,10 +37,10 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 	try {
 		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, n));
 		int* optr=INTEGER(VECTOR_ELT(output, 0));
-		*optr=1;
 		int start_index=0, last_end=*eptr;
 		bool diffchr, diffsign;
-		int i;
+		int i, ngroups;
+		*optr=ngroups=1;
 
 		for (i=1; i<n; ++i) {
 			diffchr=(cptr[i]!=cptr[i-1]);
@@ -50,8 +50,9 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 				|| sptr[i]-last_end-1 > tol							// Space between windows, start anew if this is greater than the tolerance.
 				|| diffsign 										// Checking if the sign is consistent.
 		   	) {
- 			    if (limit_size) { split_cluster(sptr, eptr, start_index, i, maxs, optr); } // Splitting the cluster, if desired.
-				optr[i]=optr[i-1]+1; 
+ 			    if (limit_size) { ngroups=split_cluster(sptr, eptr, last_end, start_index, i, maxs, optr); } // Splitting the cluster, if desired.
+				++ngroups;
+				optr[i]=ngroups; 
 				start_index=i;
 			} else {
 				optr[i]=optr[i-1];
@@ -73,16 +74,15 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
  			 * such cases. This ensures that the following windows get a change to compute
  			 * distances to the parent end (which should be closer).
  			 */
- 		    if (!diffchr && eptr[i] < eptr[i-1]) {
+ 		    if (!diffchr && eptr[i] < last_end) {
  			   	if (diffsign) { throw std::runtime_error("fully nested windows of opposite sign are not supported"); } 
 			} else { last_end=eptr[i]; }
 		}
 
 		// Cleaning up the last cluster, if necessary.
-  	  	if (limit_size) { split_cluster(sptr, eptr, start_index, n, maxs, optr); }
+  	  	if (limit_size) { ngroups=split_cluster(sptr, eptr, last_end, start_index, n, maxs, optr); }
 
 		// Now, identifying the chromosome, start and end of each region.
-		const int ngroups=optr[n-1];
 		SET_VECTOR_ELT(output, 1, allocVector(INTSXP, ngroups));
 		int* ocptr=INTEGER(VECTOR_ELT(output, 1));
 		SET_VECTOR_ELT(output, 2, allocVector(INTSXP, ngroups));
@@ -113,15 +113,15 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 	return mkString(e.what());
 }
 
-void split_cluster(const int* starts, const int* ends, const int& xs, const int& xe, const int& width, int* output) { 
-	double full_width=ends[xe-1]-starts[xs]+1;
-	if (full_width <= width) { return; }
+int split_cluster(const int* starts, const int* ends, const int& actual_end, const int& xs, const int& xe, const int& width, int* output) { 
+	double full_width=actual_end-starts[xs]+1;
+	if (full_width <= width) { return output[xs]; }
 	int mult=int(full_width/width+0.5);
-	if (mult==1) { return; }
+	if (mult==1) { return output[xs]; }
 
 	/* There can only be `mult` subclusters. At the worst, `cur_diff`
-	   will be equal to `ends[xe-1] - starts[xs]`. Division by `subwidth` will
-	   give an expression of `(ends[xe-1] - starts[xs]) / [ (ends[xe-1] - starts[xs] + 1) / mult ]`.
+	   will be equal to `actual_end - starts[xs]`. Division by `subwidth` will
+	   give an expression of `(actual_end - starts[xs]) / [ actual_end - starts[xs] + 1) / mult ]`.
 	   This will always be less than `mult`, so flooring it will give `mult-1`,
 	   i.e., the last index of `instantiated`.
 	 */
@@ -149,5 +149,7 @@ void split_cluster(const int* starts, const int* ends, const int& xs, const int&
 
 	// Assigning indices back to the output vector.
 	for (i=xs; i<xe; ++i) { output[i]=instantiated[output[i]]; }
-	return;	
+
+	// Returning the last group index that was used.
+	return output_index-1;	
 }
