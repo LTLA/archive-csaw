@@ -12,8 +12,7 @@ suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE) { 
 	# Simulating first.
 	bam <- regen(nreads, chromos, outfname)
-	win.data <- generateWindows(chrs=chromos, winsize=res, nwin=20)
-	windows <- win.data$region
+	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
 	nwin <- length(windows)
 
 	# Running profileSites.

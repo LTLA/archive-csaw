@@ -87,9 +87,7 @@ generateWindows <- function(chrs, nwin, winsize) {
 			pmin(chrs[[x]], pos+winsize-1L)))))
 	}
 	total.n<-nwin*length(chrs)
-	tab<-data.frame(logFC=runif(total.n, -1, 1), logCPM=runif(total.n, -2, 1),
-		PValue=rbeta(total.n, 1, 10))
-	return(list(region=allregs, table=tab))
+	return(allregs)
 }
 
 ###################################################################################################

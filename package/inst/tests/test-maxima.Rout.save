@@ -24,18 +24,18 @@ Type 'q()' to quit R.
 > 
 > comp <- function(nregs, chromos, winsize, range) {
 + 	reg.data <- generateWindows(chromos, nregs, winsize)
-+ 	reg.data$region <- reg.data$region[sample(length(reg.data$region))]
-+ 	metric <- reg.data$table$logCPM
++ 	reg.data <- reg.data[sample(length(reg.data))]
++ 	metric <- runif(length(reg.data), -1, 1)
 + 
 + 	# Getting max.
-+ 	is.max <- findMaxima(reg.data$region, range=range, metric=metric)
++ 	is.max <- findMaxima(reg.data, range=range, metric=metric)
 + 
 + 	# Finding our own maxima.
 + 	for (x in 1:length(nregs)) {
-+ 		new.reg <- reg.data$region[x]
++ 		new.reg <- reg.data[x]
 + 		start(new.reg) <- start(new.reg) - range
 + 		end(new.reg) <- end(new.reg) + range
-+ 		all.lap <- overlapsAny(reg.data$region, new.reg)
++ 		all.lap <- overlapsAny(reg.data, new.reg)
 + 		
 + 		check.max <- (metric[x] >= max(metric[all.lap]))
 + 		if (!identical(check.max, is.max[x])) { stop("mismatch in max truths") }
@@ -48,44 +48,44 @@ Type 'q()' to quit R.
 > 
 > set.seed(2394234)
 > comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=50)
-[1] 18
+[1] 16
 > comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=100)
-[1] 13
+[1] 9
 > comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=200)
 [1] 6
 > comp(100, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=10, range=500)
 [1] 3
 > 
 > comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=50)
-[1] 6
+[1] 9
 > comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=100)
-[1] 7
+[1] 6
 > comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=200)
-[1] 3
+[1] 4
 > comp(20, chromos=c(chrA=1000, chrB=2000, chrC=500), winsize=100, range=500)
 [1] 3
 > 
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=50)
-[1] 130
+[1] 132
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=100)
-[1] 80
+[1] 81
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=200)
-[1] 39
+[1] 41
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=20, range=500)
-[1] 19
+[1] 18
 > 
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=50)
-[1] 61
+[1] 64
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=100)
-[1] 45
+[1] 48
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=200)
 [1] 33
 > comp(500, chromos=c(chrA=10000, chrB=20000, chrC=5000), winsize=100, range=500)
-[1] 19
+[1] 18
 > 
 > #######################################################################################
 > 
 > 
 > proc.time()
    user  system elapsed 
-  9.536   0.117   9.677 
+  9.627   0.138   9.767 
