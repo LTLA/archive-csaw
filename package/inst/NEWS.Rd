@@ -21,6 +21,9 @@ Changed algorithm for splitting of large peaks in mergeWindows().
 \item
 Stored counting parameters in exptData for windowCounts(), regionCounts().
 
+\item
+Fixed small inaccuracies with continuity correction addition in normalizeCounts() for NB-loess.
+
 \item 
 Switched to fragment midpoint for binning of paired-end data in windowCounts().
 

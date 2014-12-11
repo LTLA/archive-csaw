@@ -6,8 +6,7 @@
 \description{Calculate normalization factors or offsets using count data from multiple libraries.}
 
 \usage{
-normalizeCounts(counts, lib.sizes, type=c("scaling", "loess"), 
-    weighted=FALSE, dispersion=0.05, ...)
+normalizeCounts(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, ...)
 }
 
 \arguments{
@@ -15,7 +14,6 @@ normalizeCounts(counts, lib.sizes, type=c("scaling", "loess"),
   \item{lib.sizes}{a numeric vector specifying the total number of reads per library}
   \item{type}{a character string indicating what type of normalization is to be performed}
   \item{weighted}{a logical scalar indicating whether precision weights should be used for TMM normalization}
-  \item{dispersion}{a numeric scalar specifying the NB dispersion for calculation of the average count in \code{type="loess"}}
   \item{...}{other arguments to be passed to \code{\link{calcNormFactors}} for \code{type="scaling"}, or \code{\link{loessFit}} for \code{type="loess"}}
 }
 

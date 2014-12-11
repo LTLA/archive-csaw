@@ -1,4 +1,4 @@
-normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, dispersion=0.05, ...) 
+normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, ...) 
 # This provides a wrapper to perform TMM normalization with non-standard
 # library sizes (e.g. due to filtering) and weighting turned off.
 # Alternatively, it can do a form a fast loess-like normalization which uses
@@ -7,7 +7,7 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 #
 # written by Aaron Lun
 # 19 November, 2013
-# modified 1 September, 2014
+# modified 11 December, 2014
 {
 	if (missing(lib.sizes)) { 
 		lib.sizes <- colSums(counts)
@@ -20,9 +20,19 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 		y <- calcNormFactors(y, doWeighting=weighted, ...)
 		return(y$samples$norm.factors)
 	} else if (type=="loess") { 
-	    ab <- aveLogCPM(counts, lib.size=lib.sizes, dispersion=dispersion)
+		# Scaled corrections squeeze offsets towards relative log-library sizes.
+		# Constant value of `cont.cor' would squeeze them towards zero.
+		cont.cor <- 0.5
+		cont.cor.scaled <- cont.cor * lib.sizes/mean(lib.sizes)
+		
+		# Using it as a prior.count for abundance ensures linearity with log-counts.
+	    ab <- aveLogCPM(counts, lib.size=lib.sizes, prior.count=cont.cor)/log2(exp(1))
+
 		offs <- matrix(0, nrow(counts), ncol(counts), byrow=TRUE)
-		for (x in 1:ncol(counts)) { offs[,x] <- loessFit(log(counts[,x]+0.5), ab, ...)$fitted }
+		for (x in 1:ncol(counts)) { 
+			fit <- loessFit(log(counts[,x]+cont.cor.scaled[x]), ab, ...)
+			offs[,x] <- fit$fitted 
+		}
 		offs <- offs-rowMeans(offs)
 		return(offs)
 	}
