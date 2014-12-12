@@ -5,16 +5,15 @@
 \description{Get the widths of the read counting interval for each region.}
 
 \usage{
-getWidths(data, pet.len=NULL)
+getWidths(data)
 }
 
 \arguments{
 \item{data}{a \code{SummarizedExperiment} object, produced by \code{\link{windowCounts}} or \code{\link{regionCounts}}}
-\item{pet.len}{an integer scalar specifying the median length of fragments for paired-end data}
 }
 
 \details{
-For single-end data, widths of all regions are increased by the average fragment length during the calculations.
+Widths of all regions are increased by the average fragment length during the calculations.
 This is because each count represents the number of (imputed) fragments overlapping each region.
 Thus, a 1 bp window has an effective width that includes the average length of each fragment. 
 
@@ -23,8 +22,9 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 % are 149 positions where the fragment overlaps the interval. So, the effective width
 % is actually 149 bp.
 
-For paired-end data, the average fragment length needs to be specified in \code{pet.len}.
-This is because the true fragment length is variable, and can vary depending on how the average is defined.
+The average fragment length is defined as \code{ext} in the parameter list from \code{paramList(data)}.
+If different \code{ext} is used between libraries, the mean value across the dataset is used.
+For paired-end data, the average fragment length needs to be specified in \code{ext}.
 One recommended strategy is to use the median of the values obtained with \code{\link{getPETSizes}}.
 }
 
@@ -48,7 +48,11 @@ getWidths(data)
 
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 data <- windowCounts(bamFile, param=readParam(pet="both"), filter=1)
-getWidths(data, pet.len=200)
+getWidths(data)
+
+# Avoid warning by defining 'ext'.
+exptData(data)$param <- reformList(exptData(data)$param, ext=200)
+getWidths(data)
 }
 
 \keyword{filtering}
