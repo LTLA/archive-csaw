@@ -38,7 +38,7 @@ out <- windowCounts(pet.file, param=readParam(pet="both"), width=100, filter=1L)
 assay(out)
 out$totals
 rowData(out)
-out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE), width=100, filter=1L)
+out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE, rescue.ext=100), width=100, filter=1L)
 assay(out)
 out$totals
 rowData(out)

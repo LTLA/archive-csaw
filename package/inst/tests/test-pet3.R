@@ -98,7 +98,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			}
 
 			# Loading windowCounts.
-			rpam <- readParam(pet=pet, rescue.pairs=rescue, ext=ext, max.frag=max.frag, 
+			rpam <- readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 				width=right+left+1, filter=0, param=rpam)

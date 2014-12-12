@@ -3,7 +3,7 @@
 # there are continuous validity checks on the list values.
 
 setClass("readParam", representation(pet="character", 
-	max.frag="integer", rescue.pairs="logical", ext="integer", 
+	max.frag="integer", rescue.pairs="logical", rescue.ext="integer", 
 	dedup="logical", minq="integer", 
 	restrict="character", discard="GRanges"))
 
@@ -14,14 +14,20 @@ setValidity("readParam", function(object) {
    	if (length(object@max.frag)!=1L || object@max.frag <= 0L) {
 		return("maximum fragment specifier must be a positive integer")
 	} 
+
 	if (length(object@rescue.pairs)!=1L) {
 		return("pair rescue specification must be a logical scalar")
 	}
-
-	if (length(object@ext)!=1L || object@ext <= 0L){
-		return("extension length must be a positive integer")	
+	if (length(object@rescue.ext)!=1L) {
+		if (is.na(object@rescue.ext)) { 
+   			if (object@rescue.pairs) { 
+				return("extension length must be specified for rescuing")
+			}
+		} else if (object@rescue.ext <= 0L){
+			return("extension length must be a positive integer")	
+		}
 	}
-	
+		
 	if (length(object@dedup)!=1L || !is.logical(object@dedup)) { 
 		return("duplicate removal specification must be a logical scalar")
 	}
@@ -55,8 +61,6 @@ setMethod("show", signature("readParam"), function(object) {
 		if (object@rescue.pairs) {
 			cat("            Extension length for rescued reads is", object@ext, "bp\n")
 		}
-	} else {
-		cat("    Extension length for single-end reads is", object@ext, "bp\n")
 	}
 
 	cat("    Duplicate removal is turned", ifelse(object@dedup, "on", "off"), "\n")
@@ -82,7 +86,7 @@ setMethod("show", signature("readParam"), function(object) {
 })
 
 readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
-	ext=NULL, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
+	rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
 # to synchronize read loading throughout the package, such that
@@ -93,18 +97,16 @@ readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
 {
 	max.frag <- as.integer(max.frag)
 	rescue.pairs <- as.logical(rescue.pairs)
-	if (is.null(ext)) { 
-		ext <- 100L
-		attr(ext, "default") <- TRUE
-	} else {
-		ext <- as.integer(ext)
-	}
+	if (rescue.pairs) {
+		if (is.na(rescue.ext)) { stop("need to specify extension length for rescued reads") }
+ 	}	
+	rescue.ext <- as.integer(rescue.ext)
 
 	dedup <- as.logical(dedup)
 	minq <- as.integer(minq)
 	restrict <- as.character(restrict) 
 	new("readParam", pet=pet, max.frag=max.frag, rescue.pairs=rescue.pairs,
-		ext=ext, dedup=dedup, minq=minq, restrict=restrict, discard=discard)
+		rescue.ext=rescue.ext, dedup=dedup, minq=minq, restrict=restrict, discard=discard)
 }
 
 setGeneric("reform", function(x, ...) { standardGeneric("reform") })
@@ -117,7 +119,7 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 		incoming[[sx]] <- switch(sx, 
 			max.frag=as.integer(val),
 			rescue.pairs=as.logical(val),
-			ext=as.integer(val),
+			rescue.ext=as.integer(val),
 			dedup=as.logical(val),
 			minq=as.integer(val),
 			restrict=as.character(val),

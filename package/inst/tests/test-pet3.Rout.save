@@ -117,7 +117,7 @@ Type 'q()' to quit R.
 + 			}
 + 
 + 			# Loading windowCounts.
-+ 			rpam <- readParam(pet=pet, rescue.pairs=rescue, ext=ext, max.frag=max.frag, 
++ 			rpam <- readParam(pet=pet, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
 + 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 + 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 + 				width=right+left+1, filter=0, param=rpam)

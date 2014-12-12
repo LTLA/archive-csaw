@@ -18,7 +18,7 @@ Slots are defined as:
 	\item{\code{pet}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
 	\item{\code{rescue.pairs}:}{a logical scalar indicating whether invalid read pairs should be rescued}
-	\item{\code{ext}:}{an integer scalar indicating the extension length for single-end reads, or rescued reads from invalid pairs}
+	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
 	\item{\code{restrict}:}{a character vector containing the names of allowable chromosomes from which reads will be extracted}
@@ -43,18 +43,6 @@ Conversely, if \code{discard} is set, a read will be removed if the correspondin
 This is useful for removing reads in repeat regions. 
 }
 
-\section{Parameter settings for single-end data}{
-If \code{pet="none"}, reads are assumed to be single-end.
-Directional extension is often performed here, whereby each read is extended from its 3' end to recover the interval of the fragment from which the read was derived.
-The \code{ext} parameter stores this average fragment length for common use.
-It can be estimated using \code{\link{correlateReads}} or from fragment length diagnostics during library preparation. 
-
-Some functions accept a list of \code{readParam} objects, such that a different value of \code{ext} can be specified for each library.
-This ensures that sufficient extension is performed for libraries with larger fragments (and hence, wider peaks).
-However, caution is required as differences in peak widths may then be detected.
-Such differences are not biologically interesting and should be filtered out.
-}
-
 \section{Parameter settings for paired-end data}{
 For \code{pet="both"}, reads are extracted with the previously described filters, i.e., \code{discard}, \code{minq}, \code{dedup}.
 Extracted reads are then grouped into proper pairs.
@@ -64,8 +52,8 @@ Fragment sizes above \code{max.frag} are removed; use \code{\link{getPETSizes}} 
 
 By default, only reads in proper pairs are used to construct a fragment interval.
 If \code{rescue.pairs=TRUE}, the function will also attempt to recover reads from improper pairs.
-For each improper pair, the read with the higher MAPQ score will be directionally extended as described with \code{ext} and \code{frag.len}.
-Here, \code{ext} should be set as the median fragment length from \code{\link{getPETSizes}}.
+For each improper pair, the read with the higher MAPQ score will be directionally extended with \code{rescue.ext}.
+Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPETSizes}}.
 The extended read will then be used as the fragment interval.
 Similarly, any reads without a mapped mate will be extended. 
 For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
@@ -77,12 +65,20 @@ Treating the data as single-end may allow the analysis to be salvaged.
 In all cases, users should ensure that each BAM file containing paired-end data is properly synchronized prior to count loading.
 }
 
+\section{Parameter settings for single-end data}{
+If \code{pet="none"}, reads are assumed to be single-end.
+Read extraction from BAM files is performed with the same filters as described above.
+Note that directional extension is often used in analyses of single-end data.
+However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
+Instead, the average fragment length must be specified in each of the relevant downstream functions.
+This is because directional extension pertains to analysis, not read extraction.
+}
+
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, ext=NULL, frag.len=ext, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
-		\code{ext} is set at a default value of 100 bp, if not otherwise specified.
 	}
 }
 }
@@ -130,7 +126,7 @@ blah$dedup
 # Use 'reform' if only some arguments need to be changed.
 blah
 reform(blah, dedup=TRUE)
-reform(blah, ext=200)
+reform(blah, rescue.pairs=TRUE, rescue.ext=200)
 reform(blah, pet="both", max.frag=212.0)
 }
 
