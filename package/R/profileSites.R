@@ -1,4 +1,4 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
+profileSites <- function(bam.files, regions, range=5000, ext=NULL, weight=1, param=readParam()) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -10,6 +10,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
+	if (!is.null(ext)) { paramlist <- reformList(paramlist, ext=ext) }
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
 	# Splitting up the regions.
@@ -40,9 +41,10 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 					reads <- .extractSET(bam.files[b], where=where, param=curpar)
 				} else {
 					reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
-				} 
-				start.pos <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
-				end.pos <- start.pos + ext - 1L
+				}
+   				extended <- .extendSE(reads, chrlen=outlen, param=curpar)
+				start.pos <- extended$start
+				end.pos <- extended$end
 			} else {
                 if (curpar$rescue.pairs) {
 					out <- .rescuePET(bam.files[b], where=where, param=curpar)

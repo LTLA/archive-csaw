@@ -1,4 +1,4 @@
-windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
+windowCounts <- function(bam.files, spacing=50, width=spacing, ext=NULL, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
@@ -34,11 +34,14 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	# that 'left' and 'right' refer to the extension of the window from a nominal
 	# 'center' point. This simplifies read counting as we just measure read
 	# overlaps to those center points, spaced at regular intervals. 
+	if (length(ext)) { 
+		if (ext <= 0L) { stop("extension width must be a positive integer") }
+		paramlist <- reformList(paramlist, ext=ext) 
+	}
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
 	if (left + right < 0L) { stop("width must be a positive integer") }
 	if (spacing <= 0L) { stop("spacing must be a positive integer") }
-	if (ext <= 0L) { stop("extension width must be a positive integer") }
 
 	# Need to account for the possible loss of a centre point from the front when
 	# the shift is non-zero, because the corresponding window is wholly outside the
@@ -74,9 +77,9 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 				} else {
 					reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
 				}
-				frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
-				if (length(frag.start)) { frag.start <- pmin(frag.start, outlen) }
-				frag.end <- frag.start+ext-1L
+				extended <- .extendSE(reads, chrlen=outlen, param=curpar)
+				frag.start <- extended$start
+				frag.end <- extended$end
 			} else {
 				if (curpar$rescue.pairs) { 
 					out <- .rescuePET(bam.files[bf], where=where, param=curpar)
@@ -128,12 +131,13 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	if (is.list(param)) { 
 		index <- 1:nbam
 	} else {
-		index <- 0L
+		index <- 1L
+		paramlist <- paramlist[1]
 	}
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
 		rowData=all.regions, 
 		colData=DataFrame(bam.files=bam.files, totals=totals, param=index),
-		exptData=SimpleList(ext=ext, spacing=spacing, width=width, 
-			shift=shift, param=param)))
+		exptData=SimpleList(spacing=spacing, width=width, 
+			shift=shift, param=paramlist)))
 }
 

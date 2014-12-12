@@ -1,4 +1,4 @@
-regionCounts <- function(bam.files, regions, ext=100, param=readParam())
+regionCounts <- function(bam.files, regions, ext=NULL, param=readParam())
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
@@ -10,6 +10,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
+	if (!is.null(ext)) { paramlist <- reformList(paramlist, ext=ext) }
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
     totals <- integer(nbam)
@@ -31,9 +32,9 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
                 } else {
                     reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
                 }
-                frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
-                if (length(frag.start)) { frag.start <- pmin(frag.start, outlen) }
-                frag.end <- frag.start+ext-1L
+				extended <- .extendSE(reads, chrlen=outlen, param=curpar)
+				frag.start <- extended$start
+				frag.end <- extended$end
             } else {
                 if (curpar$rescue.pairs) {
                     out <- .rescuePET(bam.files[bf], where=where, param=curpar)
@@ -54,10 +55,11 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	if (is.list(param)) { 
 		index <- 1:nbam
 	} else {
-		index <- 0L
+		index <- 1L
+		paramlist <- paramlist[1]
 	}
 	return(SummarizedExperiment(assays=counts, 
 		rowData=regions, 
 		colData=DataFrame(bam.files, totals=totals, param=index),
-		exptData=SimpleList(ext=ext, param=param)))
+		exptData=SimpleList(param=paramlist)))
 }
