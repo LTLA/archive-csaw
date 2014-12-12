@@ -6,7 +6,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 # 
 # written by Aaron Lun
 # a long long time ago
-# modified 1 September 2014
+# last modified 12 December 2014
 {
 	if (param$pet!="both") { stop("paired-end inputs required") }
     extracted.chrs <- .activeChrs(bam.file, param$restrict)

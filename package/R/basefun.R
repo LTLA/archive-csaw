@@ -5,6 +5,10 @@
 # within the repeat region.  We use the real alignment width, just in case we
 # have very long reads in the alignment that are heavily soft-clipped (i.e., they
 # should be reported as within but the read length will put them out).
+#
+# written by Aaron Lun
+# created 8 December 2013
+# last modified 12 December 2014
 {
 	all.fields <- c("pos", "qwidth", extras)
 	if (!is.na(param$minq)) { all.fields <- c(all.fields, "mapq") }
@@ -43,7 +47,8 @@
 # well with the rest of the pipelines which assume coordinate sorting.
 # 
 # written by Aaron Lun
-# 8 December 2013
+# created 8 December 2013
+# last modified 12 December 2012
 {
 	reads <- .extractSET(bam.file, extras=c("qname", "flag"), where=where, 	
 		param=param, isPaired=TRUE, hasUnmappedMate=FALSE)
@@ -68,7 +73,8 @@
 # Interchromosomal pairs get counted once on each chromosome.
 #
 # written by Aaron Lun
-# 13 May, 2014
+# created 13 May 2014
+# last modified 12 December 2012
 {
 	reads <- .extractSET(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
 		param=param, isPaired=TRUE)
@@ -96,7 +102,12 @@
 		      size=c(output$size, rep(param$rescue.ext, sum(additor))) ) )
 }
 
-.makeParamList <- function(nbam, param) {
+.makeParamList <- function(nbam, param) 
+# Converts a readParam object into a list, if it isn't so already.
+# 
+# written by Aaron Lun
+# created 12 December 2014
+{
 	if (!is.list(param)) { 
 		paramlist <- lapply(1:nbam, FUN=function(x) { param })
 	} else if (nbam!=length(param)) {
@@ -116,6 +127,9 @@
 .activeChrs <- function(bam.files, restrict) 
 # Processes the incoming data; checks that bam headers are all correct,
 # truncates the list according to 'restrict'.
+# 
+# written by Aaron Lun
+# created 12 December 2014
 { 
 	originals <- NULL
 	for (bam in bam.files) {

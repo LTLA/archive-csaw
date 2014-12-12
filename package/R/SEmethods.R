@@ -4,7 +4,7 @@
 # for the library sizes.
 #
 # written by Aaron Lun
-# 2 September, 2014
+# created 2 September 2014
 
 setMethod("normalize", "SummarizedExperiment", function(object, ...) {
 	if (is.null(object$totals)) { 
@@ -19,7 +19,14 @@ setMethod("asDGEList", "SummarizedExperiment", function(object, ...) {
 })
 
 setGeneric("param", function(object) { standardGeneric("param") })
-setMethod("param", "SummarizedExperiment", function(object) {
+setMethod("param", "SummarizedExperiment", function(object) 
+# This defines a method to extract readParam objects from a counted
+# SummarizedExperiment, for re-use in recounting or whatnot. It requires some
+# finesse as we need to account for library-specific lists of parameters.
+#
+# written by Aaron Lun
+# created 12 December 2014
+{
 	if (any(object$param==0L)) {
 		if (!all(object$param==0L)) {
 			stop("zero readParam indices mixed in with non-zero indices")

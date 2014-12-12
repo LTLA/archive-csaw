@@ -4,7 +4,8 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 # and PET manipulation.
 #
 # written by Aaron Lun
-# 1 September 2014
+# created 1 September 2014
+# last modified 12 December 2014
 {
     if (length(cur.region)!=1L) { stop("exactly one range is required for plotting") }
     chrs <- scanBamHeader(bam.file)[[1]][[1]]

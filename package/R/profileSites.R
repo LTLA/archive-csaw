@@ -5,8 +5,8 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 # records the coverage of the resulting bases, up to `max.dist`.
 #
 # written by Aaron Lun
-# 2 July 2012
-# modified 10 November, 2014
+# created 2 July 2012
+# last modified 12 December 2014
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)

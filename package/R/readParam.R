@@ -81,7 +81,7 @@ readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
 # you don't have to manually respecify them in each function.
 #
 # written by Aaron Lun
-# 1 September 2014
+# created 1 September 2014
 {
 	max.frag <- as.integer(max.frag)
 	rescue.pairs <- as.logical(rescue.pairs)
@@ -107,13 +107,19 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 			rescue.ext=as.integer(val),
 			dedup=as.logical(val),
 			minq=as.integer(val),
-			restrict=as.character(restrict),
+			restrict=as.character(val),
 			val)
 	}
 	do.call(initialize, c(x, incoming))
 })
 
-reformList <- function(paramlist, ...) {
+reformList <- function(paramlist, ...) 
+# A convenience function to standardize parameters in a list of 
+# readParam objects.
+#
+# written by Aaron Lun
+# created 12 December 2014
+{
 	if (is.list(paramlist)) { 
 		return(lapply(paramlist, FUN=reform, ...))
 	} else {

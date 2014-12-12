@@ -137,4 +137,3 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 			shift=shift, param=param)))
 }
 
-
