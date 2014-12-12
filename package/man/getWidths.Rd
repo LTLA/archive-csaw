@@ -51,7 +51,7 @@ data <- windowCounts(bamFile, param=readParam(pet="both"), filter=1)
 getWidths(data)
 
 # Avoid warning by defining 'ext'.
-exptData(data)$param <- reformList(exptData(data)$param, ext=200)
+exptData(data)$param <- reformList(exptData(data)$param, rescue.ext=200)
 getWidths(data)
 }
 
