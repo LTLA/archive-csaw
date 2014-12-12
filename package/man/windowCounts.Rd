@@ -18,7 +18,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar indicating whether binning should be performed}
-	\item{param}{a \code{readParam} object containing read extraction parameters}
+	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
 \value{
@@ -62,7 +62,8 @@ Only the 5' end of each read or the midpoint of each fragment (for paired-end da
 \seealso{
 \code{\link{correlateReads}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}}
+\code{\link{SummarizedExperiment}},
+\code{\link{param}}
 }
 
 \examples{

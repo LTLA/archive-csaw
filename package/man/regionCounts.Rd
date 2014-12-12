@@ -13,7 +13,7 @@ regionCounts(bam.files, regions, ext=100, param=readParam())
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{regions}{a \code{GRanges} object containing the regions over which reads are to be counted}
 	\item{ext}{an integer scalar describing the average length of the sequenced fragment}
-	\item{param}{a \code{readParam} object containing read extraction parameters}
+	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
 \value{
@@ -37,7 +37,8 @@ Checking that the output \code{totals} are the same between the two calls is str
 \code{\link{countOverlaps}},
 \code{\link{windowCounts}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}}
+\code{\link{SummarizedExperiment}},
+\code{\link{param}}
 }
 
 \examples{

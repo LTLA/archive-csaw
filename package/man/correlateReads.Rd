@@ -13,7 +13,7 @@ correlateReads(bam.files, max.dist=1000, cross=TRUE, param=readParam())
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{max.dist}{integer scalar specifying the maximum delay distance over which correlation coefficients will be calculated}
 	\item{cross}{a logical scalar specifying whether cross-correlations should be computed}
-	\item{param}{a \code{readParam} object containing read extraction parameters}
+	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
 \value{
