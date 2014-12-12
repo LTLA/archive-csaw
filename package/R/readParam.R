@@ -3,7 +3,7 @@
 # there are continuous validity checks on the list values.
 
 setClass("readParam", representation(pet="character", 
-	max.frag="integer", rescue.pairs="logical", rescue.ext="integer",
+	max.frag="integer", rescue.pairs="logical", ext="integer", 
 	dedup="logical", minq="integer", 
 	restrict="character", discard="GRanges"))
 
@@ -17,9 +17,11 @@ setValidity("readParam", function(object) {
 	if (length(object@rescue.pairs)!=1L) {
 		return("pair rescue specification must be a logical scalar")
 	}
-	if (length(object@rescue.ext)!=1L || object@rescue.ext <= 0L){
-		return("rescue extension length must be a positive integer")	
+
+	if (length(object@ext)!=1L || object@ext <= 0L){
+		return("extension length must be a positive integer")	
 	}
+	
 	if (length(object@dedup)!=1L || !is.logical(object@dedup)) { 
 		return("duplicate removal specification must be a logical scalar")
 	}
@@ -45,26 +47,32 @@ setMethod("show", signature("readParam"), function(object) {
 	   both="Extracting reads in paired-end mode",
 	   first="Extracting the first read of each pair",
 	   second="Extracting the second read of each pair"), "\n", sep="")
+
 	if (object@pet=="both") { 
 		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
 		cat("        Rescuing of improperly paired reads is", 
 			ifelse(object@rescue.pairs, "enabled", "disabled"), "\n")
 		if (object@rescue.pairs) {
-			cat("            Extension length for rescued reads is", object@rescue.ext, "bp\n")
+			cat("            Extension length for rescued reads is", object@ext, "bp\n")
 		}
+	} else {
+		cat("    Extension length for single-end reads is", object@ext, "bp\n")
 	}
+
 	cat("    Duplicate removal is turned", ifelse(object@dedup, "on", "off"), "\n")
 	if (is.na(object@minq)) { 
 		cat("    No minimum threshold is set on the mapping score\n")
 	} else {
 		cat("    Minimum allowed mapping score is", object@minq, "\n")
 	}
+
 	rl <- length(object@restrict)
 	if (rl) { 
 		cat("    Read extraction is limited to", rl, ifelse(rl==1L, "sequence\n", "sequences\n"))
 	} else {
 		cat("    No restrictions are placed on read extraction\n")
 	}
+
 	dl <- length(object@discard)
 	if (dl) { 
 		cat("    Reads in", dl, ifelse(dl==1L, "region", "regions"), "will be discarded\n")
@@ -74,7 +82,7 @@ setMethod("show", signature("readParam"), function(object) {
 })
 
 readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
-	rescue.ext=200, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
+	ext=NULL, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
 # to synchronize read loading throughout the package, such that
@@ -85,13 +93,18 @@ readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
 {
 	max.frag <- as.integer(max.frag)
 	rescue.pairs <- as.logical(rescue.pairs)
-	rescue.ext <- as.integer(rescue.ext)
+	if (is.null(ext)) { 
+		ext <- 100L
+		attr(ext, "default") <- TRUE
+	} else {
+		ext <- as.integer(ext)
+	}
+
 	dedup <- as.logical(dedup)
 	minq <- as.integer(minq)
 	restrict <- as.character(restrict) 
 	new("readParam", pet=pet, max.frag=max.frag, rescue.pairs=rescue.pairs,
-		rescue.ext=rescue.ext, dedup=dedup, minq=minq, restrict=restrict, 
-		discard=discard)
+		ext=ext, dedup=dedup, minq=minq, restrict=restrict, discard=discard)
 }
 
 setGeneric("reform", function(x, ...) { standardGeneric("reform") })
@@ -104,7 +117,7 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 		incoming[[sx]] <- switch(sx, 
 			max.frag=as.integer(val),
 			rescue.pairs=as.logical(val),
-			rescue.ext=as.integer(val),
+			ext=as.integer(val),
 			dedup=as.logical(val),
 			minq=as.integer(val),
 			restrict=as.character(val),
@@ -113,16 +126,3 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 	do.call(initialize, c(x, incoming))
 })
 
-reformList <- function(paramlist, ...) 
-# A convenience function to standardize parameters in a list of 
-# readParam objects.
-#
-# written by Aaron Lun
-# created 12 December 2014
-{
-	if (is.list(paramlist)) { 
-		return(lapply(paramlist, FUN=reform, ...))
-	} else {
-		return(reform(paramlist, ...))
-	}
-}
