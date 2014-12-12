@@ -6,7 +6,7 @@
 \description{Count the number of extended reads overlapping a sliding window at spaced positions across the genome.}
 
 \usage{
-windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
+windowCounts(bam.files, spacing=50, width=spacing, ext=NULL, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 }
 
@@ -26,7 +26,7 @@ A \code{\link{SummarizedExperiment}} object is returned containing one integer m
 Each entry of the matrix contains the count for each library (column) at each window (row).
 The coordinates of each window are stored as the \code{rowData}.
 The total number of reads in each library are stored as \code{totals} in the \code{colData}.
-Other read counting parameters (e.g., \code{ext}, \code{param}) are stored in the \code{exptData}.
+Other read counting parameters (e.g., \code{spacing}, \code{param}) are stored in the \code{exptData}.
 }
 
 \details{
@@ -41,12 +41,18 @@ New windows are found by sliding the current window to the right by the specifie
 Increasing \code{spacing} will reduce the frequency at which counts are extracted from the genome. 
 This results in some loss of resolution but it may be necessary when machine memory is limited. 
 
-Each read in \code{bam.files} is extended by \code{ext} in the direction of the read to obtain a rough estimate of the fragment boundaries. 
-The number of fragments overlapping the window for each library is then counted for each window position. 
-For single-end data, the value of \code{ext} can be estimated using \code{correlateReads} or from fragment length diagnostics during library preparation. 
-For paired-end data, the fragment boundaries can be computed exactly for proper pairs, by specifying \code{pet="both"} in \code{\link{readParam}}.
-If \code{rescue.pairs=TRUE}, improperly paired reads are salvaged by directional extension to \code{ext}.
+Read extraction from the BAM files is governed by the \code{param} argument.
+Specifying a single \code{readParam} object will use the same extraction parameters for all files.
+However, different parameters can be used for each file by specifying a list of \code{readParam} objects.
+Users should take care with library-specific parameters, lest spurious differences be introduced between libraries.
 
+For single-end reads, directional extension is performed to obtain a rough estimate of the fragment interval. 
+By default, the extension length is recovered from the \code{param} object.
+If \code{ext} is specified, it overrides any value recovered from \code{param}.
+Obviously, for paired-end data, the fragment boundaries can be computed exactly for proper pairs.
+See \code{\link{readParam}} for more details on the relevant parameters.
+
+The number of fragments overlapping the window for each library is then counted for each window position. 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
 If \code{filter=NULL}, the count sum filter threshold is automatically defined as the number of libraries multiplied by 5. 
@@ -63,7 +69,7 @@ Only the 5' end of each read or the midpoint of each fragment (for paired-end da
 \code{\link{correlateReads}},
 \code{\link{readParam}},
 \code{\link{SummarizedExperiment}},
-\code{\link{param}}
+\code{\link{paramList}}
 }
 
 \examples{

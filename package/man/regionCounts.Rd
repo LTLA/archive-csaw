@@ -6,7 +6,7 @@
 \description{Count the number of extended reads overlapping pre-specified regions}
 
 \usage{
-regionCounts(bam.files, regions, ext=100, param=readParam())
+regionCounts(bam.files, regions, ext=NULL, param=readParam())
 }
 
 \arguments{
@@ -21,7 +21,7 @@ A \code{\link{SummarizedExperiment}} object is returned containing one integer m
 Each entry of the matrix contains the count for each library (column) at each region (row).
 The coordinates of each region are stored as the \code{rowData}.
 The total number of reads in each library are stored as \code{totals} in the \code{colData}.
-Other read counting parameters (e.g., \code{ext}, \code{param}) are stored in the \code{exptData}.
+Other read counting parameters (i.e., \code{param}) are stored in the \code{exptData}.
 }
 
 \details{
@@ -29,6 +29,10 @@ This function simply provides a wrapper around \code{\link{countOverlaps}} for r
 It is provided so as to allow for counting with awareness of the other parameters, e.g., \code{ext}, \code{pet}.
 This allows users to coordinate region-based counts with those from \code{\link{windowCounts}}. 
 Checking that the output \code{totals} are the same between the two calls is strongly recommended.
+
+By default, the extension length for single-end data is extracted from \code{param}.
+However, if \code{ext} is specified, this overrides any other value.
+See \code{\link{readParam}} for more details on extension or pairing.
 }
 
 \author{Aaron Lun}
@@ -38,7 +42,7 @@ Checking that the output \code{totals} are the same between the two calls is str
 \code{\link{windowCounts}},
 \code{\link{readParam}},
 \code{\link{SummarizedExperiment}},
-\code{\link{param}}
+\code{\link{paramList}}
 }
 
 \examples{

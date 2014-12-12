@@ -5,7 +5,7 @@
 \description{Get the coverage profile around potential binding sites.}
 
 \usage{
-profileSites(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
+profileSites(bam.files, regions, range=5000, ext=NULL, weight=1, param=readParam()) 
 }
 
 \arguments{
@@ -23,14 +23,18 @@ The shape of this profile can guide an intelligent choice of the window size in 
 For the former, restricting the \code{regions} to locally maximal windows with \code{\link{findMaxima}} is recommended prior to use of \code{profileSites}.
 
 More specifically, for each region, the profile consists of the number of non-overlapping fragments at each distance away from the closest edge of the region (to a maximum distance of \code{range}).
-Single-end reads are extended by \code{ext} in the direction of the read to impute the fragment.
+Single-end reads are directionally extended to impute the fragment.
 For paired-end reads, the interval between each pair is used as the fragment.
-If multiple \code{bam.files} are specified, reads are pooled across files for counting into each window.
+If multiple \code{bam.files} are specified, reads are pooled across files for counting into each profile.
 
 Direct aggregation will favour high-abundance regions as these have higher counts.
 If this is undesirable, high-abundance regions can be downweighted using the \code{weight} argument.
 For example, this can be set to the inverse of the sum of counts across all libraries for each region in \code{regions}.
 This will ensure that each region contributes equally to the final profile.
+
+By default, the extension length for single-end data is extracted from \code{param}.
+However, if \code{ext} is specified, this overrides any other value.
+See \code{\link{readParam}} for more details on extension or pairing.
 }
 
 \value{
