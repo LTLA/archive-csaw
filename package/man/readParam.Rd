@@ -12,19 +12,21 @@
 \description{Class to specify read loading parameters}
 
 \details{
-Each readParam object stores a number of parameters to extract reads from a BAM file.
+Each readParam object stores a number of parameters, each pertaining to the extraction of reads from a BAM file.
 Slots are defined as:
 \describe{
-	\item{\code{pet}:}{a character string indicating whether paired-end data is present}
+	\item{\code{pet}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
 	\item{\code{rescue.pairs}:}{a logical scalar indicating whether invalid read pairs should be rescued}
-	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for invalid read pairs}
+	\item{\code{ext}:}{an integer scalar indicating the extension length for single-end reads, or rescued reads from invalid pairs}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
 	\item{\code{restrict}:}{a character vector containing the names of allowable chromosomes from which reads will be extracted}
 	\item{\code{discard}:}{a \code{GRanges} object containing intervals in which any alignments will be discarded}
 }
+}
 
+\section{Removing low-quality or irrelevant reads}{
 Marked duplicate reads will be removed with \code{dedup=TRUE}.
 This may be necessary when many rounds of PCR have been performed during library preparation.
 However, it is not recommended for routine counting as it will interfere with the downstream statistical methods.
@@ -39,30 +41,34 @@ If \code{restrict} is supplied, reads will only be extracted for the specified c
 This is useful to restrict the analysis to interesting chromosomes, e.g., no contigs/scaffolds or mitochondria. 
 Conversely, if \code{discard} is set, a read will be removed if the corresponding alignment is wholly contained within the supplied ranges. 
 This is useful for removing reads in repeat regions. 
-
-The \code{pet} parameter can take values of \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}.
-If \code{pet="none"}, reads are assumed to be single-end.
-Each read will then be processed on its own merits.
-The other settings for \code{pet} and the values of \code{max.frag} and \code{rescue.pairs} describe the treatment of paired-end data; see below for more information.
 }
 
-% I don't put 'ext' in here, because it's conceivable that you'd want to try
-% different extension lengths, e.g., with and without binning, or if the
-% specified regions from peak-calling already include the fragment length.
+\section{Parameter settings for single-end data}{
+If \code{pet="none"}, reads are assumed to be single-end.
+Directional extension is often performed here, whereby each read is extended from its 3' end to recover the interval of the fragment from which the read was derived.
+The \code{ext} parameter stores this average fragment length for common use.
+It can be estimated using \code{\link{correlateReads}} or from fragment length diagnostics during library preparation. 
 
-\section{Additional advice for paired-end data}{
-Reads are first extracted in a single-end manner, using the parameters described above, e.g., \code{discard}, \code{minq}, \code{dedup}.
-For \code{pet="both"}, the extracted reads are grouped into proper pairs.
-Proper pairs are defined as reads that are close together and in an inward-facing orientation. 
+Some functions accept a list of \code{readParam} objects, such that a different value of \code{ext} can be specified for each library.
+This ensures that sufficient extension is performed for libraries with larger fragments (and hence, wider peaks).
+However, caution is required as differences in peak widths may then be detected.
+Such differences are not biologically interesting and should be filtered out.
+}
+
+\section{Parameter settings for paired-end data}{
+For \code{pet="both"}, reads are extracted with the previously described filters, i.e., \code{discard}, \code{minq}, \code{dedup}.
+Extracted reads are then grouped into proper pairs.
+Proper pairs are those where the two reads are close together and in an inward-facing orientation. 
 The fragment interval is defined as that bounded by the 5' ends of the two reads in a proper pair.
 Fragment sizes above \code{max.frag} are removed; use \code{\link{getPETSizes}} to pick an appropriate value. 
 
-If \code{rescue.pairs=FALSE}, only reads in proper pairs are used to construct a fragment interval.
-Otherwise, if \code{rescue.pairs=TRUE}, the function will first attempt to assign reads into proper pairs.
-For the remaining reads in improper pairs, the read with the higher MAPQ score will be taken and directionally extended to a length of \code{rescue.ext}.
+By default, only reads in proper pairs are used to construct a fragment interval.
+If \code{rescue.pairs=TRUE}, the function will also attempt to recover reads from improper pairs.
+For each improper pair, the read with the higher MAPQ score will be directionally extended as described with \code{ext} and \code{frag.len}.
+Here, \code{ext} should be set as the median fragment length from \code{\link{getPETSizes}}.
 The extended read will then be used as the fragment interval.
 Similarly, any reads without a mapped mate will be extended. 
-Note that both reads will be rescued and extended for interchromosomal read pairs.
+For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
 
 Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pet="first"} or \code{"second"}.  
 This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.
@@ -73,9 +79,10 @@ In all cases, users should ensure that each BAM file containing paired-end data 
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=200, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, ext=NULL, frag.len=ext, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
+		\code{ext} is set at a default value of 100 bp, if not otherwise specified.
 	}
 }
 }
@@ -109,7 +116,7 @@ Aaron Lun
 \seealso{
 \code{\link{windowCounts}},
 \code{\link{regionCounts}},
-\code{\link{extractReads}},
+\code{\link{correlateReads}},
 \code{\link{getPETSizes}}
 }
 
@@ -123,6 +130,7 @@ blah$dedup
 # Use 'reform' if only some arguments need to be changed.
 blah
 reform(blah, dedup=TRUE)
+reform(blah, ext=200)
 reform(blah, pet="both", max.frag=212.0)
 }
 
