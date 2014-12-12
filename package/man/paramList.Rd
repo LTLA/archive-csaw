@@ -1,34 +1,39 @@
 \name{Parameter list methods}
-\alias{param,SummarizedExperiment-method}
-\alias{param}
+\alias{paramList}
 \alias{reformList}
+\alias{checkList}
 
 \title{Get or modify readParam lists}
 \description{Extract and modify lists of library-specific readParam objects}
 
 \usage{
-param(object)
+paramList(data)
 reformList(paramlist, ...)
+checkList(paramlist)
 }
 
 \arguments{
-  \item{object}{a \code{SummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
+  \item{data}{a \code{SummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
   \item{paramlist}{a list of \code{readParam} objects}
   \item{...}{other arguments, to be passed to \code{\link{reform}}}
 }
 
 \details{
-The \code{param} function extracts a \code{readParam} object, or a list of such objects, from a \code{SummarizedExperiment} object.
-The former is returned if a common \code{readParam} was used for counting in \code{\link{windowCounts}} or \code{\link{regionCounts}}.
-Otherwise, the latter is returned if a different \code{readParam} was used for each library.
+The \code{paramList} function extracts a list of \code{readParam} objects from a \code{SummarizedExperiment}.
+Each object represents the parameter settings for each library used in counting by \code{\link{windowCounts}} or \code{\link{regionCounts}}.
 
 The \code{reformList} function sets the parameters specified in \code{...} across all elements of \code{paramlist}.
 This standardizes all of the internal \code{readParam} objects, e.g., for the \code{restrict} parameter.
 If \code{paramlist} is a single \code{readParam} object, then \code{reformList} is equivalent to \code{\link{reform}}.
+
+The \code{checkList} function checks which parameter settings are identical between elements of \code{paramlist}.
+This is useful when some parameters must be variable, while others must be the same.
 }
 
 \value{
-For both functions, a common \code{readParam} object or a list of library-specific \code{readParam} objects.
+For \code{paramList} and \code{reformList}, a list of library-specific \code{readParam} objects is returned.
+
+For \code{checkList}, a character vector is returned containing all non-identical parameters across the list.
 }
 
 \author{Aaron Lun}
@@ -36,16 +41,19 @@ For both functions, a common \code{readParam} object or a list of library-specif
 \examples{
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, width=100, filter=1)
-param(data)
+paramList(data)
 
 data <- windowCounts(bamFiles, width=100, filter=1, param=list(readParam(), readParam(minq=100)))
-param(data)
-param(data[,1])
-param(data[,2])
+paramList(data)
+paramList(data[,1])
+paramList(data[,2])
 
-plist <- param(data)
+plist <- paramList(data)
 reformList(plist, restrict="chrA")
 reformList(plist, minq=10)
+
+checkList(plist)
+checkList(reformList(plist, minq=10))
 }
 
 \seealso{
