@@ -98,8 +98,8 @@
 
 	# Returning the loot.
 	return( list( pos=c(output$pos, ifelse(bitwAnd(reads$flag[additor], 0x10)==0L, reads$pos[additor], 
-					reads$pos[additor]+reads$qwidth[additor]-param$ext)),
-		      size=c(output$size, rep(param$ext, sum(additor))) ) )
+					reads$pos[additor]+reads$qwidth[additor]-param$rescue.ext)),
+		      size=c(output$size, rep(param$rescue.ext, sum(additor))) ) )
 }
 
 .makeParamList <- function(nbam, param) 
@@ -146,17 +146,15 @@
 	return(originals)
 }
 
-.extendSE <- function(reads, chrlen, param)
-# This decides how long to extend reads. There's two parameters here; how long
-# to extend the read, and what the final fragment size should be. These are
-# separate parameters, to allow synchronization of different libraries to the
-# same fragment length.
+.extendSE <- function(reads, chrlen, ext)
+# This decides how long to extend reads. The maxima is just to ensure the read
+# is still counted when ext < qwidth.
 #
 # written by Aaron Lun
 # created 12 December 2014
 {
-	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - param$ext)
-	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } # to ensure the read is still counted when ext < qwidth.
-	frag.end <- frag.start + param$ext - 1L
+	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
+	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } 
+	frag.end <- frag.start + ext - 1L
 	return(list(start=frag.start, end=frag.end))
 }

@@ -1,4 +1,4 @@
-profileSites <- function(bam.files, regions, range=5000, ext=NULL, weight=1, param=readParam()) 
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -10,19 +10,20 @@ profileSites <- function(bam.files, regions, range=5000, ext=NULL, weight=1, par
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
-	if (!is.null(ext)) { paramlist <- reformList(paramlist, ext=ext) }
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
 	# Splitting up the regions.
 	indices <- split(1:length(regions), seqnames(regions))
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
-
-	ext <- as.integer(ext)
+	
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
 	blen <- length(bam.files)
 	total.profile <- 0
+
+	if (length(ext)!=nbam && length(ext)!=1L) { stop("ext must have length of 1 or that equal to the number of libraries") }
+	ext <- rep(as.integer(ext), length.out=nbam)
 		
 	# Running through the chromosomes.
     for (i in 1:length(extracted.chrs)) {
@@ -42,7 +43,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=NULL, weight=1, par
 				} else {
 					reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
 				}
-   				extended <- .extendSE(reads, chrlen=outlen, param=curpar)
+   				extended <- .extendSE(reads, chrlen=outlen, ext=ext[b])
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {

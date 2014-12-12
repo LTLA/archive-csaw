@@ -1,4 +1,4 @@
-windowCounts <- function(bam.files, spacing=50, width=spacing, ext=NULL, shift=0,
+windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
@@ -29,15 +29,14 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=NULL, shift=0
 		ext <- 1L
 		filter <- 1
 	}
+	if (length(ext)!=nbam && length(ext)!=1L) { stop("ext must have length of 1 or that equal to the number of libraries") }
+	ext <- rep(ext, length.out=nbam)
 
 	# Checking the extension and spacing parameters. We've reparameterised it so
 	# that 'left' and 'right' refer to the extension of the window from a nominal
 	# 'center' point. This simplifies read counting as we just measure read
 	# overlaps to those center points, spaced at regular intervals. 
-	if (length(ext)) { 
-		if (ext <= 0L) { stop("extension width must be a positive integer") }
-		paramlist <- reformList(paramlist, ext=ext) 
-	}
+	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
 	if (left + right < 0L) { stop("width must be a positive integer") }
@@ -77,7 +76,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=NULL, shift=0
 				} else {
 					reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
 				}
-				extended <- .extendSE(reads, chrlen=outlen, param=curpar)
+				extended <- .extendSE(reads, chrlen=outlen, ext=ext[bf])
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
@@ -136,7 +135,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=NULL, shift=0
 	}
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
 		rowData=all.regions, 
-		colData=DataFrame(bam.files=bam.files, totals=totals, param=index),
+		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext, param=index),
 		exptData=SimpleList(spacing=spacing, width=width, 
 			shift=shift, param=paramlist)))
 }

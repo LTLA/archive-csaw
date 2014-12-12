@@ -6,13 +6,13 @@
 \description{Count the number of extended reads overlapping pre-specified regions}
 
 \usage{
-regionCounts(bam.files, regions, ext=NULL, param=readParam())
+regionCounts(bam.files, regions, ext=100, param=readParam())
 }
 
 \arguments{
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{regions}{a \code{GRanges} object containing the regions over which reads are to be counted}
-	\item{ext}{an integer scalar describing the average length of the sequenced fragment}
+	\item{ext}{an integer scalar or vector, describing the average length of the sequenced fragment in each library}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
@@ -20,7 +20,7 @@ regionCounts(bam.files, regions, ext=NULL, param=readParam())
 A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each region (row).
 The coordinates of each region are stored as the \code{rowData}.
-The total number of reads in each library are stored as \code{totals} in the \code{colData}.
+The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length used in each library.
 Other read counting parameters (i.e., \code{param}) are stored in the \code{exptData}.
 }
 
@@ -29,10 +29,6 @@ This function simply provides a wrapper around \code{\link{countOverlaps}} for r
 It is provided so as to allow for counting with awareness of the other parameters, e.g., \code{ext}, \code{pet}.
 This allows users to coordinate region-based counts with those from \code{\link{windowCounts}}. 
 Checking that the output \code{totals} are the same between the two calls is strongly recommended.
-
-By default, the extension length for single-end data is extracted from \code{param}.
-However, if \code{ext} is specified, this overrides any other value.
-See \code{\link{readParam}} for more details on extension or pairing.
 }
 
 \author{Aaron Lun}
@@ -59,7 +55,7 @@ regionCounts(bamFile, regions=incoming, param=readParam(pet="both"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
 	pet="first", restrict="chrA"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
-	pet="both", restrict="chrA", rescue.pairs=TRUE))
+	pet="both", restrict="chrA", rescue.pairs=TRUE, rescue.ext=100))
 }
 
 \keyword{counting}
