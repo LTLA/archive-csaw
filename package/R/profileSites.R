@@ -8,13 +8,9 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 # 2 July 2012
 # modified 10 November, 2014
 {
-    extracted <- .processIncoming(bam.files, param$restrict, param$discard)
-	pet <- param$pet
-	minq <- param$minq
-	dedup <- param$dedup
-	rescue.pairs <- param$rescue.pairs
-	rescue.ext <- param$rescue.ext
-	max.frag <- param$max.frag
+	nbam <- length(bam.files)
+	paramlist <- .makeParamList(nbam, param)
+	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
 	# Splitting up the regions.
 	indices <- split(1:length(regions), seqnames(regions))
@@ -28,33 +24,30 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 	total.profile <- 0
 		
 	# Running through the chromosomes.
-    for (i in 1:length(extracted$chrs)) {
-		chr <- names(extracted$chrs)[i]
+    for (i in 1:length(extracted.chrs)) {
+		chr <- names(extracted.chrs)[i]
 		chosen <- indices[[chr]]
 		if (!length(chosen)) { next }
-		outlen <- extracted$chrs[i]
+		outlen <- extracted.chrs[i]
 		where <- GRanges(chr, IRanges(1L, outlen))
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		starts <- ends <- list()
 		for (b in 1:blen) {
-            if (pet!="both") {
-				if (pet=="none") { 
-					reads <- .extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, 
-						discard=extracted$discard[[chr]])
+			curpar <- paramlist[[b]]
+            if (curpar$pet!="both") {
+				if (curpar$pet=="none") { 
+					reads <- .extractSET(bam.files[b], where=where, param=curpar)
 				} else {
-					reads <- .extractBrokenPET(bam.files[b], where=where, dedup=dedup, minq=minq, 
-						discard=extracted$discard[[chr]], use.first=(pet=="first"))
+					reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
 				} 
 				start.pos <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
 				end.pos <- start.pos + ext - 1L
 			} else {
-                if (rescue.pairs) {
-					out <- .rescuePET(bam.files[b], where=where, dedup=dedup, minq=minq,
-						max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
+                if (curpar$rescue.pairs) {
+					out <- .rescuePET(bam.files[b], where=where, param=curpar)
 				} else {
-					out <- .extractPET(bam.files[b], where=where, dedup=dedup, minq=minq,
-						discard=extracted$discard[[chr]], max.frag=max.frag)
+					out <- .extractPET(bam.files[b], where=where, param=curpar)
 				}
 				start.pos <- out$pos
 				end.pos <- out$pos + out$size - 1L

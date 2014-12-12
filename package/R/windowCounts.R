@@ -7,16 +7,11 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # ages ago.
-# last modified 1 September 2014
+# last modified 12 December 2014
 {   
 	nbam <- length(bam.files)
-	extracted <- .processIncoming(bam.files, param$restrict, param$discard)
-	pet <- param$pet
-	max.frag <- param$max.frag
-	minq <- param$minq
-	dedup <- param$dedup
-	rescue.pairs <- param$rescue.pairs
-	rescue.ext <- param$rescue.ext
+	paramlist <- .makeParamList(nbam, param)
+	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
 	# Processing input parameters.
 	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
@@ -35,20 +30,20 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		filter <- 1
 	}
 
-# Checking the extension and spacing parameters. We've reparameterised it so
-# that 'left' and 'right' refer to the extension of the window from a nominal
-# 'center' point. This simplifies read counting as we just measure read
-# overlaps to those center points, spaced at regular intervals. 
+	# Checking the extension and spacing parameters. We've reparameterised it so
+	# that 'left' and 'right' refer to the extension of the window from a nominal
+	# 'center' point. This simplifies read counting as we just measure read
+	# overlaps to those center points, spaced at regular intervals. 
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
 	if (left + right < 0L) { stop("width must be a positive integer") }
 	if (spacing <= 0L) { stop("spacing must be a positive integer") }
 	if (ext <= 0L) { stop("extension width must be a positive integer") }
 
-# Need to account for the possible loss of a centre point from the front when
-# the shift is non-zero, because the corresponding window is wholly outside the
-# chromosome (i.e., shifted so that the width of the window is before position
-# 1, so width > shift; left+right+1 > left; right+1 > 0; right >= 0).
+	# Need to account for the possible loss of a centre point from the front when
+	# the shift is non-zero, because the corresponding window is wholly outside the
+	# chromosome (i.e., shifted so that the width of the window is before position
+	# 1, so width > shift; left+right+1 > left; right+1 > 0; right >= 0).
 	at.start <- right >= 0L 
 	first.pt <- ifelse(at.start, 1L, spacing+1L)
 
@@ -58,8 +53,9 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	all.regions <- list(GRanges())
 	ix <- 1
 
-	for (chr in names(extracted$chrs)) {
-		outlen <- extracted$chrs[[chr]]		
+	for (i in 1:length(extracted.chrs)) {
+		chr <- names(extracted.chrs)[i]
+		outlen <- extracted.chrs[i]		
 		where <- GRanges(chr, IRanges(1, outlen))
 
 		# Accounting for the possible gain of a centrepoint from the back when
@@ -71,24 +67,21 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		outcome <- matrix(0L, total.pts, nbam) 
 
 		for (bf in 1:nbam) {
-			if (pet!="both") {
-				if (pet=="none") { 
-   					reads <- .extractSET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-						discard=extracted$discard[[chr]])
+			curpar <- paramlist[[bf]]
+			if (curpar$pet!="both") {
+				if (curpar$pet=="none") { 
+   					reads <- .extractSET(bam.files[bf], where=where, param=curpar)
 				} else {
-					reads <- .extractBrokenPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-						discard=extracted$discard[[chr]], use.first=(pet=="first"))
+					reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
 				}
 				frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-ext)
 				if (length(frag.start)) { frag.start <- pmin(frag.start, outlen) }
 				frag.end <- frag.start+ext-1L
 			} else {
-				if (rescue.pairs) { 
-					out <- .rescuePET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-						max.frag=max.frag, ext=rescue.ext, discard=extracted$discard[[chr]])
+				if (curpar$rescue.pairs) { 
+					out <- .rescuePET(bam.files[bf], where=where, param=curpar)
 				} else {
-					out <- .extractPET(bam.files[bf], where=where, dedup=dedup, minq=minq, 
-						discard=extracted$discard[[chr]], max.frag=max.frag)
+					out <- .extractPET(bam.files[bf], where=where, param=curpar)
 				}
 
 				# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
@@ -101,20 +94,20 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 				}
 			}
 
-# Extending reads to account for window sizes > 1 bp. The start of each read
-# must be extended by 'right' and the end of each read must be extended by
-# 'left'. We then pull out counts at the specified spacing. We do have to 
-# keep track of whether or not we want to use the first point, though.
+			# Extending reads to account for window sizes > 1 bp. The start of each read
+			# must be extended by 'right' and the end of each read must be extended by
+			# 'left'. We then pull out counts at the specified spacing. We do have to 
+			# keep track of whether or not we want to use the first point, though.
 			out <- .Call(cxx_get_rle_counts, frag.start-right, frag.end+left, total.pts, spacing, at.start)
 			if (is.character(out)) { stop(out) }
 			outcome[,bf] <- out
 			totals[bf] <- totals[bf]+length(frag.start)
 		}
 
-# Filtering on row sums (for memory efficiency). Note that redundant windows
-# are avoided by enforcing 'shift < spacing', as a window that is shifted to 
-# cover the whole chromosome cannot be spaced to a new position where it still 
-# covers the whole chromosome. The next one must be inside the chromosome.
+		# Filtering on row sums (for memory efficiency). Note that redundant windows
+		# are avoided by enforcing 'shift < spacing', as a window that is shifted to 
+		# cover the whole chromosome cannot be spaced to a new position where it still 
+		# covers the whole chromosome. The next one must be inside the chromosome.
 		keep <- rowSums(outcome)>=filter 
 		if (!any(keep)) { next } 
 		else if (!all(keep)) { outcome <- outcome[keep,,drop=FALSE] }
@@ -129,80 +122,19 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 
 	# Generating the remaining GRanges for output (suppressing numerous warnings).
 	all.regions <- suppressWarnings(do.call(c, all.regions))
-	seqlevels(all.regions) <- names(extracted$chrs)
-	seqlengths(all.regions) <- extracted$chrs
+	seqlevels(all.regions) <- names(extracted.chrs)
+	seqlengths(all.regions) <- extracted.chrs
 
+	if (is.list(param)) { 
+		index <- 1:nbam
+	} else {
+		index <- 0L
+	}
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
-		rowData=all.regions, colData=DataFrame(totals=totals),
+		rowData=all.regions, 
+		colData=DataFrame(bam.files=bam.files, totals=totals, param=index),
 		exptData=SimpleList(ext=ext, spacing=spacing, width=width, 
 			shift=shift, param=param)))
 }
 
-########################################################
 
-.extractSET <- function(bam, where, dedup, minq, discard=NULL, extras="strand", ...) 
-# Extracts single-end read data from a BAM file with removal of unmapped,
-# duplicate and poorly mapped/non-unique reads. We also discard reads in the
-# specified discard regions. In such cases, the offending reads must be wholly
-# within the repeat region.  We use the real alignment width, just in case we
-# have very long reads in the alignment that are heavily soft-clipped (i.e., they
-# should be reported as within but the read length will put them out).
-{
-	all.fields <- c("pos", "qwidth", extras)
-	if (!is.na(minq)) { all.fields <- c(all.fields, "mapq") }
-	if (!is.null(discard)) { all.fields <- c(all.fields, "cigar") }	
-	all.fields <- unique(all.fields)
-	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
-		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
-		isDuplicate=ifelse(dedup, FALSE, NA), ...)))[[1]]
-   
-	# Filtering by MAPQ.
-	if (!is.na(minq)) { 
-		keep <- reads$mapq >= minq & !is.na(reads$mapq) 
-		if (!"mapq" %in% extras) { reads$mapq <- NULL }
-		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	}
-	
-	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
-	if (!is.null(discard)) {
-		awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
-		keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), discard, type="within")
-		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-		if (!"cigar" %in% extras) { reads$cigar <- NULL }
-	}
-	return(reads)
-}
-
-.processIncoming <- function(bam.files, restrict, discard) 
-# Processes the incoming data; checks that bam headers are all correct,
-# truncates the list according to 'restrict', processes the GRanges list 
-# for discarding objects.
-{ 
-	originals <- NULL
-	for (bam in bam.files) {
-		chrs <- scanBamHeader(bam)[[1]][[1]]
-		chrs <- chrs[order(names(chrs))]
-		if (is.null(originals)) { originals <- chrs } 
-		else if (!identical(originals, chrs)) { 
-			warning("chromosomes are not identical between BAM files")
-			pairing <- match(names(originals), names(chrs))
-			originals <- pmin(originals[!is.na(pairing)], chrs[pairing[!is.na(pairing)]])
-		}
-	}
-
-	if (length(restrict)) { originals <- originals[names(originals) %in% restrict] }
-	if (length(discard)) {
-		discard <- split(ranges(discard), seqnames(discard), drop=TRUE)
-		for (x in names(discard)) { 
-			if (x %in% names(originals)) { 
-				discard[[x]] <- reduce(discard[[x]])
-			} else {
-				discard[[x]] <- NULL 
-			}
-		}
-	} else { discard <- NULL }
-
-	return(list(discard=discard, chrs=originals))
-}
-
-########################################################

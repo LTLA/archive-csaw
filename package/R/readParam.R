@@ -112,3 +112,11 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 	}
 	do.call(initialize, c(x, incoming))
 })
+
+reformList <- function(paramlist, ...) {
+	if (is.list(paramlist)) { 
+		return(lapply(paramlist, FUN=reform, ...))
+	} else {
+		return(reform(paramlist, ...))
+	}
+}

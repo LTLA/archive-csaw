@@ -6,40 +6,41 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 # acf/ccf() function because it doesn't handle the large inputs from BAM efficiently.
 #
 # written by Aaron Lun
-# 2 July 2012
-# modified 1 September, 2014
+# created 2 July 2012
+# last modified 12 December 2014
 {
-    extracted <- .processIncoming(bam.files, param$restrict, param$discard)
+	nbam <- length(bam.files)
+	paramlist <- .makeParamList(nbam, param)
+	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
+	for (x in paramlist) { 
+		if (x$pet=="both") { stop("paired-end read extraction not supported") }
+	}
+
 	max.dist <- as.integer(max.dist)
     if (max.dist <=0) { stop("maximum distance must be positive") }
     total.cor <- numeric(max.dist+1L)
     total.read.num <- 0L
 
-	pet <- param$pet
-	if (pet=="both") { stop("paired-end read extraction not supported") }
-	minq <- param$minq
-	dedup <- param$dedup
-
-    for (i in 1:length(extracted$chrs)) {
-		if (extracted$chrs[i]<2L) { next } # No way to compute variance if there's only one base.
-		chr <- names(extracted$chrs)[i]
-		where <- GRanges(chr, IRanges(1L, extracted$chrs[i]))
+    for (i in 1:length(extracted.chrs)) {
+		if (extracted.chrs[i]<2L) { next } # No way to compute variance if there's only one base.
+		chr <- names(extracted.chrs)[i]
+		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		all.f <- all.r <- list()
 		num.reads <- 0L
 		forward.reads <- 0L
-		for (b in 1:length(bam.files)) {
-			if (pet=="none") { 
-				reads <- .extractSET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]])
+		for (b in 1:nbam) { 
+			curpar <- paramlist[[b]]
+			if (curpar$pet=="none") { 
+				reads <- .extractSET(bam.files[b], where=where, param=curpar)
 			} else {
-				reads <- .extractBrokenPET(bam.files[b], where=where, dedup=dedup, minq=minq, discard=extracted$discard[[chr]],
-					use.first=(pet=="first"))
+				reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
 			}
 			forwards <- reads$strand=="+"
 			num.reads <- num.reads+length(forwards)
 			forward.reads <- forward.reads+sum(forwards)
-			if (!all(forwards)) { reads$pos[!forwards] <- pmin(extracted$chrs[i], reads$pos[!forwards]+reads$qwidth[!forwards]) }
+			if (!all(forwards)) { reads$pos[!forwards] <- pmin(extracted.chrs[i], reads$pos[!forwards]+reads$qwidth[!forwards]) }
 			if (cross) {
 				all.f[[b]] <- reads$pos[forwards]
 				all.r[[b]] <- reads$pos[!forwards]
@@ -59,7 +60,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		}
 
 	    # We call the C++ function to compute correlations. 
-		ccfs <- .Call(cxx_correlate_reads, all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, extracted$chrs[i])
+		ccfs <- .Call(cxx_correlate_reads, all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, extracted.chrs[i])
 		if (is.character(ccfs)) { stop(ccfs) }
 
 		# Returning some output. Note that the coefficient is weighted according to the number

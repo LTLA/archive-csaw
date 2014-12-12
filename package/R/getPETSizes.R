@@ -9,19 +9,16 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 # modified 1 September 2014
 {
 	if (param$pet!="both") { stop("paired-end inputs required") }
-	dedup <- param$dedup
-	minq <- param$minq
-    extracted <- .processIncoming(bam.file, param$restrict, param$discard)
+    extracted.chrs <- .activeChrs(bam.file, param$restrict)
 
 	singles <- totals <- others <- one.unmapped <- 0L
 	stopifnot(length(bam.file)==1L)
 	norm.list <- loose.names.1 <- loose.names.2 <- list()
 
-	for (i in 1:length(extracted$chrs)) {
-		chr <- names(extracted$chrs)[i]
-		where <- GRanges(chr, IRanges(1L, extracted$chrs[i]))
-		reads <- .extractSET(bam.file, extras=c("qname", "flag", "isize"), where=where, 
-			dedup=dedup, discard=extracted$discard[[chr]], minq=minq)
+	for (i in 1:length(extracted.chrs)) {
+		chr <- names(extracted.chrs)[i]
+		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
+		reads <- .extractSET(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
 
 		# Getting rid of unpaired reads.
 		totals <- totals + length(reads$flag)
@@ -32,7 +29,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }	
 		
 		# Identifying valid reads.
-		okay <- .yieldInterestingBits(reads, extracted$chrs[i], diag=TRUE)
+		okay <- .yieldInterestingBits(reads, extracted.chrs[i], diag=TRUE)
 		norm.list[[i]] <- okay$size
 		left.names <- reads$qname[!okay$is.ok]
 		left.flags <- reads$flag[!okay$is.ok]
@@ -67,21 +64,6 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 }
 
 ##################################
-
-.extractPET <- function(bam.file, where, dedup, minq, max.frag=Inf, discard=NULL)
-# A function to extract PET data for a particular chromosome. Synchronisation is expected.
-# We avoid sorting by name  as it'd mean we have to process the entire genome at once 
-# (can't go chromosome-by-chromosome).  This probably results in increased memory usage 
-# across the board, and it doesn't fit in well with the rest of the pipelines which assume 
-# coordinate sorting.
-# 
-# written by Aaron Lun
-# 8 December 2013
-{
-	reads <- .extractSET(bam.file, extras=c("qname", "flag"), where=where, dedup=dedup,
-		minq=minq, isPaired=TRUE, hasUnmappedMate=FALSE, discard=discard)
-	.yieldInterestingBits(reads, max(end(where)), max.frag=max.frag)
-}
 
 .yieldInterestingBits <- function(reads, clen, max.frag=Inf, diag=FALSE)
 # This figures out what the interesting reads are, given a list of 
@@ -141,53 +123,6 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 		return(list(pos=fpos, size=total.size, is.ok=is.ok))
 	}
 	return(list(pos=fpos, size=total.size))
-}
-
-##################################
-
-.extractBrokenPET <- function(bam.file, where, dedup, minq, discard=NULL, use.first=TRUE) 
-# A function to extract PET data, but as single-end data (i.e. only using one
-# of the reads).  Useful when paired-end data has gone completely off the
-# rails.
-{
-	.extractSET(bam.file, where=where, dedup=dedup, minq=minq, discard=discard,
-		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
-}
-
-.rescuePET <- function(bam.file, where, dedup, minq, discard=NULL, ext=100, max.frag=Inf) 
-# A function to extract PET data where possible, but to rescue those that
-# are invalid by using them as single-end data with read extension. Those
-# reads that form invalid pairs are broken up and the read with the better
-# MAPQ is chosen. Any single read (due to filtering or whatever) is used as-is.
-# Interchromosomal pairs get counted once on each chromosome.
-#
-# written by Aaron Lun
-# 13 May, 2014
-{
-	reads <- .extractSET(bam.file, extras=c("qname", "flag", "mapq"), where=where, dedup=dedup,
-		minq=minq, isPaired=TRUE, discard=discard)
-	output <- .yieldInterestingBits(reads, max(end(where)), diag=TRUE, max.frag=max.frag)
-
-	# Figuring out which reads do pair up.
-	is.first <- bitwAnd(reads$flag, 0x40) != 0L
-	nok.first <- !output$is.ok & is.first
-	nok.second <- !output$is.ok & !is.first
-	corresponding <- match(reads$qname[nok.first], reads$qname[nok.second])
-	first.paired <- which(!is.na(corresponding))
-	second.paired <- corresponding[first.paired]
-	
-	# Picking the unique reads, or the better read from the each pair.
-	additor <- logical(length(reads$flag))
-	additor[nok.first][-first.paired] <- TRUE
-	additor[nok.second][-second.paired] <- TRUE
-	is.better <- reads$mapq[nok.first][first.paired] > reads$mapq[nok.second][second.paired]
-	additor[nok.first][first.paired][is.better] <- TRUE
-	additor[nok.second][second.paired][!is.better] <- TRUE
-
-	# Returning the loot.
-	return( list( pos=c(output$pos, ifelse(bitwAnd(reads$flag[additor], 0x10)==0L, reads$pos[additor], 
-					reads$pos[additor]+reads$qwidth[additor]-ext)),
-		      size=c(output$size, rep(ext, sum(additor))) ) )
 }
 
 ##################################

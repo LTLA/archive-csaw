@@ -28,23 +28,12 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		}
 	}
 
-	# Dropping additional reads if required.
-	minq <- param$minq
-	dedup <- param$dedup
-    if (length(param$discard)) { 
-		cur.lost <- param$discard[seqnames(param$discard)==cur.chr]
-		seqlevels(cur.lost) <- cur.chr
-		discard <- ranges(cur.lost[overlapsAny(cur.lost, actual.region)]) 
-	} else { discard <- NULL }
-
 	# Pulling out reads from a region and setting up coverage RLE's.
 	if (param$pet!="both") {
 		if (param$pet=="none") { 
-			cur.reads <- .extractSET(bam.file, where=actual.region, dedup=dedup, 
-				minq=minq, discard=discard)
+			cur.reads <- .extractSET(bam.file, where=actual.region, param=param)
 		} else {
-			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, dedup=dedup, 
-				minq=minq, discard=discard, use.first=(param$pet=="first"))
+			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, param=param)
 		}
 
 		if (length(cur.reads$pos)) { 
@@ -54,11 +43,9 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		}
 	} else {
 		if (param$rescue.pairs) {
-			cur.reads <- .rescuePET(bam.file, where=actual.region, dedup=dedup, 
-				minq=minq, discard=discard, max.frag=param$max.frag, ext=param$rescue.ext)
+			cur.reads <- .rescuePET(bam.file, where=actual.region, param=param)
 		} else {
-			cur.reads <- .extractPET(bam.file, where=actual.region, dedup=dedup, 
-				minq=minq, discard=discard, max.frag=param$max.frag)
+			cur.reads <- .extractPET(bam.file, where=actual.region, param=param)
 		}
 
 		# Filtering to retain those that don't actually overlap.

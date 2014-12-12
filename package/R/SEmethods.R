@@ -17,3 +17,19 @@ setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
 setMethod("asDGEList", "SummarizedExperiment", function(object, ...) {
 	DGEList(assay(object), lib.size=object$totals, ...)
 })
+
+setGeneric("param", function(object) { standardGeneric("param") })
+setMethod("param", "SummarizedExperiment", function(object) {
+	if (any(object$param==0L)) {
+		if (!all(object$param==0L)) {
+			stop("zero readParam indices mixed in with non-zero indices")
+		}
+		return(exptData(object)$param)
+	} else {
+		if (length(unique(object$param))==1L) {
+			return(exptData(object)$param[[object$param[1]]])
+		} else {
+			return(exptData(object)$param[object$param])
+		}
+	}
+})
