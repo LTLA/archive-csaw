@@ -23,7 +23,7 @@ getWidths <- function(data)
 # last modified 12 December 2014
 {
 	is.pet <- sapply(exptData(data)$param, FUN=function(x) { x$pet=="both" })
-	is.def <- sapply(exptData(data)$param, FUN=function(x) { attr(x$ext, "default") })
+	is.def <- sapply(exptData(data)$param, FUN=function(x) { !is.null(attr(x$ext, "default")) })
 	if (any(is.pet & is.def)) { 
 		warning("assuming that ext holds median fragment length for PE data")
 	}
