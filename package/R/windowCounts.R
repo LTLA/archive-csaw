@@ -1,5 +1,5 @@
 windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, param=readParam())
+	filter=NULL, bin=FALSE, final.ext=NULL, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # ages ago.
-# last modified 12 December 2014
+# last modified 13 December 2014
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -19,24 +19,21 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		spacing <- as.integer(spacing)
 		left <- as.integer(shift)
 		right <- as.integer(width) - left - 1L
-		ext <- as.integer(ext)
 		if (is.null(filter)) { filter <- 5*nbam }
 	} else {
 		# A convenience flag, which assigns sensible arguments to everything else.
 		spacing <- as.integer(width)
 		left <- as.integer(shift)
 		right <- spacing - 1L - left
-		ext <- 1L
+		final.ext <- ext <- 1L
 		filter <- 1
 	}
-	if (length(ext)!=nbam && length(ext)!=1L) { stop("ext must have length of 1 or that equal to the number of libraries") }
-	ext <- rep(ext, length.out=nbam)
+	ext.data <- .collateExt(nbam, ext, final.ext)
 
 	# Checking the extension and spacing parameters. We've reparameterised it so
 	# that 'left' and 'right' refer to the extension of the window from a nominal
 	# 'center' point. This simplifies read counting as we just measure read
 	# overlaps to those center points, spaced at regular intervals. 
-	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
 	if (left >= spacing) { stop("shift must be less than the spacing") }
 	if (left < 0L) { stop("shift must be positive") }
 	if (left + right < 0L) { stop("width must be a positive integer") }
@@ -76,7 +73,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 				} else {
 					reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
 				}
-				extended <- .extendSE(reads, chrlen=outlen, ext=ext[bf])
+				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[bf,])
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
@@ -136,7 +133,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
 		rowData=all.regions, 
 		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext, param=index),
-		exptData=SimpleList(spacing=spacing, width=width, 
-			shift=shift, param=paramlist)))
+		exptData=SimpleList(final.ext=ext.data$final.ext[1], spacing=spacing, 
+			width=width, shift=shift, param=paramlist)))
 }
 

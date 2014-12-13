@@ -146,15 +146,49 @@
 	return(originals)
 }
 
-.extendSE <- function(reads, chrlen, ext)
+.extendSE <- function(reads, chrlen, ext.info)
 # This decides how long to extend reads. The maxima is just to ensure the read
-# is still counted when ext < qwidth.
+# is still counted when ext < qwidth. The addition of the remainder kicks out
+# (or truncates) the fragments to reach the desired 'final.ext'.
 #
 # written by Aaron Lun
 # created 12 December 2014
+# last modified 13 December 2014
 {
-	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
+	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext.info$ext)
 	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } 
-	frag.end <- frag.start + ext - 1L
+	frag.end <- frag.start + ext.info$ext - 1L
+	
+	frag.start <- frag.start - ext.info$remainder
+	frag.end <- frag.end + ext.info$remainder
 	return(list(start=frag.start, end=frag.end))
+}
+
+.collateExt <- function(nbam, ext, final.ext) 
+# Collates the extension parameters into a set of ext and remainder values.
+# The idea is to extend each read directionally to 'ext', and then extend in
+# both directions by 'remainder' to reach the desired fragment length.
+# 
+# written by Aaron Lun
+# created 12 December 2014
+{
+	ext <- as.integer(ext)
+	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
+	if (length(ext)==1L) { 
+		ext <- rep(ext, length.out=nbam)
+	} else if (length(ext)!=nbam) { 
+		stop("ext must have length of 1 or that equal to the number of libraries") 
+	}
+	if (length(final.ext)>1L) { stop("multiple final extension lengths are not supported") }
+	if (is.null(final.ext)) {
+		report <- final.ext <- as.integer(mean(ext))
+	} else if (is.na(final.ext)) { 
+		final.ext <- ext
+		report <- NA
+	} else {
+		report <- final.ext <- as.integer(final.ext)
+		if (final.ext <= 0L) { stop("final extension length must be a positive integer") }
+	}
+	remainder <- as.integer((final.ext - ext)/2)
+	data.frame(ext=ext, remainder=remainder, final.ext=report)
 }

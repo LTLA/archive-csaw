@@ -1,4 +1,4 @@
-regionCounts <- function(bam.files, regions, ext=100, param=readParam())
+regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=readParam())
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
@@ -6,19 +6,17 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 12 December 2014
+# last modified 13 December 2014
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
-	
+	ext.data <- .collateExt(nbam, ext, final.ext)
+
     totals <- integer(nbam)
 	nx <- length(regions)
 	counts <- matrix(0L, nrow=nx, ncol=nbam)
 	indices <- split(1:nx, seqnames(regions))
-
-	if (length(ext)!=nbam && length(ext)!=1L) { stop("ext must have length of 1 or that equal to the number of libraries") }
-	ext <- rep(as.integer(ext), length.out=nbam)
 
     for (chr in names(extracted.chrs)) {
 		chosen <- indices[[chr]]
@@ -34,7 +32,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
                 } else {
                     reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
                 }
-				extended <- .extendSE(reads, chrlen=outlen, ext=ext[bf])
+				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[bf,])
 				frag.start <- extended$start
 				frag.end <- extended$end
             } else {
@@ -63,5 +61,5 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	return(SummarizedExperiment(assays=counts, 
 		rowData=regions, 
 		colData=DataFrame(bam.files, totals=totals, ext=ext, param=index),
-		exptData=SimpleList(list(param=paramlist))))
+		exptData=SimpleList(final.ext=ext.data$final.ext[1], param=paramlist)))
 }

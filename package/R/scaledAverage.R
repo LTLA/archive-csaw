@@ -24,7 +24,11 @@ getWidths <- function(data)
 {
 	is.pet <- sapply(paramList(data), FUN=function(x) { x$pet=="both" })
 	frag.len <- integer(ncol(data))
-	frag.len[!is.pet] <- data$ext[!is.pet]
+	if (is.na(exptData(data)$final.ext)) { 
+		frag.len[!is.pet] <- data$ext[!is.pet]
+	} else {
+		frag.len[!is.pet] <- exptData(data)$final.ext
+	}
 	
 	pet.len <- sapply(paramList(data), FUN=function(x) { x$rescue.ext })
 	not.def <- is.na(pet.len)
