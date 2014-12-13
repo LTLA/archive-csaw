@@ -57,29 +57,28 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 
 			if (!length(start.pos)) { next }
 			ix <- length(starts) + 1L
-			starts[[ix]] <- start.pos 
- 			ends[[ix]] <- end.pos
+			starts[[ix]] <- pmax(start.pos, 1L) # Avoid considering off ends of chromosomes.
+ 			ends[[ix]] <- pmin(end.pos, outlen)
 		}
 			
 		# Pulling out the regions.
 		all.starts <- start(regions)[chosen]
-		all.ends <- end(regions)[chosen]
 		os <- order(all.starts)
-		oe <- order(all.ends)
-		rank.e <- 1:length(oe)
-		rank.e[oe] <- rank.e
+		all.starts <- all.starts[os]
+		all.weights <- weight[chosen][os]
 
 	    # We call the C++ functions to aggregate profiles.
 		starts <- unlist(starts)
 		ends <- unlist(ends)
 		if (!length(starts)) { next }
-		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts[os], all.ends[oe], 
-			os-1L, oe-1L, rank.e-1L, weight[chosen], range) 
+		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, range) 
 		if (is.character(cur.profile)) { stop(cur.profile) }
 		total.profile <- total.profile + cur.profile
     }
 
 	# Cleaning up and returning the profiles. We divide by 2 to get the coverage,
 	# as total.profile counts both sides of each summit (and is twice as large as it should be).
-    return(total.profile/length(regions)/2)
+	out <- total.profile/length(regions)
+	names(out) <- (-range):range
+    return(out)
 }

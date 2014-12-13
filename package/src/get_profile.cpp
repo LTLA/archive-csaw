@@ -6,20 +6,14 @@
 
 /* This function scans through the track and pulls out local maxima. */
 
-SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP regends, 
-		SEXP order_s, SEXP order_e, SEXP rank_e, SEXP weights, SEXP range) try {
+SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP range) try {
 
 	if (!isInteger(starts) || !isInteger(ends)) { throw std::runtime_error("fragment start/end positions should be integer"); }
 	const int nfrags=LENGTH(starts);
 	if (LENGTH(ends)!=nfrags) { throw std::runtime_error("fragment start/end vectors should have same length"); }
-	if (!isInteger(regstarts) || !isInteger(regends)) { throw std::runtime_error("region start/end positions should be integer"); }
+	if (!isInteger(regstarts)) { throw std::runtime_error("region start/end positions should be integer"); }
 	const int nregs=LENGTH(regstarts);
-	if (LENGTH(regends)!=nregs) { throw std::runtime_error("region start/end vectors should have the same length"); }
 	if (nregs==0) { throw std::runtime_error("no regions supplied"); }
-
-	if (!isInteger(order_s) || !isInteger(order_e) || !isInteger(rank_e)) { throw std::runtime_error("ordering vectors should be integer"); }
-	if (LENGTH(order_s)!=nregs || LENGTH(order_e)!=nregs || LENGTH(rank_e)!=nregs) { 
-		throw std::runtime_error("ordering vectors should have length equal to number of regions"); }
 	if (!isReal(weights))  { throw std::runtime_error("weight vector should be double-precision"); }
 	if (LENGTH(weights)!=nregs) { throw std::runtime_error("weight vector should have length equal to number of regions"); }
 
@@ -28,52 +22,49 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP regends,
 	const int maxrange=asInteger(range);
 	const int* fsptr=INTEGER(starts),
 		  *feptr=INTEGER(ends),
-		  *rsptr=INTEGER(regstarts),
-		  *reptr=INTEGER(regends),
-		  *osptr=INTEGER(order_s),
-		  *oeptr=INTEGER(order_e),
-		  *erptr=INTEGER(rank_e);
+		  *rsptr=INTEGER(regstarts);
 	const double* wptr=REAL(weights);
 
 	// Setting up output.
-	SEXP output=PROTECT(allocVector(REALSXP, maxrange));
+	const int totallen=2*maxrange+1;
+	SEXP output=PROTECT(allocVector(REALSXP, totallen));
 try{ 
 	double* optr=REAL(output);
-	for (int i=0; i<maxrange; ++i) { optr[i]=0; }
+	for (int i=0; i<totallen; ++i) { optr[i]=0; }
+	optr += maxrange; // 0 is now distance of zero.
 
 	// Running through the reads.
 	const int* ptr=NULL, *ptr_copy=NULL, *terminal_s=rsptr+nregs;
-	int dist, counter, end_rank;
+	int dist, dist2;
 	for (int frag=0; frag<nfrags; ++frag) {
+		const int& curstart=fsptr[frag];
+		const int& curend=feptr[frag];
 
 		// Getting all regions starting after the fragment.
-		const int& curend=feptr[frag];
 		ptr_copy=ptr=std::upper_bound(rsptr, terminal_s, curend);
 		while (ptr!=terminal_s) { 
-			dist = *ptr - curend - 1;
-			if (dist >= maxrange) { break; }
-			optr[dist] += wptr[osptr[ptr-rsptr]];
+			dist = *ptr - curend;
+			if (dist > maxrange) { break; }
+			optr[-dist+1] -= wptr[ptr-rsptr];
+			dist2 = *ptr - curstart;
+			optr[dist2 >= maxrange ? -maxrange : -dist2] += wptr[ptr-rsptr];
 			++ptr;
 		}
 
-		// Getting the first region ending before the fragment.
-		counter=ptr_copy-rsptr;
-		if (counter==nregs) { --counter; }		
-		end_rank=erptr[osptr[counter]];
-		const int& curstart=fsptr[frag];
-		while (curstart <= reptr[end_rank]) {
-			--end_rank;
-			if (end_rank < 0) { break; }				
-		}
-
-		// Adding all regions ending before the fragment.
-		while (end_rank >= 0) {
-			dist = curstart - reptr[end_rank] - 1;
-			if (dist >= maxrange) { break; }
-			optr[dist] += wptr[oeptr[end_rank]];
-			--end_rank;
+		// Getting all regions starting before the fragment end.
+		ptr=ptr_copy;
+		while (ptr!=rsptr) {
+			--ptr;
+			dist = curstart - *ptr;
+			if (dist > maxrange) { break; }
+			optr[dist < -maxrange ? -maxrange : dist] += wptr[ptr-rsptr];
+			dist2 = curend - *ptr;
+			if (dist2 < maxrange) { optr[dist2+1] -= wptr[ptr-rsptr]; }
 		}
 	}
+
+	optr -= maxrange;
+	for (int i=1; i<totallen; ++i) { optr[i]+=optr[i-1]; }
 } catch (std::exception& e) {
 	UNPROTECT(1);
 	throw;

@@ -29,19 +29,24 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	totally <- list()
 	for (chr in names(chromos)) {
 		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam)
-		totally[[chr]] <- suppressWarnings(resize(out, width=ext))
+		out <- suppressWarnings(resize(out, width=ext))
+		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 	} 
-	totes.prof <- 0
+
+	modwin <- windows
+	start(modwin) <- start(windows) - width
+	end(modwin) <- start(windows) + width
+	totes.prof <- integer(width*2+1)
 	for (x in 1:nwin) {
-		curwin <- windows[x]
-		all.reads <- totally[[as.character(seqnames(curwin))]]
-		dist.back <- start(all.reads) - end(curwin)
-		dist.front <- start(curwin) - end(all.reads)
-		totes.prof <- totes.prof + (tabulate(dist.back, nbin=width) + tabulate(dist.front, nbin=width))/metric[x]
+		curwin <- modwin[x]
+		curchr <- as.character(seqnames(curwin))
+		relevant <- start(curwin):end(curwin)
+		valid <- relevant > 0L & relevant <= chromos[[curchr]]
+		totes.prof[valid] <- totes.prof[valid] + as.integer(totally[[curchr]][relevant[valid]])/metric[x]
 	}
 
 	# Evaluating the two methods.
-	reference <- totes.prof/nwin/2
+	reference <- totes.prof/nwin
 	if (length(reference)!=length(observed)) { stop("vectors are of differing lengths") }
 	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("coverage profiles don't match up") }
 	return(head(observed))
