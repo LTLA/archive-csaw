@@ -159,7 +159,7 @@
 	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext.info$ext)
 	frag.end <- frag.start + ext.info$ext - 1L
 
-	# 2*remainder <= ext, so start <= end should be true.	
+	# 2*remainder < ext, so start <= end should be true.	
 	frag.start <- frag.start - ext.info$remainder
 	frag.end <- frag.end + ext.info$remainder
 	
