@@ -71,7 +71,9 @@ Read extraction from BAM files is performed with the same filters as described a
 Note that directional extension is often used in analyses of single-end data.
 However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
 Instead, the average fragment length must be specified in each of the relevant downstream functions.
-This is because directional extension pertains to analysis, not read extraction.
+This is because directional extension of single-end data pertains to analysis, not read extraction.
+
+% Doing so for paired-end data is just to recover the paired-end fragment, for similarity with proper pairs.
 }
 
 \section{Constructor}{
