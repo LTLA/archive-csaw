@@ -40,6 +40,17 @@ compare2Ranges <- function(left, right) {
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
+	if (length(fraglen)==1L) { 
+		fraglen <- rep(fraglen, length.out=length(bamFiles))
+		final.out <- NULL
+		remainder <- integer(length(bamFiles))
+	} else {
+		final.out <- as.integer(mean(fraglen))
+		remainder <- as.integer((final.out - fraglen)/2)
+		final.out <- NULL
+	}
+	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
+	
 	for (type in 1:3) {
 		if (type==1) {
 			dedup<- FALSE
@@ -52,7 +63,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			minq <- 100
 		}
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+			final.ext=final.out, param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
 
 		# Checking with countOverlaps.
 		totals<-integer(length(bamFiles))
@@ -69,8 +80,12 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 				reads$qwidth <- reads$qwidth[keep]
 			}
 
-			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen)
-			read.ends<-read.starts+fraglen-1L
+			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen[i])
+			read.ends<-read.starts+fraglen[i]-1L
+			read.starts <- read.starts - remainder[i]
+			read.ends <- read.ends + remainder[i]
+			if (length(read.starts)) { read.starts <- pmin(read.starts, chrlens[reads$rname]) }
+			if (length(read.ends)) { read.ends <- pmax(1L, read.ends) }
 			frags <- GRanges(reads$rname, IRanges(read.starts, read.ends))
 
 			# Discarding. No variable read lengths here, so no need to use alignment width.			
@@ -90,7 +105,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			x2 <- x
 		} else {
 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
+				final.ext=final.out, param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
 			keep<-rowSums(assay(x2))>=filter
 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 			if (sum(keep)==0 && nrow(x)==0) { } 
@@ -157,6 +172,7 @@ chromos<-c(chrA=10000, chrB=5000)
 bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, spacing=20)
 comp(bamFiles, fraglen=200, spacing=50)
+comp(bamFiles, fraglen=c(100, 200), spacing=50)
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
@@ -166,6 +182,7 @@ bincomp(bamFiles, 500)
 bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=30, spacing=20)
 comp(bamFiles, fraglen=200, left=20, spacing=25)
+comp(bamFiles, fraglen=c(100, 200), left=20, spacing=25)
 comp(bamFiles, fraglen=150, right=10, left=10, spacing=30)
 comp(bamFiles, fraglen=150, right=-5, left=15)
 
@@ -175,6 +192,7 @@ bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file
 comp(bamFiles, fraglen=100, filter=5)
 comp(bamFiles, fraglen=100, filter=10)
 comp(bamFiles, fraglen=200, filter=15)
+comp(bamFiles, fraglen=c(100, 200), filter=15)
 
 # And again, with a different chromosome set-up.
 
@@ -182,6 +200,7 @@ chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
+comp(bamFiles, fraglen=c(100,200))
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
@@ -203,6 +222,7 @@ chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
+comp(bamFiles, fraglen=c(100, 150, 200))
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)
@@ -224,6 +244,7 @@ comp(bamFiles, fraglen=200, right=50, filter=2)
 bamFiles<-sapply(1:4, FUN=function(i) { regen(3000, chromos, file.path(dir, paste("A", i, sep=""))) })
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
+comp(bamFiles, fraglen=c(100, 120, 140, 160))
 bincomp(bamFiles, 1000)
 bincomp(bamFiles, 123)
 bincomp(bamFiles, 500)

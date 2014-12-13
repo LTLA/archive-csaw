@@ -24,8 +24,8 @@ SEXP get_rle_counts(SEXP start, SEXP end, SEXP nr, SEXP space, SEXP first) try {
 			// Get the zero-index corresponding to the smallest spacing point larger than the current inclusive start/end.
 			if (eptr[i] < sptr[i])  { throw std::runtime_error("invalid coordinates for read start/ends"); }
 			left=(sptr[i] < 2 ? 0 : int((sptr[i]-2)/spacing)+usefirst);
-			right=int((eptr[i]-1)/spacing)+usefirst;
-
+			right=(eptr[i] < 1 ? 0 : int((eptr[i]-1)/spacing)+usefirst);
+			
 			// Adding the steps for addition (at the start) and deletion (after the end) of each read.
 			if (left<right) { 
 				if (left<nrows) { ++optr[left]; }

@@ -1,5 +1,5 @@
 
-R version 3.1.0 (2014-04-10) -- "Spring Dance"
+R version 3.1.1 (2014-07-10) -- "Sock it to Me"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -59,6 +59,17 @@ Type 'q()' to quit R.
 > # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 > 
 > comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
++ 	if (length(fraglen)==1L) { 
++ 		fraglen <- rep(fraglen, length.out=length(bamFiles))
++ 		final.out <- NULL
++ 		remainder <- integer(length(bamFiles))
++ 	} else {
++ 		final.out <- as.integer(mean(fraglen))
++ 		remainder <- as.integer((final.out - fraglen)/2)
++ 		final.out <- NULL
++ 	}
++ 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
++ 	
 + 	for (type in 1:3) {
 + 		if (type==1) {
 + 			dedup<- FALSE
@@ -71,7 +82,7 @@ Type 'q()' to quit R.
 + 			minq <- 100
 + 		}
 + 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-+ 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
++ 			final.ext=final.out, param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
 + 
 + 		# Checking with countOverlaps.
 + 		totals<-integer(length(bamFiles))
@@ -88,8 +99,12 @@ Type 'q()' to quit R.
 + 				reads$qwidth <- reads$qwidth[keep]
 + 			}
 + 
-+ 			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen)
-+ 			read.ends<-read.starts+fraglen-1L
++ 			read.starts<-ifelse(reads$strand=="+", reads$pos, reads$pos+reads$qwidth-fraglen[i])
++ 			read.ends<-read.starts+fraglen[i]-1L
++ 			read.starts <- read.starts - remainder[i]
++ 			read.ends <- read.ends + remainder[i]
++ 			if (length(read.starts)) { read.starts <- pmin(read.starts, chrlens[reads$rname]) }
++ 			if (length(read.ends)) { read.ends <- pmax(1L, read.ends) }
 + 			frags <- GRanges(reads$rname, IRanges(read.starts, read.ends))
 + 
 + 			# Discarding. No variable read lengths here, so no need to use alignment width.			
@@ -109,7 +124,7 @@ Type 'q()' to quit R.
 + 			x2 <- x
 + 		} else {
 + 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-+ 				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
++ 				final.ext=final.out, param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
 + 			keep<-rowSums(assay(x2))>=filter
 + 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 + 			if (sum(keep)==0 && nrow(x)==0) { } 
@@ -208,6 +223,23 @@ GRanges object with 300 ranges and 0 metadata columns:
   [300]     chrB [4951, 4951]      *
   -------
   seqinfo: 2 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100, 200), spacing=50)
+GRanges object with 300 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 51,  51]      *
+    [3]     chrA   [101, 101]      *
+    [4]     chrA   [151, 151]      *
+    [5]     chrA   [201, 201]      *
+    ...      ...          ...    ...
+  [296]     chrB [4751, 4751]      *
+  [297]     chrB [4801, 4801]      *
+  [298]     chrB [4851, 4851]      *
+  [299]     chrB [4901, 4901]      *
+  [300]     chrB [4951, 4951]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 1000 1000
 > bincomp(bamFiles, 123)
@@ -236,6 +268,23 @@ GRanges object with 750 ranges and 0 metadata columns:
   -------
   seqinfo: 2 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=20, spacing=25)
+GRanges object with 602 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA    [ 1,   1]      *
+    [2]     chrA    [ 6,  26]      *
+    [3]     chrA    [31,  51]      *
+    [4]     chrA    [56,  76]      *
+    [5]     chrA    [81, 101]      *
+    ...      ...          ...    ...
+  [598]     chrB [4881, 4901]      *
+  [599]     chrB [4906, 4926]      *
+  [600]     chrB [4931, 4951]      *
+  [601]     chrB [4956, 4976]      *
+  [602]     chrB [4981, 5000]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100, 200), left=20, spacing=25)
 GRanges object with 602 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
@@ -341,6 +390,23 @@ GRanges object with 469 ranges and 0 metadata columns:
   [469]     chrB [4941, 4941]      *
   -------
   seqinfo: 2 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100, 200), filter=15)
+GRanges object with 283 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [321, 321]      *
+    [2]     chrA   [341, 341]      *
+    [3]     chrA   [941, 941]      *
+    [4]     chrA   [961, 961]      *
+    [5]     chrA   [981, 981]      *
+    ...      ...          ...    ...
+  [279]     chrB [4821, 4821]      *
+  [280]     chrB [4841, 4841]      *
+  [281]     chrB [4861, 4861]      *
+  [282]     chrB [4881, 4881]      *
+  [283]     chrB [4901, 4901]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome
 > 
 > # And again, with a different chromosome set-up.
 > 
@@ -364,6 +430,23 @@ GRanges object with 900 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200)
+GRanges object with 900 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [896]     chrC [7901, 7901]      *
+  [897]     chrC [7921, 7921]      *
+  [898]     chrC [7941, 7941]      *
+  [899]     chrC [7961, 7961]      *
+  [900]     chrC [7981, 7981]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100,200))
 GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
@@ -548,6 +631,23 @@ GRanges object with 900 ranges and 0 metadata columns:
   [900]     chrC [7981, 7981]      *
   -------
   seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100, 150, 200))
+GRanges object with 900 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [896]     chrC [7901, 7901]      *
+  [897]     chrC [7921, 7921]      *
+  [898]     chrC [7941, 7941]      *
+  [899]     chrC [7961, 7961]      *
+  [900]     chrC [7981, 7981]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
 > bincomp(bamFiles, 1000)
 [1] 3000 3000 3000
 > bincomp(bamFiles, 123)
@@ -700,6 +800,23 @@ GRanges object with 900 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200)
+GRanges object with 900 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [896]     chrC [7901, 7901]      *
+  [897]     chrC [7921, 7921]      *
+  [898]     chrC [7941, 7941]      *
+  [899]     chrC [7961, 7961]      *
+  [900]     chrC [7981, 7981]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=c(100, 120, 140, 160))
 GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
@@ -1028,4 +1145,4 @@ GRanges object with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-112.894   0.455 113.702 
+122.334   0.615 122.925 

@@ -147,20 +147,24 @@
 }
 
 .extendSE <- function(reads, chrlen, ext.info)
-# This decides how long to extend reads. The maxima is just to ensure the read
-# is still counted when ext < qwidth. The addition of the remainder kicks out
-# (or truncates) the fragments to reach the desired 'final.ext'.
+# This decides how long to extend reads. The addition of the remainder kicks
+# out (or truncates) the fragments to reach the desired 'final.ext'. The maxima
+# and minima ensures that no fragment interval is defined such that it becomes
+# impossible to count, e.g., if it gets shifted outside chromosome boundaries.
 #
 # written by Aaron Lun
 # created 12 December 2014
 # last modified 13 December 2014
 {
 	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext.info$ext)
-	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } 
 	frag.end <- frag.start + ext.info$ext - 1L
-	
+
+	# 2*remainder <= ext, so start <= end should be true.	
 	frag.start <- frag.start - ext.info$remainder
 	frag.end <- frag.end + ext.info$remainder
+	
+	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } 
+	if (length(frag.end)) { frag.end <- pmax(1L, frag.end) }
 	return(list(start=frag.start, end=frag.end))
 }
 
@@ -171,6 +175,7 @@
 # 
 # written by Aaron Lun
 # created 12 December 2014
+# last modified 13 December 2014
 {
 	ext <- as.integer(ext)
 	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
