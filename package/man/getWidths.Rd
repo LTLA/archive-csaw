@@ -46,6 +46,10 @@ bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, filter=1)
 getWidths(data)
 
+bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
+data <- windowCounts(bamFiles, ext=c(50, 100), final.ext=NA, filter=1)
+getWidths(data)
+
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 data <- windowCounts(bamFile, param=readParam(pet="both"), filter=1)
 getWidths(data)

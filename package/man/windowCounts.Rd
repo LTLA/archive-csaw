@@ -7,7 +7,7 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, param=readParam())
+	filter=NULL, bin=FALSE, final.ext=NULL, param=readParam())
 }
 
 \arguments{
@@ -18,6 +18,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar indicating whether binning should be performed}
+	\item{final.ext}{an integer scalar indicating the desired fragment length for extended reads}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
@@ -46,12 +47,7 @@ Specifying a single \code{readParam} object will use the same extraction paramet
 However, different parameters can be used for each file by specifying a list of \code{readParam} objects.
 Users should take care with library-specific parameters, lest spurious differences be introduced between libraries.
 
-For single-end reads, directional extension is performed whereby each read is extended from its 3' end to the average fragment length, i.e., \code{ext}.
-This obtains a rough estimate of the interval of the fragment from which the read was derived.
-Substantially different fragment lengths between libraries can be accommodated by supplying a vector to \code{ext}, where each entry represents the extension length for the corresponding library.
-Obviously, for paired-end data, the fragment boundaries can be computed exactly for proper pairs.
-See \code{\link{readParam}} for more details on the relevant parameters.
-
+Fragments are inferred from reads by directional extension (single-end; see below) or by identifying proper pairs (paired-end; see \code{\link{readParam}} for more details).
 The number of fragments overlapping the window for each library is then counted for each window position. 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
@@ -60,7 +56,23 @@ If \code{filter=NULL}, the count sum filter threshold is automatically defined a
 If \code{bin} is set, settings are internally adjusted so that all reads are counted into non-overlapping adjacent bins of size \code{width}. 
 Specifically, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
 Only the 5' end of each read or the midpoint of each fragment (for paired-end data) is used in counting.
+}
 
+\section{Elaborating on directional extension}{
+For single-end reads, directional extension is performed whereby each read is extended from its 3' end to the average fragment length, i.e., \code{ext}.
+This obtains a rough estimate of the interval of the fragment from which the read was derived.
+It is particularly useful for TF data, where extension specifically increases the coverage of peaks that exhibit strand bimodality.
+Substantially different fragment lengths between libraries can be accommodated by supplying a vector to \code{ext}, where each entry represents the extension length for the corresponding library.
+
+However, different fragment lengths will result in different peak widths between libraries.
+This may result in the detection of irrelevant differences corresponding to these differences in widths.
+To avoid this, fragment lengths in all libraries can be scaled to a value of \code{final.ext}.
+For a bimodal peak, scaling effectively aligns the subpeaks on a given strand across all libraries to a common location.
+This removes the most obvious differences in widths.
+
+A \code{NULL} value for \code{final.ext} will default to the mean of \code{ext} across all libraries.
+A \code{NA} value will not perform any scaling, i.e., \code{final.ext} is set to \code{ext} for each library.
+Users can also specify their own value, if so desired.
 }
 
 \author{Aaron Lun}
@@ -78,6 +90,7 @@ bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, width=100, filter=1)
 windowCounts(bamFiles, spacing=100, filter=1)
+windowCounts(bamFiles, ext=c(50, 100), final.ext=80, filter=1)
 
 # Loading PET data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
@@ -86,7 +99,7 @@ windowCounts(bamFile, param=readParam(pet="first"), filter=1)
 windowCounts(bamFile, param=readParam(max.frag=100, pet="both"), filter=1)
 windowCounts(bamFile, param=readParam(max.frag=100, pet="both", restrict="chrA"), filter=1)
 
-# Running rescues of PET data (use -1 to coerce single-endedness ).
+# Running rescues of PET data (use max.frag=-1 to coerce single-endedness ).
 windowCounts(bamFile, param=readParam(max.frag=50, pet="both", 
     rescue.pairs=TRUE, rescue.ext=200), filter=1)
 }

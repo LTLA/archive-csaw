@@ -6,13 +6,14 @@
 \description{Count the number of extended reads overlapping pre-specified regions}
 
 \usage{
-regionCounts(bam.files, regions, ext=100, param=readParam())
+regionCounts(bam.files, regions, ext=100, final.ext=NULL, param=readParam())
 }
 
 \arguments{
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{regions}{a \code{GRanges} object containing the regions over which reads are to be counted}
 	\item{ext}{an integer scalar or vector, describing the average length of the sequenced fragment in each library}
+	\item{final.ext}{an integer scalar indicating the desired fragment length for extended reads}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
