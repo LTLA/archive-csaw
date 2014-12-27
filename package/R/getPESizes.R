@@ -1,5 +1,5 @@
-getPETSizes <- function(bam.file, param=readParam(pet="both")) 
-# This function takes a BAM file and reads it to parse the size of the PET fragments. It then
+getPESizes <- function(bam.file, param=readParam(pe="both")) 
+# This function takes a BAM file and reads it to parse the size of the PE fragments. It then
 # returns a vector of sizes which can be plotted for diagnostics. The length of the vector
 # will also tell you how many read pairs were considered valid. The total number of reads, the
 # number of singletons and the number of interchromosomal pairs is also reported.
@@ -8,7 +8,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 # a long long time ago
 # last modified 12 December 2014
 {
-	if (param$pet!="both") { stop("paired-end inputs required") }
+	if (param$pe!="both") { stop("paired-end inputs required") }
     extracted.chrs <- .activeChrs(bam.file, param$restrict)
 
 	singles <- totals <- others <- one.unmapped <- 0L
@@ -18,7 +18,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 	for (i in 1:length(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
-		reads <- .extractSET(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
+		reads <- .extractSE(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
 
 		# Getting rid of unpaired reads.
 		totals <- totals + length(reads$flag)
@@ -87,7 +87,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 	is.second <- bitwAnd(reads$flag, 0x80) != 0L	
 	stopifnot(all(is.first!=is.second))
 
-	# Matching the reads in each pair so only valid PETs are formed.
+	# Matching the reads in each pair so only valid PEs are formed.
 	set.first.A <- should.be.left & is.first
 	set.second.A <- should.be.right & is.second
 	set.first.B <- should.be.left & is.second
@@ -108,7 +108,7 @@ getPETSizes <- function(bam.file, param=readParam(pet="both"))
 	rpos <- reads$pos[corresponding[hasmatch]]
 	rwidth <- reads$qwidth[corresponding[hasmatch]]
 
-	# Allowing only valid PETs.
+	# Allowing only valid PEs.
 	fend <- pmin(fpos+fwidth, clen+1L)
 	rend <- pmin(rpos+rwidth, clen+1L)
 	total.size <- rend - fpos

@@ -27,7 +27,7 @@ Counted reads can then be extracted by identifying their extended counterparts t
 
 \value{
 A \code{GRanges} object is returned.
-If \code{pet="both"} in \code{param}, intervals are unstranded and correspond to fragments.
+If \code{pe="both"} in \code{param}, intervals are unstranded and correspond to fragments.
 Otherwise, strand-specific intervals that represent reads are returned.
 }
 
@@ -40,8 +40,8 @@ extractReads(GRanges("chrA", IRanges(100, 500)), bamFile, param=readParam(dedup=
 
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 extractReads(GRanges("chrB", IRanges(100, 500)), bamFile)
-extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pet="both"))
-extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pet="first"))
+extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pe="both"))
+extractReads(GRanges("chrB", IRanges(100, 500)), bamFile, param=readParam(pe="first"))
 
 # Dealing with the extension length.
 bamFile <- system.file("exdata", "rep1.bam", package="csaw")

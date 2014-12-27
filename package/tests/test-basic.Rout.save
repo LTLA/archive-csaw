@@ -24,7 +24,7 @@ Type 'q()' to quit R.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > both.files <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
-> pet.file <- system.file("exdata", "pet.bam", package="csaw")
+> pe.file <- system.file("exdata", "pet.bam", package="csaw")
 > 
 > # Checking data quality prior to counting.
 > head(correlateReads(both.files))
@@ -34,7 +34,7 @@ Type 'q()' to quit R.
 [1]  1.000000000 -0.003372143  0.022101578 -0.049465927 -0.001196595
 [6] -0.002130977
 > 
-> getPETSizes(pet.file)
+> getPESizes(pe.file)
 $sizes
 [1]  90 150  70  20  10  30   2
 
@@ -116,7 +116,7 @@ GRanges object with 19 ranges and 0 metadata columns:
 [1]  451 1093
 > 
 > # Trying to count some paired-end data.
-> out <- windowCounts(pet.file, param=readParam(pet="both"), width=100, filter=1L)
+> out <- windowCounts(pe.file, param=readParam(pe="both"), width=100, filter=1L)
 > assay(out)
      [,1]
 [1,]    3
@@ -139,7 +139,7 @@ GRanges object with 6 ranges and 0 metadata columns:
   [6]     chrB [ 51, 100]      *
   -------
   seqinfo: 2 sequences from an unspecified genome
-> out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE, rescue.ext=100), width=100, filter=1L)
+> out <- windowCounts(pe.file, param=readParam(pe="both", rescue.pairs=TRUE, rescue.ext=100), width=100, filter=1L)
 > assay(out)
      [,1]
 [1,]    3
@@ -162,7 +162,7 @@ GRanges object with 6 ranges and 0 metadata columns:
   [6]     chrB [ 51, 100]      *
   -------
   seqinfo: 2 sequences from an unspecified genome
-> out <- windowCounts(pet.file, param=readParam(pet="first"), width=100, filter=1L)
+> out <- windowCounts(pe.file, param=readParam(pe="first"), width=100, filter=1L)
 > assay(out)
      [,1]
 [1,]    3
@@ -447,7 +447,7 @@ GRanges object with 19 ranges and 0 metadata columns:
   [19]     chrA [93, 102]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="both"))
+> extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="both"))
 GRanges object with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
@@ -455,7 +455,7 @@ GRanges object with 2 ranges and 0 metadata columns:
   [2]     chrB [99, 100]      *
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="second"))
+> extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="second"))
 GRanges object with 4 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>

@@ -1,7 +1,7 @@
 extractReads <- function(cur.region, bam.file, param=readParam())
 # Exactly as specified. Takes a region and plots it in bimodal mode, with
 # options for duplicate removal, mapping quality enhancement, colorization,
-# and PET manipulation.
+# and PE manipulation.
 #
 # written by Aaron Lun
 # created 1 September 2014
@@ -17,10 +17,10 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 
 	# Extracting all-of-chromosome for paired-end rescue, as you need to find the read with the higher MAPQ.
 	expand <- 0L
-	if (param$pet=="both" && param$rescue.pairs) {
+	if (param$pe=="both" && param$rescue.pairs) {
 		actual.region <- GRanges(cur.chr, IRanges(1L, max.len)) 
 	} else {
-		if (param$pet=="both") {
+		if (param$pe=="both") {
 			actual.region <- GRanges(cur.chr, IRanges(max(1L, start(cur.region)-param$max.frag),
 				min(max.len, end(cur.region)+param$max.frag)))
 		} else {
@@ -30,11 +30,11 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 	}
 
 	# Pulling out reads from a region and setting up coverage RLE's.
-	if (param$pet!="both") {
-		if (param$pet=="none") { 
-			cur.reads <- .extractSET(bam.file, where=actual.region, param=param)
+	if (param$pe!="both") {
+		if (param$pe=="none") { 
+			cur.reads <- .extractSE(bam.file, where=actual.region, param=param)
 		} else {
-			cur.reads <- .extractBrokenPET(bam.file, where=actual.region, param=param)
+			cur.reads <- .extractBrokenPE(bam.file, where=actual.region, param=param)
 		}
 
 		if (length(cur.reads$pos)) { 
@@ -44,9 +44,9 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 		}
 	} else {
 		if (param$rescue.pairs) {
-			cur.reads <- .rescuePET(bam.file, where=actual.region, param=param)
+			cur.reads <- .rescuePE(bam.file, where=actual.region, param=param)
 		} else {
-			cur.reads <- .extractPET(bam.file, where=actual.region, param=param)
+			cur.reads <- .extractPE(bam.file, where=actual.region, param=param)
 		}
 
 		# Filtering to retain those that don't actually overlap.

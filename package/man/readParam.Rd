@@ -15,7 +15,7 @@
 Each readParam object stores a number of parameters, each pertaining to the extraction of reads from a BAM file.
 Slots are defined as:
 \describe{
-	\item{\code{pet}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
+	\item{\code{pe}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
 	\item{\code{rescue.pairs}:}{a logical scalar indicating whether invalid read pairs should be rescued}
 	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
@@ -44,21 +44,21 @@ This is useful for removing reads in repeat regions.
 }
 
 \section{Parameter settings for paired-end data}{
-For \code{pet="both"}, reads are extracted with the previously described filters, i.e., \code{discard}, \code{minq}, \code{dedup}.
+For \code{pe="both"}, reads are extracted with the previously described filters, i.e., \code{discard}, \code{minq}, \code{dedup}.
 Extracted reads are then grouped into proper pairs.
 Proper pairs are those where the two reads are close together and in an inward-facing orientation. 
 The fragment interval is defined as that bounded by the 5' ends of the two reads in a proper pair.
-Fragment sizes above \code{max.frag} are removed; use \code{\link{getPETSizes}} to pick an appropriate value. 
+Fragment sizes above \code{max.frag} are removed; use \code{\link{getPESizes}} to pick an appropriate value. 
 
 By default, only reads in proper pairs are used to construct a fragment interval.
 If \code{rescue.pairs=TRUE}, the function will also attempt to recover reads from improper pairs.
 For each improper pair, the read with the higher MAPQ score will be directionally extended with \code{rescue.ext}.
-Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPETSizes}}.
+Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPESizes}}.
 The extended read will then be used as the fragment interval.
 Similarly, any reads without a mapped mate will be extended. 
 For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
 
-Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pet="first"} or \code{"second"}.  
+Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pe="first"} or \code{"second"}.  
 This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.
 Treating the data as single-end may allow the analysis to be salvaged.
 
@@ -66,7 +66,7 @@ In all cases, users should ensure that each BAM file containing paired-end data 
 }
 
 \section{Parameter settings for single-end data}{
-If \code{pet="none"}, reads are assumed to be single-end.
+If \code{pe="none"}, reads are assumed to be single-end.
 Read extraction from BAM files is performed with the same filters as described above.
 Note that directional extension is often used in analyses of single-end data.
 However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
@@ -78,7 +78,7 @@ This is because directional extension of single-end data pertains to analysis, n
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pet="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pe="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}
@@ -86,7 +86,7 @@ This is because directional extension of single-end data pertains to analysis, n
 }
 
 \section{Subsetting}{
-In the code snippets below, \code{x} is a readParam object.
+In the code snippes below, \code{x} is a readParam object.
 \describe{
 	\item{}{\code{x$name}: 
 	Returns the value in slot \code{name}.
@@ -95,7 +95,7 @@ In the code snippets below, \code{x} is a readParam object.
 }
 
 \section{Other methods}{
-In the code snippets below, \code{x} is a readParam object.
+In the code snippes below, \code{x} is a readParam object.
 \describe{
     \item{}{\code{show(x)}:
 	Describes the parameter settings in plain English.
@@ -115,21 +115,21 @@ Aaron Lun
 \code{\link{windowCounts}},
 \code{\link{regionCounts}},
 \code{\link{correlateReads}},
-\code{\link{getPETSizes}}
+\code{\link{getPESizes}}
 }
 
 \examples{
 blah <- readParam()
 blah <- readParam(discard=GRanges("chrA", IRanges(1, 10)))
 blah <- readParam(restrict='chr2')
-blah$pet
+blah$pe
 blah$dedup
 
 # Use 'reform' if only some arguments need to be changed.
 blah
 reform(blah, dedup=TRUE)
 reform(blah, rescue.pairs=TRUE, rescue.ext=200)
-reform(blah, pet="both", max.frag=212.0)
+reform(blah, pe="both", max.frag=212.0)
 }
 
 \keyword{counting}

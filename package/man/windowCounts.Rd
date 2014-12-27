@@ -92,15 +92,15 @@ windowCounts(bamFiles, width=100, filter=1)
 windowCounts(bamFiles, spacing=100, filter=1)
 windowCounts(bamFiles, ext=c(50, 100), final.ext=80, filter=1)
 
-# Loading PET data.
+# Loading PE data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
-windowCounts(bamFile, param=readParam(pet="both"), filter=1)
-windowCounts(bamFile, param=readParam(pet="first"), filter=1)
-windowCounts(bamFile, param=readParam(max.frag=100, pet="both"), filter=1)
-windowCounts(bamFile, param=readParam(max.frag=100, pet="both", restrict="chrA"), filter=1)
+windowCounts(bamFile, param=readParam(pe="both"), filter=1)
+windowCounts(bamFile, param=readParam(pe="first"), filter=1)
+windowCounts(bamFile, param=readParam(max.frag=100, pe="both"), filter=1)
+windowCounts(bamFile, param=readParam(max.frag=100, pe="both", restrict="chrA"), filter=1)
 
-# Running rescues of PET data (use max.frag=-1 to coerce single-endedness ).
-windowCounts(bamFile, param=readParam(max.frag=50, pet="both", 
+# Running rescues of PE data (use max.frag=-1 to coerce single-endedness ).
+windowCounts(bamFile, param=readParam(max.frag=50, pe="both", 
     rescue.pairs=TRUE, rescue.ext=200), filter=1)
 }
 

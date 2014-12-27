@@ -36,20 +36,20 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 		starts <- ends <- list()
 		for (b in 1:blen) {
 			curpar <- paramlist[[b]]
-            if (curpar$pet!="both") {
-				if (curpar$pet=="none") { 
-					reads <- .extractSET(bam.files[b], where=where, param=curpar)
+            if (curpar$pe!="both") {
+				if (curpar$pe=="none") { 
+					reads <- .extractSE(bam.files[b], where=where, param=curpar)
 				} else {
-					reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
+					reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
 				}
    				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[b,])
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
                 if (curpar$rescue.pairs) {
-					out <- .rescuePET(bam.files[b], where=where, param=curpar)
+					out <- .rescuePE(bam.files[b], where=where, param=curpar)
 				} else {
-					out <- .extractPET(bam.files[b], where=where, param=curpar)
+					out <- .extractPE(bam.files[b], where=where, param=curpar)
 				}
 				start.pos <- out$pos
 				end.pos <- out$pos + out$size - 1L

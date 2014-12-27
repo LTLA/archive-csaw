@@ -2,7 +2,7 @@ regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=read
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
-# for ext, pet, and so on).
+# for ext, pe, and so on).
 #
 # written by Aaron Lun
 # created 14 May 2014
@@ -26,20 +26,20 @@ regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=read
 		# Pulling out reads as previously described.
         for (bf in 1:nbam) {
 			curpar <- paramlist[[bf]]
-            if (curpar$pet!="both") {
-                if (curpar$pet=="none") {
-                    reads <- .extractSET(bam.files[bf], where=where, param=curpar)
+            if (curpar$pe!="both") {
+                if (curpar$pe=="none") {
+                    reads <- .extractSE(bam.files[bf], where=where, param=curpar)
                 } else {
-                    reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
+                    reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
                 }
 				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[bf,])
 				frag.start <- extended$start
 				frag.end <- extended$end
             } else {
                 if (curpar$rescue.pairs) {
-                    out <- .rescuePET(bam.files[bf], where=where, param=curpar)
+                    out <- .rescuePE(bam.files[bf], where=where, param=curpar)
                 } else {
-                    out <- .extractPET(bam.files[bf], where=where, param=curpar)
+                    out <- .extractPE(bam.files[bf], where=where, param=curpar)
                 }
                 frag.start <- out$pos
 				frag.end <- frag.start+out$size-1L

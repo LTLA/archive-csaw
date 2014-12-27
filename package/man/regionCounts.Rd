@@ -27,7 +27,7 @@ Other read counting parameters (i.e., \code{param}) are stored in the \code{expt
 
 \details{
 This function simply provides a wrapper around \code{\link{countOverlaps}} for read counting into specified regions. 
-It is provided so as to allow for counting with awareness of the other parameters, e.g., \code{ext}, \code{pet}.
+It is provided so as to allow for counting with awareness of the other parameters, e.g., \code{ext}, \code{pe}.
 This allows users to coordinate region-based counts with those from \code{\link{windowCounts}}. 
 Checking that the output \code{totals} are the same between the two calls is strongly recommended.
 }
@@ -50,13 +50,13 @@ incoming <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'),
 regionCounts(bamFiles, regions=incoming)
 regionCounts(bamFiles, regions=incoming, param=readParam(restrict="chrB"))
 
-# Loading PET data.
+# Loading PE data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
-regionCounts(bamFile, regions=incoming, param=readParam(pet="both"))
+regionCounts(bamFile, regions=incoming, param=readParam(pe="both"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
-	pet="first", restrict="chrA"))
+	pe="first", restrict="chrA"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
-	pet="both", restrict="chrA", rescue.pairs=TRUE, rescue.ext=100))
+	pe="both", restrict="chrA", rescue.pairs=TRUE, rescue.ext=100))
 }
 
 \keyword{counting}

@@ -67,20 +67,20 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 
 		for (bf in 1:nbam) {
 			curpar <- paramlist[[bf]]
-			if (curpar$pet!="both") {
-				if (curpar$pet=="none") { 
-   					reads <- .extractSET(bam.files[bf], where=where, param=curpar)
+			if (curpar$pe!="both") {
+				if (curpar$pe=="none") { 
+   					reads <- .extractSE(bam.files[bf], where=where, param=curpar)
 				} else {
-					reads <- .extractBrokenPET(bam.files[bf], where=where, param=curpar)
+					reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
 				}
 				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[bf,])
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
 				if (curpar$rescue.pairs) { 
-					out <- .rescuePET(bam.files[bf], where=where, param=curpar)
+					out <- .rescuePE(bam.files[bf], where=where, param=curpar)
 				} else {
-					out <- .extractPET(bam.files[bf], where=where, param=curpar)
+					out <- .extractPE(bam.files[bf], where=where, param=curpar)
 				}
 
 				# Only want to record each pair once in a bin, so forcing it to only use the midpoint.

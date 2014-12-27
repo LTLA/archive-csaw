@@ -35,8 +35,8 @@ This is probably an artefact of the mapping process where unique mapping occurs 
 The construction of cross-correlation plots is usually uninformative for full paired-end data.
 This is because the presence of valid pairs will inevitably result in a strong peak at the fragment length.
 Nonetheless, immunoprecipitation efficiency can be diagnosed by treating paired-end data as single end data. 
-This is done by using only the first or second read based on the value of \code{pet} used in \code{\link{readParam}}.
-Setting \code{pet="both"} will result in failure.
+This is done by using only the first or second read based on the value of \code{pe} used in \code{\link{readParam}}.
+Setting \code{pe="both"} will result in failure.
 
 If multiple BAM files are specified in \code{bam.files}, the reads from all libraries are pooled prior to calculation of the correlation coefficients.
 This is convenient for determining the average correlation profile across an entire dataset. 

@@ -1,12 +1,12 @@
-\name{getPETSizes}
-\alias{getPETSizes}
+\name{getPESizes}
+\alias{getPESizes}
 
 \title{Compute fragment lengths for paired-end tags}
  
-\description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PET) data.}
+\description{Compute the length of the sequenced fragment for each read pair in paired-end tag (PE) data.}
 
 \usage{
-getPETSizes(bam.file, param=readParam(pet="both"))
+getPESizes(bam.file, param=readParam(pe="both"))
 }
 
 \arguments{
@@ -49,9 +49,9 @@ The distribution of sizes is useful for assessing the quality of the library pre
 
 \examples{
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
-out <- getPETSizes(bamFile, param=readParam(pet="both"))
-out <- getPETSizes(bamFile, param=readParam(pet="both", restrict="chrA"))
-out <- getPETSizes(bamFile, param=readParam(pet="both", discard=GRanges("chrA", IRanges(1, 50))))
+out <- getPESizes(bamFile, param=readParam(pe="both"))
+out <- getPESizes(bamFile, param=readParam(pe="both", restrict="chrA"))
+out <- getPESizes(bamFile, param=readParam(pe="both", discard=GRanges("chrA", IRanges(1, 50))))
 }
 
 \keyword{diagnostics}

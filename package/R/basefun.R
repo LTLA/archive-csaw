@@ -1,4 +1,4 @@
-.extractSET <- function(bam, where, param, extras="strand", ...) 
+.extractSE <- function(bam, where, param, extras="strand", ...) 
 # Extracts single-end read data from a BAM file with removal of unmapped,
 # duplicate and poorly mapped/non-unique reads. We also discard reads in the
 # specified discard regions. In such cases, the offending reads must be wholly
@@ -39,8 +39,8 @@
 	return(reads)
 }
 
-.extractPET <- function(bam.file, where, param)
-# A function to extract PET data for a particular chromosome. Synchronisation
+.extractPE <- function(bam.file, where, param)
+# A function to extract PE data for a particular chromosome. Synchronisation
 # is expected.  We avoid sorting by name  as it'd mean we have to process the
 # entire genome at once (can't go chromosome-by-chromosome).  This probably
 # results in increased memory usage across the board, and it doesn't fit in
@@ -50,23 +50,23 @@
 # created 8 December 2013
 # last modified 12 December 2012
 {
-	reads <- .extractSET(bam.file, extras=c("qname", "flag"), where=where, 	
+	reads <- .extractSE(bam.file, extras=c("qname", "flag"), where=where, 	
 		param=param, isPaired=TRUE, hasUnmappedMate=FALSE)
 	.yieldInterestingBits(reads, max(end(where)), max.frag=param$max.frag)
 }
 
-.extractBrokenPET <- function(bam.file, where, param)
-# A function to extract PET data, but as single-end data (i.e. only using one
+.extractBrokenPE <- function(bam.file, where, param)
+# A function to extract PE data, but as single-end data (i.e. only using one
 # of the reads).  Useful when paired-end data has gone completely off the
 # rails.
 {
-	use.first <- param$pet=="first"
-	.extractSET(bam.file, where=where, param=param,  
+	use.first <- param$pe=="first"
+	.extractSE(bam.file, where=where, param=param,  
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }
 
-.rescuePET <- function(bam.file, where, param)
-# A function to extract PET data where possible, but to rescue those that
+.rescuePE <- function(bam.file, where, param)
+# A function to extract PE data where possible, but to rescue those that
 # are invalid by using them as single-end data with read extension. Those
 # reads that form invalid pairs are broken up and the read with the better
 # MAPQ is chosen. Any single read (due to filtering or whatever) is used as-is.
@@ -76,7 +76,7 @@
 # created 13 May 2014
 # last modified 12 December 2012
 {
-	reads <- .extractSET(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
+	reads <- .extractSE(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
 		param=param, isPaired=TRUE)
 	output <- .yieldInterestingBits(reads, max(end(where)), diag=TRUE, max.frag=param$max.frag)
 

@@ -22,19 +22,19 @@ getWidths <- function(data)
 # created 5 November 2014
 # last modified 12 December 2014
 {
-	is.pet <- sapply(paramList(data), FUN=function(x) { x$pet=="both" })
+	is.pe <- sapply(paramList(data), FUN=function(x) { x$pe=="both" })
 	frag.len <- integer(ncol(data))
 	if (is.na(exptData(data)$final.ext)) { 
-		frag.len[!is.pet] <- data$ext[!is.pet]
+		frag.len[!is.pe] <- data$ext[!is.pe]
 	} else {
-		frag.len[!is.pet] <- exptData(data)$final.ext
+		frag.len[!is.pe] <- exptData(data)$final.ext
 	}
 	
-	pet.len <- sapply(paramList(data), FUN=function(x) { x$rescue.ext })
-	not.def <- is.na(pet.len)
-	use.pet.len <- is.pet & !not.def
-	frag.len[use.pet.len] <- pet.len[use.pet.len]
-	use.def.len <- is.pet & not.def
+	pe.len <- sapply(paramList(data), FUN=function(x) { x$rescue.ext })
+	not.def <- is.na(pe.len)
+	use.pe.len <- is.pe & !not.def
+	frag.len[use.pe.len] <- pe.len[use.pe.len]
+	use.def.len <- is.pe & not.def
 	if (any(use.def.len)) { 
 		warning("using a median fragment length of 100 bp for PE data")
 		frag.len[use.def.len] <- 100L		

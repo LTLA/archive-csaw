@@ -2,14 +2,14 @@
 # parameters for read loading in csaw. A class is used here so that
 # there are continuous validity checks on the list values.
 
-setClass("readParam", representation(pet="character", 
+setClass("readParam", representation(pe="character", 
 	max.frag="integer", rescue.pairs="logical", rescue.ext="integer", 
 	dedup="logical", minq="integer", 
 	restrict="character", discard="GRanges"))
 
 setValidity("readParam", function(object) {
-    if (length(object@pet)!=1L || ! object@pet %in%	c("none", "both", "first", "second")) { 
-		return("PET specification must be a character scalar of 'none', 'both', 'first' or 'second'") 
+    if (length(object@pe)!=1L || ! object@pe %in%	c("none", "both", "first", "second")) { 
+		return("PE specification must be a character scalar of 'none', 'both', 'first' or 'second'") 
 	}
    	if (length(object@max.frag)!=1L || object@max.frag <= 0L) {
 		return("maximum fragment specifier must be a positive integer")
@@ -48,13 +48,13 @@ setMethod("$", signature("readParam"), function(x, name) {
 })
 
 setMethod("show", signature("readParam"), function(object) {
-	cat("    ", switch(object@pet,
+	cat("    ", switch(object@pe,
  	   none="Extracting reads in single-end mode",
 	   both="Extracting reads in paired-end mode",
 	   first="Extracting the first read of each pair",
 	   second="Extracting the second read of each pair"), "\n", sep="")
 
-	if (object@pet=="both") { 
+	if (object@pe=="both") { 
 		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
 		cat("        Rescuing of improperly paired reads is", 
 			ifelse(object@rescue.pairs, "enabled", "disabled"), "\n")
@@ -85,7 +85,7 @@ setMethod("show", signature("readParam"), function(object) {
 	}
 })
 
-readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
+readParam <- function(pe="none", max.frag=500, rescue.pairs=FALSE,
 	rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
@@ -105,7 +105,7 @@ readParam <- function(pet="none", max.frag=500, rescue.pairs=FALSE,
 	dedup <- as.logical(dedup)
 	minq <- as.integer(minq)
 	restrict <- as.character(restrict) 
-	new("readParam", pet=pet, max.frag=max.frag, rescue.pairs=rescue.pairs,
+	new("readParam", pe=pe, max.frag=max.frag, rescue.pairs=rescue.pairs,
 		rescue.ext=rescue.ext, dedup=dedup, minq=minq, restrict=restrict, discard=discard)
 }
 

@@ -5,13 +5,13 @@
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 both.files <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
-pet.file <- system.file("exdata", "pet.bam", package="csaw")
+pe.file <- system.file("exdata", "pet.bam", package="csaw")
 
 # Checking data quality prior to counting.
 head(correlateReads(both.files))
 head(correlateReads(both.files, cross=FALSE))
 
-getPETSizes(pet.file)
+getPESizes(pe.file)
 
 # Trying to count some single-end data.
 data <- windowCounts(both.files, ext=100)
@@ -34,15 +34,15 @@ data <- windowCounts(both.files, ext=100, param=readParam(restrict="chrA"))
 data$totals
 
 # Trying to count some paired-end data.
-out <- windowCounts(pet.file, param=readParam(pet="both"), width=100, filter=1L)
+out <- windowCounts(pe.file, param=readParam(pe="both"), width=100, filter=1L)
 assay(out)
 out$totals
 rowData(out)
-out <- windowCounts(pet.file, param=readParam(pet="both", rescue.pairs=TRUE, rescue.ext=100), width=100, filter=1L)
+out <- windowCounts(pe.file, param=readParam(pe="both", rescue.pairs=TRUE, rescue.ext=100), width=100, filter=1L)
 assay(out)
 out$totals
 rowData(out)
-out <- windowCounts(pet.file, param=readParam(pet="first"), width=100, filter=1L)
+out <- windowCounts(pe.file, param=readParam(pe="first"), width=100, filter=1L)
 assay(out)
 out$totals
 rowData(out)
@@ -100,6 +100,6 @@ head(output$left)
 extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
 extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
 extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
-extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="both"))
-extractReads(GRanges("chrB", IRanges(50, 100)), pet.file, param=readParam(pet="second"))
+extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="both"))
+extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="second"))
 

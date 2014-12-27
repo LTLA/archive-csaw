@@ -25,7 +25,7 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 The average fragment length is defined as \code{ext} in the parameter list from \code{paramList(data)}.
 If different \code{ext} is used between libraries, the mean value across the dataset is used.
 For paired-end data, the average fragment length needs to be specified in \code{ext}.
-One recommended strategy is to use the median of the values obtained with \code{\link{getPETSizes}}.
+One recommended strategy is to use the median of the values obtained with \code{\link{getPESizes}}.
 }
 
 \value{
@@ -51,7 +51,7 @@ data <- windowCounts(bamFiles, ext=c(50, 100), final.ext=NA, filter=1)
 getWidths(data)
 
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
-data <- windowCounts(bamFile, param=readParam(pet="both"), filter=1)
+data <- windowCounts(bamFile, param=readParam(pe="both"), filter=1)
 getWidths(data)
 
 # Avoid warning by defining 'ext'.

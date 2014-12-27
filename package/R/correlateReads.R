@@ -13,7 +13,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 	for (x in paramlist) { 
-		if (x$pet=="both") { stop("paired-end read extraction not supported") }
+		if (x$pe=="both") { stop("paired-end read extraction not supported") }
 	}
 
 	max.dist <- as.integer(max.dist)
@@ -32,10 +32,10 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		forward.reads <- 0L
 		for (b in 1:nbam) { 
 			curpar <- paramlist[[b]]
-			if (curpar$pet=="none") { 
-				reads <- .extractSET(bam.files[b], where=where, param=curpar)
+			if (curpar$pe=="none") { 
+				reads <- .extractSE(bam.files[b], where=where, param=curpar)
 			} else {
-				reads <- .extractBrokenPET(bam.files[b], where=where, param=curpar)
+				reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
 			}
 			forwards <- reads$strand=="+"
 			num.reads <- num.reads+length(forwards)
