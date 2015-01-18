@@ -34,7 +34,7 @@ Specification of \code{max.width} prevents the formation of excessively large cl
 Any cluster that is wider than \code{max.width} is split into multiple subclusters of (roughly) equal size.
 Specifically, the cluster interval is partitioned into the smallest number of equally-sized subintervals where each subinterval is smaller than \code{max.width}.
 Windows are then assigned to each subinterval based on the location of the window midpoints.
-Suggested values range from 2000 to 10000 bp, but no limits are placed on the maximum size if it is \code{NULL}, 
+Suggested values range from 2000 to 10000 bp, but no limits are placed on the maximum size if it is \code{NULL}. 
 
 The tolerance should reflect the minimum distance at which two regions of
 enrichment are considered separate. If two windows are more than \code{tol}
