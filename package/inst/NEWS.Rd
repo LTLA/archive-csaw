@@ -16,7 +16,7 @@ Added profileSites() to examine the coverage profile around specified regions.
 Changed default width in windowCounts() to 50.
 
 \item 
-Changed all instances of \code{pet} to \code{pe} in read parameter specification.
+Changed all instances of \code{pet} to \code{pe} in read parameter specification, and renamed getPETSizes() to getPESizes().
 
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().
