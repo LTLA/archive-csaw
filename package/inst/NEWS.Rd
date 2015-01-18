@@ -15,6 +15,9 @@ Added profileSites() to examine the coverage profile around specified regions.
 \item
 Changed default width in windowCounts() to 50.
 
+\item 
+Changed all instances of \code{pet} to \code{pe} in read parameter specification.
+
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().
 
@@ -26,6 +29,12 @@ Fixed small inaccuracies with continuity correction addition in normalizeCounts(
 
 \item 
 Switched to fragment midpoint for binning of paired-end data in windowCounts().
+
+\item 
+Added support for lists of library-specific readParam objects in windowCounts(), regionCounts(), correlateReads().
+
+\item 
+Added support for variable read extension lengths between libraries in windowCounts(), regionCounts().
 
 \item 
 Updated the user's guide to reflect new and modified functions.
