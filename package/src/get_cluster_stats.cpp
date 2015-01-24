@@ -1,33 +1,30 @@
 #include "csaw.h"
 
-SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
+SEXP get_cluster_stats (SEXP otherdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
 	// Checking indices.
-	if (!isInteger(fcdex) || !isInteger(cpmdex) || !isInteger(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
-	if (LENGTH(cpmdex)!=1 || LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for log-CPM and p-value columns"); }
-	const int pdex=asInteger(pvaldex), cdex=asInteger(cpmdex);
-	const int fcn=LENGTH(fcdex);
-	if (!LENGTH(fcdex)) { throw std::runtime_error("at least one index should be supplied for log-FC columns"); }
-	const int* fcdptr=INTEGER(fcdex);
-	if (fcn==0) { throw std::runtime_error("no log-FC columns supplied for clustering"); }
+	if (!isInteger(otherdex) || !isInteger(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
+	if (LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for log-CPM and p-value columns"); }
+	const int pdex=asInteger(pvaldex);
+	const int ocn=LENGTH(otherdex);
+	if (!ocn) { throw std::runtime_error("at least one index should be supplied for the other columns"); }
+	const int* odptr=INTEGER(otherdex);
 
 	// Setting up the columns.
 	if (!isNewList(tab)) { throw std::runtime_error("data values should be supplied as a list or dataframe"); }
-	SEXP cpm=VECTOR_ELT(tab, cdex), pval=VECTOR_ELT(tab, pdex);
-	if (!isNumeric(cpm)) { throw std::runtime_error("vector of log-CPMs should be double precision"); }
+	SEXP pval=VECTOR_ELT(tab, pdex);
 	if (!isNumeric(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
-	const double *cptr=REAL(cpm), *pptr=REAL(pval);
+	const double *pptr=REAL(pval);
 	const int n=LENGTH(pval);
-	if (n!=LENGTH(cpm)) { throw std::runtime_error("vector lengths are not equal"); }
+	if (n==0) { throw std::runtime_error("no elements supplied to compute cluster statistics"); }
 
 	// Setting up the columns (II), for log-FCs.
-	double** fcptrs=(double**)R_alloc(fcn, sizeof(double*));
-	for (int i=0; i<fcn; ++i) { 
-		SEXP fc=VECTOR_ELT(tab, fcdptr[i]);
-		if (!isNumeric(fc)) { throw std::runtime_error("vector of log-FCs should be double precision"); }
-	    if (n!=LENGTH(fc)) { throw std::runtime_error("vector lengths are not equal"); }
-		fcptrs[i]=REAL(fc);
+	double** optrs=(double**)R_alloc(ocn, sizeof(double*));
+	for (int i=0; i<ocn; ++i) { 
+		SEXP other=VECTOR_ELT(tab, odptr[i]);
+		if (!isNumeric(other)) { throw std::runtime_error("vector of other statistics should be double precision"); }
+	    if (n!=LENGTH(other)) { throw std::runtime_error("vector lengths are not equal"); }
+		optrs[i]=REAL(other);
 	}
-	if (n==0) { throw std::runtime_error("no elements supplied to compute cluster statistics"); }
 
 	// Setting up the remaining inputs. 
 	if (!isInteger(by)) { throw std::runtime_error("vector of cluster ids should be integer"); }
@@ -49,18 +46,16 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by
 	sort_row_index<double> pcomp(pptr);
 
 	// Pulling out results.
-	SEXP output=PROTECT(allocVector(VECSXP, 3));
+	SEXP output=PROTECT(allocVector(VECSXP, 2));
 	try {
-		SET_VECTOR_ELT(output, 0, allocMatrix(REALSXP, total, fcn));
-		double** ofptrs=(double**)R_alloc(fcn, sizeof(double*));
-		ofptrs[0]=REAL(VECTOR_ELT(output, 0));
-		for (int i=1; i<fcn; ++i) { ofptrs[i]=ofptrs[i-1]+total; }
+		SET_VECTOR_ELT(output, 0, allocMatrix(REALSXP, total, ocn));
+		double** ooptrs=(double**)R_alloc(ocn, sizeof(double*));
+		ooptrs[0]=REAL(VECTOR_ELT(output, 0));
+		for (int i=1; i<ocn; ++i) { ooptrs[i]=ooptrs[i-1]+total; }
 		SET_VECTOR_ELT(output, 1, allocVector(REALSXP, total));
-		double* ocptr=REAL(VECTOR_ELT(output, 1));
-		SET_VECTOR_ELT(output, 2, allocVector(REALSXP, total));
-		double* opptr=REAL(VECTOR_ELT(output, 2));
+		double* opptr=REAL(VECTOR_ELT(output, 1));
 	
-		int i=0;
+		int i=0, k, x;
 		while (i<n) {
 			int j=i+1;
 			double subweight=wptr[i];
@@ -70,15 +65,12 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by
 			}
 
 			// Computing the weighted mean of log-FC(s) and log-CPM values.
-			double& outcpm=(*ocptr=0);
-	        for (int x=i; x<j; ++x) { outcpm+=cptr[x]*wptr[x]; }
-			for (int k=0; k<fcn; ++k) { 
-				double& outfc=(ofptrs[k][0]=0);
-				for (int x=i; x<j; ++x) {  outfc+=fcptrs[k][x]*wptr[x]; }
-				outfc/=subweight;
-				++(ofptrs[k]);
+			for (k=0; k<ocn; ++k) { 
+				double& out_other=(ooptrs[k][0]=0);
+				for (x=i; x<j; ++x) {  out_other+=optrs[k][x]*wptr[x]; }
+				out_other/=subweight;
+				++(ooptrs[k]);
 			}
-			outcpm/=subweight;
 
 			/* Computing the weighted Simes value. The weights are implemented as frequency 
  			 * weights, e.g., if you had 2 tests with a weight of 10 to 1, you'd consider the
@@ -88,7 +80,7 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by
 			std::sort(sortvec+i, sortvec+j, pcomp);
 			double more_temp=0, remaining=wptr[sortvec[i]];
 			double& outp=(*opptr=pptr[sortvec[i]]/remaining); 
-			for (int x=i+1; x<j; ++x) {
+			for (x=i+1; x<j; ++x) {
  		    	const int& current=sortvec[x];	
 				remaining+=wptr[current];
 				more_temp=pptr[current]/remaining;
@@ -97,7 +89,6 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP cpmdex, SEXP pvaldex, SEXP tab, SEXP by
 			outp*=subweight;
 
 			// Setting it up for the next round.
-			++ocptr;
 			++opptr;
 			i=j;
 		}

@@ -39,7 +39,7 @@ SEXP best_in_cluster(SEXP, SEXP, SEXP);
 
 /* get_cluster_stats.cpp */
 
-SEXP get_cluster_stats(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP get_cluster_stats(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 /* merge_windows.cpp */
 
