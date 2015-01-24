@@ -1,4 +1,4 @@
-regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=readParam())
+regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
@@ -11,7 +11,7 @@ regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=read
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
-	ext.data <- .collateExt(nbam, ext, final.ext)
+	ext.data <- .collateExt(nbam, ext) 
 
     totals <- integer(nbam)
 	nx <- length(regions)
@@ -60,6 +60,6 @@ regionCounts <- function(bam.files, regions, ext=100, final.ext=NULL, param=read
 	}
 	return(SummarizedExperiment(assays=counts, 
 		rowData=regions, 
-		colData=DataFrame(bam.files, totals=totals, ext=ext, param=index),
-		exptData=SimpleList(final.ext=ext.data$final.ext[1], param=paramlist)))
+		colData=DataFrame(bam.files, totals=totals, ext=ext, final.ext=ext.data$final, param=index),
+		exptData=SimpleList(list(param=paramlist)))) # Need the extra list, as it gets rid of the list aspect of paramlist if there's only one elemtn.
 }

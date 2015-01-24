@@ -5,7 +5,7 @@
 \description{Get the coverage profile around potential binding sites.}
 
 \usage{
-profileSites(bam.files, regions, range=5000, ext=100, weight=1, final.ext=NULL, param=readParam()) 
+profileSites(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
 }
 
 \arguments{
@@ -14,7 +14,6 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1, final.ext=NULL, 
 	\item{range}{an integer scalar specifying the range over which the profile will be collected}
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
-	\item{final.ext}{an integer scalar indicating the desired fragment length for extended reads}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
@@ -24,7 +23,7 @@ The shape of this profile can guide an intelligent choice of the window size in 
 For the former, restricting the \code{regions} to locally maximal windows with \code{\link{findMaxima}} is recommended prior to use of \code{profileSites}.
 
 The profile consists of the number of fragments overlapping each base within \code{range} of the start of all \code{regions}.
-Single-end reads are directionally extended to \code{ext} to impute the fragment (with some modification according to \code{final.ext}; see \code{\link{windowCounts}} for more details).
+Single-end reads are directionally extended to \code{ext} to impute the fragment (see \code{\link{windowCounts}} for more details).
 For paired-end reads, the interval between each pair is used as the fragment.
 If multiple \code{bam.files} are specified, reads are pooled across files for counting into each profile.
 

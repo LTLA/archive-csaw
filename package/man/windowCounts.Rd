@@ -7,7 +7,7 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, final.ext=NULL, param=readParam())
+	filter=NULL, bin=FALSE, param=readParam())
 }
 
 \arguments{
@@ -18,7 +18,6 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar indicating whether binning should be performed}
-	\item{final.ext}{an integer scalar indicating the desired fragment length for extended reads}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
@@ -66,13 +65,13 @@ Substantially different fragment lengths between libraries can be accommodated b
 
 However, different fragment lengths will result in different peak widths between libraries.
 This may result in the detection of irrelevant differences corresponding to these differences in widths.
-To avoid this, fragment lengths in all libraries can be scaled to a value of \code{final.ext}.
+To avoid this, fragment lengths in all libraries can be scaled to another value, named as \code{final.ext}.
 For a bimodal peak, scaling effectively aligns the subpeaks on a given strand across all libraries to a common location.
 This removes the most obvious differences in widths.
 
-A \code{NULL} value for \code{final.ext} will default to the mean of \code{ext} across all libraries.
-A \code{NA} value will not perform any scaling, i.e., \code{final.ext} is set to \code{ext} for each library.
-Users can also specify their own value, if so desired.
+By default, \code{final.ext} is defined as the mean of all \code{ext}.
+Users can specify another value by supplying a list or data frame as \code{ext}, where the first element is the vector of extension lengths and the second is the desired \code{final.ext}.
+A vector of \code{final.ext} can also be specified in this manner, if different extension lengths are intended.
 }
 
 \author{Aaron Lun}
@@ -89,8 +88,8 @@ Users can also specify their own value, if so desired.
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, width=100, filter=1)
-windowCounts(bamFiles, spacing=100, filter=1)
-windowCounts(bamFiles, ext=c(50, 100), final.ext=80, filter=1)
+windowCounts(bamFiles, ext=c(50, 100), spacing=100, filter=1)
+windowCounts(bamFiles, ext=list(c(50, 100), 80), filter=1)
 
 # Loading PE data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")

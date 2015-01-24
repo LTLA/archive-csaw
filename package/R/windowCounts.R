@@ -1,5 +1,5 @@
 windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, final.ext=NULL, param=readParam())
+	filter=NULL, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -25,10 +25,10 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		spacing <- as.integer(width)
 		left <- as.integer(shift)
 		right <- spacing - 1L - left
-		final.ext <- ext <- 1L
+		ext <- 1L
 		filter <- 1
 	}
-	ext.data <- .collateExt(nbam, ext, final.ext)
+	ext.data <- .collateExt(nbam, ext)
 
 	# Checking the extension and spacing parameters. We've reparameterised it so
 	# that 'left' and 'right' refer to the extension of the window from a nominal
@@ -132,8 +132,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	}
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
 		rowData=all.regions, 
-		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext, param=index),
-		exptData=SimpleList(final.ext=ext.data$final.ext[1], spacing=spacing, 
-			width=width, shift=shift, param=paramlist)))
+		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext, final.ext=ext.data$final, param=index),
+		exptData=SimpleList(spacing=spacing, width=width, shift=shift, param=paramlist)))
 }
 

@@ -168,7 +168,7 @@
 	return(list(start=frag.start, end=frag.end))
 }
 
-.collateExt <- function(nbam, ext, final.ext) 
+.collateExt <- function(nbam, ext) 
 # Collates the extension parameters into a set of ext and remainder values.
 # The idea is to extend each read directionally to 'ext', and then extend in
 # both directions by 'remainder' to reach the desired fragment length.
@@ -177,23 +177,24 @@
 # created 12 December 2014
 # last modified 13 December 2014
 {
-	ext <- as.integer(ext)
-	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
-	if (length(ext)==1L) { 
-		ext <- rep(ext, length.out=nbam)
-	} else if (length(ext)!=nbam) { 
-		stop("ext must have length of 1 or that equal to the number of libraries") 
-	}
-	if (length(final.ext)>1L) { stop("multiple final extension lengths are not supported") }
-	if (is.null(final.ext)) {
-		report <- final.ext <- as.integer(mean(ext))
-	} else if (is.na(final.ext)) { 
-		final.ext <- ext
-		report <- NA
+	if (is.list(ext)) {
+		final.ext <- ext[[2]]
+		ext <- ext[[1]]
+		if (length(ext)!=nbam) { stop("length of extension vector is not consistent with number of libraries") }
+		final.ext <- rep(final.ext, length.out=nbam)
 	} else {
-		report <- final.ext <- as.integer(final.ext)
-		if (final.ext <= 0L) { stop("final extension length must be a positive integer") }
+		if (length(ext)==1L) { 
+			final.ext <- ext <- rep(ext, nbam)
+		} else if (length(ext)==nbam) {
+			final.ext <- rep(mean(ext), nbam)
+		} else {
+			stop("length of extension vector is not consistent with number of libraries")
+		}
 	}
+
+	ext <- as.integer(ext)
+	final.ext <- as.integer(final.ext)
+	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
 	remainder <- as.integer((final.ext - ext)/2)
-	data.frame(ext=ext, remainder=remainder, final.ext=report)
+	data.frame(ext=ext, remainder=remainder, final=final.ext)
 }

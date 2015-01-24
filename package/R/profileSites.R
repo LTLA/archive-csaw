@@ -1,5 +1,4 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, 
-    final.ext=NULL, param=readParam()) 
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -12,7 +11,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
-	ext.data <- .collateExt(nbam, ext, final.ext)
+	ext.data <- .collateExt(nbam, ext)
 
 	# Splitting up the regions.
 	indices <- split(1:length(regions), seqnames(regions))
