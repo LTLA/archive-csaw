@@ -41,7 +41,7 @@ In Simes' procedure, weights are interpreted as relative frequencies of the test
 Note that these weights have no effect between clusters and will not be used to adjust the computed FDR.
 
 By default, the relevant fields in \code{tab} are identified by matching the column names to their expected values.
-If the column names are different from what is expected, specification of the correct column can still be performed using \code{pval.col} and \code{other.col}
+If the column names are different from what is expected, specification of the correct column can be performed using \code{pval.col} and \code{other.col}
 The former will be combined as described, whereas the fields in the latter will be averaged across the cluster.
 This will overwrite any internal selection of the appropriate fields.
 

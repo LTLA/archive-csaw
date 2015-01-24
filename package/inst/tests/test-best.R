@@ -25,7 +25,7 @@ comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 	}
 
 	# Now, searching for the max log-CPM.
-	almostbest <- getBestTest(ids, tab, mode="logCPM")
+	almostbest <- getBestTest(ids, tab, by.pval=FALSE)
     ref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.max(tab$logCPM[x])] }, data=NULL)
 	if (!identical(ref[,2], almostbest$best)) { stop("tests with the highest log-CPMs don't match reference") }
 	

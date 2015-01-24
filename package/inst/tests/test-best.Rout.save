@@ -1,11 +1,13 @@
 
-R version 3.0.3 (2014-03-06) -- "Warm Puppy"
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -42,7 +44,7 @@ Type 'q()' to quit R.
 + 	}
 + 
 + 	# Now, searching for the max log-CPM.
-+ 	almostbest <- getBestTest(ids, tab, mode="logCPM")
++ 	almostbest <- getBestTest(ids, tab, by.pval=FALSE)
 +     ref <- aggregate(1:n ~ ids, FUN=function(x) { x[which.max(tab$logCPM[x])] }, data=NULL)
 + 	if (!identical(ref[,2], almostbest$best)) { stop("tests with the highest log-CPMs don't match reference") }
 + 	
@@ -218,4 +220,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 11.617   0.062  11.705 
+ 14.358   0.138  14.500 
