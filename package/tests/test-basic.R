@@ -74,7 +74,7 @@ head(combineTests(merged$id, tabled, weight=weighting))
 
 head(getBestTest(merged$id, tabled))
 head(getBestTest(merged$id, tabled, weight=weighting))
-head(getBestTest(merged$id, tabled, mode="logCPM"))
+head(getBestTest(merged$id, tabled, by.pval=FALSE))
 
 # Pulling out some diagnostics.
 suppressPackageStartupMessages(require(org.Mm.eg.db))

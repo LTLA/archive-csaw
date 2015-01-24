@@ -1,5 +1,5 @@
 
-R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -345,7 +345,7 @@ GRanges object with 43 ranges and 0 metadata columns:
 4    5 0.04669873 0.4255938
 5    9 0.24536526 0.4795776
 6   10 0.01949563 0.3373185
-> head(getBestTest(merged$id, tabled, mode="logCPM"))
+> head(getBestTest(merged$id, tabled, by.pval=FALSE))
   best     PValue       FDR
 1    1 0.46328451 0.5622769
 2    2 0.79272727 0.8116017
@@ -469,4 +469,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 31.600   0.612  38.679 
+ 25.570   0.297  25.874 

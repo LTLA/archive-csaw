@@ -1,5 +1,5 @@
 
-R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -61,12 +61,10 @@ Type 'q()' to quit R.
 > comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
 + 	if (length(fraglen)==1L) { 
 + 		fraglen <- rep(fraglen, length.out=length(bamFiles))
-+ 		final.out <- NULL
 + 		remainder <- integer(length(bamFiles))
 + 	} else {
 + 		final.out <- as.integer(mean(fraglen))
 + 		remainder <- as.integer((final.out - fraglen)/2)
-+ 		final.out <- NULL
 + 	}
 + 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 + 	
@@ -82,7 +80,7 @@ Type 'q()' to quit R.
 + 			minq <- 100
 + 		}
 + 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-+ 			final.ext=final.out, param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
++ 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
 + 
 + 		# Checking with countOverlaps.
 + 		totals<-integer(length(bamFiles))
@@ -124,7 +122,7 @@ Type 'q()' to quit R.
 + 			x2 <- x
 + 		} else {
 + 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-+ 				final.ext=final.out, param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
++ 				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
 + 			keep<-rowSums(assay(x2))>=filter
 + 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 + 			if (sum(keep)==0 && nrow(x)==0) { } 
@@ -1145,4 +1143,4 @@ GRanges object with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-122.334   0.615 122.925 
+ 66.514   0.305  66.842 

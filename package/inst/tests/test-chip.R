@@ -42,12 +42,10 @@ compare2Ranges <- function(left, right) {
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
 	if (length(fraglen)==1L) { 
 		fraglen <- rep(fraglen, length.out=length(bamFiles))
-		final.out <- NULL
 		remainder <- integer(length(bamFiles))
 	} else {
 		final.out <- as.integer(mean(fraglen))
 		remainder <- as.integer((final.out - fraglen)/2)
-		final.out <- NULL
 	}
 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 	
@@ -63,7 +61,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			minq <- 100
 		}
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			final.ext=final.out, param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
 
 		# Checking with countOverlaps.
 		totals<-integer(length(bamFiles))
@@ -105,7 +103,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			x2 <- x
 		} else {
 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-				final.ext=final.out, param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
+				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
 			keep<-rowSums(assay(x2))>=filter
 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 			if (sum(keep)==0 && nrow(x)==0) { } 
