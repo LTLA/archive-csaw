@@ -72,6 +72,7 @@ This removes the most obvious differences in widths.
 By default, \code{final.ext} is defined as the mean of all \code{ext}.
 Users can specify another value by supplying a list or data frame as \code{ext}, where the first element is the vector of extension lengths and the second is the desired \code{final.ext}.
 A vector of \code{final.ext} can also be specified in this manner, if different extension lengths are intended.
+In all cases, the \code{final.ext} used for each library is stored in the \code{colData} of the returned \code{SummarizedExperiment} object.
 }
 
 \author{Aaron Lun}
