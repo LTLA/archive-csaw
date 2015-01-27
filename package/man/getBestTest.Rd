@@ -55,8 +55,7 @@ If the column names are different from what is expected, specification of the co
 
 \examples{ 
 ids <- round(runif(100, 1, 10))
-tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), 
-    PValue=rbeta(100, 1, 2))
+tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
 combined <- getBestTest(ids, tab)
 head(combined)
 
@@ -67,6 +66,9 @@ head(combined)
 
 # By logCPM.
 combined <- getBestTest(ids, tab, by.pval=FALSE)
+head(combined)
+
+combined <- getBestTest(ids, tab, by.pval=FALSE, cpm.col=2, pval.col=3)
 head(combined)
 }
 

@@ -53,8 +53,7 @@ independently called peaks.
 
 \examples{ 
 ids <- round(runif(100, 1, 10))
-tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100),
-	    PValue=rbeta(100, 1, 2))
+tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
 combined <- combineTests(ids, tab)
 head(combined)
 
@@ -66,6 +65,9 @@ head(combined)
 # With multiple log-FCs.
 tab$logFC.whee <- rnorm(100, 5)
 combined <- combineTests(ids, tab)
+head(combined)
+
+combined <- combineTests(ids, tab, other.col=c(1,2,4), pval.col=3)
 head(combined)
 }
 
