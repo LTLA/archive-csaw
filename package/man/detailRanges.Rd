@@ -5,8 +5,8 @@
 \description{Add detailed exon-based annotation to specified genomic regions.}
 
 \usage{
-detailRanges(incoming, txdb, orgdb, dist=5000, 
-    promoter=c(3000, 1000), max.intron=1e6)
+detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), 
+    max.intron=1e6, key.field="ENTREZID", name.field="SYMBOL")
 }
 
 \arguments{
@@ -16,6 +16,8 @@ detailRanges(incoming, txdb, orgdb, dist=5000,
 \item{dist}{an integer scalar specifying the flanking distance to annotate}
 \item{promoter}{an integer vector of length 2, where first and second values define the promoter as some distance upstream and downstream from the TSS, respectively}
 \item{max.intron}{an integer scalar indicating the maximum distance between exons}
+\item{key.field}{a character scalar specifying the keytype for name extraction}
+\item{name.field}{a character scalar specifying the column to use as the gene name}
 }
 
 \value{
@@ -82,6 +84,10 @@ further work on the annotation is required. Exon numbers are provided in the
 metadata with promoters and gene bodies labelled as 0 and -1, respectively.
 Overlaps to introns can be identified by finding those regions that overlap 
 with gene bodies but not with any of the corresponding exons.
+
+The default settings for \code{key.field} and \code{name.field} will work for human and mouse genomes, but may not work for other organisms.
+The \code{key.field} should refer to the key type in the \code{OrgDb} object, corresponding to the \code{GENEID} of the \code{TxDb} object.
+For example, in S. cerevisiae, \code{key.field} is set to \code{"ORF"} while \code{name.field} is set to \code{"GENENAME"}.
 }
 
 \author{Aaron Lun}
