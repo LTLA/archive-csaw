@@ -39,8 +39,7 @@ See \code{\link{windowCounts}} for more details on read extension.
 \code{\link{countOverlaps}},
 \code{\link{windowCounts}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}},
-\code{\link{paramList}}
+\code{\link{SummarizedExperiment}}
 }
 
 \examples{

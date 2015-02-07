@@ -175,9 +175,9 @@
 # 
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 13 December 2014
+# last modified 7 February 2015
 {
-	if (is.list(ext)) {
+	if (!is.numeric(ext)) {
 		final.ext <- ext[[2]]
 		ext <- ext[[1]]
 		if (length(ext)!=nbam) { stop("length of extension vector is not consistent with number of libraries") }

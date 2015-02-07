@@ -59,7 +59,7 @@ setMethod("show", signature("readParam"), function(object) {
 		cat("        Rescuing of improperly paired reads is", 
 			ifelse(object@rescue.pairs, "enabled", "disabled"), "\n")
 		if (object@rescue.pairs) {
-			cat("            Extension length for rescued reads is", object@ext, "bp\n")
+			cat("            Extension length for rescued reads is", object@rescue.ext, "bp\n")
 		}
 	}
 

@@ -22,11 +22,11 @@ getWidths <- function(data)
 # created 5 November 2014
 # last modified 12 December 2014
 {
-	is.pe <- sapply(paramList(data), FUN=function(x) { x$pe=="both" })
+	is.pe <- sapply(data$param, FUN=function(x) { x$pe=="both" })
 	frag.len <- integer(ncol(data))
 	frag.len[!is.pe] <- data$final.ext[!is.pe]
 	
-	pe.len <- sapply(paramList(data), FUN=function(x) { x$rescue.ext })
+	pe.len <- sapply(data$param, FUN=function(x) { x$rescue.ext })
 	not.def <- is.na(pe.len)
 	use.pe.len <- is.pe & !not.def
 	frag.len[use.pe.len] <- pe.len[use.pe.len]

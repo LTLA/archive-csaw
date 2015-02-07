@@ -25,8 +25,8 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each window (row).
 The coordinates of each window are stored as the \code{rowData}.
-The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length used in each library.
-Other read counting parameters (e.g., \code{spacing}, \code{param}) are stored in the \code{exptData}.
+The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length and \code{param} used in each library.
+Other window counting parameters (e.g., \code{spacing}, \code{width}) are stored in the \code{exptData}.
 }
 
 \details{
@@ -80,8 +80,7 @@ In all cases, the \code{final.ext} used for each library is stored in the \code{
 \seealso{
 \code{\link{correlateReads}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}},
-\code{\link{paramList}}
+\code{\link{SummarizedExperiment}}
 }
 
 \examples{
@@ -91,6 +90,10 @@ windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, width=100, filter=1)
 windowCounts(bamFiles, ext=c(50, 100), spacing=100, filter=1)
 windowCounts(bamFiles, ext=list(c(50, 100), 80), filter=1)
+
+# Rerunning with old extension parameters.
+old <- windowCounts(bamFiles, ext=list(c(50, 100), 80), filter=1)
+windowCounts(bamFiles, ext=colData(old)[,c("ext", "final.ext")], width=100)
 
 # Loading PE data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")

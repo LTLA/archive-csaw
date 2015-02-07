@@ -22,7 +22,7 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 % are 149 positions where the fragment overlaps the interval. So, the effective width
 % is actually 149 bp.
 
-The average fragment length is defined as \code{ext} in the parameter list from \code{paramList(data)}.
+The average fragment length is defined as \code{ext} in the parameter list from \code{data$param}.
 If different \code{ext} is used between libraries, the mean value across the dataset is used.
 For paired-end data, the average fragment length needs to be specified in the \code{readParam} object of \code{data}, in the \code{rescue.ext} slot.
 One recommended strategy is to use the median of the values obtained with \code{\link{getPESizes}}.

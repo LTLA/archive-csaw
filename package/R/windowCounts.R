@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # ages ago.
-# last modified 13 December 2014
+# last modified 7 February 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -124,15 +124,11 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	seqlevels(all.regions) <- names(extracted.chrs)
 	seqlengths(all.regions) <- extracted.chrs
 
-	if (is.list(param)) { 
-		index <- 1:nbam
-	} else {
-		index <- 1L
-		paramlist <- paramlist[1]
-	}
+	dim(paramlist) <- c(nbam, 1)
+	colnames(paramlist) <- "param"
 	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
 		rowData=all.regions, 
-		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext, final.ext=ext.data$final, param=index),
+		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext.data$ext, final.ext=ext.data$final, paramlist),
 		exptData=SimpleList(spacing=spacing, width=width, shift=shift, param=paramlist)))
 }
 

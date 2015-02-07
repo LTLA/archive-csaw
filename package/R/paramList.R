@@ -3,10 +3,7 @@
 #
 # written by Aaron Lun
 # created 12 December 2014
-
-paramList <- function(data) {
-	return(exptData(data)$param[data$param])
-}
+# last modified 7 February 2015
 
 reformList <- function(paramlist, ...) {
 	lapply(paramlist, FUN=reform, ...)
