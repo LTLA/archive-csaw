@@ -82,6 +82,10 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	# we're so-and-so base pairs away from the end of the promoter. We also
 	# rule out negative or zero distances i.e. those that would overlap the
 	# region itself (zero distance means 1-based end and start are equal).
+	# Strandedness in the incoming data is eliminated, as we're looking for 
+	# any annotated features that overlap.
+
+	strand(incoming) <- "*" 
 	full.lap <- findOverlaps(incoming, curex)
 	flank.only <- ex.num > 0L
 	to.flank <- curex[flank.only]

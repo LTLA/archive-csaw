@@ -34,22 +34,20 @@ annotated feature is also included.
 }
 
 \details{
-This function adds exon-based annotations to a given set of genomic regions, in
-the form of compact character strings specifying the features overlapping and
-flanking each region. The aim is to determine the genic context of empirically
-identified regions. This allows some basic biological interpretation of
-binding/marking in those regions. All neighbouring genes within a specified
-range are reported, rather than just the closest gene to the region.
+This function adds exon-based annotations to a given set of genomic regions, in the form of compact character strings specifying the features overlapping and flanking each region.
+The aim is to determine the genic context of empirically identified regions. 
+This allows some basic biological interpretation of binding/marking in those regions. 
+All neighbouring genes within a specified range are reported, rather than just the closest gene to the region.
 
 For annotated features overlapping a region, the character string in the
 \code{overlap} output vector will be of the form \code{GENE|EXONS|STRAND}. The
 \code{GENE} is the gene symbol, with an alternative as \code{ID:XXX} for the
 Entrez ID if the symbol is unavailable. The \code{EXONS} indicate the exon or
 range of exons that are overlapped. The \code{STRAND} is, obviously, the strand
-on which the gene is coded. For annotated regions flanking the region within
-\code{dist}, the character string in the \code{left} or \code{right} output
-vectors will have an additional \code{DIST} value. This represents the gap
-between the edge of the region and the closest exon for that gene.
+on which the gene is coded. 
+Strandedness in \code{incoming} is ignored when considering overlaps.
+For annotated regions flanking the region within a distance of \code{dist}, the character string in the \code{left} or \code{right} output vectors will have an additional \code{DIST} value. 
+This represents the gap between the edge of the region and the closest exon for that gene.
 
 Exons are numbered in order of increasing start or end position for genes
 on the forward or reverse strands, respectively. Promoters are defined as
