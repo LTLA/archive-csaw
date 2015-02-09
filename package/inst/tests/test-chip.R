@@ -284,7 +284,6 @@ comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), res
 comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
 
 bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
-debug(comp)
 comp(bamFiles, fraglen=100, forward=TRUE)
 comp(bamFiles, fraglen=100, forward=FALSE, discard=makeDiscard(10, 200, chromos))
 comp(bamFiles, fraglen=200, left=20, spacing=50, forward=TRUE)
