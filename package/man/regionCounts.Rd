@@ -20,8 +20,7 @@ regionCounts(bam.files, regions, ext=100, param=readParam())
 A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each region (row).
 The coordinates of each region are stored as the \code{rowData}.
-The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length used in each library.
-Other read counting parameters (i.e., \code{param}) are stored in the \code{exptData}.
+The total number of reads, read extension length and \code{param} used in each library are in the \code{colData}.
 }
 
 \details{
