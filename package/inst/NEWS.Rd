@@ -24,6 +24,9 @@ Added support for custom column specification in getBestTest(), combineTests().
 \item
 Added support for custom key/name specification in detailRanges() for non-human/mouse systems.
 
+\item 
+Added support for strand-specific read extraction in readParam(), strand-specific counting in windowCounts(), regionCounts() via strandedCounts().
+
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().
 
