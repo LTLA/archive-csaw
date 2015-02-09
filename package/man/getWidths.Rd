@@ -17,13 +17,13 @@ Widths of all regions are increased by the average fragment length during the ca
 This is because each count represents the number of (imputed) fragments overlapping each region.
 Thus, a 1 bp window has an effective width that includes the average length of each fragment. 
 
-% It's a direct addition of width and fragment length. If you have a 100 bp interval,
+% It's a direct addition of width and fragment length, minus 1. If you have a 100 bp interval,
 % and you slide a 50 bp fragment along the genome until it hits the interval, there
 % are 149 positions where the fragment overlaps the interval. So, the effective width
-% is actually 149 bp.
+% is actually 149 bp. This logic holds regardless of which strand the read was from, so
+% there's no need to adjust things if data$param$forward is not NA.
 
-The average fragment length is defined as \code{ext} in the parameter list from \code{data$param}.
-If different \code{ext} is used between libraries, the mean value across the dataset is used.
+The fragment length is defined as \code{final.ext} in \code{colData(data)}.
 For paired-end data, the average fragment length needs to be specified in the \code{readParam} object of \code{data}, in the \code{rescue.ext} slot.
 One recommended strategy is to use the median of the values obtained with \code{\link{getPESizes}}.
 }
