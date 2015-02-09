@@ -5,7 +5,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 export(csawUsersGuide,
 	readParam, reformList, checkList,
 	correlateReads, getPESizes, profileSites,
-	regionCounts, windowCounts,
+	regionCounts, windowCounts, strandedCounts,
 	normalizeCounts, 
 	getWidths, scaledAverage, findMaxima,
 	combineTests, getBestTest, mergeWindows,
@@ -15,12 +15,13 @@ export(csawUsersGuide,
 #  Importing required packages
 import(GenomicRanges, Rsamtools,
 	S4Vectors, IRanges, GenomeInfoDb,
-	edgeR, limma,
+	edgeR, 
 	methods)
 
 importFrom("GenomicAlignments", cigarWidthAlongReferenceSpace)
 importFrom("GenomicFeatures", exonsBy)
 importFrom("AnnotationDbi", select)
+importFrom("limma", loessFit)
 
 #  Exporting classes and methods
 exportClasses(
