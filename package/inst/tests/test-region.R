@@ -4,7 +4,7 @@
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL) {
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL, forward=NA) {
 	for (type in 1:3) {
 		if (type==1) {
 			dedup<- FALSE
@@ -18,7 +18,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 		}
 	
 		# We compare windowCounts and regionCounts directly.
-		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup)
+		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward)
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, 
 			filter=filter, param=repar)
 		y <- regionCounts(bamFiles, regions=rowData(x), ext=fraglen, param=repar)
@@ -116,6 +116,12 @@ bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.p
 comp(bamFiles, fraglen=200, left=25, spacing=50, discard=makeDiscard(20, 200, chromos))
 comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), restrict=c("chrC", "chrA"))
 comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
+
+bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+comp(bamFiles, fraglen=100, filter=2, forward=TRUE)
+comp(bamFiles, fraglen=100, filter=2, forward=FALSE, discard=makeDiscard(10, 200, chromos))
+comp(bamFiles, fraglen=200, filter=2, left=20, spacing=50, forward=TRUE)
+comp(bamFiles, fraglen=200, filter=2, left=20, spacing=50, forward=FALSE, discard=makeDiscard(20, 200, chromos))
 
 ###################################################################################################
 # Cleaning up.

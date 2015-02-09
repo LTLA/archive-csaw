@@ -39,7 +39,7 @@ compare2Ranges <- function(left, right) {
 
 # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL, forward=NA) {
 	if (length(fraglen)==1L) { 
 		fraglen <- rep(fraglen, length.out=length(bamFiles))
 		remainder <- integer(length(bamFiles))
@@ -61,14 +61,15 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			minq <- 100
 		}
 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
+			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward))
 
 		# Checking with countOverlaps.
 		totals<-integer(length(bamFiles))
 		out<-matrix(0L, nrow(x), length(bamFiles))
 		for (i in 1:length(bamFiles)) {
 	        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth", "mapq"), 
-						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
+						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA), 
+							isMinusStrand=ifelse(is.na(forward), NA, !forward))))[[1]]
 			keep <- reads$mapq >= minq
 			reads$mapq <- NULL
 			if (any(keep)) {
@@ -103,7 +104,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			x2 <- x
 		} else {
 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
+				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq, forward=forward))
 			keep<-rowSums(assay(x2))>=filter
 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 			if (sum(keep)==0 && nrow(x)==0) { } 
@@ -265,7 +266,7 @@ comp(bamFiles, right=max(chromos))
 comp(bamFiles, right=max(chromos), spacing=max(chromos))
 
 ###################################################################################################
-# Restricted and/or discarded.
+# Restricted and/or discarded and/or strand-specific.
 
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 
@@ -281,6 +282,13 @@ comp(bamFiles, fraglen=200, right=100, spacing=100, discard=makeDiscard(10, 1000
 comp(bamFiles, fraglen=100, filter=0, discard=makeDiscard(10, 500, chromos))
 comp(bamFiles, fraglen=200, filter=1, discard=makeDiscard(5, 1000, chromos), restrict=c("chrC", "chrA"))
 comp(bamFiles, fraglen=200, right=50, filter=2, discard=makeDiscard(20, 100, chromos))
+
+bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+debug(comp)
+comp(bamFiles, fraglen=100, forward=TRUE)
+comp(bamFiles, fraglen=100, forward=FALSE, discard=makeDiscard(10, 200, chromos))
+comp(bamFiles, fraglen=200, left=20, spacing=50, forward=TRUE)
+comp(bamFiles, fraglen=200, left=20, spacing=50, forward=FALSE, discard=makeDiscard(20, 200, chromos))
 
 ###################################################################################################
 # Cleaning up.

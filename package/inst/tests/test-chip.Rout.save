@@ -58,7 +58,7 @@ Type 'q()' to quit R.
 > 
 > # We also set up a comparison function between the windowCount function and its countOverlaps equivalent.
 > 
-> comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL) {
+> comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL, forward=NA) {
 + 	if (length(fraglen)==1L) { 
 + 		fraglen <- rep(fraglen, length.out=length(bamFiles))
 + 		remainder <- integer(length(bamFiles))
@@ -80,14 +80,15 @@ Type 'q()' to quit R.
 + 			minq <- 100
 + 		}
 + 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
-+ 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup))
++ 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward))
 + 
 + 		# Checking with countOverlaps.
 + 		totals<-integer(length(bamFiles))
 + 		out<-matrix(0L, nrow(x), length(bamFiles))
 + 		for (i in 1:length(bamFiles)) {
 + 	        reads <- scanBam(bamFiles[i], param = ScanBamParam(what =c("rname", "strand", "pos", "qwidth", "mapq"), 
-+ 						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA))))[[1]]
++ 						flag=scanBamFlag(isDuplicate=ifelse(dedup, FALSE, NA), 
++ 							isMinusStrand=ifelse(is.na(forward), NA, !forward))))[[1]]
 + 			keep <- reads$mapq >= minq
 + 			reads$mapq <- NULL
 + 			if (any(keep)) {
@@ -122,7 +123,7 @@ Type 'q()' to quit R.
 + 			x2 <- x
 + 		} else {
 + 	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
-+ 				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq))
++ 				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq, forward=forward))
 + 			keep<-rowSums(assay(x2))>=filter
 + 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 + 			if (sum(keep)==0 && nrow(x)==0) { } 
@@ -971,7 +972,7 @@ GRanges object with 2 ranges and 0 metadata columns:
   seqinfo: 2 sequences from an unspecified genome
 > 
 > ###################################################################################################
-> # Restricted and/or discarded.
+> # Restricted and/or discarded and/or strand-specific.
 > 
 > chromos<-c(chrA=5000, chrB=5000, chrC=8000)
 > 
@@ -1132,6 +1133,76 @@ GRanges object with 479 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 > 
+> bamFiles<-c(regen(100, chromos, file.path(dir, "A")), regen(100, chromos, file.path(dir, "B")))
+> comp(bamFiles, fraglen=100, forward=TRUE)
+GRanges object with 900 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [896]     chrC [7901, 7901]      *
+  [897]     chrC [7921, 7921]      *
+  [898]     chrC [7941, 7941]      *
+  [899]     chrC [7961, 7961]      *
+  [900]     chrC [7981, 7981]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=100, forward=FALSE, discard=makeDiscard(10, 200, chromos))
+GRanges object with 900 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA     [ 1,  1]      *
+    [2]     chrA     [21, 21]      *
+    [3]     chrA     [41, 41]      *
+    [4]     chrA     [61, 61]      *
+    [5]     chrA     [81, 81]      *
+    ...      ...          ...    ...
+  [896]     chrC [7901, 7901]      *
+  [897]     chrC [7921, 7921]      *
+  [898]     chrC [7941, 7941]      *
+  [899]     chrC [7961, 7961]      *
+  [900]     chrC [7981, 7981]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=200, left=20, spacing=50, forward=TRUE)
+GRanges object with 363 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 31,  51]      *
+    [3]     chrA   [ 81, 101]      *
+    [4]     chrA   [131, 151]      *
+    [5]     chrA   [181, 201]      *
+    ...      ...          ...    ...
+  [359]     chrC [7781, 7801]      *
+  [360]     chrC [7831, 7851]      *
+  [361]     chrC [7881, 7901]      *
+  [362]     chrC [7931, 7951]      *
+  [363]     chrC [7981, 8000]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> comp(bamFiles, fraglen=200, left=20, spacing=50, forward=FALSE, discard=makeDiscard(20, 200, chromos))
+GRanges object with 363 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [  1,   1]      *
+    [2]     chrA   [ 31,  51]      *
+    [3]     chrA   [ 81, 101]      *
+    [4]     chrA   [131, 151]      *
+    [5]     chrA   [181, 201]      *
+    ...      ...          ...    ...
+  [359]     chrC [7781, 7801]      *
+  [360]     chrC [7831, 7851]      *
+  [361]     chrC [7881, 7901]      *
+  [362]     chrC [7931, 7951]      *
+  [363]     chrC [7981, 8000]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome
+> 
 > ###################################################################################################
 > # Cleaning up.
 > 
@@ -1143,4 +1214,4 @@ GRanges object with 479 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 66.514   0.305  66.842 
+ 71.572   0.325  71.943 
