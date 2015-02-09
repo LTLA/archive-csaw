@@ -8,7 +8,7 @@
 #
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 12 December 2014
+# last modified 9 February 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
 	if (!is.na(param$minq)) { all.fields <- c(all.fields, "mapq") }
@@ -16,7 +16,9 @@
 	all.fields <- unique(all.fields)
 	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
 		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
-		isDuplicate=ifelse(param$dedup, FALSE, NA), ...)))[[1]]
+		isDuplicate=ifelse(param$dedup, FALSE, NA), 
+		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), 
+		...)))[[1]]
    
 	# Filtering by MAPQ.
 	if (!is.na(param$minq)) { 
@@ -50,6 +52,7 @@
 # created 8 December 2013
 # last modified 12 December 2012
 {
+	if (!is.na(param$forward)) { stop("strand-specific extraction makes no sense for paired-end data") }
 	reads <- .extractSE(bam.file, extras=c("qname", "flag"), where=where, 	
 		param=param, isPaired=TRUE, hasUnmappedMate=FALSE)
 	.yieldInterestingBits(reads, max(end(where)), max.frag=param$max.frag)
@@ -76,6 +79,7 @@
 # created 13 May 2014
 # last modified 12 December 2012
 {
+	if (!is.na(param$forward)) { stop("strand-specific extraction makes no sense for paired-end data") }
 	reads <- .extractSE(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
 		param=param, isPaired=TRUE)
 	output <- .yieldInterestingBits(reads, max(end(where)), diag=TRUE, max.frag=param$max.frag)

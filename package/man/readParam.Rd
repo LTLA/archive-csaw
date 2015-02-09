@@ -21,6 +21,7 @@ Slots are defined as:
 	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
+	\item{\code{forward}:}{a logical scalar indicating whether only forward reads should be extracted}
 	\item{\code{restrict}:}{a character vector containing the names of allowable chromosomes from which reads will be extracted}
 	\item{\code{discard}:}{a \code{GRanges} object containing intervals in which any alignments will be discarded}
 }
@@ -67,7 +68,11 @@ In all cases, users should ensure that each BAM file containing paired-end data 
 
 \section{Parameter settings for single-end data}{
 If \code{pe="none"}, reads are assumed to be single-end.
-Read extraction from BAM files is performed with the same filters as described above.
+Read extraction from BAM files is performed with the same quality filters described above.
+If \code{forward=NA}, reads are extracted from all strands.
+Otherwise, reads are only extracted from the forward or reverse strands for \code{TRUE} or \code{FALSE}, respectively.
+This may be useful for applications requiring strand-specific counting.
+
 Note that directional extension is often used in analyses of single-end data.
 However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
 Instead, the average fragment length must be specified in each of the relevant downstream functions.
@@ -78,7 +83,7 @@ This is because directional extension of single-end data pertains to analysis, n
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pe="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pe="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}

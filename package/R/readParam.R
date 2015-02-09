@@ -4,7 +4,7 @@
 
 setClass("readParam", representation(pe="character", 
 	max.frag="integer", rescue.pairs="logical", rescue.ext="integer", 
-	dedup="logical", minq="integer", 
+	dedup="logical", minq="integer", forward="logical", 
 	restrict="character", discard="GRanges"))
 
 setValidity("readParam", function(object) {
@@ -30,6 +30,9 @@ setValidity("readParam", function(object) {
 		
 	if (length(object@dedup)!=1L || !is.logical(object@dedup)) { 
 		return("duplicate removal specification must be a logical scalar")
+	}
+	if (length(object@forward)!=1L || !is.logical(object@forward)) { 
+		return("forward strand specification must be a logical scalar")
 	}
 	if (length(object@minq)!=1L || !is.numeric(object@minq)) { 
 		return("minimum mapping quality must be a numeric scalar")
@@ -70,6 +73,12 @@ setMethod("show", signature("readParam"), function(object) {
 		cat("    Minimum allowed mapping score is", object@minq, "\n")
 	}
 
+	if (is.na(object@forward)) { 
+		cat("    Strand specificity is turned off\n")
+	} else {
+		cat("    Reads are extracted from the", ifelse(object@forward, "forward", "reverse"), "strand only\n")
+	}
+
 	rl <- length(object@restrict)
 	if (rl) { 
 		cat("    Read extraction is limited to", rl, ifelse(rl==1L, "sequence\n", "sequences\n"))
@@ -86,7 +95,7 @@ setMethod("show", signature("readParam"), function(object) {
 })
 
 readParam <- function(pe="none", max.frag=500, rescue.pairs=FALSE,
-	rescue.ext=NA, dedup=FALSE, minq=NA, restrict=NULL, discard=GRanges())
+	rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
 # to synchronize read loading throughout the package, such that
@@ -103,10 +112,12 @@ readParam <- function(pe="none", max.frag=500, rescue.pairs=FALSE,
 	rescue.ext <- as.integer(rescue.ext)
 
 	dedup <- as.logical(dedup)
+	forward <- as.logical(forward)
 	minq <- as.integer(minq)
 	restrict <- as.character(restrict) 
 	new("readParam", pe=pe, max.frag=max.frag, rescue.pairs=rescue.pairs,
-		rescue.ext=rescue.ext, dedup=dedup, minq=minq, restrict=restrict, discard=discard)
+		rescue.ext=rescue.ext, dedup=dedup, forward=forward, minq=minq, 
+		restrict=restrict, discard=discard)
 }
 
 setGeneric("reform", function(x, ...) { standardGeneric("reform") })
@@ -121,6 +132,7 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 			rescue.pairs=as.logical(val),
 			rescue.ext=as.integer(val),
 			dedup=as.logical(val),
+			forward=as.logical(val),
 			minq=as.integer(val),
 			restrict=as.character(val),
 			val)
