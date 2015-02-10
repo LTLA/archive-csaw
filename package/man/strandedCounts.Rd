@@ -35,10 +35,14 @@ Note that there may not be two rows for each genomic region.
 This is because any empty rows, or those with counts below \code{filter}, will be removed within each call to \code{\link{windowCounts}}.
 }
 
-\section{Warning}{
-Users should be aware that the downstream range-processing functions are not strand-aware by default, e.g., \code{\link{mergeWindows}}.
+\section{Warnings}{
+Users should be aware that many of the downstream range-processing functions are not strand-aware by default, e.g., \code{\link{mergeWindows}}.
 Any strandedness of the ranges will be ignored in these functions.
 If strand-specific processing is desired, users must manually set \code{ignore.strand=FALSE}.
+
+Note that the returned object is a composite of two separate calls with \code{param$forward} set to \code{TRUE} or \code{FALSE}.
+If calls are made to other functions expecting a \code{readParam} object, they should be performed twice with those two settings of \code{param$forward}.
+This ensures that the same reads are extracted within each call.
 }
 
 \examples{
