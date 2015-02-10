@@ -24,7 +24,9 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	anno <- select(orgdb, keys=gene.id, columns=name.field, keytype=key.field)
 	n.entries <- length(gene.id)
 	if (nrow(anno)!=n.entries) { stop("possible many-to-one relationship between key and name fields") }
-	gene.name <- ifelse(is.na(anno[[name.field]]), paste0("ID:", names(anno[[key.field]])), anno[[name.field]])
+	gene.name <- anno[[name.field]]
+	if (!is.character(gene.name)) { gene.name <- as.character(gene.name) } 
+	gene.name <- ifelse(is.na(gene.name), paste0("ID:", anno[[key.field]]), gene.name)
 	
 	# Splitting IDs, to avoid problems when genes are assigned to multiple locations.
 	# The start uses '>' as we should be on the same location by that stage; and exonBy
