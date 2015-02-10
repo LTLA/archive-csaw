@@ -29,6 +29,10 @@ It is provided so as to allow for counting with awareness of the other parameter
 This allows users to coordinate region-based counts with those from \code{\link{windowCounts}}. 
 Checking that the output \code{totals} are the same between the two calls is strongly recommended.
 
+Note that the strandedness of \code{regions} will not be considered when computing overlaps.
+The strandedness of the output \code{rowData} will depend on the strand(s) from which reads were counted.
+This is determined by the \code{forward} slot in the \code{param} object.
+
 See \code{\link{windowCounts}} for more details on read extension.
 }
 

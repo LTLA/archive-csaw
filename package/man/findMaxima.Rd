@@ -25,7 +25,7 @@ The sensibility of using this function for arbitrary regions is left to the user
 In particular, the algorithm will not support nested regions and will fail correspondingly if any are detected.
 
 If \code{ignore.strand=FALSE}, the entries in \code{regions} are split into their separate strands.
-The function is then run separately on the entries for each strand.
+The function is run separately on the entries for each strand, and the results are collated into a single output.
 This may be useful for strand-specific applications.
 }
 

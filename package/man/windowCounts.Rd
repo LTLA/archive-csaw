@@ -29,7 +29,7 @@ The total number of reads in each library are stored as \code{totals} in the \co
 Other window counting parameters (e.g., \code{spacing}, \code{width}) are stored in the \code{exptData}.
 }
 
-\details{
+\section{Defining the sliding windows}{
 A window is defined as a genomic interval of size equal to \code{width}. 
 The value of \code{width} can be interpreted as the width of the contact area between the DNA and protein. 
 In practical terms, it determines the spatial resolution of the analysis. Larger windows count reads over a larger region which results in larger counts. 
@@ -41,6 +41,12 @@ New windows are found by sliding the current window to the right by the specifie
 Increasing \code{spacing} will reduce the frequency at which counts are extracted from the genome. 
 This results in some loss of resolution but it may be necessary when machine memory is limited. 
 
+If \code{bin} is set, settings are internally adjusted so that all reads are counted into non-overlapping adjacent bins of size \code{width}. 
+Specifically, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
+Only the 5' end of each read or the midpoint of each fragment (for paired-end data) is used in counting.
+}
+
+\section{Read extraction and counting}{ 
 Read extraction from the BAM files is governed by the \code{param} argument.
 Specifying a single \code{readParam} object will use the same extraction parameters for all files.
 Different parameters can also be used for each file by specifying a list of \code{readParam} objects.
@@ -52,9 +58,8 @@ Windows will be removed if the count sum across all libraries is below \code{fil
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
 If \code{filter=NULL}, the count sum filter threshold is automatically defined as the number of libraries multiplied by 5. 
  
-If \code{bin} is set, settings are internally adjusted so that all reads are counted into non-overlapping adjacent bins of size \code{width}. 
-Specifically, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
-Only the 5' end of each read or the midpoint of each fragment (for paired-end data) is used in counting.
+The strandedness of the output \code{rowData} is set based on the strand(s) from which the reads are extracted and counted.
+This is determined by the value of the \code{forward} slot in the input \code{param} object.
 }
 
 \section{Elaborating on directional extension}{
