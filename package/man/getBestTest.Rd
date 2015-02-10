@@ -14,8 +14,8 @@ getBestTest(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval.col=NULL, c
 	\item{tab}{a table of results with a \code{PValue} field for each test}
 	\item{by.pval}{a logical scalar, indicating whether selection should be performed on corrected p-values}
 	\item{weight}{a numeric vector of weights for each window}
-	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values}
-	\item{cpm.col}{an integer scalar specifying the column of \code{tab} containing the log-CPM values}
+	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values, or a character string containing the name of that column}
+	\item{cpm.col}{an integer scalar specifying the column of \code{tab} containing the log-CPM values, or a character string containing the name of that column}
 }
 
 \value{
@@ -57,6 +57,9 @@ If the column names are different from what is expected, specification of the co
 ids <- round(runif(100, 1, 10))
 tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
 combined <- getBestTest(ids, tab)
+head(combined)
+
+combined <- getBestTest(ids, tab, cpm.col="logCPM", pval.col="PValue")
 head(combined)
 
 # With window weighting.

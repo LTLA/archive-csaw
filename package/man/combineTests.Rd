@@ -13,8 +13,8 @@ combineTests(ids, tab, weight=rep(1, length(ids)), pval.col=NULL, other.col=NULL
 	\item{ids}{an integer vector containing the cluster ID for each test}
 	\item{tab}{a dataframe of results with \code{PValue}, \code{logCPM} and at least one \code{logFC} field for each test}
 	\item{weight}{a numeric vector of weights for each window}
-	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values}
-	\item{other.col}{an integer vector specifying the columns of \code{tab} containing the other statistics}
+	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values, or a character string containing the name of that column}
+	\item{other.col}{an integer vector specifying the columns of \code{tab} containing the other statistics, or a character vector containing the names of those columns}
 }
 
 \value{
@@ -68,6 +68,9 @@ combined <- combineTests(ids, tab)
 head(combined)
 
 combined <- combineTests(ids, tab, other.col=c(1,2,4), pval.col=3)
+head(combined)
+
+combined <- combineTests(ids, tab, other.col="logFC.whee", pval.col="PValue")
 head(combined)
 }
 

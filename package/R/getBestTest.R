@@ -20,6 +20,10 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval
 	} else if (length(pval.col)>1L) { 
 		stop("multiple p-value columns are not supported")
 	} else { 
+		if (is.character(pval.col)) {
+			pval.col <- match(pval.col, colnames(tab)) 
+			if (any(is.na(pval.col))) { stop("failed to match p-value column names") }
+		}
 		pval.col <- as.integer(pval.col) 
 	}
 
@@ -38,6 +42,10 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval
 		} else if (length(cpm.col)>1L) { 
 			stop("multiple logCPM columns are not supported")
 		} else {
+			if (is.character(cpm.col)) {
+				cpm.col <- match(cpm.col, colnames(tab)) 
+				if (any(is.na(cpm.col))) { stop("failed to match CPM column names") }
+			}
 			cpm.col <- as.integer(cpm.col)
 		}
 		weight <- rep(1, length(ids))

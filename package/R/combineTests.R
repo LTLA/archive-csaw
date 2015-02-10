@@ -24,6 +24,10 @@ combineTests <- function(ids, tab, weight=rep(1, length(ids)), pval.col=NULL, ot
 		if (length(is.cpm)!=1L) { stop("result table should have one logCPM field") }
 		other.col <- c(is.fcs, is.cpm)
 	} else {
+		if (is.character(other.col)) { 
+			other.col <- match(other.col, colnames(tab)) 
+			if (any(is.na(other.col))) { stop("failed to match other column names") }
+		}
 		other.col <- as.integer(other.col) - 1L
 	}
 
@@ -34,6 +38,10 @@ combineTests <- function(ids, tab, weight=rep(1, length(ids)), pval.col=NULL, ot
 	} else if (length(pval.col)!=1L) {
 		stop("only one p-value field is possible")
 	} else {
+		if (is.character(pval.col)) {
+			pval.col <- match(pval.col, colnames(tab)) 
+			if (any(is.na(pval.col))) { stop("failed to match p-value column names") }
+		}
 		is.pval <- as.integer(pval.col) - 1L
 	}
  
