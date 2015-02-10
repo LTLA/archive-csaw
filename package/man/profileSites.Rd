@@ -6,7 +6,7 @@
 
 \usage{
 profileSites(bam.files, regions, range=5000, ext=100, weight=1, 
-    param=readParam(), ignore.strand=TRUE) 
+    param=readParam(), use.strand=TRUE) 
 }
 
 \arguments{
@@ -16,7 +16,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1,
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
-	\item{ignore.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
+	\item{use.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
 }
 
 \details{
@@ -24,7 +24,7 @@ This function aggregates the coverage profile around the specified regions.
 The shape of this profile can guide an intelligent choice of the window size in \code{\link{windowCounts}}, or to determine if region expansion is necessary in \code{\link{regionCounts}}.
 For the former, restricting the \code{regions} to locally maximal windows with \code{\link{findMaxima}} is recommended prior to use of \code{profileSites}.
 
-The profile consists of the number of fragments overlapping each base within \code{range} of the start of all \code{regions}.
+The profile records the number of fragments overlapping each base within \code{range} of the start of all \code{regions}.
 Single-end reads are directionally extended to \code{ext} to impute the fragment (see \code{\link{windowCounts}} for more details).
 For paired-end reads, the interval between each pair is used as the fragment.
 If multiple \code{bam.files} are specified, reads are pooled across files for counting into each profile.
@@ -36,10 +36,11 @@ This will ensure that each region contributes equally to the final profile.
 }
 
 \section{Comments on strand specificity}{
-If \code{ignore.strand=FALSE}, the function is recalled on the reverse-stranded regions.
-The profile for these regions is computed such that the left side of the profile corresponds to the upstream flank on the reverse strand.
+If \code{use.strand=TRUE}, the function is recalled on the reverse-stranded regions.
+The profile for these regions is computed such that the left side of the profile corresponds to the upstream flank on the reverse strand (i.e., the profile is flipped).
 The center of the profile corresponds to the 5' end of the region on the reverse strand.
-This is added to the profile for the other regions, and may be useful for strand-specific applications.
+This may be useful for features where strandedness is important, e.g., TSS's.
+Otherwise, if \code{use.strand=FALSE}, all features are treated as forward-stranded.
 
 Note that the strandedness of the region has no effect on read extraction.
 The latter depends only on the value of \code{param$forward}.
@@ -79,8 +80,10 @@ plot(as.integer(names(x)), x)
 # Introducing some strandedness.
 regs <- rowData(data)[maxed]
 strand(regs) <- sample(c("-", "+", "*"), sum(maxed), replace=TRUE)
-x <- profileSites(bamFile, regs, range=500, ignore.strand=FALSE)
+x <- profileSites(bamFile, regs, range=500)
+x2 <- profileSites(bamFile, regs, range=500, use.strand=FALSE)
 plot(as.integer(names(x)), x)
+points(as.integer(names(x2)), x2, col="red")
 }
 
 \keyword{diagnostics}

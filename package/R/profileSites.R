@@ -1,4 +1,4 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), ignore.strand=TRUE) 
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), use.strand=TRUE) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -10,13 +10,13 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
-	if (!ignore.strand) {
+	if (use.strand) { 
 		reverse <- strand(regions)=="-"
 		if (any(reverse)) {
 			reverse <- as.logical(reverse)
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
-			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], param=param)
+			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], param=param, use.strand=FALSE)
 			if (any(!reverse)) { 
 				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse], param=param)
 			} else { 

@@ -9,12 +9,12 @@ outfname <- file.path(sdir, "out")
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
-comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, ignore.strand=TRUE) { 
+comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE) { 
 	# Simulating first.
 	bam <- regen(nreads, chromos, outfname)
 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
 	nwin <- length(windows)
-	if (!ignore.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
+	if (!sim.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
 
 	# Running profileSites.
 	xparam <- readParam(minq=minq, dedup=dedup)
@@ -24,7 +24,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric, ignore.strand=ignore.strand)
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric) 
 
 	# Running the reference analysis.
 	totally <- list()
@@ -36,7 +36,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 
 	relevant.start <- start(windows) - width
 	relevant.end <- start(windows) + width
-	if (!ignore.strand) {
+	if (!sim.strand) {
 		reverse <- as.logical(strand(windows)=="-")
 		relevant.start[reverse] <- end(windows[reverse]) + width # Automatic reversal.
 		relevant.end[reverse] <- end(windows[reverse]) - width
@@ -81,10 +81,10 @@ comp(nreads, chromos, res=100, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
 
-comp(nreads, chromos, res=20, ignore.strand=FALSE)
-comp(nreads, chromos, res=100, ignore.strand=FALSE)
-comp(nreads, chromos, ignore.strand=FALSE)
-comp(nreads, chromos, ignore.strand=FALSE)
+comp(nreads, chromos, res=20, sim.strand=FALSE)
+comp(nreads, chromos, res=100, sim.strand=FALSE)
+comp(nreads, chromos, sim.strand=FALSE)
+comp(nreads, chromos, sim.strand=FALSE)
 
 ############################################################
 # Cleaning up.
