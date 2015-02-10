@@ -1138,68 +1138,68 @@ GRanges object with 479 ranges and 0 metadata columns:
 GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA     [ 1,  1]      *
-    [2]     chrA     [21, 21]      *
-    [3]     chrA     [41, 41]      *
-    [4]     chrA     [61, 61]      *
-    [5]     chrA     [81, 81]      *
+    [1]     chrA     [ 1,  1]      +
+    [2]     chrA     [21, 21]      +
+    [3]     chrA     [41, 41]      +
+    [4]     chrA     [61, 61]      +
+    [5]     chrA     [81, 81]      +
     ...      ...          ...    ...
-  [896]     chrC [7901, 7901]      *
-  [897]     chrC [7921, 7921]      *
-  [898]     chrC [7941, 7941]      *
-  [899]     chrC [7961, 7961]      *
-  [900]     chrC [7981, 7981]      *
+  [896]     chrC [7901, 7901]      +
+  [897]     chrC [7921, 7921]      +
+  [898]     chrC [7941, 7941]      +
+  [899]     chrC [7961, 7961]      +
+  [900]     chrC [7981, 7981]      +
   -------
   seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=100, forward=FALSE, discard=makeDiscard(10, 200, chromos))
 GRanges object with 900 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA     [ 1,  1]      *
-    [2]     chrA     [21, 21]      *
-    [3]     chrA     [41, 41]      *
-    [4]     chrA     [61, 61]      *
-    [5]     chrA     [81, 81]      *
+    [1]     chrA     [ 1,  1]      -
+    [2]     chrA     [21, 21]      -
+    [3]     chrA     [41, 41]      -
+    [4]     chrA     [61, 61]      -
+    [5]     chrA     [81, 81]      -
     ...      ...          ...    ...
-  [896]     chrC [7901, 7901]      *
-  [897]     chrC [7921, 7921]      *
-  [898]     chrC [7941, 7941]      *
-  [899]     chrC [7961, 7961]      *
-  [900]     chrC [7981, 7981]      *
+  [896]     chrC [7901, 7901]      -
+  [897]     chrC [7921, 7921]      -
+  [898]     chrC [7941, 7941]      -
+  [899]     chrC [7961, 7961]      -
+  [900]     chrC [7981, 7981]      -
   -------
   seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=20, spacing=50, forward=TRUE)
 GRanges object with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [  1,   1]      *
-    [2]     chrA   [ 31,  51]      *
-    [3]     chrA   [ 81, 101]      *
-    [4]     chrA   [131, 151]      *
-    [5]     chrA   [181, 201]      *
+    [1]     chrA   [  1,   1]      +
+    [2]     chrA   [ 31,  51]      +
+    [3]     chrA   [ 81, 101]      +
+    [4]     chrA   [131, 151]      +
+    [5]     chrA   [181, 201]      +
     ...      ...          ...    ...
-  [359]     chrC [7781, 7801]      *
-  [360]     chrC [7831, 7851]      *
-  [361]     chrC [7881, 7901]      *
-  [362]     chrC [7931, 7951]      *
-  [363]     chrC [7981, 8000]      *
+  [359]     chrC [7781, 7801]      +
+  [360]     chrC [7831, 7851]      +
+  [361]     chrC [7881, 7901]      +
+  [362]     chrC [7931, 7951]      +
+  [363]     chrC [7981, 8000]      +
   -------
   seqinfo: 3 sequences from an unspecified genome
 > comp(bamFiles, fraglen=200, left=20, spacing=50, forward=FALSE, discard=makeDiscard(20, 200, chromos))
 GRanges object with 363 ranges and 0 metadata columns:
         seqnames       ranges strand
            <Rle>    <IRanges>  <Rle>
-    [1]     chrA   [  1,   1]      *
-    [2]     chrA   [ 31,  51]      *
-    [3]     chrA   [ 81, 101]      *
-    [4]     chrA   [131, 151]      *
-    [5]     chrA   [181, 201]      *
+    [1]     chrA   [  1,   1]      -
+    [2]     chrA   [ 31,  51]      -
+    [3]     chrA   [ 81, 101]      -
+    [4]     chrA   [131, 151]      -
+    [5]     chrA   [181, 201]      -
     ...      ...          ...    ...
-  [359]     chrC [7781, 7801]      *
-  [360]     chrC [7831, 7851]      *
-  [361]     chrC [7881, 7901]      *
-  [362]     chrC [7931, 7951]      *
-  [363]     chrC [7981, 8000]      *
+  [359]     chrC [7781, 7801]      -
+  [360]     chrC [7831, 7851]      -
+  [361]     chrC [7881, 7901]      -
+  [362]     chrC [7931, 7951]      -
+  [363]     chrC [7981, 8000]      -
   -------
   seqinfo: 3 sequences from an unspecified genome
 > 
@@ -1214,4 +1214,4 @@ GRanges object with 363 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 71.572   0.325  71.943 
+ 72.349   0.368  72.821 

@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.11}{\itemize{
+\section{Version 1.1.26}{\itemize{
 \item 
 Added getWidths() and scaledAverage(), to facilitate comparison of abundances during filtering.
 
@@ -26,6 +26,9 @@ Added support for custom key/name specification in detailRanges() for non-human/
 
 \item 
 Added support for strand-specific read extraction in readParam(), strand-specific counting in windowCounts(), regionCounts() via strandedCounts().
+
+\item 
+Added strand-awareness to mergeWindows(). Added protection against stranded inputs in extractReads(), detailRanges().
 
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().

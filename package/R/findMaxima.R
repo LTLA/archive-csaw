@@ -1,11 +1,25 @@
-findMaxima <- function(regions, range, metric)
+findMaxima <- function(regions, range, metric, ignore.strand=TRUE)
 # This function finds the maximum window in 'data', given a range
 # around which the maxima is to be considered. The 'metric' is,
 # by default, the average count, but others can be used if supplied.
 #
 # written by Aaron Lun
-# Created 9 November 2014.
+# created 9 November 2014.
+# last modified 10 February 2015.
 {
+	strs <- strand(regions)
+	if (!ignore.strand && length(runValue(strs))!=1) {
+		# Strand-specific maxima identification.
+		forward <- as.logical(strs=="+")
+		reverse <- as.logical(strs=="-")
+		neither <- as.logical(strs=="*")
+		out <- logical(length(regions))
+		if (any(forward)) { out[forward] <- Recall(regions=regions[forward], range=range, metric=metric[forward]) }
+		if (any(reverse)) { out[reverse] <- Recall(regions=regions[reverse], range=range, metric=metric[reverse]) }
+		if (any(neither)) { out[neither] <- Recall(regions=regions[neither], range=range, metric=metric[neither]) }
+		return(out)
+	}
+
 	chrs <- as.integer(seqnames(regions))
 	starts <- start(regions)
 	ends <- end(regions)

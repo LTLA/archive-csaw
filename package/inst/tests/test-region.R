@@ -29,6 +29,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 		chosen <- round(nrow(x)/2)
 		my.reg <- rowData(x)[chosen]
 		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+fraglen*2))
+		strand(my.reg2) <- "*"
 		for (f in 1:length(bamFiles)) {
 			collected <- extractReads(my.reg2, bamFiles[f], param=repar)
 			collected <- suppressWarnings(resize(collected, width=fraglen))

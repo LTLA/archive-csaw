@@ -202,3 +202,20 @@
 	remainder <- as.integer((final.ext - ext)/2)
 	data.frame(ext=ext, remainder=remainder, final=final.ext)
 }
+
+.decideStrand <- function(paramlist) 
+# Decides what strand we should assign to the output GRanges in the
+# SummarizedExperiment object, after counting.
+#
+# written by Aaron Lun
+# created 10 February 2015
+{
+	getfs <- sapply(paramlist, FUN=function(x) { x$forward })
+	if (length(unique(getfs))!=1) {
+		warning("unstranded regions used for counts from multiple strands")
+		return("*")
+	}
+	if (is.na(getfs[1])) { return("*") }
+	else if (getfs[1]) { return("+") }
+	else { return("-") }
+}

@@ -6,7 +6,7 @@
 \description{Uses a simple single-linkage approach to merge adjacent or overlapping windows into clusters.}
 
 \usage{
-mergeWindows(regions, tol, sign=NULL, max.width=NULL) 
+mergeWindows(regions, tol, sign=NULL, max.width=NULL, ignore.strand=TRUE) 
 }
 
 \arguments{
@@ -14,6 +14,7 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL)
 	\item{tol}{a numeric scalar specifying the maximum distance between adjacent windows}
 	\item{sign}{a logical vector specifying whether each window has a positive log-FC}
 	\item{max.width}{a numeric scalar specifying the maximum size of merged intervals}
+	\item{ignore.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
 }
 
 \value{
@@ -52,8 +53,12 @@ Splitting with \code{max.width!=NULL} will not fail, but cluster sizes may not b
 % will be assigned to their own subclusters. As a result, you end up with one giant 
 % subcluster in which the other subclusters are nested.
 
-Note that in the output, the cluster ID reported in \code{id} corresponds to
-the index of the cluster coordinates in the input \code{region}.
+If \code{ignore.strand=FALSE}, the entries in \code{regions} are split into their separate strands.
+The function is run separately on the entries for each strand, and the results collated.
+The \code{region} returned in the output will be stranded to reflect the strand of the contributing input regions.
+This may be useful for strand-specific applications.
+
+Note that, in the output, the cluster ID reported in \code{id} corresponds to the index of the cluster coordinates in the input \code{region}.
 }
 
 \examples{

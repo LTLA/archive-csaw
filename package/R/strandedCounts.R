@@ -5,6 +5,7 @@ strandedCounts <- function(bam.files, param=readParam(), regions=NULL, ...)
 #
 # written by Aaron Lun
 # created 9 February 2015
+# last modified 10 February 2015
 {
 	nbam <- length(bam.files)
 	plist <- .makeParamList(nbam, param)
@@ -19,8 +20,6 @@ strandedCounts <- function(bam.files, param=readParam(), regions=NULL, ...)
 	}	
 	
 	# Combining them together.
-	strand(rowData(fdata)) <- "+"
-	strand(rowData(rdata)) <- "-"
 	combined <- SummarizedExperiment(rbind(assay(fdata), assay(rdata)),
 		rowData=c(rowData(fdata), rowData(rdata)),
 		colData=colData(fdata), exptData=exptData(fdata))

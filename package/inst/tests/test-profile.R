@@ -9,11 +9,12 @@ outfname <- file.path(sdir, "out")
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
-comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE) { 
+comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, ignore.strand=TRUE) { 
 	# Simulating first.
 	bam <- regen(nreads, chromos, outfname)
 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
 	nwin <- length(windows)
+	if (!ignore.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
 
 	# Running profileSites.
 	xparam <- readParam(minq=minq, dedup=dedup)
@@ -23,7 +24,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric, ignore.strand=ignore.strand)
 
 	# Running the reference analysis.
 	totally <- list()
@@ -33,14 +34,17 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 	} 
 
-	modwin <- windows
-	start(modwin) <- start(windows) - width
-	end(modwin) <- start(windows) + width
+	relevant.start <- start(windows) - width
+	relevant.end <- start(windows) + width
+	if (!ignore.strand) {
+		reverse <- as.logical(strand(windows)=="-")
+		relevant.start[reverse] <- end(windows[reverse]) + width # Automatic reversal.
+		relevant.end[reverse] <- end(windows[reverse]) - width
+	}
 	totes.prof <- integer(width*2+1)
 	for (x in 1:nwin) {
-		curwin <- modwin[x]
-		curchr <- as.character(seqnames(curwin))
-		relevant <- start(curwin):end(curwin)
+		curchr <- as.character(seqnames(windows[x]))
+		relevant <- relevant.start[x]:relevant.end[x]
 		valid <- relevant > 0L & relevant <= chromos[[curchr]]
 		totes.prof[valid] <- totes.prof[valid] + as.integer(totally[[curchr]][relevant[valid]])/metric[x]
 	}
@@ -76,6 +80,11 @@ comp(nreads, chromos, res=20, weight=FALSE)
 comp(nreads, chromos, res=100, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
+
+comp(nreads, chromos, res=20, ignore.strand=FALSE)
+comp(nreads, chromos, res=100, ignore.strand=FALSE)
+comp(nreads, chromos, ignore.strand=FALSE)
+comp(nreads, chromos, ignore.strand=FALSE)
 
 ############################################################
 # Cleaning up.

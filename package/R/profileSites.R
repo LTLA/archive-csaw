@@ -1,30 +1,44 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), ignore.strand=TRUE) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
-# records the coverage of the resulting bases, up to `max.dist`.
+# records the coverage of the resulting bases, up to `range`.
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 13 December 2014
+# last modified 10 February 2015
 {
+	weight <- as.double(weight)
+	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
+	if (!ignore.strand) {
+		reverse <- strand(regions)=="-"
+		if (any(reverse)) {
+			reverse <- as.logical(reverse)
+			rregs <- regions[reverse]
+			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
+			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], param=param)
+			if (any(!reverse)) { 
+				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse], param=param)
+			} else { 
+				fprof <- 0 
+			}
+			prop.rev <- sum(reverse)/length(reverse)
+			return(fprof * (1-prop.rev) + rev(rprof) * prop.rev) # Flipping the profile.
+		}
+	}
+
+	# Setting up.
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 	ext.data <- .collateExt(nbam, ext)
-
-	# Splitting up the regions.
-	indices <- split(1:length(regions), seqnames(regions))
-	weight <- as.double(weight)
-	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
-	
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
-	blen <- length(bam.files)
-	total.profile <- 0
 		
 	# Running through the chromosomes.
-    for (i in 1:length(extracted.chrs)) {
+	total.profile <- 0
+	indices <- split(1:length(regions), seqnames(regions))
+	for (i in 1:length(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		chosen <- indices[[chr]]
 		if (!length(chosen)) { next }
@@ -33,7 +47,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 
         # Reading in the reads for the current chromosome for all the BAM files.
 		starts <- ends <- list()
-		for (b in 1:blen) {
+		for (b in 1:nbam) {
 			curpar <- paramlist[[b]]
             if (curpar$pe!="both") {
 				if (curpar$pe=="none") { 

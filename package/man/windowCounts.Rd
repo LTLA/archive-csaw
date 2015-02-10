@@ -43,8 +43,8 @@ This results in some loss of resolution but it may be necessary when machine mem
 
 Read extraction from the BAM files is governed by the \code{param} argument.
 Specifying a single \code{readParam} object will use the same extraction parameters for all files.
-However, different parameters can be used for each file by specifying a list of \code{readParam} objects.
-Users should take care with library-specific parameters, lest spurious differences be introduced between libraries.
+Different parameters can also be used for each file by specifying a list of \code{readParam} objects.
+However, users should take care with library-specific parameters, lest spurious differences be introduced between libraries.
 
 Fragments are inferred from reads by directional extension (single-end; see below) or by identifying proper pairs (paired-end; see \code{\link{readParam}} for more details).
 The number of fragments overlapping the window for each library is then counted for each window position. 

@@ -45,9 +45,9 @@ For annotated features overlapping a region, the character string in the
 Entrez ID if the symbol is unavailable. The \code{EXONS} indicate the exon or
 range of exons that are overlapped. The \code{STRAND} is, obviously, the strand
 on which the gene is coded. 
-Strandedness in \code{incoming} is ignored when considering overlaps.
 For annotated regions flanking the region within a distance of \code{dist}, the character string in the \code{left} or \code{right} output vectors will have an additional \code{DIST} value. 
 This represents the gap between the edge of the region and the closest exon for that gene.
+In all cases, any strandedness in \code{incoming} is ignored.
 
 Exons are numbered in order of increasing start or end position for genes
 on the forward or reverse strands, respectively. Promoters are defined as

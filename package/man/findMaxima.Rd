@@ -5,13 +5,14 @@
 \description{Find the local maxima for a given set of genomic regions.}
 
 \usage{
-findMaxima(regions, range, metric)
+findMaxima(regions, range, metric, ignore.strand=TRUE)
 }
 
 \arguments{
 \item{regions}{a \code{GRanges} object}
 \item{range}{an integer scalar specifying the range of surrounding regions to consider as local}
-\item{metric}{a numeric vector of values for which the local maxima is found, defaults to the average count}
+\item{metric}{a numeric vector of values for which the local maxima is found}
+\item{ignore.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
 }
 
 \details{
@@ -22,6 +23,10 @@ A typical metric to maximize might be the sum of counts or the average abundance
 Preferably, \code{regions} should contain regularly sized and spaced windows or bins, e.g., from \code{\link{windowCounts}}.
 The sensibility of using this function for arbitrary regions is left to the user.
 In particular, the algorithm will not support nested regions and will fail correspondingly if any are detected.
+
+If \code{ignore.strand=FALSE}, the entries in \code{regions} are split into their separate strands.
+The function is then run separately on the entries for each strand.
+This may be useful for strand-specific applications.
 }
 
 \value{

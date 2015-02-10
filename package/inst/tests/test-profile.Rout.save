@@ -1,5 +1,5 @@
 
-R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -28,11 +28,12 @@ Type 'q()' to quit R.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE) { 
+> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, ignore.strand=TRUE) { 
 + 	# Simulating first.
 + 	bam <- regen(nreads, chromos, outfname)
 + 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
 + 	nwin <- length(windows)
++ 	if (!ignore.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
 + 
 + 	# Running profileSites.
 + 	xparam <- readParam(minq=minq, dedup=dedup)
@@ -42,7 +43,7 @@ Type 'q()' to quit R.
 + 	} else {
 + 		metric <- rep(1, nwin)
 + 	}
-+ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
++ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric, ignore.strand=ignore.strand)
 + 
 + 	# Running the reference analysis.
 + 	totally <- list()
@@ -52,14 +53,17 @@ Type 'q()' to quit R.
 + 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 + 	} 
 + 
-+ 	modwin <- windows
-+ 	start(modwin) <- start(windows) - width
-+ 	end(modwin) <- start(windows) + width
++ 	relevant.start <- start(windows) - width
++ 	relevant.end <- start(windows) + width
++ 	if (!ignore.strand) {
++ 		reverse <- as.logical(strand(windows)=="-")
++ 		relevant.start[reverse] <- end(windows[reverse]) + width # Automatic reversal.
++ 		relevant.end[reverse] <- end(windows[reverse]) - width
++ 	}
 + 	totes.prof <- integer(width*2+1)
 + 	for (x in 1:nwin) {
-+ 		curwin <- modwin[x]
-+ 		curchr <- as.character(seqnames(curwin))
-+ 		relevant <- start(curwin):end(curwin)
++ 		curchr <- as.character(seqnames(windows[x]))
++ 		relevant <- relevant.start[x]:relevant.end[x]
 + 		valid <- relevant > 0L & relevant <= chromos[[curchr]]
 + 		totes.prof[valid] <- totes.prof[valid] + as.integer(totally[[curchr]][relevant[valid]])/metric[x]
 + 	}
@@ -126,6 +130,19 @@ Type 'q()' to quit R.
   -200   -199   -198   -197   -196   -195 
 34.650 34.625 34.400 34.325 34.350 34.250 
 > 
+> comp(nreads, chromos, res=20, ignore.strand=FALSE)
+     -200      -199      -198      -197      -196      -195 
+0.8051357 0.8041238 0.8046621 0.8055796 0.8060276 0.8107401 
+> comp(nreads, chromos, res=100, ignore.strand=FALSE)
+     -200      -199      -198      -197      -196      -195 
+0.4707838 0.4703937 0.4711090 0.4737918 0.4741216 0.4765514 
+> comp(nreads, chromos, ignore.strand=FALSE)
+     -200      -199      -198      -197      -196      -195 
+0.6991890 0.7007939 0.6966547 0.6972806 0.6985931 0.6996342 
+> comp(nreads, chromos, ignore.strand=FALSE)
+     -200      -199      -198      -197      -196      -195 
+0.6364542 0.6369933 0.6374587 0.6336338 0.6323193 0.6319561 
+> 
 > ############################################################
 > # Cleaning up.
 > 
@@ -135,4 +152,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 20.774   0.209  20.980 
+ 19.555   0.151  19.700 

@@ -23,6 +23,10 @@ The aim is to supply the raw data for visualization, in a manner that maintains 
 Note that this does not account for any read extension that might have been performed during read counting.
 In such cases, users are advised to expand \code{cur.region} by the extension length on each side.
 Counted reads can then be extracted by identifying their extended counterparts that overlap with the original \code{cur.region}.
+
+Any strandedness of \code{cur.region} is ignored.
+If strand-specific extraction is desired, this can be done by setting \code{param$forward} via \code{\link{reform}}.
+Alternatively, the returned \code{GRanges} can be filtered to retain only the desired strand.
 }
 
 \value{

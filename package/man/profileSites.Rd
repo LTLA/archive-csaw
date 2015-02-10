@@ -5,7 +5,8 @@
 \description{Get the coverage profile around potential binding sites.}
 
 \usage{
-profileSites(bam.files, regions, range=5000, ext=100, weight=1, param=readParam()) 
+profileSites(bam.files, regions, range=5000, ext=100, weight=1, 
+    param=readParam(), ignore.strand=TRUE) 
 }
 
 \arguments{
@@ -15,6 +16,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
+	\item{ignore.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
 }
 
 \details{
@@ -31,6 +33,18 @@ Direct aggregation will favour high-abundance regions as these have higher count
 If this is undesirable, high-abundance regions can be downweighted using the \code{weight} argument.
 For example, this can be set to the inverse of the sum of counts across all libraries for each region in \code{regions}.
 This will ensure that each region contributes equally to the final profile.
+}
+
+\section{Comments on strand specificity}{
+If \code{ignore.strand=FALSE}, the function is recalled on the reverse-stranded regions.
+The profile for these regions is computed such that the left side of the profile corresponds to the upstream flank on the reverse strand.
+The center of the profile corresponds to the 5' end of the region on the reverse strand.
+This is added to the profile for the other regions, and may be useful for strand-specific applications.
+
+Note that the strandedness of the region has no effect on read extraction.
+The latter depends only on the value of \code{param$forward}.
+The profile will then be constructed with all extracted reads, regardless of their strand or the strand of \code{regions}.
+If a strand-specific profile is desired, users should subset \code{regions} and set \code{param$forward} for the chosen strand, and call \code{profileSites} for each strand separately. 
 }
 
 \value{
@@ -60,6 +74,12 @@ x <- profileSites(bamFile, rowData(data)[maxed], range=500)
 plot(as.integer(names(x)), x)
 
 x <- profileSites(bamFile, rowData(data)[maxed], range=500, weight=1/rwsms)
+plot(as.integer(names(x)), x)
+
+# Introducing some strandedness.
+regs <- rowData(data)[maxed]
+strand(regs) <- sample(c("-", "+", "*"), sum(maxed), replace=TRUE)
+x <- profileSites(bamFile, regs, range=500, ignore.strand=FALSE)
 plot(as.integer(names(x)), x)
 }
 

@@ -6,8 +6,8 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # object specifying the window intervals.
 # 
 # written by Aaron Lun
-# ages ago.
-# last modified 7 February 2015
+# created 5 April 2012
+# last modified 10 February 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -123,6 +123,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	all.regions <- suppressWarnings(do.call(c, all.regions))
 	seqlevels(all.regions) <- names(extracted.chrs)
 	seqlengths(all.regions) <- extracted.chrs
+	strand(all.regions) <- .decideStrand(paramlist)
 
 	dim(paramlist) <- c(nbam, 1)
 	colnames(paramlist) <- "param"

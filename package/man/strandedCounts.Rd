@@ -36,9 +36,9 @@ This is because any empty rows, or those with counts below \code{filter}, will b
 }
 
 \section{Warning}{
-Users should be aware that the downstream range-processing functions are generally not strand-aware, e.g., \code{\link{mergeWindows}}.
+Users should be aware that the downstream range-processing functions are not strand-aware by default, e.g., \code{\link{mergeWindows}}.
 Any strandedness of the ranges will be ignored in these functions.
-If strand-specific processing is desired, users must manually subset the input by strand, and then reassemble the function outputs - see the examples below.
+If strand-specific processing is desired, users must manually set \code{ignore.strand=FALSE}.
 }
 
 \examples{
@@ -54,24 +54,12 @@ strandedCounts(bamFiles, regions=incoming)
 strandedCounts(bamFiles, regions=incoming, param=readParam(dedup=TRUE))
 
 # Running mergeWindows with strand-specificity.
-is.forward <- as.logical(strand(out) == "+")
-fclust <- mergeWindows(rowData(out[is.forward]), tol=100)
-rclust <- mergeWindows(rowData(out[!is.forward]), tol=100)
+mergeWindows(rowData(out), tol=100)
+mergeWindows(rowData(out), tol=100, ignore.strand=FALSE)
 
-strand(fclust$region) <- "+"
-strand(rclust$region) <- "-"
-cluster.ids <- integer(nrow(out))
-cluster.ids[is.forward] <- fclust$id
-cluster.ids[!is.forward] <- rclust$id + length(fclust$region)
-clustered <- list(id=cluster.ids, region=c(fclust$region, rclust$region))
-
-# Running findMaxima with strand-specificity.
 rwsms <- rowSums(assay(out))
-f.ismax <- findMaxima(rowData(out[is.forward]), range=100, metric=rwsms[is.forward])
-r.ismax <- findMaxima(rowData(out[!is.forward]), range=100, metric=rwsms[!is.forward])
-ismax <- logical(nrow(out))
-ismax[is.forward] <- f.ismax
-ismax[!is.forward] <- r.ismax
+summary(findMaxima(rowData(out), range=100, metric=rwsms))
+summary(findMaxima(rowData(out), range=100, metric=rwsms, ignore.strand=FALSE))
 }
 
 \seealso{
