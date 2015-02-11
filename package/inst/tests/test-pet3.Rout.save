@@ -1,5 +1,5 @@
 
-R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
 Copyright (C) 2014 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
@@ -108,16 +108,16 @@ Type 'q()' to quit R.
 +     	# Looping through a number of possible extraction scenarios.
 + 		for (mode in 1:3) {
 + 			if (mode==1L) {
-+ 				rescue <- FALSE
++ 				rescue.ext <- NA
 + 				pe <- "both"
 + 			} else if (mode==2L) {
-+ 				rescue <- TRUE
++ 				rescue.ext <- ext
 + 			} else if (mode==3L) {
 + 				pe <- "first"
 + 			}
 + 
 + 			# Loading windowCounts.
-+ 			rpam <- readParam(pe=pe, rescue.pairs=rescue, rescue.ext=ext, max.frag=max.frag, 
++ 			rpam <- readParam(pe=pe, rescue.ext=rescue.ext, max.frag=max.frag, 
 + 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 + 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 + 				width=right+left+1, filter=0, param=rpam)
@@ -182,7 +182,7 @@ Type 'q()' to quit R.
 + 				valid <- valid & sizes <= max.frag
 + 				if (pe=="both") {
 + 					pairedness <- GRanges(chr1, IRanges(leftpos, leftpos+sizes-1))[valid & paired]
-+ 					if (rescue) {
++ 					if (!is.na(rescue.ext)) {
 + 						# We pick the first if the second is inactive, if paired but interchromosomal, or if paired and intrachromosomal
 + 						# and otherwise invalid and has higher mapping quality.
 + 						better <- firsts[[lib]]$mapq > seconds[[lib]]$mapq
@@ -651,4 +651,4 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-169.455   0.431 169.885 
+108.382   0.428 108.802 
