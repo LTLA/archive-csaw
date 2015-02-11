@@ -9,6 +9,10 @@ strandedCounts <- function(bam.files, param=readParam(), regions=NULL, ...)
 {
 	nbam <- length(bam.files)
 	plist <- .makeParamList(nbam, param)
+	for (i in 1:nbam) { 
+		if (length(plist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific counting") } 
+	}
+
 	if (is.null(regions)) { 
 		fdata <- windowCounts(bam.files=bam.files, param=reformList(plist, forward=TRUE), ...)
 		rdata <- windowCounts(bam.files=bam.files, param=reformList(plist, forward=FALSE), ...)

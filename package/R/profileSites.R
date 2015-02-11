@@ -1,4 +1,5 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), use.strand=TRUE) 
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), 
+	use.strand=TRUE, match.strand=FALSE)
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -10,15 +11,26 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
+	nbam <- length(bam.files)
+	paramlist <- .makeParamList(nbam, param)
+
+	if (match.strand) { 
+		use.strand <- TRUE
+	    for (i in 1:nbam) { 
+			if (length(paramlist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific counting") } 
+		}
+	}
 	if (use.strand) { 
 		reverse <- strand(regions)=="-"
 		if (any(reverse)) {
 			reverse <- as.logical(reverse)
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
-			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], param=param, use.strand=FALSE)
+			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], 
+				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), use.strand=FALSE, match.strand=FALSE)
 			if (any(!reverse)) { 
-				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse], param=param)
+				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse], 
+					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), use.strand=FALSE, match.strand=FALSE)
 			} else { 
 				fprof <- 0 
 			}
@@ -28,16 +40,14 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 	}
 
 	# Setting up.
-	nbam <- length(bam.files)
-	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 	ext.data <- .collateExt(nbam, ext)
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
-		
-	# Running through the chromosomes.
 	total.profile <- 0
 	indices <- split(1:length(regions), seqnames(regions))
+		
+	# Running through the chromosomes.
 	for (i in 1:length(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		chosen <- indices[[chr]]
@@ -59,7 +69,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
-                if (curpar$rescue.pairs) {
+                if (!is.na(curpar$rescue.ext)) {
 					out <- .rescuePE(bam.files[b], where=where, param=curpar)
 				} else {
 					out <- .extractPE(bam.files[b], where=where, param=curpar)
