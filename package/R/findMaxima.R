@@ -14,9 +14,9 @@ findMaxima <- function(regions, range, metric, ignore.strand=TRUE)
 		reverse <- as.logical(strs=="-")
 		neither <- as.logical(strs=="*")
 		out <- logical(length(regions))
-		if (any(forward)) { out[forward] <- Recall(regions=regions[forward], range=range, metric=metric[forward]) }
-		if (any(reverse)) { out[reverse] <- Recall(regions=regions[reverse], range=range, metric=metric[reverse]) }
-		if (any(neither)) { out[neither] <- Recall(regions=regions[neither], range=range, metric=metric[neither]) }
+		if (any(forward)) { out[forward] <- Recall(regions=regions[forward], range=range, metric=metric[forward], ignore.strand=TRUE) }
+		if (any(reverse)) { out[reverse] <- Recall(regions=regions[reverse], range=range, metric=metric[reverse], ignore.strand=TRUE) }
+		if (any(neither)) { out[neither] <- Recall(regions=regions[neither], range=range, metric=metric[neither], ignore.strand=TRUE) }
 		return(out)
 	}
 
