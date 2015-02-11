@@ -59,7 +59,7 @@ regionCounts(bamFile, regions=incoming, param=readParam(pe="both"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
 	pe="first", restrict="chrA"))
 regionCounts(bamFile, regions=incoming, param=readParam(max.frag=100, 
-	pe="both", restrict="chrA", rescue.pairs=TRUE, rescue.ext=100))
+	pe="both", restrict="chrA", rescue.ext=100))
 }
 
 \keyword{counting}

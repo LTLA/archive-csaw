@@ -6,7 +6,7 @@
 
 \usage{
 profileSites(bam.files, regions, range=5000, ext=100, weight=1, 
-    param=readParam(), use.strand=TRUE) 
+    param=readParam(), use.strand=TRUE, match.strand=FALSE) 
 }
 
 \arguments{
@@ -17,6 +17,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1,
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 	\item{use.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
+	\item{match.strand}{a logical scalar indicating whether to match the strandedness of the regions to the reads}
 }
 
 \details{
@@ -40,12 +41,12 @@ If \code{use.strand=TRUE}, the function is recalled on the reverse-stranded regi
 The profile for these regions is computed such that the left side of the profile corresponds to the upstream flank on the reverse strand (i.e., the profile is flipped).
 The center of the profile corresponds to the 5' end of the region on the reverse strand.
 This may be useful for features where strandedness is important, e.g., TSS's.
-Otherwise, if \code{use.strand=FALSE}, all features are treated as forward-stranded.
+Otherwise, if \code{use.strand=FALSE}, no special treatment is given to reverse-stranded features.
 
-Note that the strandedness of the region has no effect on read extraction.
-The latter depends only on the value of \code{param$forward}.
-The profile will then be constructed with all extracted reads, regardless of their strand or the strand of \code{regions}.
-If a strand-specific profile is desired, users should subset \code{regions} and set \code{param$forward} for the chosen strand, and call \code{profileSites} for each strand separately. 
+By default, the strandedness of the region has no effect on read extraction.
+If \code{match.strand=TRUE}, the profile for reverse-strand regions is made with reverse-strand reads only (this profile is also flipped, as described for \code{use.strand=TRUE}).
+Similarly, only forward-strand reads are used for forward- or unstranded regions.
+Note that \code{param$forward} must be set to \code{NULL} for this to work.
 }
 
 \value{
@@ -81,9 +82,12 @@ plot(as.integer(names(x)), x)
 regs <- rowData(data)[maxed]
 strand(regs) <- sample(c("-", "+", "*"), sum(maxed), replace=TRUE)
 x <- profileSites(bamFile, regs, range=500)
-x2 <- profileSites(bamFile, regs, range=500, use.strand=FALSE)
 plot(as.integer(names(x)), x)
+x2 <- profileSites(bamFile, regs, range=500, use.strand=FALSE)
 points(as.integer(names(x2)), x2, col="red")
+x3 <- profileSites(bamFile, regs, range=500, match.strand=TRUE, 
+    param=readParam(forward=NULL))
+points(as.integer(names(x3)), x3, col="blue")
 }
 
 \keyword{diagnostics}

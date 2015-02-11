@@ -107,9 +107,8 @@ windowCounts(bamFile, param=readParam(pe="first"), filter=1)
 windowCounts(bamFile, param=readParam(max.frag=100, pe="both"), filter=1)
 windowCounts(bamFile, param=readParam(max.frag=100, pe="both", restrict="chrA"), filter=1)
 
-# Running rescues of PE data (use max.frag=-1 to coerce single-endedness ).
-windowCounts(bamFile, param=readParam(max.frag=50, pe="both", 
-    rescue.pairs=TRUE, rescue.ext=200), filter=1)
+# Running rescues of PE data (use max.frag=-1 to coerce failure).
+windowCounts(bamFile, param=readParam(max.frag=50, pe="both", rescue.ext=200), filter=1)
 }
 
 \keyword{counting}

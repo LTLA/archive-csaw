@@ -17,7 +17,6 @@ Slots are defined as:
 \describe{
 	\item{\code{pe}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
-	\item{\code{rescue.pairs}:}{a logical scalar indicating whether invalid read pairs should be rescued}
 	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
@@ -52,7 +51,7 @@ The fragment interval is defined as that bounded by the 5' ends of the two reads
 Fragment sizes above \code{max.frag} are removed; use \code{\link{getPESizes}} to pick an appropriate value. 
 
 By default, only reads in proper pairs are used to construct a fragment interval.
-If \code{rescue.pairs=TRUE}, the function will also attempt to recover reads from improper pairs.
+If \code{rescue.ext=NA}, the function will also attempt to recover reads from improper pairs.
 For each improper pair, the read with the higher MAPQ score will be directionally extended with \code{rescue.ext}.
 Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPESizes}}.
 The extended read will then be used as the fragment interval.
@@ -72,6 +71,7 @@ Read extraction from BAM files is performed with the same quality filters descri
 If \code{forward=NA}, reads are extracted from all strands.
 Otherwise, reads are only extracted from the forward or reverse strands for \code{TRUE} or \code{FALSE}, respectively.
 This may be useful for applications requiring strand-specific counting.
+A special case is \code{forward=NULL} - see \code{\link{strandedCounts}} for more details.
 
 Note that directional extension is often used in analyses of single-end data.
 However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
@@ -83,7 +83,7 @@ This is because directional extension of single-end data pertains to analysis, n
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pe="none", max.frag=500, rescue.pairs=FALSE, rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pe="none", max.frag=500, rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}
@@ -133,7 +133,7 @@ blah$dedup
 # Use 'reform' if only some arguments need to be changed.
 blah
 reform(blah, dedup=TRUE)
-reform(blah, rescue.pairs=TRUE, rescue.ext=200)
+reform(blah, rescue.ext=200)
 reform(blah, pe="both", max.frag=212.0)
 }
 
