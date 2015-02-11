@@ -30,6 +30,9 @@ Added support for strand-specific read extraction in readParam(), strand-specifi
 \item 
 Added strand-awareness to mergeWindows(). Added protection against stranded inputs in extractReads(), detailRanges().
 
+\item 
+Removed the redundant rescue.pairs parameter in readParam().
+
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().
 
