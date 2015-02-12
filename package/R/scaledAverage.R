@@ -15,7 +15,8 @@ scaledAverage <- function(y, scale=1, prior.count=NULL, ...)
 getWidths <- function(data)
 # This computes the effective width of the data in the SummarizedExperiment
 # object. This is done by accounting for the effect of read extension; or, for
-# paired end data, the median fragment length. 
+# paired end data, the median fragment length (either from `rescue.ext`, or 
+# from `data$ext` if `rescue.ext` is not specified).
 #
 # written by Aaron Lun
 # created 5 November 2014
@@ -31,8 +32,7 @@ getWidths <- function(data)
 	frag.len[use.pe.len] <- pe.len[use.pe.len]
 	use.def.len <- is.pe & not.def
 	if (any(use.def.len)) { 
-		warning("using a median fragment length of 100 bp for PE data")
-		frag.len[use.def.len] <- 100L		
+		frag.len[use.def.len] <- data$ext[use.def.len]	
 	}
 
 	frag.len <- as.integer(mean(frag.len))
