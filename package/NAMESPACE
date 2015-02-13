@@ -4,6 +4,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 #  All functions exported, arranged by sequence of usage.
 export(csawUsersGuide,
 	readParam, reformList, checkList,
+	makeExtVector, "[.extVector",
 	correlateReads, getPESizes, profileSites,
 	regionCounts, windowCounts, strandedCounts,
 	normalizeCounts, 
