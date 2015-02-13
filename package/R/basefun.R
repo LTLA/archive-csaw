@@ -153,57 +153,69 @@
 	return(originals)
 }
 
-.extendSE <- function(reads, chrlen, ext.info)
+.extendSE <- function(reads, ext)
 # This decides how long to extend reads. The addition of the remainder kicks
-# out (or truncates) the fragments to reach the desired 'final.ext'. The maxima
-# and minima ensures that no fragment interval is defined such that it becomes
-# impossible to count, e.g., if it gets shifted outside chromosome boundaries.
+# out (or truncates) the fragments to reach the desired 'final.ext'. If 'ext'
+# is NA, the read length is used instead.
 #
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 13 December 2014
+# last modified 13 February 2015
 {
-	frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext.info$ext)
-	frag.end <- frag.start + ext.info$ext - 1L
-
-	# 2*remainder < ext, so start <= end should be true.	
-	frag.start <- frag.start - ext.info$remainder
-	frag.end <- frag.end + ext.info$remainder
-	
-	if (length(frag.start)) { frag.start <- pmin(frag.start, chrlen) } 
-	if (length(frag.end)) { frag.end <- pmax(1L, frag.end) }
+	if (is.na(ext)) {   
+		frag.start <- reads$pos
+		frag.end <- frag.start + reads$qwidth - 1L	
+	} else {
+		frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
+		frag.end <- frag.start + ext - 1L
+	}
 	return(list(start=frag.start, end=frag.end))
 }
 
-.collateExt <- function(nbam, ext) 
+.collateExt <- function(nbam, ext)
 # Collates the extension parameters into a set of ext and remainder values.
 # The idea is to extend each read directionally to 'ext', and then extend in
 # both directions by 'remainder' to reach the desired fragment length.
 # 
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 7 February 2015
+# last modified 13 February 2015
 {
-	if (!is.numeric(ext)) {
-		final.ext <- ext[[2]]
-		ext <- ext[[1]]
-		if (length(ext)!=nbam) { stop("length of extension vector is not consistent with number of libraries") }
-		final.ext <- rep(final.ext, length.out=nbam)
-	} else {
-		if (length(ext)==1L) { 
-			final.ext <- ext <- rep(ext, nbam)
-		} else if (length(ext)==nbam) {
-			final.ext <- rep(mean(ext), nbam)
-		} else {
-			stop("length of extension vector is not consistent with number of libraries")
-		}
+	final.ext <- attributes(ext)$final.ext # Do this, before attributes are lost.
+	if (is.null(final.ext)) { final.ext <- NA }
+	final.ext <- as.integer(final.ext)
+	if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
+		stop("final extension length must be a positive integer or NA") 
+	}
+	
+	if (length(ext)==1L) { 
+		ext <- rep(ext, nbam)
+	} else if (length(ext)!=nbam) {
+		stop("length of extension vector is not consistent with number of libraries")
+	}
+	ext <- as.integer(ext)
+	if (any(!is.na(ext) & ext <= 0L)) { stop("extension length must be NA or a positive integer") }
+
+	list(ext=ext, final=final.ext)
+}
+
+.checkFragments <- function(starts, ends, final, chrlen) 
+# Coerces the fragments to the desired 'final.ext', and ensures
+# that manipulations do not redefine fragment beyond chromosome boundaries.
+#
+# written by Aaron Lun
+# created 13 February 2014
+# last modified 13 February 2015
+{
+	if (!is.na(final)) { 
+		remainders <- as.integer((ends - starts + 1L - final)/2)
+		starts <- starts + remainders
+		ends <- ends - remainders
 	}
 
-	ext <- as.integer(ext)
-	final.ext <- as.integer(final.ext)
-	if (any(ext <= 0L)) { stop("extension width must be a positive integer") }
-	remainder <- as.integer((final.ext - ext)/2)
-	data.frame(ext=ext, remainder=remainder, final=final.ext)
+	if (length(starts)) { starts <- pmin(starts, chrlen) } 
+	if (length(ends)) { ends <- pmax(1L, ends) }
+	return(list(start=starts, end=ends)) 
 }
 
 .decideStrand <- function(paramlist) 
