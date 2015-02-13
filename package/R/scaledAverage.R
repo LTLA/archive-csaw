@@ -23,33 +23,38 @@ getWidths <- function(data, len=NULL)
 # last modified 13 February 2015
 {
 	if (!is.null(len)) { len <- rep(len, length.out=ncol(data)) }
-	is.pe <- sapply(data$param, FUN=function(x) { x$pe=="both" })
-	frag.len <- integer(ncol(data))
+	final.ext <- exptData(data)$final.ext
 
-	# Single-end.
-	frag.len[!is.pe] <- data$final.ext[!is.pe]
-	missing.se <- is.na(frag.len[!is.pe])
-	if (any(missing.se)) {
-		if (is.null(len)) { 
-			stop("need to specify fragment lengths for single-end data")
+	if (is.na(final.ext)) { 
+		frag.len <- integer(ncol(data))
+		is.pe <- sapply(data$param, FUN=function(x) { x$pe=="both" })
+
+		# Single-end.
+		frag.len[!is.pe] <- data$ext[!is.pe]
+		missing.se <- is.na(frag.len[!is.pe])
+		if (any(missing.se)) {
+			if (is.null(len)) { 
+				stop("need to specify fragment lengths for single-end data in 'len'")
+			}
+			frag.len[!is.pe][missing.se] <- len[!is.pe][missing.se]
 		}
-		frag.len[!is.pe][missing.se] <- len[!is.pe][missing.se]
-	}
 	
-	# Paired-end.
-	pe.len <- sapply(data$param, FUN=function(x) { x$rescue.ext })
-	not.def <- is.na(pe.len)
-	use.pe.len <- is.pe & !not.def
-	frag.len[use.pe.len] <- pe.len[use.pe.len]
-	use.def.len <- is.pe & not.def
-	if (any(use.def.len)) { 
-		if (is.null(len)) { 
-			stop("need to specify fragment lengths for paired-end data")
+		# Paired-end.
+		pe.len <- sapply(data$param, FUN=function(x) { x$rescue.ext })
+		not.def <- is.na(pe.len)
+		use.pe.len <- is.pe & !not.def
+		frag.len[use.pe.len] <- pe.len[use.pe.len]
+		use.def.len <- is.pe & not.def
+		if (any(use.def.len)) { 
+			if (is.null(len)) { 
+				stop("need to specify fragment lengths for paired-end data in 'len'")
+			}
+			frag.len[use.def.len] <- len[use.def.len]	
 		}
-		frag.len[use.def.len] <- len[use.def.len]	
+
+		final.ext <- as.integer(mean(frag.len))
 	}
 
-	frag.len <- as.integer(mean(frag.len))
-	width(rowData(data)) + frag.len - 1L
+	width(rowData(data)) + final.ext - 1L
 }
 
