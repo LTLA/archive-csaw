@@ -32,7 +32,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
                 } else {
                     reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
                 }
-				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[bf,])
+				extended <- .extendSE(reads, ext=ext.data$ext[bf])
 				frag.start <- extended$start
 				frag.end <- extended$end
             } else {
@@ -41,9 +41,12 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
                 } else {
                     out <- .extractPE(bam.files[bf], where=where, param=curpar)
                 }
-                frag.start <- out$pos
-				frag.end <- frag.start+out$size-1L
+				frag.start <- out$pos
+				frag.end <- out$pos + out$size - 1L
             }
+			checked <- .checkFragments(frag.start, frag.end, final=ext.data$final, chrlen=outlen)
+			frag.start <- checked$start
+			frag.end <- checked$end
 		
 			# Counting the number of overlaps of any type with the known regions.
 			totals[bf] <- totals[bf] + length(frag.start)
@@ -57,5 +60,6 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	colnames(paramlist) <- "param"
 	return(SummarizedExperiment(assays=counts, 
 		rowData=regions, 
-		colData=DataFrame(bam.files, totals=totals, ext=ext.data$ext, final.ext=ext.data$final, paramlist)))
+		colData=DataFrame(bam.files, totals=totals, ext=ext.data$ext, paramlist),
+		exptData=List(final.ext=ext.data$final)))
 }

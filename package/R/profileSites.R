@@ -1,5 +1,5 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, param=readParam(), 
-	use.strand=TRUE, match.strand=FALSE)
+profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, 
+	param=readParam(), use.strand=TRUE, match.strand=FALSE)
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -14,10 +14,11 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 
+	# A bit of work for strand-specificity.
 	if (match.strand) { 
 		use.strand <- TRUE
 	    for (i in 1:nbam) { 
-			if (length(paramlist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific counting") } 
+			if (length(paramlist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific profiling") } 
 		}
 	}
 	if (use.strand) { 
@@ -27,10 +28,12 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
 			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], 
-				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), use.strand=FALSE, match.strand=FALSE)
+				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), 
+				use.strand=FALSE, match.strand=FALSE)
 			if (any(!reverse)) { 
-				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse], 
-					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), use.strand=FALSE, match.strand=FALSE)
+				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse],
+ 					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), 
+					use.strand=FALSE, match.strand=FALSE)
 			} else { 
 				fprof <- 0 
 			}
@@ -65,7 +68,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 				} else {
 					reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
 				}
-   				extended <- .extendSE(reads, chrlen=outlen, ext.info=ext.data[b,])
+   				extended <- .extendSE(reads, ext=ext.data$ext[b])
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
@@ -77,6 +80,9 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, para
 				start.pos <- out$pos
 				end.pos <- out$pos + out$size - 1L
 			}
+			checked <- .checkFragments(start.pos, end.pos, final=ext.data$final, chrlen=outlen)
+			start.pos <- checked$start
+			end.pos <- checked$end
 
 			if (!length(start.pos)) { next }
 			ix <- length(starts) + 1L
