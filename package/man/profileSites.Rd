@@ -5,7 +5,7 @@
 \description{Get the coverage profile around potential binding sites.}
 
 \usage{
-profileSites(bam.files, regions, range=5000, ext=100, weight=1, 
+profileSites(bam.files, regions, range=5000, ext=100, weight=1,
     param=readParam(), use.strand=TRUE, match.strand=FALSE) 
 }
 

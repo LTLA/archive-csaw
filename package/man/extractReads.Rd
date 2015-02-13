@@ -6,12 +6,13 @@
 \description{Extract reads from a BAM file with the specified parameter settings.}
 
 \usage{
-extractReads(cur.region, bam.file, param=readParam())
+extractReads(cur.region, bam.file, ext=NA, param=readParam())
 }
 
 \arguments{
 	\item{cur.region}{a \code{GRanges} object of length 1 describing the region of interest}
 	\item{bam.file}{a character string containing the path to a sorted and indexed BAM file}
+	\item{ext}{an integer scalar or vector, containing the fragment lengths for directional read extension}
 	\item{param}{a \code{readParam} object specifying how reads should be extracted}
 }	
 
@@ -27,6 +28,9 @@ Counted reads can then be extracted by identifying their extended counterparts t
 Any strandedness of \code{cur.region} is ignored.
 If strand-specific extraction is desired, this can be done by setting \code{param$forward} via \code{\link{reform}}.
 Alternatively, the returned \code{GRanges} can be filtered to retain only the desired strand.
+
+If \code{ext} is not \code{NA}, directional read extension will be performed for single-end data.
+See \code{\link{windowCounts}} for more details.
 }
 
 \value{
@@ -61,7 +65,8 @@ collected[relevant,]
 }
 
 \seealso{
-\code{\link{readParam}}
+\code{\link{readParam}},
+\code{\link{windowCounts}}
 }
 
 \keyword{visualization}

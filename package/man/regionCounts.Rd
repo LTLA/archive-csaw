@@ -17,7 +17,7 @@ regionCounts(bam.files, regions, ext=100, param=readParam())
 }
 
 \value{
-A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
+A \code{SummarizedExperiment} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each region (row).
 The coordinates of each region are stored as the \code{rowData}.
 The total number of reads, read extension length and \code{param} used in each library are in the \code{colData}.
@@ -33,7 +33,7 @@ Note that the strandedness of \code{regions} will not be considered when computi
 The strandedness of the output \code{rowData} will depend on the strand(s) from which reads were counted.
 This is determined by the \code{forward} slot in the \code{param} object.
 
-See \code{\link{windowCounts}} for more details on read extension.
+See \code{\link{windowCounts}} and \code{\link{makeExtVector}} for more details on read extension.
 }
 
 \author{Aaron Lun}
@@ -42,7 +42,7 @@ See \code{\link{windowCounts}} for more details on read extension.
 \code{\link{countOverlaps}},
 \code{\link{windowCounts}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}}
+\code{\link{makeExtVector}}
 }
 
 \examples{

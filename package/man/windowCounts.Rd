@@ -14,7 +14,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{spacing}{an integer scalar specifying the distance between consecutive windows}
 	\item{width}{an integer scalar specifying the width of the window}
-	\item{ext}{an integer scalar or vector, describing the average length of the sequenced fragment in each library}
+	\item{ext}{an integer scalar or vector, containing the average length(s) of the sequenced fragments in each library}
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{an integer scalar indicating whether binning should be performed}
@@ -22,7 +22,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 }
 
 \value{
-A \code{\link{SummarizedExperiment}} object is returned containing one integer matrix.
+A \code{SummarizedExperiment} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each window (row).
 The coordinates of each window are stored as the \code{rowData}.
 The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length and \code{param} used in each library.
@@ -67,17 +67,18 @@ For single-end reads, directional extension is performed whereby each read is ex
 This obtains a rough estimate of the interval of the fragment from which the read was derived.
 It is particularly useful for TF data, where extension specifically increases the coverage of peaks that exhibit strand bimodality.
 Substantially different fragment lengths between libraries can be accommodated by supplying a vector to \code{ext}, where each entry represents the extension length for the corresponding library.
+If any value of \code{ext} is set to \code{NA}, the read length is used as the fragment length in that library.
 
 However, different fragment lengths will result in different peak widths between libraries.
 This may result in the detection of irrelevant differences corresponding to these differences in widths.
-To avoid this, fragment lengths in all libraries can be scaled to another value, named as \code{final.ext}.
+To avoid this, fragment lengths in all libraries can be scaled to \code{final.ext}.
 For a bimodal peak, scaling effectively aligns the subpeaks on a given strand across all libraries to a common location.
 This removes the most obvious differences in widths.
 
-By default, \code{final.ext} is defined as the mean of all \code{ext}.
-Users can specify another value by supplying a list or data frame as \code{ext}, where the first element is the vector of extension lengths and the second is the desired \code{final.ext}.
-A vector of \code{final.ext} can also be specified in this manner, if different extension lengths are intended.
-In all cases, the \code{final.ext} used for each library is stored in the \code{colData} of the returned \code{SummarizedExperiment} object.
+The value of \code{final.ext} is sourced from the attributes of \code{ext} (see \code{\link{makeExtVector}} for more details).
+If this attribute is not present or is \code{NA}, no rescaling is performed.
+Note that this rescaling will also be performed for paired-end data, by resizing each fragment from its midpoint.
+This still uses \code{final.ext} from \code{ext}, even though the values of \code{ext} itself are not used.
 }
 
 \author{Aaron Lun}
@@ -85,7 +86,7 @@ In all cases, the \code{final.ext} used for each library is stored in the \code{
 \seealso{
 \code{\link{correlateReads}},
 \code{\link{readParam}},
-\code{\link{SummarizedExperiment}}
+\code{\link{makeExtVector}}
 }
 
 \examples{
@@ -94,11 +95,7 @@ bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 windowCounts(bamFiles, filter=1)
 windowCounts(bamFiles, width=100, filter=1)
 windowCounts(bamFiles, ext=c(50, 100), spacing=100, filter=1)
-windowCounts(bamFiles, ext=list(c(50, 100), 80), filter=1)
-
-# Rerunning with old extension parameters.
-old <- windowCounts(bamFiles, ext=list(c(50, 100), 80), filter=1)
-windowCounts(bamFiles, ext=colData(old)[,c("ext", "final.ext")], width=100)
+windowCounts(bamFiles, ext=makeExtVector(c(50, 100), 80), width=100)
 
 # Loading PE data.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
