@@ -1,4 +1,4 @@
-extractReads <- function(cur.region, bam.file, param=readParam())
+extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 # Exactly as specified. Takes a region and plots it in bimodal mode, with
 # options for duplicate removal, mapping quality enhancement, colorization,
 # and PE manipulation.
@@ -32,29 +32,33 @@ extractReads <- function(cur.region, bam.file, param=readParam())
 	}
 
 	# Pulling out reads from a region and setting up coverage RLE's.
+	ext.data <- .collateExt(1, ext)
 	if (param$pe!="both") {
 		if (param$pe=="none") { 
 			cur.reads <- .extractSE(bam.file, where=actual.region, param=param)
 		} else {
 			cur.reads <- .extractBrokenPE(bam.file, where=actual.region, param=param)
 		}
+		stranded <- cur.reads$strand
+		cur.reads <- .extendSE(cur.reads, ext=ext.data$ext[1])
+		cur.reads <- .checkFragments(cur.reads$start, cur.reads$end, final=ext.data$final, chrlen=max.len)
 
-		if (length(cur.reads$pos)) { 
-			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$pos), 
-				pmin(max.len, cur.reads$pos + cur.reads$qwidth - 1L)),
-				strand=cur.reads$strand, seqinfo=sqi))
+		if (length(stranded)) { 
+			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)),
+				strand=stranded, seqinfo=sqi))
 		}
 	} else {
 		if (!is.na(param$rescue.ext)) {
-			cur.reads <- .rescuePE(bam.file, where=actual.region, param=param)
+			cur.frags <- .rescuePE(bam.file, where=actual.region, param=param)
 		} else {
-			cur.reads <- .extractPE(bam.file, where=actual.region, param=param)
+			cur.frags <- .extractPE(bam.file, where=actual.region, param=param)
 		}
+		cur.frags <- .checkFragments(cur.frags$pos, cur.frags$pos + cur.frags$size - 1L, final=ext.data$final, chrlen=max.len)
 
 		# Filtering to retain those that don't actually overlap.
-		if (length(cur.reads$pos)) { 
-			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.reads$pos), 
-				pmin(max.len, cur.reads$pos + cur.reads$size - 1L)), seqinfo=sqi)
+		if (length(cur.frags$start)) { 
+			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.frags$start), pmin(max.len, cur.frags$end)), 
+				seqinfo=sqi)
 			keep <- overlapsAny(of.interest, cur.region)
 			return(of.interest[keep])
 		}
