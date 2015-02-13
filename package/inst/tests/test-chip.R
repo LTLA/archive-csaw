@@ -46,6 +46,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 	} else {
 		final.out <- as.integer(mean(fraglen))
 		remainder <- as.integer((final.out - fraglen)/2)
+		fraglen <- makeExtVector(fraglen, final.out)
 	}
 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 	

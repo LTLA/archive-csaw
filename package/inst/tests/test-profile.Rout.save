@@ -28,7 +28,7 @@ Type 'q()' to quit R.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE) { 
+> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE, final.mode=NA) { 
 + 	# Simulating first.
 + 	bam <- regen(nreads, chromos, outfname)
 + 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
@@ -43,13 +43,13 @@ Type 'q()' to quit R.
 + 	} else {
 + 		metric <- rep(1, nwin)
 + 	}
-+ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric) 
++ 	ext <- makeExtVector(ext, final.mode)
++ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
 + 
 + 	# Running the reference analysis.
 + 	totally <- list()
 + 	for (chr in names(chromos)) {
-+ 		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam)
-+ 		out <- suppressWarnings(resize(out, width=ext))
++ 		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam, ext=ext)
 + 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 + 	} 
 + 
@@ -143,6 +143,17 @@ Type 'q()' to quit R.
      -200      -199      -198      -197      -196      -195 
 0.6364542 0.6369933 0.6374587 0.6336338 0.6323193 0.6319561 
 > 
+> # Just exercising the multi-fragment length options here.
+> comp(nreads, chromos, ext=50, final.mode=NULL)
+     -200      -199      -198      -197      -196      -195 
+0.5257641 0.5229465 0.5215333 0.5181628 0.5207782 0.5234487 
+> comp(nreads, chromos, ext=50, final.mode=100)
+     -200      -199      -198      -197      -196      -195 
+0.9181448 0.9192015 0.9175968 0.9197485 0.9166779 0.9125906 
+> comp(nreads, chromos, ext=50, final.mode=20)
+     -200      -199      -198      -197      -196      -195 
+0.1855786 0.1853374 0.1867298 0.1941571 0.1931860 0.1880529 
+> 
 > ############################################################
 > # Cleaning up.
 > 
@@ -152,4 +163,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 20.315   0.208  20.526 
+ 25.673   0.262  27.151 

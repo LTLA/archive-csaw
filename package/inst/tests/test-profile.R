@@ -9,7 +9,7 @@ outfname <- file.path(sdir, "out")
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
-comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE) { 
+comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE, final.mode=NA) { 
 	# Simulating first.
 	bam <- regen(nreads, chromos, outfname)
 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
@@ -24,13 +24,13 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric) 
+	ext <- makeExtVector(ext, final.mode)
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
 
 	# Running the reference analysis.
 	totally <- list()
 	for (chr in names(chromos)) {
-		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam)
-		out <- suppressWarnings(resize(out, width=ext))
+		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam, ext=ext)
 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 	} 
 
@@ -85,6 +85,11 @@ comp(nreads, chromos, res=20, sim.strand=FALSE)
 comp(nreads, chromos, res=100, sim.strand=FALSE)
 comp(nreads, chromos, sim.strand=FALSE)
 comp(nreads, chromos, sim.strand=FALSE)
+
+# Just exercising the multi-fragment length options here.
+comp(nreads, chromos, ext=50, final.mode=NULL)
+comp(nreads, chromos, ext=50, final.mode=100)
+comp(nreads, chromos, ext=50, final.mode=20)
 
 ############################################################
 # Cleaning up.

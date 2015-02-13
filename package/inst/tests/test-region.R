@@ -4,7 +4,13 @@
 suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
-comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL, forward=NA) {
+comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL, forward=NA, final.len=NA) {
+	if (length(final.len) && is.na(final.len)) { 
+		ext <- rep(fraglen, length.out=length(bamFiles))
+	} else {
+		ext <- makeExtVector(fraglen, final.len)
+	}
+
 	for (type in 1:3) {
 		if (type==1) {
 			dedup<- FALSE
@@ -19,20 +25,20 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 	
 		# We compare windowCounts and regionCounts directly.
 		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward)
-		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, 
+		x<-windowCounts(bamFiles, ext=ext, width=right+left+1, shift=left, spacing=spacing, 
 			filter=filter, param=repar)
-		y <- regionCounts(bamFiles, regions=rowData(x), ext=fraglen, param=repar)
+		y <- regionCounts(bamFiles, regions=rowData(x), ext=ext, param=repar)
 		if (!identical(assay(y), assay(x))) { stop("mismatch in count matrices") }
 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
 
-		# We also pick a region in the middle and we check it with extractReads.
+		# If there's no rescaling, we pick a region in the middle and we check it with extractReads.
 		chosen <- round(nrow(x)/2)
 		my.reg <- rowData(x)[chosen]
-		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+fraglen*2))
+		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+max(y$ext)*2))
 		strand(my.reg2) <- "*"
+	
 		for (f in 1:length(bamFiles)) {
-			collected <- extractReads(my.reg2, bamFiles[f], param=repar)
-			collected <- suppressWarnings(resize(collected, width=fraglen))
+			collected <- extractReads(my.reg2, bamFiles[f], param=repar, ext=ext[f])
 			strand(collected) <- "*"
 			if (!identical(assay(x)[chosen,f], suppressWarnings(countOverlaps(my.reg, collected)))) { 
 				stop("mismatch in the number of counts from extractReads")
@@ -58,6 +64,12 @@ bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file
 comp(bamFiles, fraglen=100, spacing=20)
 comp(bamFiles, fraglen=200, spacing=50)
 
+# More complex with variable fragment lengths.
+
+comp(bamFiles, fraglen=c(100, 200), spacing=50)
+comp(bamFiles, fraglen=c(100, 200), spacing=50, final.len=NULL)
+comp(bamFiles, fraglen=c(100, 200), spacing=50, final.len=100)
+
 # More complex with right arguments.
 
 bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
@@ -79,6 +91,10 @@ bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
 
+comp(bamFiles, fraglen=c(100, 200), spacing=50)
+comp(bamFiles, fraglen=c(100, 200), spacing=50, final.len=NULL)
+comp(bamFiles, fraglen=c(100, 200), spacing=50, final.len=100)
+
 bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")))
 comp(bamFiles, fraglen=100, right=100)
 comp(bamFiles, fraglen=200, left=10)
@@ -91,15 +107,19 @@ comp(bamFiles, fraglen=200, filter=40)
 # One more time; sparse across the genome, but three files.
 
 chromos<-c(chrA=5000, chrB=5000, chrC=8000)
-bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "C")))
 comp(bamFiles, fraglen=100)
 comp(bamFiles, fraglen=200)
 
-bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+comp(bamFiles, fraglen=c(100, 200, 150), spacing=50)
+comp(bamFiles, fraglen=c(100, 200, 150), spacing=50, final.len=NULL)
+comp(bamFiles, fraglen=c(100, 200, 150), spacing=50, final.len=100)
+
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "C")))
 comp(bamFiles, fraglen=100, left=50, spacing=100)
 comp(bamFiles, fraglen=200, right=100, spacing=100)
 
-bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "B")))
+bamFiles<-c(regen(3000, chromos, file.path(dir, "A")), regen(3000, chromos, file.path(dir, "B")), regen(3000, chromos, file.path(dir, "C")))
 comp(bamFiles, fraglen=200, filter=10)
 comp(bamFiles, fraglen=200, right=50, filter=50)
 

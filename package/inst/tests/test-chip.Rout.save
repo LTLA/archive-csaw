@@ -65,6 +65,7 @@ Type 'q()' to quit R.
 + 	} else {
 + 		final.out <- as.integer(mean(fraglen))
 + 		remainder <- as.integer((final.out - fraglen)/2)
++ 		fraglen <- makeExtVector(fraglen, final.out)
 + 	}
 + 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 + 	
@@ -1214,4 +1215,4 @@ GRanges object with 363 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 72.349   0.368  72.821 
+ 76.601   0.693  77.796 
