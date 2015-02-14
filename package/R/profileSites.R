@@ -72,7 +72,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
-                if (!is.na(curpar$rescue.ext)) {
+                if (.rescueMe(curpar)) { 
 					out <- .rescuePE(bam.files[b], where=where, param=curpar)
 				} else {
 					out <- .extractPE(bam.files[b], where=where, param=curpar)

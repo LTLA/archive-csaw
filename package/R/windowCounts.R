@@ -78,7 +78,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
-				if (!is.na(curpar$rescue.ext)) { 
+				if (.rescueMe(curpar)) {
 					out <- .rescuePE(bam.files[bf], where=where, param=curpar)
 				} else {
 					out <- .extractPE(bam.files[bf], where=where, param=curpar)
