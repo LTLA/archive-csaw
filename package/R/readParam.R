@@ -58,11 +58,11 @@ setMethod("show", signature("readParam"), function(object) {
 	   second="Extracting the second read of each pair"), "\n", sep="")
 
 	if (object@pe=="both") {
+		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
    		if (object@fast.pe) {
 			cat("        Fast PE extraction enabled, ignoring other settings\n")
 			return(invisible(NULL))
 		}	
-		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
 		if (!is.na(object@rescue.ext)) {
 			cat("        Rescuing of improperly paired reads is enabled\n")
 			cat("            Extension length for rescued reads is", object@rescue.ext, "bp\n")

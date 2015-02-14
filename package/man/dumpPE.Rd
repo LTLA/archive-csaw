@@ -64,7 +64,7 @@ stopifnot(identical(out$totals, out2$totals))
 # Looking at extracted reads.
 last.reg <- rowData(out)[6]
 reg1 <- extractReads(last.reg, bamFile, param=xparam)
-reg2 <- extractReads(last.reg, outBam, reform(xparam, fast.pe=TRUE))
+reg2 <- extractReads(last.reg, outBam, param=reform(xparam, fast.pe=TRUE))
 
 stopifnot(identical(sort(reg1), sort(reg2)))
 unlink("whee.bam")
