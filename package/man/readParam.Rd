@@ -18,6 +18,7 @@ Slots are defined as:
 	\item{\code{pe}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
 	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
+	\item{\code{fast.pe}:}{a logical scalar specifying whether fast fragment extraction should be performed for paired-end data}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
 	\item{\code{forward}:}{a logical scalar indicating whether only forward reads should be extracted}
@@ -57,6 +58,12 @@ Users should set \code{rescue.ext} as the median fragment length from \code{\lin
 The extended read will then be used as the fragment interval.
 Similarly, any reads without a mapped mate will be extended. 
 For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
+
+Each run through the position-sorted BAM file tends to be time-consuming, as read names must be extracted and matched.
+This can be avoided by setting \code{fast.pe=TRUE}.
+In this case, only cursory checks are done with regards to proper pairing.
+Each fragment is defined from a forward-stranded read with a reverse-stranded mate and a positive insert size no larger than \code{max.frag}.
+Values of \code{minq} and \code{discard} are ignored, as the specifics of the mate alignment are not accessed in this fast mode.
 
 Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pe="first"} or \code{"second"}.  
 This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.
@@ -135,6 +142,7 @@ blah
 reform(blah, dedup=TRUE)
 reform(blah, rescue.ext=200)
 reform(blah, pe="both", max.frag=212.0)
+reform(blah, pe="both", fast.pe=TRUE)
 }
 
 \keyword{counting}

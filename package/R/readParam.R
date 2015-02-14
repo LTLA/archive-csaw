@@ -3,7 +3,7 @@
 # there are continuous validity checks on the list values.
 
 setClass("readParam", representation(pe="character", 
-	max.frag="integer", rescue.ext="integer", 
+	max.frag="integer", rescue.ext="integer", fast.pe="logical",
 	dedup="logical", minq="integer", forward="logical", 
 	restrict="character", discard="GRanges"))
 
@@ -20,16 +20,23 @@ setValidity("readParam", function(object) {
 	} else if (!is.na(object@rescue.ext) && object@rescue.ext <= 0L){
 		return("extension length must be a positive integer")	
 	}
+	if (length(object@fast.pe)!=1L || !is.logical(object@fast.pe)) { 
+		return("fast PE extraction flag must be a logical scalar")
+	}
 		
 	if (length(object@dedup)!=1L || !is.logical(object@dedup)) { 
 		return("duplicate removal specification must be a logical scalar")
 	}
-	if (length(object@forward)>1L || !is.logical(object@forward)) { 
-		return("forward strand specification must be logical")
-	}
 	if (length(object@minq)!=1L || !is.numeric(object@minq)) { 
 		return("minimum mapping quality must be a numeric scalar")
 	}
+
+	if (length(object@forward)>1L || !is.logical(object@forward)) { 
+		return("forward strand specification must be logical")
+	} else if ((length(object@forward)==0L || !is.na(object@forward)) && object@pe == "both") {
+		stop("strand-specific extraction makes no sense for paired-end data")
+	}
+
 	return(TRUE)
 })
 
@@ -50,7 +57,11 @@ setMethod("show", signature("readParam"), function(object) {
 	   first="Extracting the first read of each pair",
 	   second="Extracting the second read of each pair"), "\n", sep="")
 
-	if (object@pe=="both") { 
+	if (object@pe=="both") {
+   		if (object@fast.pe) {
+			cat("        Fast PE extraction enabled, ignoring other settings\n")
+			return(invisible(NULL))
+		}	
 		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
 		if (!is.na(object@rescue.ext)) {
 			cat("        Rescuing of improperly paired reads is enabled\n")
@@ -90,7 +101,8 @@ setMethod("show", signature("readParam"), function(object) {
 	}
 })
 
-readParam <- function(pe="none", max.frag=500, rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())
+readParam <- function(pe="none", max.frag=500, rescue.ext=NA, fast.pe=FALSE, 
+	dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())
 # This creates a SimpleList of parameter objects, specifying
 # how reads should be extracted from the BAM files. The aim is
 # to synchronize read loading throughout the package, such that
@@ -101,11 +113,12 @@ readParam <- function(pe="none", max.frag=500, rescue.ext=NA, dedup=FALSE, minq=
 {
 	max.frag <- as.integer(max.frag)
 	rescue.ext <- as.integer(rescue.ext)
+	fast.pe <- as.logical(fast.pe)
 	dedup <- as.logical(dedup)
 	forward <- as.logical(forward)
 	minq <- as.integer(minq)
 	restrict <- as.character(restrict) 
-	new("readParam", pe=pe, max.frag=max.frag, 
+	new("readParam", pe=pe, max.frag=max.frag, fast.pe=fast.pe,
 		rescue.ext=rescue.ext, dedup=dedup, forward=forward, minq=minq, 
 		restrict=restrict, discard=discard)
 }
@@ -120,6 +133,7 @@ setMethod("reform", signature("readParam"), function(x, ...) {
 		incoming[[sx]] <- switch(sx, 
 			max.frag=as.integer(val),
 			rescue.ext=as.integer(val),
+			fast.pe=as.logical(val),
 			dedup=as.logical(val),
 			forward=as.logical(val),
 			minq=as.integer(val),
