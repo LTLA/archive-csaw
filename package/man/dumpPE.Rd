@@ -60,5 +60,12 @@ out2 <- windowCounts(outBam, param=reform(xparam, fast.pe=TRUE), filter=1)
 
 stopifnot(identical(assay(out), assay(out2)))
 stopifnot(identical(out$totals, out2$totals))
+
+# Looking at extracted reads.
+last.reg <- rowData(out)[6]
+reg1 <- extractReads(last.reg, bamFile, param=xparam)
+reg2 <- extractReads(last.reg, outBam, reform(xparam, fast.pe=TRUE))
+
+stopifnot(identical(sort(reg1), sort(reg2)))
 unlink("whee.bam")
 }
