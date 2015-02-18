@@ -9,7 +9,7 @@ export(csawUsersGuide,
 	getPESizes, dumpPE,
 	regionCounts, windowCounts, strandedCounts,
 	normalizeCounts, 
-	getWidths, scaledAverage, findMaxima,
+	getWidths, scaledAverage, findMaxima, filterWindows,
 	combineTests, getBestTest, mergeWindows,
 	detailRanges,
 	extractReads)
