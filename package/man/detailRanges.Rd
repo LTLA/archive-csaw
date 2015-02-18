@@ -17,7 +17,7 @@ detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000),
 \item{promoter}{an integer vector of length 2, where first and second values define the promoter as some distance upstream and downstream from the TSS, respectively}
 \item{max.intron}{an integer scalar indicating the maximum distance between exons}
 \item{key.field}{a character scalar specifying the keytype for name extraction}
-\item{name.field}{a character scalar specifying the column to use as the gene name}
+\item{name.field}{a character scalar or vector specifying the column(s) to use as the gene name}
 }
 
 \value{
@@ -39,12 +39,10 @@ The aim is to determine the genic context of empirically identified regions.
 This allows some basic biological interpretation of binding/marking in those regions. 
 All neighbouring genes within a specified range are reported, rather than just the closest gene to the region.
 
-For annotated features overlapping a region, the character string in the
-\code{overlap} output vector will be of the form \code{GENE|EXONS|STRAND}. The
-\code{GENE} is the gene symbol, with an alternative as \code{ID:XXX} for the
-Entrez ID if the symbol is unavailable. The \code{EXONS} indicate the exon or
-range of exons that are overlapped. The \code{STRAND} is, obviously, the strand
-on which the gene is coded. 
+For annotated features overlapping a region, the character string in the \code{overlap} output vector will be of the form \code{GENE|EXONS|STRAND}. 
+\code{GENE} is the gene symbol by default, but reverts to \code{<XXX>} if no symbol is defined for a gene with the Entrez ID \code{XXX}.
+The \code{EXONS} indicate the exon or range of exons that are overlapped. 
+The \code{STRAND} is, obviously, the strand on which the gene is coded. 
 For annotated regions flanking the region within a distance of \code{dist}, the character string in the \code{left} or \code{right} output vectors will have an additional \code{DIST} value. 
 This represents the gap between the edge of the region and the closest exon for that gene.
 In all cases, any strandedness in \code{incoming} is ignored.
@@ -84,8 +82,9 @@ Overlaps to introns can be identified by finding those regions that overlap
 with gene bodies but not with any of the corresponding exons.
 
 The default settings for \code{key.field} and \code{name.field} will work for human and mouse genomes, but may not work for other organisms.
-The \code{key.field} should refer to the key type in the \code{OrgDb} object, corresponding to the \code{GENEID} of the \code{TxDb} object.
+The \code{key.field} should refer to the key type in the \code{OrgDb} object, and also correspond to the \code{GENEID} of the \code{TxDb} object.
 For example, in S. cerevisiae, \code{key.field} is set to \code{"ORF"} while \code{name.field} is set to \code{"GENENAME"}.
+If multiple entries are supplied in \code{name.field}, the value of \code{GENE} is defined as a semicolon-separated list of each of those entries.
 }
 
 \author{Aaron Lun}
@@ -102,6 +101,16 @@ head(output$right)
 head(output$left)
 
 detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db)
+
+\dontrun{
+output <- detailRanges(current, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
+    orgdb=org.Mm.eg.db, name.field=c("ENTREZID"))
+head(output$overlap)
+
+output <- detailRanges(current, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
+    orgdb=org.Mm.eg.db, name.field=c("SYMBOL", "ENTREZID"))
+head(output$overlap)
+}
 }
 
 \keyword{annotation}
