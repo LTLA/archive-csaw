@@ -7,7 +7,7 @@
 
 \usage{
 windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, param=readParam())
+	filter=10, bin=FALSE, param=readParam())
 }
 
 \arguments{
@@ -56,7 +56,6 @@ Fragments are inferred from reads by directional extension (single-end; see belo
 The number of fragments overlapping the window for each library is then counted for each window position. 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
-If \code{filter=NULL}, the count sum filter threshold is automatically defined as the number of libraries multiplied by 5. 
  
 The strandedness of the output \code{rowData} is set based on the strand(s) from which the reads are extracted and counted.
 This is determined by the value of the \code{forward} slot in the input \code{param} object.

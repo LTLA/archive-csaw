@@ -1,5 +1,5 @@
 windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=NULL, bin=FALSE, param=readParam())
+	filter=10, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a DGEList with count and total information, as well as a GRanges
@@ -19,7 +19,6 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		spacing <- as.integer(spacing)
 		left <- as.integer(shift)
 		right <- as.integer(width) - left - 1L
-		if (is.null(filter)) { filter <- 5*nbam }
 	} else {
 		# A convenience flag, which assigns sensible arguments to everything else.
 		spacing <- as.integer(width)
