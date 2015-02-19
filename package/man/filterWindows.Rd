@@ -5,7 +5,7 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=2) 
+filterWindows(data, background, type="global", prior.count=2, len=NULL) 
 }
 
 \arguments{
@@ -13,6 +13,7 @@ filterWindows(data, background, type="global", prior.count=2)
 \item{background}{another \code{SummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
 \item{type}{a character string specifying the type of filtering to perform; can be any of \code{c("global", "local", "control", "proportion")}}
 \item{prior.count}{a numeric scalar, specifying the prior count to use in \code{\link{aveLogCPM}}}
+\item{len}{a numeric scalar containing the median fragment length for paired-end data}
 }
 
 \value{
@@ -45,11 +46,14 @@ Unlike \code{type="local"}, there is no subtraction of the counts in \code{backg
 For all background-based methods, windows can be filtered to retain those with large filter statistics.
 This selects windows with strong enrichment over background, that are more likely to contain genuine binding sites.
 In all cases, the abundances of large bins or regions in \code{background} must be rescaled for comparison to those of smaller windows.
+This is where \code{len} may be needed, for use in \code{\link{getWidths}} when computing effective window widths in paired-end datasets.
 }
 
 \seealso{
 \code{\link{windowCounts}},
-\code{\link{aveLogCPM}}
+\code{\link{aveLogCPM}},
+\code{\link{getWidths}},
+\code{\link{scaledAverage}}
 }
 
 \examples{
