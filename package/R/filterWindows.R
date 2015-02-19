@@ -19,9 +19,13 @@ filterWindows <- function(data, background, type="global", prior.count=2)
 		return(list(abundances=abundances, filter=relative.rank))
 
 	} else {
+		if (missing(background) && type=="global") { 
+			filter.stat <- abundances  - median(abundances)
+			return(list(abundances=abundances, filter=filter.stat))
+		} 
+
 		bwidth <- getWidths(background)
 		dwidth <- getWidths(data)
-		if (!identical(data$totals, background$totals)) { warning("data and background should be counted with the same parameters") }
 
 		if (type=="global") { 
 			relative.width <- median(bwidth)/median(dwidth)

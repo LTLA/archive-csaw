@@ -30,14 +30,17 @@ Background-based filtering compares the window abundances to those of putative b
 If \code{type="global"}, the median average abundance of all entries in \code{background} is used as a global estimate of the background abundance.
 This is designed to be used when \code{background} contains counts for large (2000 - 10000 kbp) genomic bins.
 The filter statistic is defined as the difference between the window abundance and the global background, i.e., the log-fold increase over the background.
+If \code{background} is not supplied, the median of the abundances in \code{data} is used as the background abundance.
 
 If \code{type="local"}, the counts of each row in \code{data} are subtracted from those of the corresponding row in \code{background}.
 The average abundance of the remaining counts is computed and used as the background abundance.
 The filter statistic is defined by subtracting the background abundance from the corresponding window abundance for each row.
-This is designed to be used when \code{background} contains counts for expanded windows, to determine the loal background estimate.
+This is designed to be used when \code{background} contains counts for expanded windows, to determine the local background estimate.
 
-If \code{type="control"}, the filter statistic is defined by subtracting the average abundance of each row in \code{background} from the average abundance of the corresponding row in \code{data}.
+If \code{type="control"}, the background abundance is defined as the average abundance of each row in \code{background}.
+The filter statistic is defined as the difference between the average abundance of each row in \code{data} and that of the corresponding row in \code{background}.
 This is designed to be used when \code{background} contains read counts for each window in the control sample(s).
+Unlike \code{type="local"}, there is no subtraction of the counts in \code{background} prior to computing the average abundance.
 
 For all background-based methods, windows can be filtered to retain those with large filter statistics.
 This selects windows with strong enrichment over background, that are more likely to contain genuine binding sites.
