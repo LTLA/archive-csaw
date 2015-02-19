@@ -31,7 +31,13 @@ Background-based filtering compares the window abundances to those of putative b
 If \code{type="global"}, the median average abundance of all entries in \code{background} is used as a global estimate of the background abundance.
 This is designed to be used when \code{background} contains counts for large (2000 - 10000 kbp) genomic bins.
 The filter statistic is defined as the difference between the window abundance and the global background, i.e., the log-fold increase over the background.
-If \code{background} is not supplied, the median of the abundances in \code{data} is used as the background abundance.
+
+If \code{background} is not supplied for \code{type="global"}, the median of the abundances in \code{data} is used as the background abundance.
+This assumes that no pre-filtering has been performed for \code{data} in \code{\link{windowCounts}}, i.e., \code{filter} should not be greater than 1.
+
+% Note that empty windows are automatically removed by windowCounts.
+% However, if you're using large bins, these regions are likely to be systematically empty, e.g. large repeats like telomeres, centromeres.
+% I'm happy to consider them as being irrelevant parts of the genome that we can ignore, as they don't help in estimating the background (as they're empty).
 
 If \code{type="local"}, the counts of each row in \code{data} are subtracted from those of the corresponding row in \code{background}.
 The average abundance of the remaining counts is computed and used as the background abundance.
