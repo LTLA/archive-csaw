@@ -5,7 +5,7 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=2, len=NULL) 
+filterWindows(data, background, type="global", prior.count=NULL, len=NULL) 
 }
 
 \arguments{
@@ -27,13 +27,13 @@ Rank is in ascending order, i.e., higher abundance windows have higher ratios.
 Determining the total number requires some care, as the majority of the genome is already discarded by pre-filtering in \code{\link{windowCounts}}.
 Windows are retained that have rank ratios above a threshold, e.g., 0.99 if 1\% of the genome is assumed to be bound.
 
-Background-based filtering compares the window abundances to those of putative background regions.
+All other values of \code{type} will perform background-based filtering, where abundances fof windows are compared to those of putative background regions.
+The filter statistic are generally defined as the difference between window and background abundances, i.e., the log-fold increase in the counts.
+Windows can be filtered to retain those with large filter statistics, to select those that are more likely to contain genuine binding sites.
+
 If \code{type="global"}, the median average abundance of all entries in \code{background} is used as a global estimate of the background abundance.
 This is designed to be used when \code{background} contains counts for large (2000 - 10000 kbp) genomic bins.
-The filter statistic is defined as the difference between the window abundance and the global background, i.e., the log-fold increase over the background.
-
-If \code{background} is not supplied for \code{type="global"}, the median of the abundances in \code{data} is used as the background abundance.
-This assumes that no pre-filtering has been performed for \code{data} in \code{\link{windowCounts}}, i.e., \code{filter} should not be greater than 1.
+The filter statistic is defined as the difference between the window abundance and the global background.
 
 % Note that empty windows are automatically removed by windowCounts.
 % However, if you're using large bins, these regions are likely to be systematically empty, e.g. large repeats like telomeres, centromeres.
@@ -48,11 +48,24 @@ If \code{type="control"}, the background abundance is defined as the average abu
 The filter statistic is defined as the difference between the average abundance of each row in \code{data} and that of the corresponding row in \code{background}.
 This is designed to be used when \code{background} contains read counts for each window in the control sample(s).
 Unlike \code{type="local"}, there is no subtraction of the counts in \code{background} prior to computing the average abundance.
+}
 
-For all background-based methods, windows can be filtered to retain those with large filter statistics.
-This selects windows with strong enrichment over background, that are more likely to contain genuine binding sites.
-In all cases, the abundances of large bins or regions in \code{background} must be rescaled for comparison to those of smaller windows.
-This is where \code{len} may be needed, for use in \code{\link{getWidths}} when computing effective window widths in paired-end datasets.
+\section{Additional details}{
+If \code{background} is not supplied for \code{type="global"}, the median of the abundances in \code{data} is used as the background abundance.
+This assumes that no pre-filtering has been performed for \code{data} in \code{\link{windowCounts}}, i.e., \code{filter} should not be greater than 1.
+
+For background-based methods, the abundances of large bins or regions in \code{background} must be rescaled for comparison to those of smaller windows 
+- see \code{\link{getWidths}} and \code{\link{scaledAverage}} for more details.
+In particular, the effective width of the window is often larger than \code{width}, due to the counting of fragments rather than reads.
+The fragment length is generally extracted from \code{data}.
+If not (e.g., for paired-end analyses), specification of \code{len} may be necessary.
+
+If \code{prior.count} is not specified, it is set at 5 for \code{type="local"} or \code{"control"}.
+This avoids large log-fold increases when the count for the background of each window is near-zero.
+Otherwise, filtering may select for low-abundance windows, if those windows lie in empty neighbourhoods.
+No such protection is necessary in \code{type="global"}, as the same background estimate is used for each window.
+Thus, higher abundance windows will always have larger filter statistics.
+A prior count of 2 is used for both \code{type="global"} and {"proportion"}.
 }
 
 \seealso{
@@ -72,21 +85,21 @@ head(stats$filter)
 keep <- stats$filter > 0.99 
 new.data <- data[keep,]
 
-# Global background-based (keeping fold-change above 5).
+# Global background-based (keeping fold-change above 3).
 background <- windowCounts(bamFiles, bin=TRUE, width=300)
 stats <- filterWindows(data, background, type="global")
 head(stats$filter)
-keep <- stats$filter > log2(5)
+keep <- stats$filter > log2(3)
 
 # Local background-based.
 locality <- regionCounts(bamFiles, resize(rowData(data), fix="center", 300))
 stats <- filterWindows(data, locality, type="local")
 head(stats$filter)
-keep <- stats$filter > log2(5)
+keep <- stats$filter > log2(3)
 
 # Control-based (pretend "rep.2" is a control library).
 stats <- filterWindows(data[,1], data[,2], type="control")
 head(stats$filter)
-keep <- stats$filter > log2(5)
+keep <- stats$filter > log2(3)
 }
 
