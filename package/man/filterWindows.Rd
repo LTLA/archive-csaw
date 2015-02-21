@@ -5,7 +5,7 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=NULL, len=NULL) 
+filterWindows(data, background, type="global", prior.count=2, len=NULL) 
 }
 
 \arguments{
@@ -60,12 +60,10 @@ In particular, the effective width of the window is often larger than \code{widt
 The fragment length is generally extracted from \code{data}.
 If not (e.g., for paired-end analyses), specification of \code{len} may be necessary.
 
-If \code{prior.count} is not specified, it is set at 5 for \code{type="local"} or \code{"control"}.
-This avoids large log-fold increases when the count for the background of each window is near-zero.
-Otherwise, filtering may select for low-abundance windows, if those windows lie in empty neighbourhoods.
-No such protection is necessary in \code{type="global"}, as the same background estimate is used for each window.
-Thus, higher abundance windows will always have larger filter statistics.
-A prior count of 2 is used for both \code{type="global"} and {"proportion"}.
+The \code{prior.count} protects against inflated log-fold increases when the background counts are near zero.
+A low prior is sufficient if \code{background} has large counts, which is usually the case for wide regions.
+Otherwise, \code{prior.count} should be increased to a larger value like 5.
+This may be necessary in \code{type="control"}, where \code{background} contains counts for small windows in the control sample.
 }
 
 \seealso{
@@ -98,7 +96,7 @@ head(stats$filter)
 keep <- stats$filter > log2(3)
 
 # Control-based (pretend "rep.2" is a control library).
-stats <- filterWindows(data[,1], data[,2], type="control")
+stats <- filterWindows(data[,1], data[,2], type="control", prior.count=5)
 head(stats$filter)
 keep <- stats$filter > log2(3)
 }
