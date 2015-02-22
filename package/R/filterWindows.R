@@ -24,17 +24,18 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 			filter.stat <- abundances  - median(abundances)
 			return(list(abundances=abundances, filter=filter.stat))
 		} 
-
 		bwidth <- getWidths(background, len=len)
 		dwidth <- getWidths(data, len=len)
 
 		if (type=="global") { 
+			.checkLibSizes(data, background)
 			relative.width <- median(bwidth)/median(dwidth)
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
 			filter.stat <- abundances - median(bg.ab)
 			
 		} else if (type=="local") {
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
+			.checkLibSizes(data, background)
 			relative.width <- (bwidth  - dwidth)/dwidth		
 			bg.y <- asDGEList(background)
 			bg.y$counts <- bg.y$counts - assay(data)
@@ -51,10 +52,18 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 		} else {
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
 			relative.width <- bwidth/dwidth
-			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
+			lib.adjust <- prior.count * mean(background$totals)/mean(data$totals) # Account for library size differences.
+			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=lib.adjust)
 			filter.stat <- abundances - bg.ab
 		}
 
 		return(list(abundances=abundances, back.abundances=bg.ab, filter=filter.stat))
 	}
+}
+
+.checkLibSizes <- function(data, background) {
+	if (!identical(data$totals, background$totals)) { 
+		stop("data and background totals should be identical")
+	}
+	return(NULL)
 }
