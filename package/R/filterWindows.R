@@ -44,7 +44,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 			subzero <- relative.width <= 0
 			if (any(subzero)) { 
 				relative.width[subzero] <- 1
-				bg.y$counts[sub.zero,] <- 0
+				bg.y$counts[subzero,] <- 0L
 			}	
 			bg.ab <- scaledAverage(bg.y, scale=relative.width, prior.count=prior.count)
 			filter.stat <- abundances - bg.ab
