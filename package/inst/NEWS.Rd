@@ -2,9 +2,9 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.26}{\itemize{
+\section{Version 1.1.30}{\itemize{
 \item 
-Added getWidths() and scaledAverage(), to facilitate comparison of abundances during filtering.
+Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison of abundances during filtering.
 
 \item 
 Added findMaxima() to identify locally maximal windows.
@@ -13,7 +13,7 @@ Added findMaxima() to identify locally maximal windows.
 Added profileSites() to examine the coverage profile around specified regions.
 
 \item
-Changed default window width in windowCounts() to 50 bp.
+Changed default window width in windowCounts() to 50 bp, default filter to 10.
 
 \item 
 Changed all instances of \code{pet} to \code{pe} in read parameter specification, and renamed getPETSizes() to getPESizes().
@@ -25,7 +25,7 @@ Added support for custom column specification in getBestTest(), combineTests().
 Added support for custom key/name specification in detailRanges() for non-human/mouse systems.
 
 \item 
-Added support for strand-specific read extraction in readParam(), strand-specific counting in windowCounts(), regionCounts() via strandedCounts().
+Added support for strand-specific read extraction in readParam(), strand-specific counting via strandedCounts().
 
 \item 
 Added strand-awareness to mergeWindows(). Added protection against stranded inputs in extractReads(), detailRanges().
