@@ -19,6 +19,12 @@ Changed default window width in windowCounts() to 50 bp, default filter to 10.
 Changed all instances of \code{pet} to \code{pe} in read parameter specification, and renamed getPETSizes() to getPESizes().
 
 \item 
+Removed the redundant rescue.pairs parameter in readParam().
+
+\item
+Added fast.pe parameter in readParam(), for fast paired-end data extraction. Added dumpPE() to pre-process paired-end BAM files for fast downstream extraction.
+
+\item 
 Added support for custom column specification in getBestTest(), combineTests().
 
 \item
@@ -28,10 +34,7 @@ Added support for custom key/name specification in detailRanges() for non-human/
 Added support for strand-specific read extraction in readParam(), strand-specific counting via strandedCounts().
 
 \item 
-Added strand-awareness to mergeWindows(). Added protection against stranded inputs in extractReads(), detailRanges().
-
-\item 
-Removed the redundant rescue.pairs parameter in readParam().
+Added strand-awareness to mergeWindows(). Added protection against stranded input regions in extractReads(), detailRanges().
 
 \item
 Changed algorithm for splitting of large peaks in mergeWindows().
@@ -49,7 +52,10 @@ Switched to fragment midpoint for binning of paired-end data in windowCounts().
 Added support for lists of library-specific readParam objects in windowCounts(), regionCounts(), correlateReads().
 
 \item 
-Added support for variable read extension lengths between libraries in windowCounts(), regionCounts().
+Added makeExtVector(), to support variable read extension lengths between libraries in windowCounts(), regionCounts().
+
+\item
+Added support for read extension within extractReads().
 
 \item 
 Updated the user's guide to reflect new and modified functions.
