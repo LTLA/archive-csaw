@@ -13,8 +13,8 @@ consolidateSizes(data.list, result.list, equiweight=TRUE,
 \item{data.list}{a list of \code{SummarizedExperiment} objects, produced by \code{\link{windowCounts}}; or, a list of integer vectors (see details)}
 \item{result.list}{a list of data frames containing the DB test results for each entry of \code{data.list}}
 \item{equiweight}{a logical scalar indicating whether equal weighting from each window size should be enforced}
-\item{merge.arg}{a list of parameters to pass to \code{\link{mergeWindows}} when \code{FUN=NULL}}
-\item{combine.arg}{a list of parameters to pass to \code{\link{combineTests}}}
+\item{merge.args}{a list of parameters to pass to \code{\link{mergeWindows}} when \code{FUN=NULL}}
+\item{combine.args}{a list of parameters to pass to \code{\link{combineTests}}}
 \item{region}{a \code{GRanges} object to supply when \code{data.list} is a list of integer vectors}
 }
 
