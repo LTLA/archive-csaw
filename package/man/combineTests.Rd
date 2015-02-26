@@ -86,6 +86,8 @@ Simes RJ (1986). An improved Bonferroni procedure for multiple tests of signific
 
 Benjamini Y and Hochberg Y (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{J. R. Stat. Soc. Series B} 57, 289-300. 
 
+Benjamini Y and Hochberg Y (1997). Multiple hypotheses testing with weights. \emph{Scand. J. Stat.} 24, 407-418.
+
 Lun ATL and Smyth GK (2014). De novo detection of differentially bound regions for ChIP-seq data using peaks and windows: controlling error rates correctly. \emph{Nucleic Acids Res.} 42, e95
 }
 
