@@ -11,6 +11,7 @@ export(csawUsersGuide,
 	normalizeCounts, 
 	getWidths, scaledAverage, findMaxima, filterWindows,
 	combineTests, getBestTest, mergeWindows,
+	consolidateSizes, upweightSummit,
 	detailRanges,
 	extractReads)
 
