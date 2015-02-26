@@ -1,4 +1,4 @@
-consolidateSizes <- function(data.list, result.list, equiweight=TRUE, FUN=NULL, 
+consolidateSizes <- function(data.list, result.list, equiweight=TRUE, 
     merge.args=list(tol=1000), combine.args=list(), region) 
 # Consolidates results for multiple window sizes into a result for the
 # genomic region over which those windows are tiled. Returns the combined
@@ -30,10 +30,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE, FUN=NULL,
 		all.ranges <- list()
 		for (x in 1:nset) { all.ranges[[x]] <- rowData(data.list[[x]]) }
 		all.ranges <- do.call(c, all.ranges)
-		if (is.null(FUN)) { FUN <- function(x) { do.call(mergeWindows, c(merge.args, regions=x)) } }
-		merged <- FUN(all.ranges)
-		if (! ("id" %in% names(merged) && "region" %in% names(merged)) ) { stop("FUN must yield a list with elements 'id' and 'region'") }
-		if (any(merged$id <= 0L)) { stop("merged IDs must be positive integers") }
+		merged <- do.call(mergeWindows, c(merge.args, regions=all.ranges)) 
 	} else {
 		if (missing(region)) { 
 			warning("region should be supplied when clustering is manually performed") 
