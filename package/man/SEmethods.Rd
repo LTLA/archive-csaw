@@ -1,8 +1,6 @@
 \name{SEmethods}
 \alias{normalize,SummarizedExperiment-method}
 \alias{normalize}
-\alias{average,SummarizedExperiment-method}
-\alias{average}
 \alias{asDGEList,SummarizedExperiment-method}
 \alias{asDGEList}
 

@@ -48,3 +48,5 @@ out[1:2] # Doesn't recalculate, which is correct.
 }
 
 \author{Aaron Lun}
+
+\keyword{counting}

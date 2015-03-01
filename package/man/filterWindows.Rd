@@ -101,3 +101,4 @@ head(stats$filter)
 keep <- stats$filter > log2(3)
 }
 
+\keyword{filtering}

@@ -79,3 +79,5 @@ cons <- consolidateSizes(list(subjectHits(llap), subjectHits(mlap), subjectHits(
     region=of.interest)
 cons$table
 }
+
+\keyword{clustering}

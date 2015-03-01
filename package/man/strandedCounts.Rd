@@ -79,3 +79,5 @@ summary(findMaxima(rowData(out), range=100, metric=rwsms, ignore.strand=FALSE))
 \author{
 Aaron Lun
 }
+
+\keyword{counting}

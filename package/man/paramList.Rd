@@ -56,3 +56,4 @@ checkList(reformList(plist, minq=10))
 \code{\link{reform}}
 }
 
+\keyword{counting}

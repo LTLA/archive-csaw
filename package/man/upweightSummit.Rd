@@ -57,3 +57,5 @@ summits <- sample(5, nwin, replace=TRUE)==1L
 weights <- upweightSummit(ids, summits)
 split(data.frame(summits, weights), ids)
 }
+
+\keyword{testing}

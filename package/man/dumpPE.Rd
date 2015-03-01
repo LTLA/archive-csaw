@@ -29,7 +29,6 @@ The idea is to generate a pre-filtered BAM file by specifying the appropriate se
 The output BAM file can then be efficiently analyzed with, e.g., \code{\link{windowCounts}} with \code{fast.pe=TRUE}.
 This avoids the need to load and match read names in every function.
 Note that all alignment-specific information is lost, e.g., MAPQ scores, duplicate information, CIGAR strings.
-
 }
 
 \seealso{
@@ -69,3 +68,5 @@ reg2 <- extractReads(last.reg, outBam, param=reform(xparam, fast.pe=TRUE))
 stopifnot(identical(sort(reg1), sort(reg2)))
 unlink("whee.bam")
 }
+
+\keyword{counting}
