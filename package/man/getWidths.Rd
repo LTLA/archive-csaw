@@ -21,8 +21,10 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 % It's a direct addition of width and fragment length, minus 1. If you have a 100 bp interval,
 % and you slide a 50 bp fragment along the genome until it hits the interval, there
 % are 149 positions where the fragment overlaps the interval. So, the effective width
-% is actually 149 bp. This logic holds regardless of which strand the read was from, so
-% there's no need to adjust things if data$param$forward is not NA.
+% is actually 149 bp (compared to the case where ext=1; imagine the interval spanned by the
+% midpoints of the fragments, or by the start or end of the fragment for forward or reverse
+% strand reads, respectively). This logic holds regardless of which strand the read was from, 
+% so there's no need to adjust things if data$param$forward is not NA.
 
 The fragment length is taken from \code{exptData(data)$final.ext}, if it is not \code{NA}.
 Otherwise, for single-end data, it is taken from \code{data$ext}.
