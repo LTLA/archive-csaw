@@ -24,6 +24,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1,
 This function aggregates the coverage profile around the specified regions.
 The shape of this profile can guide an intelligent choice of the window size in \code{\link{windowCounts}}, or to determine if region expansion is necessary in \code{\link{regionCounts}}.
 For the former, restricting the \code{regions} to locally maximal windows with \code{\link{findMaxima}} is recommended prior to use of \code{profileSites}.
+The function can be also used to examine average coverage around known features of interest, like genes.
 
 The profile records the number of fragments overlapping each base within \code{range} of the start of all \code{regions}.
 Single-end reads are directionally extended to \code{ext} to impute the fragment (see \code{\link{windowCounts}} for more details).
@@ -60,7 +61,8 @@ Aaron Lun
 
 \seealso{
 \code{\link{findMaxima}},
-\code{\link{windowCounts}}
+\code{\link{windowCounts}},
+\code{\link{wwhm}}
 }
 
 \examples{
