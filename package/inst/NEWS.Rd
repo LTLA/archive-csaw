@@ -10,7 +10,7 @@ Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison
 Added findMaxima() to identify locally maximal windows.
 
 \item 
-Added profileSites() to examine the coverage profile around specified regions.
+Added profileSites(), wwhm() to examine the coverage profile around specified regions.
 
 \item
 Changed default window width in windowCounts() to 50 bp, default filter to 10.
@@ -26,6 +26,12 @@ Added fast.pe parameter in readParam(), for fast paired-end data extraction. Add
 
 \item 
 Added support for custom column specification in getBestTest(), combineTests().
+
+\item 
+Added consolidateSizes(), to consolidate DB results from multiple window sizes.
+
+\item
+Added upweightSummits(), to compute weights favouring high-abundance windows during Simes.
 
 \item
 Added support for custom key/name specification in detailRanges() for non-human/mouse systems.
