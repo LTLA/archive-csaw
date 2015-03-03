@@ -42,7 +42,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	# Need to account for the possible loss of a centre point from the front when
 	# the shift is non-zero, because the corresponding window is wholly outside the
 	# chromosome (i.e., shifted so that the width of the window is before position
-	# 1, so width > shift; left+right+1 > left; right+1 > 0; right >= 0).
+	# 1; can't happen if width > shift; left+right+1 > left; right+1 > 0; right >= 0).
 	at.start <- right >= 0L 
 	first.pt <- ifelse(at.start, 1L, spacing+1L)
 
@@ -60,7 +60,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		# Accounting for the possible gain of a centrepoint from the back when
 		# shift/left is non-zero, i.e., does the shift bring the next centre point
 		# (floor((outlen-1)/spacing)*spacing+1+spacing) under outlen?  [note that 
-		# floor - original for a float is equal to the negative remainder].
+		# floor - original for (outlen-1) is equal to the negative remainder].
 		at.end <- spacing - (outlen - 1L) %% spacing <= left
 		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
 		outcome <- matrix(0L, total.pts, nbam) 
