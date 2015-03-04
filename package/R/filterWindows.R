@@ -7,23 +7,22 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 #
 # written by Aaron Lun
 # created 18 February 2015	
-# last modified 21 February 2015
+# last modified 4 March 2015
 {
 	type <- match.arg(type, c("global", "local", "control", "proportion"))
 	abundances <- scaledAverage(asDGEList(data), scale=1, prior.count=prior.count)
 
 	if (type=="proportion") {
-		spacing <- exptData(data)$spacing
-		if (is.null(spacing)) { stop("proportion-based filtering only works with window/bin counts") }
-		genome.windows <- sum(seqlengths(rowData(data))/spacing) # To account for those lost by filter>1 in windowCounts.
+		genome.windows <- .getWindowNum(data)
 		relative.rank <- 1 - (rank(abundances) - 1)/genome.windows
 		return(list(abundances=abundances, filter=relative.rank))
 
 	} else {
-		if (missing(background) && type=="global") { 
-			filter.stat <- abundances  - median(abundances)
+		if (missing(background) && type=="global") {
+			filter.stat <- abundances  - .getGlobalBg(data, abundances, prior.count)
 			return(list(abundances=abundances, filter=filter.stat))
 		} 
+
 		bwidth <- getWidths(background, len=len)
 		dwidth <- getWidths(data, len=len)
 
@@ -31,7 +30,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 			.checkLibSizes(data, background)
 			relative.width <- median(bwidth)/median(dwidth)
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
-			filter.stat <- abundances - median(bg.ab)
+			filter.stat <- abundances - .getGlobalBg(binned, bg.ab, prior.count)
 			
 		} else if (type=="local") {
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
@@ -66,4 +65,23 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 		stop("data and background totals should be identical")
 	}
 	return(NULL)
+}
+
+.getWindowNum <- function(data) 
+# Get the total number of windows, to account for those not 
+# reported in windowCounts (for empty windows/those lost by filter > 1).
+{
+	spacing <- exptData(data)$spacing
+	if (is.null(spacing)) { stop("failed to find spacing for windows") }
+	sum(ceiling(seqlengths(rowData(data))/spacing)) 
+}
+
+.getGlobalBg <- function(data, ab, prior.count)
+# Getting the quantile of those windows that were seen, corresponding to 
+# the median of all windows in the genome.
+{
+	prop.seen <- length(ab)/.getWindowNum(data)
+ 	if (prop.seen > 1) { return(median(ab)) }
+	if (prop.seen < 0.5) { return(aveLogCPM(rbind(integer(ncol(data))), lib.size=data$totals, prior.count=prior.count)) }
+	quantile(ab, probs=1 - 0.5/prop.seen) 
 }
