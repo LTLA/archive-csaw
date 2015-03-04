@@ -32,74 +32,134 @@ multiple methods tables found for ‘score’
 > # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
 > 
 > checkranges <- function(ref, up, down) {
-+ 	by.gene <- split(ref, ref$internal)
-+ 	mclapply(names(by.gene), FUN=function(x) { 
-+ 		entry <- by.gene[[x]]
-+ 		all.exons <- entry[entry$exon >= 1L]
-+ 		true.gb <- range(all.exons)
-+ 		cur.gb <- entry[entry$exon==-1L]
-+ 		names(cur.gb) <- elementMetadata(cur.gb) <- NULL
-+ 		if (!identical(cur.gb, true.gb)) { 
-+ 			print(all.exons)
-+ 			print(cur.gb)
-+ 			print(true.gb)
-+ 			stop("gene body identification is wrong") }
++ 	exonic <- ref[ref$exon>=1L]
++ 	gb <- unlist(range(split(exonic, exonic$internal)))
++ 	test.gb <- ref[ref$exon==-1L]
++ 	names(test.gb) <- test.gb$internal
++ 	elementMetadata(test.gb) <- NULL
++ 	if (!identical(gb, test.gb)) { stop("differences in gene body identification") }
 + 
-+ 		promoter <- entry[entry$exon==0L]
-+ 		first.exon <- entry[entry$exon==1L]
-+ 		if (!identical(seqnames(promoter), seqnames(first.exon)) || !identical(strand(promoter), strand(first.exon))) {
-+ 			stop("promoter characteristics are not consistent with exons") }
-+ 		chrlen <- seqlengths(ref)[[runValue(seqnames(promoter))]]
++ 	promoters <- ref[ref$exon==0L]
++  	first.exon <- ref[ref$exon==1L]
++ 	is.forward <- as.logical(strand(first.exon)=="+")
++ 	new.prom <- first.exon
++ 	suppressWarnings(start(new.prom) <- ifelse(is.forward, start(first.exon) - up, end(first.exon) - down + 1L))
++ 	suppressWarnings(end(new.prom) <- ifelse(is.forward, start(first.exon) + down - 1L, end(first.exon) + up))
++ 	new.prom <- trim(new.prom)
++ 	new.prom$exon <- 0L
++ 	if (!identical(new.prom, promoters)) { stop("differences in promoter identification") }
 + 
-+ 		if (as.character(runValue(strand(entry)))=="+") { 
-+ 			if (is.unsorted(start(all.exons)[order(all.exons$exon)])) { 
-+ 				print(all.exons)
-+ 				stop("exon numbering is wrong for forward-strand gene") 
-+ 			}
-+ 			if (max(1L, start(first.exon) - up) != start(promoter) || min(chrlen, start(first.exon) + down - 1L) != end(promoter)) {
-+ 				print(promoter)
-+ 				print(first.exon)
-+ 				stop("promoter generation is wrong for forward-strand gene") }
-+ 		} else {
-+ 			if (is.unsorted(end(all.exons)[order(all.exons$exon, decreasing=TRUE)])) { 
-+ 				print(all.exons)
-+ 				stop("exon numbering is wrong for reverse strand") 
-+ 			}
-+ 			if (max(1L, end(first.exon) - down + 1L) != start(promoter) || min(chrlen, end(first.exon) + up) != end(promoter)) {
-+ 				print(promoter)
-+ 				print(first.exon)
-+ 				stop("promoter generation is wrong for reverse-strand gene") }
-+ 		}
-+ 		return(0)
-+ 	}, mc.cores=8)
-+ 	return(ref)
++ 	forward.exons <- exonic[strand(exonic)=="+"]
++ 	o <- order(forward.exons$internal, forward.exons$exon)
++ 	n <- length(o)
++ 	forward.exons <- forward.exons[o]
++ 	out.of.order <- c(FALSE, forward.exons$internal[-1]==forward.exons$internal[-n] & 
++ 		start(forward.exons)[-n] > start(forward.exons)[-1])
++ 	if (any(out.of.order)) { stop("exon ranking for forward-strand genes is incorrect") }
++ 
++ 	reverse.exons <- exonic[strand(exonic)=="-"]
++ 	o <- order(reverse.exons$internal, reverse.exons$exon)
++ 	n <- length(o)
++ 	reverse.exons <- reverse.exons[o]
++ 	out.of.order <- c(FALSE, reverse.exons$internal[-1]==reverse.exons$internal[-n] & 
++ 		end(reverse.exons)[-n] < end(reverse.exons)[-1])
++ 	if (any(out.of.order)) { stop("exon ranking for reverse-strand genes is incorrect") }
++ 	return(promoters)
 + }
 > 
 > up <- 3000
 > down <- 1000
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 286315 ranges and 3 metadata columns:
-            seqnames                 ranges strand   |      symbol      exon
-               <Rle>              <IRanges>  <Rle>   | <character> <integer>
-  100009600     chr9   [21062393, 21062717]      -   |       Zglp1         7
-  100009600     chr9   [21062894, 21062987]      -   |       Zglp1         6
-  100009600     chr9   [21063314, 21063396]      -   |       Zglp1         5
-  100009600     chr9   [21066024, 21066377]      -   |       Zglp1         4
-  100009600     chr9   [21066940, 21067925]      -   |       Zglp1         3
-        ...      ...                    ...    ... ...         ...       ...
-      99889     chr3 [ 85785218,  85887518]      -   |      Arfip1        -1
-      99890     chr3 [110246104, 110250999]      -   |       Prmt6        -1
-      99899     chr3 [151730923, 151749959]      -   |       Ifi44        -1
-      99929     chr3 [ 65528447,  65555518]      +   |      Tiparp        -1
-      99982     chr4 [136550533, 136602723]      -   |       Kdm1a        -1
+GRanges object with 23885 ranges and 3 metadata columns:
+            seqnames                 ranges strand   |        symbol      exon
+               <Rle>              <IRanges>  <Rle>   |   <character> <integer>
+  100009600     chr9 [ 21074497,  21078496]      -   |         Zglp1         0
+  100009609     chr7 [ 84963010,  84967009]      -   |       Vmn2r65         0
+  100009614    chr10 [ 77708446,  77712445]      +   |       Gm10024         0
+  100009664    chr11 [ 45805083,  45809082]      +   | F630206G17Rik         0
+     100012     chr4 [144161652, 144165651]      -   |          Oog3         0
+        ...      ...                    ...    ... ...           ...       ...
+      99889     chr3 [ 85886519,  85890518]      -   |        Arfip1         0
+      99890     chr3 [110250000, 110253999]      -   |         Prmt6         0
+      99899     chr3 [151748960, 151752959]      -   |         Ifi44         0
+      99929     chr3 [ 65525447,  65529446]      +   |        Tiparp         0
+      99982     chr4 [136601724, 136605723]      -   |         Kdm1a         0
              internal
             <integer>
   100009600         1
+  100009609         2
+  100009614         3
+  100009664         4
+     100012         5
+        ...       ...
+      99889     23881
+      99890     23882
+      99899     23883
+      99929     23884
+      99982     23885
+  -------
+  seqinfo: 66 sequences (1 circular) from mm10 genome
+> 
+> up <- 2000
+> down <- 500
+> ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
+> checkranges(ref, up, down)
+GRanges object with 23885 ranges and 3 metadata columns:
+            seqnames                 ranges strand   |        symbol      exon
+               <Rle>              <IRanges>  <Rle>   |   <character> <integer>
+  100009600     chr9 [ 21074997,  21077496]      -   |         Zglp1         0
+  100009609     chr7 [ 84963510,  84966009]      -   |       Vmn2r65         0
+  100009614    chr10 [ 77709446,  77711945]      +   |       Gm10024         0
+  100009664    chr11 [ 45806083,  45808582]      +   | F630206G17Rik         0
+     100012     chr4 [144162152, 144164651]      -   |          Oog3         0
+        ...      ...                    ...    ... ...           ...       ...
+      99889     chr3 [ 85887019,  85889518]      -   |        Arfip1         0
+      99890     chr3 [110250500, 110252999]      -   |         Prmt6         0
+      99899     chr3 [151749460, 151751959]      -   |         Ifi44         0
+      99929     chr3 [ 65526447,  65528946]      +   |        Tiparp         0
+      99982     chr4 [136602224, 136604723]      -   |         Kdm1a         0
+             internal
+            <integer>
   100009600         1
+  100009609         2
+  100009614         3
+  100009664         4
+     100012         5
+        ...       ...
+      99889     23881
+      99890     23882
+      99899     23883
+      99929     23884
+      99982     23885
+  -------
+  seqinfo: 66 sequences (1 circular) from mm10 genome
+> 
+> up <- 5000
+> down <- 0
+> ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
+> checkranges(ref, up, down)
+GRanges object with 23885 ranges and 3 metadata columns:
+            seqnames                 ranges strand   |        symbol      exon
+               <Rle>              <IRanges>  <Rle>   |   <character> <integer>
+  100009600     chr9 [ 21075497,  21080496]      -   |         Zglp1         0
+  100009609     chr7 [ 84964010,  84969009]      -   |       Vmn2r65         0
+  100009614    chr10 [ 77706446,  77711445]      +   |       Gm10024         0
+  100009664    chr11 [ 45803083,  45808082]      +   | F630206G17Rik         0
+     100012     chr4 [144162652, 144167651]      -   |          Oog3         0
+        ...      ...                    ...    ... ...           ...       ...
+      99889     chr3 [ 85887519,  85892518]      -   |        Arfip1         0
+      99890     chr3 [110251000, 110255999]      -   |         Prmt6         0
+      99899     chr3 [151749960, 151754959]      -   |         Ifi44         0
+      99929     chr3 [ 65523447,  65528446]      +   |        Tiparp         0
+      99982     chr4 [136602724, 136607723]      -   |         Kdm1a         0
+             internal
+            <integer>
   100009600         1
-  100009600         1
-  100009600         1
+  100009609         2
+  100009614         3
+  100009664         4
+     100012         5
         ...       ...
       99889     23881
       99890     23882
@@ -112,9 +172,10 @@ GRanges object with 286315 ranges and 3 metadata columns:
 > ########################################################################################
 > ### Making a comparator function, to check proper string construction.
 > 
-> comp <- function(incoming, ref, dist=5000) {
+> comp <- function(incoming, up, down, dist=5000) {
++ 	ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 + 	olap <- findOverlaps(incoming, ref)	
-+ 	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist)	
++ 	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist, promoter=c(up, down))	
 + 
 + 	.getmode <- function(collected.modes) {
 + 		collected.modes <- sort(collected.modes)
@@ -199,27 +260,27 @@ GRanges object with 286315 ranges and 3 metadata columns:
 + 		stopifnot(all(nchar(gsub(",", "", unlist(new.anno)))==0L))
 + 	}
 + 	
-+ 	return(data.frame(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
++ 	return(c(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
 + }
 > 
 > set.seed(1847382)
 > chromos <- seqlengths(ref)
 > chromos <- chromos[chromos > 1e7]
 > 
-> all.win <- generateWindows(chromos*1.8, 1e3, 1000)
-> comp(all.win, ref)
-     O    L    R
-1 8376 3890 3884
+> all.win <- generateWindows(chromos*1.8, 1e2, 1000)
+> comp(all.win, up=3000, down=1000)
+  O   L   R 
+841 371 403 
 > 
-> all.win <- generateWindows(chromos*1.8, 1e3, 2000)
-> comp(all.win, ref, dist=2000)
-     O    L    R
-1 8666 2360 2402
+> all.win <- generateWindows(chromos*1.8, 1e2, 2000)
+> comp(all.win, up=3000, down=1000, dist=2000)
+  O   L   R 
+830 223 233 
 > 
-> all.win <- generateWindows(chromos*1.8, 1e3, 2000)
-> comp(all.win, ref, dist=10000)
-     O    L    R
-1 8455 5415 5339
+> all.win <- generateWindows(chromos*1.8, 1e2, 2000)
+> comp(all.win, up=5000, down=500, dist=10000)
+  O   L   R 
+894 530 573 
 > 
 > ########################################################################################
 > #### Checking key, name field options.
@@ -228,23 +289,30 @@ GRanges object with 286315 ranges and 3 metadata columns:
 + 		    orgdb=org.Mm.eg.db, name.field=c("ENTREZID"))
 > head(output$overlap, 30)
  [1] ""           ""           ""           ""           ""          
- [6] ""           ""           ""           ""           ""          
-[11] ""           ""           ""           ""           ""          
-[16] ""           "497097|I|-" "497097|I|-" "497097|I|-" "497097|I|-"
-[21] ""           ""           "19888|I|-"  ""           ""          
-[26] "21399|I|+"  "58175|I|-"  ""           ""           ""          
+ [6] "320492|I|+" ""           ""           ""           ""          
+[11] "241035|I|-" "226922|I|-" ""           "210933|I|-" "210933|0|-"
+[16] ""           ""           ""           "19076|I|-"  "226970|I|+"
+[21] "16764|I|-"  "18143|I|+"  ""           "70676|I|+"  ""          
+[26] ""           ""           ""           ""           "81898|I|-" 
 > 
 > output <- detailRanges(all.win, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
 + 	    orgdb=org.Mm.eg.db, name.field=c("SYMBOL", "ENTREZID"))
 > head(output$overlap, 30)
- [1] ""                ""                ""                ""               
- [5] ""                ""                ""                ""               
- [9] ""                ""                ""                ""               
-[13] ""                ""                ""                ""               
-[17] "Xkr4;497097|I|-" "Xkr4;497097|I|-" "Xkr4;497097|I|-" "Xkr4;497097|I|-"
-[21] ""                ""                "Rp1;19888|I|-"   ""               
-[25] ""                "Tcea1;21399|I|+" "Rgs20;58175|I|-" ""               
-[29] ""                ""               
+ [1] ""                         ""                        
+ [3] ""                         ""                        
+ [5] ""                         "A830018L16Rik;320492|I|+"
+ [7] ""                         ""                        
+ [9] ""                         ""                        
+[11] "Pkhd1;241035|I|-"         "Kcnq5;226922|I|-"        
+[13] ""                         "Bai3;210933|I|-"         
+[15] "Bai3;210933|0|-"          ""                        
+[17] ""                         ""                        
+[19] "Prim2;19076|I|-"          "Arhgef4;226970|I|+"      
+[21] "Aff3;16764|I|-"           "Npas2;18143|I|+"         
+[23] ""                         "Gulp1;70676|I|+"         
+[25] ""                         ""                        
+[27] ""                         ""                        
+[29] ""                         "Sf3b1;81898|I|-"         
 > 
 > suppressPackageStartupMessages(require(TxDb.Scerevisiae.UCSC.sacCer3.sgdGene))
 > suppressPackageStartupMessages(require(org.Sc.sgd.db))
@@ -287,5 +355,5 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > # End.
 > 
 > proc.time()
-    user   system  elapsed 
-5140.806   14.782  719.827 
+   user  system elapsed 
+278.860   9.693  98.648 

@@ -11,47 +11,39 @@ require(parallel)
 # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
 
 checkranges <- function(ref, up, down) {
-	by.gene <- split(ref, ref$internal)
-	mclapply(names(by.gene), FUN=function(x) { 
-		entry <- by.gene[[x]]
-		all.exons <- entry[entry$exon >= 1L]
-		true.gb <- range(all.exons)
-		cur.gb <- entry[entry$exon==-1L]
-		names(cur.gb) <- elementMetadata(cur.gb) <- NULL
-		if (!identical(cur.gb, true.gb)) { 
-			print(all.exons)
-			print(cur.gb)
-			print(true.gb)
-			stop("gene body identification is wrong") }
+	exonic <- ref[ref$exon>=1L]
+	gb <- unlist(range(split(exonic, exonic$internal)))
+	test.gb <- ref[ref$exon==-1L]
+	names(test.gb) <- test.gb$internal
+	elementMetadata(test.gb) <- NULL
+	if (!identical(gb, test.gb)) { stop("differences in gene body identification") }
 
-		promoter <- entry[entry$exon==0L]
-		first.exon <- entry[entry$exon==1L]
-		if (!identical(seqnames(promoter), seqnames(first.exon)) || !identical(strand(promoter), strand(first.exon))) {
-			stop("promoter characteristics are not consistent with exons") }
-		chrlen <- seqlengths(ref)[[runValue(seqnames(promoter))]]
+	promoters <- ref[ref$exon==0L]
+ 	first.exon <- ref[ref$exon==1L]
+	is.forward <- as.logical(strand(first.exon)=="+")
+	new.prom <- first.exon
+	suppressWarnings(start(new.prom) <- ifelse(is.forward, start(first.exon) - up, end(first.exon) - down + 1L))
+	suppressWarnings(end(new.prom) <- ifelse(is.forward, start(first.exon) + down - 1L, end(first.exon) + up))
+	new.prom <- trim(new.prom)
+	new.prom$exon <- 0L
+	if (!identical(new.prom, promoters)) { stop("differences in promoter identification") }
 
-		if (as.character(runValue(strand(entry)))=="+") { 
-			if (is.unsorted(start(all.exons)[order(all.exons$exon)])) { 
-				print(all.exons)
-				stop("exon numbering is wrong for forward-strand gene") 
-			}
-			if (max(1L, start(first.exon) - up) != start(promoter) || min(chrlen, start(first.exon) + down - 1L) != end(promoter)) {
-				print(promoter)
-				print(first.exon)
-				stop("promoter generation is wrong for forward-strand gene") }
-		} else {
-			if (is.unsorted(end(all.exons)[order(all.exons$exon, decreasing=TRUE)])) { 
-				print(all.exons)
-				stop("exon numbering is wrong for reverse strand") 
-			}
-			if (max(1L, end(first.exon) - down + 1L) != start(promoter) || min(chrlen, end(first.exon) + up) != end(promoter)) {
-				print(promoter)
-				print(first.exon)
-				stop("promoter generation is wrong for reverse-strand gene") }
-		}
-		return(0)
-	}, mc.cores=8)
-	return(ref)
+	forward.exons <- exonic[strand(exonic)=="+"]
+	o <- order(forward.exons$internal, forward.exons$exon)
+	n <- length(o)
+	forward.exons <- forward.exons[o]
+	out.of.order <- c(FALSE, forward.exons$internal[-1]==forward.exons$internal[-n] & 
+		start(forward.exons)[-n] > start(forward.exons)[-1])
+	if (any(out.of.order)) { stop("exon ranking for forward-strand genes is incorrect") }
+
+	reverse.exons <- exonic[strand(exonic)=="-"]
+	o <- order(reverse.exons$internal, reverse.exons$exon)
+	n <- length(o)
+	reverse.exons <- reverse.exons[o]
+	out.of.order <- c(FALSE, reverse.exons$internal[-1]==reverse.exons$internal[-n] & 
+		end(reverse.exons)[-n] < end(reverse.exons)[-1])
+	if (any(out.of.order)) { stop("exon ranking for reverse-strand genes is incorrect") }
+	return(promoters)
 }
 
 up <- 3000
@@ -59,12 +51,23 @@ down <- 1000
 ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 checkranges(ref, up, down)
 
+up <- 2000
+down <- 500
+ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
+checkranges(ref, up, down)
+
+up <- 5000
+down <- 0
+ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
+checkranges(ref, up, down)
+
 ########################################################################################
 ### Making a comparator function, to check proper string construction.
 
-comp <- function(incoming, ref, dist=5000) {
+comp <- function(incoming, up, down, dist=5000) {
+	ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 	olap <- findOverlaps(incoming, ref)	
-	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist)	
+	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist, promoter=c(up, down))	
 
 	.getmode <- function(collected.modes) {
 		collected.modes <- sort(collected.modes)
@@ -149,21 +152,21 @@ comp <- function(incoming, ref, dist=5000) {
 		stopifnot(all(nchar(gsub(",", "", unlist(new.anno)))==0L))
 	}
 	
-	return(data.frame(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
+	return(c(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
 }
 
 set.seed(1847382)
 chromos <- seqlengths(ref)
 chromos <- chromos[chromos > 1e7]
 
-all.win <- generateWindows(chromos*1.8, 1e3, 1000)
-comp(all.win, ref)
+all.win <- generateWindows(chromos*1.8, 1e2, 1000)
+comp(all.win, up=3000, down=1000)
 
-all.win <- generateWindows(chromos*1.8, 1e3, 2000)
-comp(all.win, ref, dist=2000)
+all.win <- generateWindows(chromos*1.8, 1e2, 2000)
+comp(all.win, up=3000, down=1000, dist=2000)
 
-all.win <- generateWindows(chromos*1.8, 1e3, 2000)
-comp(all.win, ref, dist=10000)
+all.win <- generateWindows(chromos*1.8, 1e2, 2000)
+comp(all.win, up=5000, down=500, dist=10000)
 
 ########################################################################################
 #### Checking key, name field options.
