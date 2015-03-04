@@ -370,30 +370,6 @@ GRanges object with 43 ranges and 0 metadata columns:
 [1] ""                        ""                       
 [3] ""                        "1700007G11Rik|5|+[2890]"
 [5] ""                        ""                       
->      
-> output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, promoter=c(2000, 500))
-> head(output$overlap)
-[1] "Nrxn3|8|+"         ""                  ""                 
-[4] "1700007G11Rik|I|+" "Mannr|2|+"         ""                 
-> head(output$right)
-[1] "Nrxn3|9|+[3846]" "Rprm|1|-[2293]"  ""                ""               
-[5] ""                ""               
-> head(output$left)
-[1] ""                        ""                       
-[3] ""                        "1700007G11Rik|5|+[2890]"
-[5] ""                        ""                       
-> 
-> output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, dist=3000)
-> head(output$overlap)
-[1] "Nrxn3|8|+"         ""                  ""                 
-[4] "1700007G11Rik|I|+" "Mannr|2|+"         ""                 
-> head(output$right)
-[1] ""               "Rprm|1|-[2293]" ""               ""              
-[5] ""               ""              
-> head(output$left)
-[1] ""                        ""                       
-[3] ""                        "1700007G11Rik|5|+[2890]"
-[5] ""                        ""                       
 > 
 > # Pulling out some reads. 
 > extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
@@ -469,4 +445,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 24.725   0.294  25.040 
+ 18.056   0.222  18.265 

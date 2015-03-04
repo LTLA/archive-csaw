@@ -85,16 +85,6 @@ output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db
 head(output$overlap)
 head(output$right)
 head(output$left)
-     
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, promoter=c(2000, 500))
-head(output$overlap)
-head(output$right)
-head(output$left)
-
-output <- detailRanges(current, TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, dist=3000)
-head(output$overlap)
-head(output$right)
-head(output$left)
 
 # Pulling out some reads. 
 extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
