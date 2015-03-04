@@ -1,0 +1,291 @@
+
+R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This tests the behaviour of the detailRanges function, by comparing the output of the
+> # strings to the output of the function proper.
+> 
+> suppressPackageStartupMessages(require(csaw))
+Warning message:
+multiple methods tables found for ‘score’ 
+> suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene))
+> suppressPackageStartupMessages(require(org.Mm.eg.db))
+> source("simsam.R")
+> require(parallel)
+> 
+> ########################################################################################
+> # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
+> 
+> checkranges <- function(ref, up, down) {
++ 	by.gene <- split(ref, ref$internal)
++ 	mclapply(names(by.gene), FUN=function(x) { 
++ 		entry <- by.gene[[x]]
++ 		all.exons <- entry[entry$exon >= 1L]
++ 		true.gb <- range(all.exons)
++ 		cur.gb <- entry[entry$exon==-1L]
++ 		names(cur.gb) <- elementMetadata(cur.gb) <- NULL
++ 		if (!identical(cur.gb, true.gb)) { 
++ 			print(all.exons)
++ 			print(cur.gb)
++ 			print(true.gb)
++ 			stop("gene body identification is wrong") }
++ 
++ 		promoter <- entry[entry$exon==0L]
++ 		first.exon <- entry[entry$exon==1L]
++ 		if (!identical(seqnames(promoter), seqnames(first.exon)) || !identical(strand(promoter), strand(first.exon))) {
++ 			stop("promoter characteristics are not consistent with exons") }
++ 		chrlen <- seqlengths(ref)[[runValue(seqnames(promoter))]]
++ 
++ 		if (as.character(runValue(strand(entry)))=="+") { 
++ 			if (is.unsorted(start(all.exons)[order(all.exons$exon)])) { 
++ 				print(all.exons)
++ 				stop("exon numbering is wrong for forward-strand gene") 
++ 			}
++ 			if (max(1L, start(first.exon) - up) != start(promoter) || min(chrlen, start(first.exon) + down - 1L) != end(promoter)) {
++ 				print(promoter)
++ 				print(first.exon)
++ 				stop("promoter generation is wrong for forward-strand gene") }
++ 		} else {
++ 			if (is.unsorted(end(all.exons)[order(all.exons$exon, decreasing=TRUE)])) { 
++ 				print(all.exons)
++ 				stop("exon numbering is wrong for reverse strand") 
++ 			}
++ 			if (max(1L, end(first.exon) - down + 1L) != start(promoter) || min(chrlen, end(first.exon) + up) != end(promoter)) {
++ 				print(promoter)
++ 				print(first.exon)
++ 				stop("promoter generation is wrong for reverse-strand gene") }
++ 		}
++ 		return(0)
++ 	}, mc.cores=8)
++ 	return(ref)
++ }
+> 
+> up <- 3000
+> down <- 1000
+> ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
+> checkranges(ref, up, down)
+GRanges object with 286315 ranges and 3 metadata columns:
+            seqnames                 ranges strand   |      symbol      exon
+               <Rle>              <IRanges>  <Rle>   | <character> <integer>
+  100009600     chr9   [21062393, 21062717]      -   |       Zglp1         7
+  100009600     chr9   [21062894, 21062987]      -   |       Zglp1         6
+  100009600     chr9   [21063314, 21063396]      -   |       Zglp1         5
+  100009600     chr9   [21066024, 21066377]      -   |       Zglp1         4
+  100009600     chr9   [21066940, 21067925]      -   |       Zglp1         3
+        ...      ...                    ...    ... ...         ...       ...
+      99889     chr3 [ 85785218,  85887518]      -   |      Arfip1        -1
+      99890     chr3 [110246104, 110250999]      -   |       Prmt6        -1
+      99899     chr3 [151730923, 151749959]      -   |       Ifi44        -1
+      99929     chr3 [ 65528447,  65555518]      +   |      Tiparp        -1
+      99982     chr4 [136550533, 136602723]      -   |       Kdm1a        -1
+             internal
+            <integer>
+  100009600         1
+  100009600         1
+  100009600         1
+  100009600         1
+  100009600         1
+        ...       ...
+      99889     23881
+      99890     23882
+      99899     23883
+      99929     23884
+      99982     23885
+  -------
+  seqinfo: 66 sequences (1 circular) from mm10 genome
+> 
+> ########################################################################################
+> ### Making a comparator function, to check proper string construction.
+> 
+> comp <- function(incoming, ref, dist=5000) {
++ 	olap <- findOverlaps(incoming, ref)	
++ 	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist)	
++ 
++ 	.getmode <- function(collected.modes) {
++ 		collected.modes <- sort(collected.modes)
++ 		if (collected.modes[1]==-1L) {
++ 			if (length(collected.modes)==1L) { curmode <- "I" } 
++ 			collected.modes <- collected.modes[-1]
++ 		}
++ 		if (length(collected.modes)) {
++ 			consec.start <- which(c(TRUE, diff(collected.modes)!=1L))
++ 			consec.end <- c(consec.start[-1] - 1L, length(collected.modes))
++ 			all.strings <- ifelse(consec.start==consec.end, collected.modes[consec.start], paste0(collected.modes[consec.start], "-", collected.modes[consec.end]	))
++ 			curmode <- paste(all.strings, collapse=",")
++ 		}
++ 		return(curmode)
++ 	}
++ 
++ 	# Checking overlaps.
++ 	relevants <- split(subjectHits(olap), queryHits(olap))
++ 	test.anno <- mclapply(names(relevants), FUN=function(it) { 
++ 		actual.index <- as.integer(it)
++ 		by.gene <- split(relevants[[it]], ref$internal[relevants[[it]]])
++ 		cur.anno <- anno$overlap[actual.index]
++ 
++ 		# Assembling the string based on what's going on.
++ 		for (g in names(by.gene)) { 
++ 			collected.modes <- ref$exon[by.gene[[g]]]
++ 			curmode <- .getmode(collected.modes)
++ 			fstring <- paste(ref$symbol[by.gene[[g]][1]], curmode, strand(ref[by.gene[[g]][1]]), sep="|") 
++ 			if (!grepl(fstring, cur.anno, fixed=TRUE)) {
++ 				print(fstring)
++ 				print(cur.anno)
++ 				stop("could not find overlap")
++ 			} 
++ 			cur.anno <- sub(fstring, "", cur.anno, fixed=TRUE)
++ 		}
++ 		return(cur.anno)
++ 	}, mc.cores=8)
++ 	stopifnot(all(nchar(gsub(",", "", unlist(test.anno)))==0L))
++ 
++ 	# Checking left and right overlaps.
++ 	for (mode in 1:2) { 
++ 		if (mode==1L) { 
++ 			test.anno <- anno$left
++ 			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(start(incoming)-dist, start(incoming)-1L)), ref)	
++ 			relevant.x <- split(subjectHits(olap), queryHits(olap)) 
++ 		} else {
++ 			test.anno <- anno$right
++ 			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(end(incoming)+1L, end(incoming)+dist)), ref)	
++ 			relevant.x <- split(subjectHits(olap), queryHits(olap)) 
++ 		}
++ 
++ 		new.anno <- mclapply(names(relevant.x), FUN=function(it) { 
++ 			actual.index <- as.integer(it)
++ 			relevant.x[[it]] <- setdiff(relevant.x[[it]], relevants[[it]]) # Getting rid of the centers.
++ 			by.gene <- split(relevant.x[[it]], ref$internal[relevant.x[[it]]])
++ 			cur.anno <- test.anno[actual.index]
++ 
++ 			# Assembling the string based on what's going on.
++ 			for (g in names(by.gene)) { 
++ 				chosen <- ref[by.gene[[g]]]
++ 				collected.modes <- chosen$exon
++ 				keep <- collected.modes > 0L
++ 				collected.modes <- collected.modes[keep]
++ 				chosen <- chosen[keep]
++ 				if (!any(keep)) { next }
++ 
++ 				curmode <- .getmode(collected.modes)
++ 				fstring <- paste(chosen$symbol[1], curmode, strand(chosen[1]), sep="|")
++ 				all.dist <- pmax(start(incoming[actual.index]), start(chosen)) - pmin(end(incoming[actual.index]), end(chosen))
++ 				if (any(all.dist <= 0L || all.dist > dist)) { stop("distances out of range") }
++ 				fstring <- paste0(fstring, "[", min(all.dist), "]")
++ 					
++ 				if (!grepl(fstring, cur.anno, fixed=TRUE)) {
++ 					print(fstring)
++ 					print(cur.anno)
++ 					stop("could not find flank")
++ 				} 
++ 				cur.anno <- sub(fstring, "", cur.anno, fixed=TRUE)
++ 			}
++ 			return(cur.anno)
++ 		}, mc.cores=8)
++ 		stopifnot(all(nchar(gsub(",", "", unlist(new.anno)))==0L))
++ 	}
++ 	
++ 	return(data.frame(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
++ }
+> 
+> set.seed(1847382)
+> chromos <- seqlengths(ref)
+> chromos <- chromos[chromos > 1e7]
+> 
+> all.win <- generateWindows(chromos*1.8, 1e3, 1000)
+> comp(all.win, ref)
+     O    L    R
+1 8376 3890 3884
+> 
+> all.win <- generateWindows(chromos*1.8, 1e3, 2000)
+> comp(all.win, ref, dist=2000)
+     O    L    R
+1 8666 2360 2402
+> 
+> all.win <- generateWindows(chromos*1.8, 1e3, 2000)
+> comp(all.win, ref, dist=10000)
+     O    L    R
+1 8455 5415 5339
+> 
+> ########################################################################################
+> #### Checking key, name field options.
+> 
+> output <- detailRanges(all.win, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
++ 		    orgdb=org.Mm.eg.db, name.field=c("ENTREZID"))
+> head(output$overlap, 30)
+ [1] ""           ""           ""           ""           ""          
+ [6] ""           ""           ""           ""           ""          
+[11] ""           ""           ""           ""           ""          
+[16] ""           "497097|I|-" "497097|I|-" "497097|I|-" "497097|I|-"
+[21] ""           ""           "19888|I|-"  ""           ""          
+[26] "21399|I|+"  "58175|I|-"  ""           ""           ""          
+> 
+> output <- detailRanges(all.win, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
++ 	    orgdb=org.Mm.eg.db, name.field=c("SYMBOL", "ENTREZID"))
+> head(output$overlap, 30)
+ [1] ""                ""                ""                ""               
+ [5] ""                ""                ""                ""               
+ [9] ""                ""                ""                ""               
+[13] ""                ""                ""                ""               
+[17] "Xkr4;497097|I|-" "Xkr4;497097|I|-" "Xkr4;497097|I|-" "Xkr4;497097|I|-"
+[21] ""                ""                "Rp1;19888|I|-"   ""               
+[25] ""                "Tcea1;21399|I|+" "Rgs20;58175|I|-" ""               
+[29] ""                ""               
+> 
+> suppressPackageStartupMessages(require(TxDb.Scerevisiae.UCSC.sacCer3.sgdGene))
+> suppressPackageStartupMessages(require(org.Sc.sgd.db))
+> 
+> allr <-detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
+> allr
+GRanges object with 20102 ranges and 3 metadata columns:
+            seqnames           ranges strand   |      symbol      exon
+               <Rle>        <IRanges>  <Rle>   | <character> <integer>
+      Q0010     chrM   [ 3952,  4338]      +   |     <Q0010>         1
+      Q0010     chrM   [ 4254,  4415]      +   |     <Q0010>         2
+      Q0032     chrM   [11667, 11957]      +   |     <Q0032>         1
+      Q0055     chrM   [13818, 13986]      +   |         AI2         1
+      Q0055     chrM   [13818, 16322]      +   |         AI2         2
+        ...      ...              ...    ... ...         ...       ...
+    YPR200C   chrXVI [939279, 939671]      -   |        ARR2        -1
+    YPR201W   chrXVI [939922, 941136]      +   |        ARR3        -1
+    YPR202W   chrXVI [943032, 944188]      +   |   <YPR202W>        -1
+  YPR204C-A   chrXVI [946856, 947338]      -   | <YPR204C-A>        -1
+    YPR204W   chrXVI [944603, 947701]      +   |   <YPR204W>        -1
+             internal
+            <integer>
+      Q0010         1
+      Q0010         1
+      Q0032         2
+      Q0055         3
+      Q0055         3
+        ...       ...
+    YPR200C      6530
+    YPR201W      6531
+    YPR202W      6532
+  YPR204C-A      6533
+    YPR204W      6534
+  -------
+  seqinfo: 17 sequences (1 circular) from sacCer3 genome
+> 
+> ########################################################################################
+> ########################################################################################
+> ########################################################################################
+> # End.
+> 
+> proc.time()
+    user   system  elapsed 
+5140.806   14.782  719.827 
