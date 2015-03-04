@@ -10,7 +10,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 #
 # written by Aaron Lun
 # created 23 November 2013
-# last modified 10 February 2015
+# last modified 4 March 2015
 {
 	# Obtain exons, and cleaning out the annotation.
 	curex <- exonsBy(txdb, by="gene")
@@ -36,10 +36,10 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	gene.name <- do.call(paste, c(all.names, sep=";"))
 	
 	# Splitting IDs, to avoid problems when genes are assigned to multiple locations.
-	# The start uses '>' as we should be on the same location by that stage; and exonBy
-	# should give sorted locations w.r.t. start, if everything else is the same.
+	# exonBy should give sorted locations by chr/strand/start/end, so gap between 
+	# start of each exon and the end of the previous one should give the intron length (ignore nesting).
 	is.diff <- c(TRUE, gene.id[-1]!=gene.id[-n.entries] | diff(as.integer(seqnames(curex)))!=0L
-			| diff(gene.str)!=0L | diff(start(curex)) > max.intron)
+		| diff(gene.str)!=0L | start(curex)[-1] - end(curex)[-n.entries] - 1L > max.intron)
 	gene.id <- cumsum(is.diff)
 	ngenes <- sum(is.diff)
 
@@ -74,17 +74,10 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	if (missing(incoming)) { 
 		curex$symbol <- gene.name
 		curex$exon <- ex.num
+		curex$internal <- gene.id
 		return(curex)
 	}
 
-	# Reordering so we're in gene.id and ex.num order, for simplicity at the C++ level.
-	o <- order(gene.id, ex.num)
-	curex <- curex[o]
-	gene.name <- gene.name[o]
-	gene.id <- gene.id[o]
-	ex.num <- ex.num[o]
-	gene.str <- gene.str[o]
-	
 	###############################
 	# Computing overlaps to everyone and his dog. Note that we don't do
 	# intronic or promoter overlaps to the flanks; we don't care that

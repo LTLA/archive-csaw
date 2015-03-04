@@ -92,62 +92,86 @@ try {
 	return mkString(e.what()); 
 }
 
-/* This function takes a 'start' and 'end' index. These two indices indicate the
- * range of overlaps for a particular annotation/region combination. The
- * annotation indices corresponding to each overlap are in 'indices', so
- * 'indices[start <= x < end]' will give integer indices that point to the gene
- * information i.e. 'symbols', 'features', 'strand'. The overlaps are also assigned
+/* This function collapses indices into a string. The overlaps are also assigned
  * distances in 'dists', so 'dists[start <= x < end]' will give the distances from
  * the edge of the region to the annotated bit (if the pointer is not NULL).
  * The function will return a string collating all information for that annotated
  * feature (i.e., collate exon-level overlaps to a gene-level string).
  */
 
-std::string digest2string (const int start, const int end, const int* indices, const int* dists, SEXP symbols, const int* features, const int* strand) {
+std::string digest2string (const std::deque<int>& indices, const int* geneid, SEXP symbols, const int* features, const int* strand, const int* dists) {
+	if (!indices.size()) { return ""; }
 	std::stringstream ss;
-	ss << CHAR(STRING_ELT(symbols, indices[start])) << '|'; 
+	size_t start=0, end, index=0;
 
-	// Deciding what to print.
-	if (end==start) {
-		throw std::runtime_error("empty vector of collected exon numbers"); 
-	} else if (end==start+1) {
-		if (features[indices[start]]==-1) {
-			ss << "I"; 
-		} else {
-			ss << features[indices[start]];
-		}
-	} else {		
-		int index=start;
-		if (features[indices[index]]==-1) { ++index; } 
-		ss << features[indices[index]];
-		bool wasokay=false;
+	while (start < indices.size()) {
+		if (start!=0) { ss << ","; }
+		ss << CHAR(STRING_ELT(symbols, indices[start])) << '|'; 
+		end=start+1;	
+		while (end < indices.size() && 	geneid[indices[end]]==geneid[indices[start]]) { ++end; }
 
-		// Running through and printing all stretches of contiguous exons.
-		while ((++index)<end) {
-			if (features[indices[index]]==features[indices[index-1]]+1) { 
-				wasokay=true;
+		// Deciding what to print.
+		if (end==start+1) {
+			if (features[indices[start]]==-1) {
+				ss << "I"; 
 			} else {
-				if (wasokay) {
-					ss << '-' << features[indices[index-1]];
-					wasokay=false;
-				}
-				ss << ',' << features[indices[index]];
+				ss << features[indices[start]];
 			}
+		} else {	
+			index=start;
+			if (features[indices[start]]==-1) { ++index; }
+			ss << features[indices[index]];
+			bool wasokay=false;
+
+			// Running through and printing all stretches of contiguous exons.
+			while ((++index) < end) {
+				if (features[indices[index]]==features[indices[index-1]]+1) { 
+					wasokay=true;
+				} else {
+					if (wasokay) {
+						ss << '-' << features[indices[index-1]];
+						wasokay=false;
+					}
+					ss << ',' << features[indices[index]];
+				}
+			}
+			if (wasokay) { ss << '-' << features[indices[index-1]]; }
 		}
-		if (wasokay) { ss << '-' << features[indices[end-1]]; }
-	}
-	
-	// Adding the strand and distance information.	
-	ss << '|' << (strand[indices[start]] ? '+' : '-');
-	if (dists!=NULL) {
-		int lowest=dists[start];
-		for (int index=start+1; index < end; ++index) {
-			if (lowest > dists[index]) { lowest=dists[index]; }
+		
+		// Adding the strand and distance information.	
+		ss << '|' << (strand[indices[start]] ? '+' : '-');
+		if (dists!=NULL) {
+			int lowest=dists[indices[start]];
+			for (index=start+1; index < end; ++index) {
+				if (lowest > dists[indices[index]]) { lowest=dists[indices[index]]; }
+			}
+			ss << '[' << lowest << ']';
 		}
-		ss << '[' << lowest << ']';
+		start=end;
 	}
 	return ss.str();
 }
+
+/* A sorting class for two elements. */
+
+struct sort_pair_int_index { 
+	sort_pair_int_index(const int* p1, const int* p2) : ptr1(p1), ptr2(p2) {}
+	bool operator() (const int& l, const int& r) const { 
+		if (ptr1[l]==ptr1[r]) { 
+			if (ptr2[l]==ptr2[r]) { 
+				return (l < r); 
+			} else {
+				return (ptr2[l] < ptr2[r]);
+			}
+		} else { 
+			return (ptr1[l] < ptr1[r]); 
+		}
+	}
+private:
+	const int* ptr1, *ptr2;
+};
+
+/* The main function */
 
 SEXP annotate_overlaps (SEXP N, SEXP fullQ, SEXP fullS, SEXP leftQ, SEXP leftS, SEXP leftDist,
 		SEXP rightQ, SEXP rightS, SEXP rightDist, 
@@ -198,7 +222,6 @@ try {
 	SEXP right_out=VECTOR_ELT(output, 2);
 
 	int fullx=0, leftx=0, rightx=0;
-	int curend;
 	int* curx_p;
 	const int* curn_p;
 	const int* cur_qptr;
@@ -206,9 +229,13 @@ try {
 	const int* cur_dptr;
 	SEXP curout;
 
+	std::deque<int> allindices;
+	sort_pair_int_index indexcomp(giptr, gfptr);
+	int* distance_holder=(int*)R_alloc(nsym, sizeof(int));
+	std::string resultstr;
+
 	for (int curreg=0; curreg<nin; ++curreg) {
 		// Adding all overlaps of each type. Assuming that findOverlaps gives ordered output, which it should.
-		std::string resultstr;
 		for (int mode=0; mode<3; ++mode) {
 			if(mode==0) {
 				curx_p=&fullx;
@@ -232,21 +259,22 @@ try {
 				cur_dptr=rdptr;
 				curout=right_out;
 			}
-	
-			// For the current region, we get everything in the current overlap; for each overlapping gene, we collate its features.
+
+			// For the current region, we get everything in the current overlap.
 			int& curx=*curx_p;
 			const int& curn=*curn_p;
+			allindices.clear();
 			while (curx < curn && cur_qptr[curx]==curreg) {
-				const int& curindex=cur_sptr[curx];
-				if (curindex >= nsym) { throw std::runtime_error("symbol out of range for overlap index"); }
-				curend=curx+1;
-				while (curend < curn && cur_qptr[curend]==curreg && giptr[cur_sptr[curend]]==giptr[curindex]) { ++curend; }
-				if (!resultstr.empty()) { resultstr += ","; }
-				resultstr += digest2string(curx, curend, cur_sptr, cur_dptr, symbol, gfptr, gsptr);
-				curx=curend;
+				allindices.push_back(cur_sptr[curx]);
+				if (allindices.back() >= nsym) { throw std::runtime_error("symbol out of range for overlap index"); }
+				if (cur_dptr!=NULL) { distance_holder[allindices.back()] = cur_dptr[curx]; } // Storing distance to each overlapped feature.
+				++curx;
 			}
+
+			// Sorting by gene index, then feature index; then collapsing into a string.
+			std::sort(allindices.begin(), allindices.end(), indexcomp);
+			resultstr = digest2string(allindices, giptr, symbol, gfptr, gsptr, (cur_dptr!=NULL ? distance_holder : NULL));
 			SET_STRING_ELT(curout, curreg, mkChar(resultstr.c_str()));
-			resultstr.clear();
 		} 
 	}
 } catch (std::exception& e) {

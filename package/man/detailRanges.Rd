@@ -21,9 +21,9 @@ detailRanges(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000),
 }
 
 \value{
-If \code{incoming} is not provided, a \code{GRanges} object will be returned
-containing ranges for the exons, promoters and gene bodies. Gene IDs, symbol
-and exon numbers are also stored as metadata.
+If \code{incoming} is not provided, a \code{GRanges} object will be returned containing ranges for the exons, promoters and gene bodies. 
+Gene keys (e.g., Entrez IDs) are stored as row names.
+Gene symbols, exon numbers and internal groupings (for exons of genes with multiple genomic locations) are also stored as metadata.
 
 If \code{incoming} is a \code{GRanges} object, a list will be returned with
 \code{overlap}, \code{left} and \code{right} elements. Each element is a
@@ -66,13 +66,11 @@ distance would be zero if the intron overlaps the region). In cases where the
 distance is reported to the first exon, it can be used to refine the choice of
 \code{promoter}.
 
-The \code{max.intron} value is necessary to deal with genes that have ambiguous
-locations on the genome. If a gene has exons on different chromosomes, its
-location is uncertain and the gene is partitioned into two sets of exons for
-separate processing. However, this is less obvious when the ambiguous locations
-belong to the same chromosome. The \code{max.intron} value protects against
-excessively large genes that may occur from considering those locations as 
-a single transcriptional unit.
+The \code{max.intron} value is necessary to deal with genes that have ambiguous locations on the genome. 
+If a gene has exons on different chromosomes, its location is uncertain and the gene is partitioned into two sets of exons for separate processing. 
+However, this is less obvious when the ambiguous locations belong to the same chromosome. 
+The \code{max.intron} value protects against excessively large genes that may occur from considering those locations as a single transcriptional unit.
+Exons are partitioned into two (or more) internal groupings for further processing.
 
 If \code{incoming} is missing, then the annotation will be provided directly to
 the user in the form of a \code{GRanges} object. This may be more useful when
