@@ -30,7 +30,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 			.checkLibSizes(data, background)
 			relative.width <- median(bwidth)/median(dwidth)
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
-			filter.stat <- abundances - .getGlobalBg(binned, bg.ab, prior.count)
+			filter.stat <- abundances - .getGlobalBg(background, bg.ab, prior.count)
 			
 		} else if (type=="local") {
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
