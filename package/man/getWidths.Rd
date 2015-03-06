@@ -5,12 +5,11 @@
 \description{Get the widths of the read counting interval for each region.}
 
 \usage{
-getWidths(data, len=NULL)
+getWidths(data)
 }
 
 \arguments{
 \item{data}{a \code{SummarizedExperiment} object, produced by \code{\link{windowCounts}} or \code{\link{regionCounts}}}
-\item{len}{an integer scalar of vector of fragment lengths for each library}
 }
 
 \details{
@@ -27,13 +26,12 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 % so there's no need to adjust things if data$param$forward is not NA.
 
 The fragment length is taken from \code{exptData(data)$final.ext}, if it is not \code{NA}.
-Otherwise, for single-end data, it is taken from \code{data$ext}.
+Otherwise, it is taken from \code{data$ext}.
 For paired-end data, the average fragment length should be the median of the values obtained with \code{\link{getPESizes}}.
-This is taken from the \code{rescue.ext} slot of each \code{data$param}.
-
 If the fragment lengths are different between libraries, the average is used to computed the effective width of the window.
-If \code{final.ext} is \code{NA} and any of \code{ext} or \code{rescue.ext} are \code{NA} for the relevant libraries, the function will throw an error.
-Users should supply valid fragment lengths in \code{len} to avoid this.
+
+If \code{final.ext} is \code{NA} and any of \code{ext} are \code{NA}, the function will throw an error.
+Users should set the read length in \code{data$rlen} to avoid this, as \code{NA} values of \code{ext} correspond to the use of unextended reads.
 }
 
 \value{
@@ -54,17 +52,21 @@ bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, filter=1)
 getWidths(data)
 
-bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, ext=c(50, 100), filter=1)
 getWidths(data)
 
-# Avoid error by defining 'len', or by rescuing with 'rescue.ext'.
-bamFile <- system.file("exdata", "pet.bam", package="csaw")
-data <- windowCounts(bamFile, param=readParam(pe="both"), filter=1)
-try(getWidths(data))
+data <- windowCounts(bamFiles, ext=makeExtVector(c(50, 100)), filter=1)
+getWidths(data)
 
-getWidths(data, len=200)
-data <- windowCounts(bamFile, param=readParam(pe="both", rescue.ext=200), filter=1)
+# Avoid error by defining 'rlen'.
+data <- windowCounts(bamFiles, ext=c(NA, 100), filter=1)
+try(getWidths(data))
+data$rlen <- 200
+getWidths(data)
+
+# Paired-end data takes the fragment length from 'ext'.
+bamFile <- system.file("exdata", "pet.bam", package="csaw")
+data <- windowCounts(bamFile, param=readParam(pe="both"), ext=200, filter=1)
 getWidths(data)
 }
 

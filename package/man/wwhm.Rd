@@ -5,7 +5,7 @@
 \description{Get the width of the window from the half-maximum of the coverage profile.}
 
 \usage{
-wwhm(profile, regions, ext=100, param=readParam(), proportion=0.5, len=NULL)
+wwhm(profile, regions, ext=100, param=readParam(), proportion=0.5, rlen=NULL)
 }
 
 \arguments{
@@ -14,7 +14,7 @@ wwhm(profile, regions, ext=100, param=readParam(), proportion=0.5, len=NULL)
 \item{ext}{an integer scalar specifying the average fragment length for single-end data}
 \item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects}
 \item{proportion}{a numeric scalar specifying the proportion of the maximum coverage at which to compute the window width}
-\item{len}{a numeric scalar or vector containing average fragment lengths, to be used in \code{\link{getWidths}} in special cases}
+\item{rlen}{a numeric scalar or vector containing read lengths, if any \code{ext=NA}, i.e., fragments are unextended reads}
 }
 
 \details{
@@ -49,6 +49,9 @@ windows <- GRanges("chrA", IRanges(1, 50)) # Making up some windows.
 wwhm(x, windows)
 wwhm(x, windows, ext=50)
 wwhm(x, windows, proportion=0.2)
+
+# Need to set 'rlen' if ext=NA.
+wwhm(x, windows, ext=NA, rlen=10)
 }
 
 \keyword{diagnostics}

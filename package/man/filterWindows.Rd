@@ -5,7 +5,7 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=2, len=NULL) 
+filterWindows(data, background, type="global", prior.count=2) 
 }
 
 \arguments{
@@ -13,7 +13,6 @@ filterWindows(data, background, type="global", prior.count=2, len=NULL)
 \item{background}{another \code{SummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
 \item{type}{a character string specifying the type of filtering to perform; can be any of \code{c("global", "local", "control", "proportion")}}
 \item{prior.count}{a numeric scalar, specifying the prior count to use in \code{\link{aveLogCPM}}}
-\item{len}{a numeric scalar containing the median fragment length for paired-end data}
 }
 
 \value{
@@ -60,8 +59,7 @@ To avoid this, the total number of windows or bins is inferred from the spacing.
 For background-based methods, the abundances of large bins or regions in \code{background} must be rescaled for comparison to those of smaller windows 
 - see \code{\link{getWidths}} and \code{\link{scaledAverage}} for more details.
 In particular, the effective width of the window is often larger than \code{width}, due to the counting of fragments rather than reads.
-The fragment length is generally extracted from \code{data}.
-If not (e.g., for paired-end analyses), specification of \code{len} may be necessary.
+The fragment length is extracted from \code{data$ext} and \code{background$ext}, though users will need to set \code{data$rlen} or \code{background$rlen} for unextended reads (i.e., \code{ext=NA}).
 
 The \code{prior.count} protects against inflated log-fold increases when the background counts are near zero.
 A low prior is sufficient if \code{background} has large counts, which is usually the case for wide regions.
