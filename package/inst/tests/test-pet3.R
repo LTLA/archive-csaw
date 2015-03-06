@@ -155,8 +155,8 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			        if (!identical(sort(sizes[valid&paired]), sort(stuff$sizes))) { stop("mismatch in sizes"); }
 					if (lib==1L) { print(stuff$diagnostics) }
 				}
-				
-				###############################################		
+
+				###############################################
 				# Now, counting; going through and seeing up the valid paired ones.
 
 				leftpos <- pmin(pos1, pos2)
@@ -177,7 +177,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 				}
 				counts[,lib] <- countOverlaps(rowData(x), pairedness)
-				totals[lib] <- length(pairedness)					
+				totals[lib] <- length(pairedness)
 			}
 #			print(c(totals, x$totals))
 #			print(which(counts!=x$counts))
@@ -217,6 +217,21 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 						stop("mismatch in the number of single reads from extractReads")
 					}
 				}
+			}
+
+			# Comparing to what happens after dumping them and reloading them with fast.pe=TRUE.
+			if (rpam$pe=="both") { 
+				fast.param <- reform(rpam, fast.pe=TRUE)
+				dumped <- list()
+				for (lib in 1:length(fnames)) { 
+					refix <- file.path(dir, paste0("dump_", sub('\\.bam$','', basename(fnames[lib]))))
+					dumped[[lib]] <- dumpPE(fnames[lib], refix, param=fast.param, overwrite=TRUE)
+				}
+				fast.out <- windowCounts(unlist(dumped), spacing=spacing, ext=ext, shift=left, 
+					width=right+left+1, filter=0, param=fast.param)
+				if (!identical(fast.out$totals, x$totals)) { stop("mismatches in totals upon fast PE extraction") }
+				if (!identical(assay(fast.out), assay(x))) { stop("mismatches in counts upon fast PE extraction") }
+				unlink(unlist(dumped))
 			}
 		}
 	}
