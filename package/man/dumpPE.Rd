@@ -5,13 +5,14 @@
 \description{Extract proper pairs from a BAM file, and dump fragment intervals into another BAM file.}
 
 \usage{
-dumpPE(bam.file, prefix, param=readParam(pe="both"))
+dumpPE(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE)
 }
 
 \arguments{
 \item{bam.file}{a character string containing the path to a paired-end BAM file}
 \item{prefix}{a character string containing the prefix to an output BAM file}
 \item{param}{a \code{readParam} object}
+\item{overwrite}{a logical scalar indicating whether to overwrite the existing file starting with \code{prefix}}
 }
 
 \value{
