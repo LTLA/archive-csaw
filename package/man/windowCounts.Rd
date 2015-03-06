@@ -76,8 +76,16 @@ This removes the most obvious differences in widths.
 
 The value of \code{final.ext} is sourced from the attributes of \code{ext} (see \code{\link{makeExtVector}} for more details).
 If this attribute is not present or is \code{NA}, no rescaling is performed.
-Note that this rescaling will also be performed for paired-end data, by resizing each fragment from its midpoint.
-This still uses \code{final.ext} from \code{ext}, even though the values of \code{ext} itself are not used.
+}
+
+\section{Comments on ext for paired-end data}{
+Directional extension is not performed for paired-end data, so the values in \code{ext} are not used directly.
+Hwoever, rescaling can still be performed to standardize fragment lengths across libraries, by resizing each fragment from its midpoint.
+This still uses \code{final.ext} in the attributes of the \code{ext} parameter.
+
+On a similar note, some downstream functions will use the extension length in the output \code{colData} as the average fragment length.
+Thus, to maintain compatibility, users are recommended to set \code{ext} to a vector holding the median fragment length in each library.
+These values will not be used in \code{windowCounts}, but instead, in functions like \code{\link{getWidths}}.
 }
 
 \author{Aaron Lun}
