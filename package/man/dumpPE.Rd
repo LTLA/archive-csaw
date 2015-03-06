@@ -62,7 +62,7 @@ stopifnot(identical(assay(out), assay(out2)))
 stopifnot(identical(out$totals, out2$totals))
 
 # Looking at extracted reads.
-last.reg <- rowData(out)[6]
+last.reg <- rowRanges(out)[6]
 reg1 <- extractReads(last.reg, bamFile, param=xparam)
 reg2 <- extractReads(last.reg, outBam, param=reform(xparam, fast.pe=TRUE))
 

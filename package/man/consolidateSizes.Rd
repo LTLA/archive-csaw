@@ -71,9 +71,9 @@ cons$table
 # Trying with a custom function.
 of.interest <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'), 
     IRanges(c(1, 500, 100, 1000), c(200, 1000, 700, 1500)))
-llap <- findOverlaps(rowData(low), of.interest)
-mlap <- findOverlaps(rowData(med), of.interest)
-hlap <- findOverlaps(rowData(high), of.interest)
+llap <- findOverlaps(rowRanges(low), of.interest)
+mlap <- findOverlaps(rowRanges(med), of.interest)
+hlap <- findOverlaps(rowRanges(high), of.interest)
 cons <- consolidateSizes(list(subjectHits(llap), subjectHits(mlap), subjectHits(hlap)), 
     list(dbl[queryHits(llap),], dbm[queryHits(mlap),], dbh[queryHits(hlap),]),
     region=of.interest)

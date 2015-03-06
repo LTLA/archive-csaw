@@ -28,7 +28,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	# Merging windows.	
 	if (!has.integer) { 
 		all.ranges <- list()
-		for (x in 1:nset) { all.ranges[[x]] <- rowData(data.list[[x]]) }
+		for (x in 1:nset) { all.ranges[[x]] <- rowRanges(data.list[[x]]) }
 		all.ranges <- do.call(c, all.ranges)
 		merged <- do.call(mergeWindows, c(merge.args, regions=all.ranges)) 
 	} else {

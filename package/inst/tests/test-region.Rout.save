@@ -46,13 +46,13 @@ Type 'q()' to quit R.
 + 		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward)
 + 		x<-windowCounts(bamFiles, ext=ext, width=right+left+1, shift=left, spacing=spacing, 
 + 			filter=filter, param=repar)
-+ 		y <- regionCounts(bamFiles, regions=rowData(x), ext=ext, param=repar)
++ 		y <- regionCounts(bamFiles, regions=rowRanges(x), ext=ext, param=repar)
 + 		if (!identical(assay(y), assay(x))) { stop("mismatch in count matrices") }
 + 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
 + 
 + 		# If there's no rescaling, we pick a region in the middle and we check it with extractReads.
 + 		chosen <- round(nrow(x)/2)
-+ 		my.reg <- rowData(x)[chosen]
++ 		my.reg <- rowRanges(x)[chosen]
 + 		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+max(y$ext)*2))
 + 		strand(my.reg2) <- "*"
 + 	

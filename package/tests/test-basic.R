@@ -16,12 +16,12 @@ getPESizes(pe.file)
 # Trying to count some single-end data.
 data <- windowCounts(both.files, ext=100)
 head(assay(data))
-rowData(data)
+rowRanges(data)
 data$total
 
 data <- windowCounts(both.files, width=500, spacing=200)
 head(assay(data))
-rowData(data)
+rowRanges(data)
 data$totals
 
 data <- windowCounts(both.files, ext=100, param=readParam(minq=100))
@@ -37,15 +37,15 @@ data$totals
 out <- windowCounts(pe.file, param=readParam(pe="both"), width=100, filter=1L)
 assay(out)
 out$totals
-rowData(out)
+rowRanges(out)
 out <- windowCounts(pe.file, param=readParam(pe="both", rescue.ext=100), width=100, filter=1L)
 assay(out)
 out$totals
-rowData(out)
+rowRanges(out)
 out <- windowCounts(pe.file, param=readParam(pe="first"), width=100, filter=1L)
 assay(out)
 out$totals
-rowData(out)
+rowRanges(out)
 
 # Running some basic normalization.
 data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
@@ -63,10 +63,10 @@ nr <- nrow(data)
 tabled <- data.frame(logFC=rnorm(nr), logCPM=rnorm(nr), PValue=rbeta(nr, 1, 2))
 weighting <- rgamma(nr, 2, 1)
 
-mergeWindows(rowData(data), -1)
-mergeWindows(rowData(data), 100)
-mergeWindows(rowData(data), 100, max.width=500)
-merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
+mergeWindows(rowRanges(data), -1)
+mergeWindows(rowRanges(data), 100)
+mergeWindows(rowRanges(data), 100, max.width=500)
+merged <- mergeWindows(rowRanges(data), 100, sign=tabled$logFC > 0)
 merged
 
 head(combineTests(merged$id, tabled))

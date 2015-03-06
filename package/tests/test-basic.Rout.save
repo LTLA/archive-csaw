@@ -53,7 +53,7 @@ $diagnostics
 [4,]   53  141
 [5,]   40  152
 [6,]   59  135
-> rowData(data)
+> rowRanges(data)
 GRanges object with 71 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
@@ -82,7 +82,7 @@ NULL
 [4,]  200  501
 [5,]  187  468
 [6,]  127  311
-> rowData(data)
+> rowRanges(data)
 GRanges object with 19 ranges and 0 metadata columns:
        seqnames       ranges strand
           <Rle>    <IRanges>  <Rle>
@@ -127,7 +127,7 @@ GRanges object with 19 ranges and 0 metadata columns:
 [6,]    2
 > out$totals
 [1] 7
-> rowData(out)
+> rowRanges(out)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -150,7 +150,7 @@ GRanges object with 6 ranges and 0 metadata columns:
 [6,]    5
 > out$totals
 [1] 10
-> rowData(out)
+> rowRanges(out)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -173,7 +173,7 @@ GRanges object with 6 ranges and 0 metadata columns:
 [6,]    6
 > out$totals
 [1] 10
-> rowData(out)
+> rowRanges(out)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
          <Rle>  <IRanges>  <Rle>
@@ -227,7 +227,7 @@ GRanges object with 6 ranges and 0 metadata columns:
 > tabled <- data.frame(logFC=rnorm(nr), logCPM=rnorm(nr), PValue=rbeta(nr, 1, 2))
 > weighting <- rgamma(nr, 2, 1)
 > 
-> mergeWindows(rowData(data), -1)
+> mergeWindows(rowRanges(data), -1)
 $id
  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
 [26] 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50
@@ -251,7 +251,7 @@ GRanges object with 71 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 
-> mergeWindows(rowData(data), 100)
+> mergeWindows(rowRanges(data), 100)
 $id
  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2
 [39] 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
@@ -266,7 +266,7 @@ GRanges object with 3 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 
-> mergeWindows(rowData(data), 100, max.width=500)
+> mergeWindows(rowRanges(data), 100, max.width=500)
 $id
  [1] 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 5 5 5
 [39] 5 5 5 5 5 5 6 6 6 6 6 6 6 6 6 7 7 7 7 7 7 7 7 7 8 8 8 8 8 8 8 8 8
@@ -286,7 +286,7 @@ GRanges object with 8 ranges and 0 metadata columns:
   -------
   seqinfo: 3 sequences from an unspecified genome
 
-> merged <- mergeWindows(rowData(data), 100, sign=tabled$logFC > 0)
+> merged <- mergeWindows(rowRanges(data), 100, sign=tabled$logFC > 0)
 > merged
 $id
  [1]  1  2  2  3  4  4  4  5  5  6  7  8  9  9  9  9 10 10 11 12 13 14 15 15 15

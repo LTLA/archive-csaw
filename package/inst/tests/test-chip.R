@@ -91,7 +91,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			# Discarding. No variable read lengths here, so no need to use alignment width.			
 			if (length(discard)) { frags <- frags[!overlapsAny(GRanges(reads$rname, IRanges(reads$pos, reads$pos+reads$qwidth-1L)), discard, type="within")] }
 			if (!is.null(restrict)) { frags <- frags[seqnames(frags) %in% restrict] }
-			out[,i]<-countOverlaps(rowData(x), frags)
+			out[,i]<-countOverlaps(rowRanges(x), frags)
 			totals[i]<-length(frags)
 		}
 		
@@ -109,15 +109,15 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			keep<-rowSums(assay(x2))>=filter
 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }
 			if (sum(keep)==0 && nrow(x)==0) { } 
-			else if (compare2Ranges(rowData(x2)[keep], rowData(x))) { stop("mismatch in filtered regions") }
+			else if (compare2Ranges(rowRanges(x2)[keep], rowRanges(x))) { stop("mismatch in filtered regions") }
 		}
 		if (type==1) { 
 			expected<-expectedRanges(right+left+1L, left, spacing, bamFiles, restrict=restrict)
-			if (compare2Ranges(expected, rowData(x2))) { stop("mismatch in expected and unfiltered regions") }
+			if (compare2Ranges(expected, rowRanges(x2))) { stop("mismatch in expected and unfiltered regions") }
 		}
 	}
 
-	return(rowData(x))
+	return(rowRanges(x))
 }
 
 # Bin count checker.
@@ -131,7 +131,7 @@ bincomp <- function(bamFiles, binsize=1000L) {
 
 	# Counting reads into bins.
 	total.out<-list()
-	regions <- rowData(blah)
+	regions <- rowRanges(blah)
     for (x in runValue(seqnames(regions))) {
     	out<-matrix(0L, ceiling(chrs[[x]]/binsize), length(bamFiles))
 		for (i in 1:length(bamFiles)) { 

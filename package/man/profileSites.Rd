@@ -69,19 +69,19 @@ Aaron Lun
 bamFile <- system.file("exdata", "rep1.bam", package="csaw")
 data <- windowCounts(bamFile, filter=1)
 rwsms <- rowSums(assay(data))
-maxed <- findMaxima(rowData(data), range=100, metric=rwsms)
+maxed <- findMaxima(rowRanges(data), range=100, metric=rwsms)
 	
-x <- profileSites(bamFile, rowData(data)[maxed], range=200)
+x <- profileSites(bamFile, rowRanges(data)[maxed], range=200)
 plot(as.integer(names(x)), x)
 
-x <- profileSites(bamFile, rowData(data)[maxed], range=500)
+x <- profileSites(bamFile, rowRanges(data)[maxed], range=500)
 plot(as.integer(names(x)), x)
 
-x <- profileSites(bamFile, rowData(data)[maxed], range=500, weight=1/rwsms)
+x <- profileSites(bamFile, rowRanges(data)[maxed], range=500, weight=1/rwsms)
 plot(as.integer(names(x)), x)
 
 # Introducing some strandedness.
-regs <- rowData(data)[maxed]
+regs <- rowRanges(data)[maxed]
 strand(regs) <- sample(c("-", "+", "*"), sum(maxed), replace=TRUE)
 x <- profileSites(bamFile, regs, range=500)
 plot(as.integer(names(x)), x)

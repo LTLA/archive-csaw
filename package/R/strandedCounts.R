@@ -25,10 +25,10 @@ strandedCounts <- function(bam.files, param=readParam(), regions=NULL, ...)
 	
 	# Combining them together.
 	combined <- SummarizedExperiment(rbind(assay(fdata), assay(rdata)),
-		rowData=c(rowData(fdata), rowData(rdata)),
+		rowData=c(rowRanges(fdata), rowRanges(rdata)),
 		colData=colData(fdata), exptData=exptData(fdata))
 
-	o <- GenomicRanges::order(rowData(combined))
+	o <- GenomicRanges::order(rowRanges(combined))
 	combined <- combined[o]
 	combined$totals <- fdata$totals + rdata$totals
 	combined$forward.totals <- fdata$totals

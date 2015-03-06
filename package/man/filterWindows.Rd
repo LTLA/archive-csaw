@@ -91,7 +91,7 @@ head(stats$filter)
 keep <- stats$filter > log2(3)
 
 # Local background-based.
-locality <- regionCounts(bamFiles, resize(rowData(data), fix="center", 300))
+locality <- regionCounts(bamFiles, resize(rowRanges(data), fix="center", 300))
 stats <- filterWindows(data, locality, type="local")
 head(stats$filter)
 keep <- stats$filter > log2(3)

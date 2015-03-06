@@ -73,7 +73,7 @@ filterWindows <- function(data, background, type="global", prior.count=2)
 {
 	spacing <- exptData(data)$spacing
 	if (is.null(spacing)) { stop("failed to find spacing for windows") }
-	sum(ceiling(seqlengths(rowData(data))/spacing)) 
+	sum(ceiling(seqlengths(rowRanges(data))/spacing)) 
 }
 
 .getGlobalBg <- function(data, ab, prior.count)

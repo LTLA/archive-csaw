@@ -63,12 +63,12 @@ strandedCounts(bamFiles, regions=incoming, param=reform(xparam, dedup=TRUE))
 try(windowCounts(bamFiles, filter=1, width=100, param=xparam))
 
 # Running mergeWindows with strand-specificity.
-mergeWindows(rowData(out), tol=100)
-mergeWindows(rowData(out), tol=100, ignore.strand=FALSE)
+mergeWindows(rowRanges(out), tol=100)
+mergeWindows(rowRanges(out), tol=100, ignore.strand=FALSE)
 
 rwsms <- rowSums(assay(out))
-summary(findMaxima(rowData(out), range=100, metric=rwsms))
-summary(findMaxima(rowData(out), range=100, metric=rwsms, ignore.strand=FALSE))
+summary(findMaxima(rowRanges(out), range=100, metric=rwsms))
+summary(findMaxima(rowRanges(out), range=100, metric=rwsms, ignore.strand=FALSE))
 }
 
 \seealso{

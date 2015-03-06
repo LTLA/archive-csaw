@@ -45,7 +45,7 @@ Aaron Lun
 \examples{
 bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 data <- windowCounts(bamFiles, filter=1)
-regions <- rowData(data)
+regions <- rowRanges(data)
 metric <- edgeR::aveLogCPM(asDGEList(data))
 findMaxima(regions, range=10, metric=metric)
 findMaxima(regions, range=50, metric=metric)

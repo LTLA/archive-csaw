@@ -176,7 +176,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				} else {
 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 				}
-				counts[,lib] <- countOverlaps(rowData(x), pairedness)
+				counts[,lib] <- countOverlaps(rowRanges(x), pairedness)
 				totals[lib] <- length(pairedness)
 			}
 #			print(c(totals, x$totals))
@@ -192,14 +192,14 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			if (!identical(totals, x$totals)) { stop("mismatches in totals for paired data") }
 
 			# Comparing windowCounts to regionCounts.
-			x2 <- regionCounts(fnames, regions=rowData(x), ext=ext, param=rpam)
+			x2 <- regionCounts(fnames, regions=rowRanges(x), ext=ext, param=rpam)
 			stopifnot(identical(assay(x), assay(x2)))
 			stopifnot(identical(colData(x), colData(x2)))
-			stopifnot(identical(rowData(x), rowData(x2)))
+			stopifnot(identical(rowRanges(x), rowRanges(x2)))
 
 			# Comparing regionCounts to extractReads, using the middle region.
 			chosen <- round(nrow(x)/2)
-			my.reg <- rowData(x)[chosen]
+			my.reg <- rowRanges(x)[chosen]
 			if (rpam$pe=="both") {
 				for (f in 1:length(fnames)) {
 					collected <- extractReads(my.reg, fnames[f], param=rpam)
@@ -235,7 +235,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			}
 		}
 	}
-	return(rowData(x))
+	return(rowRanges(x))
 }
 
 # Running through a bunch of tests.

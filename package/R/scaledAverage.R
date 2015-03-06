@@ -35,6 +35,6 @@ getWidths <- function(data)
 		flen <- as.integer(mean(flen))
 	}
 
-	width(rowData(data)) + flen - 1L
+	width(rowRanges(data)) + flen - 1L
 }
 
