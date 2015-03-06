@@ -57,7 +57,7 @@
 	if (param$fast.pe) {
 		# In fast mode, we can take some shortcuts and ignore read-based parameters.
 		reads <- .extractSE(bam.file, where=where, extras="isize", 
-			param=readParam(forward=TRUE, dedup=param$dedup), isPaired=TRUE, 
+			param=readParam(forward=TRUE), isPaired=TRUE, 
 			hasUnmappedMate=FALSE, isMateMinusStrand=TRUE)
 		keep <- reads$isize > 0L & reads$isize <= param$max.frag
 		return(list(pos=reads$pos[keep], size=reads$isize[keep]))

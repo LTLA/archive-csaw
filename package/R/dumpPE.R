@@ -1,4 +1,4 @@
-dumpPE <- function(bam.file, prefix, param=readParam(pe="both"))
+dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE)
 # This function extracts all relevant data, and then dumps it out into another
 # SAM file. The idea is to save some time by processing paired-end data once,
 # such that we only have to load the position and insert size for each entry.
@@ -9,10 +9,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"))
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
-	
-	# To preserve as much data as possible; max.frag can be used later, 
-	# and fast.pe=TRUE would not consider param settings.
-	param <- reform(param, max.frag=.Machine$integer.max, fast.pe=FALSE) 
+	param <- reform(param, fast.pe=FALSE) # So that it properly extracts reads.
 	
 	# Storing the chromosome lengths.
 	ofile <- tempfile(tmpdir='.')
@@ -36,14 +33,22 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"))
 
 		if (length(out$pos)) {
 			fids <- paste0("f", counter + 1:length(out$pos))
+			fullsize <- out$size
+			ending <- out$pos + out$size - 1L
+			subzero <- out$pos <= 0L # Shorten rescued fragment if it runs off the front (negative positions are not stored).
+			if (any(subzero)) { 
+				out$pos[subzero] <- 1L
+				fullsize[subzero] <- ending[subzero] 
+			}
+
 			write.table(file=ohandle, data.frame(fids, active.flag, chr, out$pos, 255, "1M", "=", 
-				out$pos+out$size-1L, out$size, "N", "#"), sep="\t", quote=FALSE, col.names=FALSE, 
+				ending, fullsize, "N", "#"), sep="\t", quote=FALSE, col.names=FALSE, 
 				row.names=FALSE, append=TRUE)
 		}	
 		counter <- counter + length(out$pos)
 	}
 
 	close(ohandle)
-	output <- suppressWarnings(asBam(ofile, prefix, indexDestination=TRUE, overwrite=FALSE))
+	output <- suppressWarnings(asBam(ofile, prefix, indexDestination=TRUE, overwrite=overwrite))
 	return(invisible(output))
 }
