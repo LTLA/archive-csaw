@@ -12,49 +12,29 @@ scaledAverage <- function(y, scale=1, prior.count=NULL, ...)
 	aveLogCPM(y, prior.count=scale*prior.count, ...) - log2(scale)
 }
 
-getWidths <- function(data, len=NULL)
+getWidths <- function(data) 
 # This computes the effective width of the data in the SummarizedExperiment
 # object. This is done by accounting for the effect of read extension; or, for
-# paired end data, the median fragment length (from `rescue.ext`, or 
-# from `len` if `rescue.ext` is not specified).
+# paired end data, the median fragment length.
 #
 # written by Aaron Lun
 # created 5 November 2014
-# last modified 13 February 2015
+# last modified 6 March 2015
 {
-	if (!is.null(len)) { len <- rep(len, length.out=ncol(data)) }
-	final.ext <- exptData(data)$final.ext
+	flen <- exptData(data)$final.ext
 
-	if (is.na(final.ext)) { 
-		frag.len <- integer(ncol(data))
-		is.pe <- sapply(data$param, FUN=function(x) { x$pe=="both" })
-
-		# Single-end.
-		frag.len[!is.pe] <- data$ext[!is.pe]
-		missing.se <- is.na(frag.len[!is.pe])
-		if (any(missing.se)) {
-			if (is.null(len)) { 
-				stop("need to specify fragment lengths for single-end data in 'len'")
+	if (is.na(flen)) { 
+		flen <- data$ext
+		is.missing <- is.na(flen)
+		if (any(is.missing)) { 
+			if (is.null(data$rlen)) { 
+				stop("need to specify read lengths in 'data$rlen'")
 			}
-			frag.len[!is.pe][missing.se] <- len[!is.pe][missing.se]
+			flen[is.missing] <- data$rlen[is.missing]
 		}
-	
-		# Paired-end.
-		pe.len <- sapply(data$param, FUN=function(x) { x$rescue.ext })
-		not.def <- is.na(pe.len)
-		use.pe.len <- is.pe & !not.def
-		frag.len[use.pe.len] <- pe.len[use.pe.len]
-		use.def.len <- is.pe & not.def
-		if (any(use.def.len)) { 
-			if (is.null(len)) { 
-				stop("need to specify fragment lengths for paired-end data in 'len'")
-			}
-			frag.len[use.def.len] <- len[use.def.len]	
-		}
-
-		final.ext <- as.integer(mean(frag.len))
+		flen <- as.integer(mean(flen))
 	}
 
-	width(rowData(data)) + final.ext - 1L
+	width(rowData(data)) + flen - 1L
 }
 

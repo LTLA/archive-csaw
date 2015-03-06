@@ -112,13 +112,14 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
     return(out)
 }
 
-wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, len=NULL)
+wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, rlen=NULL)
 # This function computes the window width at half its maximum. This uses
 # the output of profileSites to get the full width of the peak; it then
 # subtracts twice the extension length to obtain the window width. 
 # 
 # written by Aaron Lun
 # created 2 March 2015
+# last modified 6 March 2015
 {
 	if (proportion <= 0 | proportion >= 1) { stop("proportion should be between 0 and 1") }
 	is.max <- which.max(profile)
@@ -145,16 +146,12 @@ wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, l
 	ref.size <- median(width(regions))
 
 	# To get the average extension length across libraries, via getWidths.
-	nbam <- max(length(ext), ifelse(is.list(param), length(param), 1))
-	paramlist <- .makeParamList(nbam, param)
-	dim(paramlist) <- c(nbam, 1)
-	colnames(paramlist) <- "param"
-	ext.data <- .collateExt(nbam, ext)
-	dummy.data <- SummarizedExperiment(matrix(0, ncol=length(ext), nrow=1),
-		rowData=GRanges("chrA", IRanges(1, 1)), 
-		colData=DataFrame(ext=ext.data$ext, paramlist),
-		exptData=List(final.ext=ext.data$final))
-	ext.len <- getWidths(dummy.data, len=len)
+	nlibs <- length(ext)
+	ext.data <- .collateExt(nlibs, ext)
+	dummy.data <- SummarizedExperiment(colData=DataFrame(ext=ext.data$ext), 
+		exptData=List(final.ext=ext.data$final), rowData=GRanges("chrA", IRanges(1, 1))) 
+	if (!is.null(rlen)) { dummy.data$rlen <- rlen }
+	ext.len <- getWidths(dummy.data)
 
 	# Computing the window size. Add 2 to ensure one base overlaps the 
 	# most extreme fragments on both sides. Subtract ref.size-1 as random

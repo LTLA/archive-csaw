@@ -1,4 +1,4 @@
-filterWindows <- function(data, background, type="global", prior.count=2, len=NULL) 
+filterWindows <- function(data, background, type="global", prior.count=2) 
 # This is a function for proportion- or background-based filtering of a
 # SummarizedExperiment object. For the former, it computes the relative ranks
 # that can be used to determine the proportion of highest-abundance windows to
@@ -7,7 +7,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 #
 # written by Aaron Lun
 # created 18 February 2015	
-# last modified 4 March 2015
+# last modified 6 March 2015
 {
 	type <- match.arg(type, c("global", "local", "control", "proportion"))
 	abundances <- scaledAverage(asDGEList(data), scale=1, prior.count=prior.count)
@@ -23,8 +23,8 @@ filterWindows <- function(data, background, type="global", prior.count=2, len=NU
 			return(list(abundances=abundances, filter=filter.stat))
 		} 
 
-		bwidth <- getWidths(background, len=len)
-		dwidth <- getWidths(data, len=len)
+		bwidth <- getWidths(background)
+		dwidth <- getWidths(data)
 
 		if (type=="global") { 
 			.checkLibSizes(data, background)
