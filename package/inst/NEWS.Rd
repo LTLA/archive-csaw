@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.30}{\itemize{
+\section{Version 1.1.31}{\itemize{
 \item 
 Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison of abundances during filtering.
 
@@ -10,7 +10,7 @@ Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison
 Added findMaxima() to identify locally maximal windows.
 
 \item 
-Added profileSites(), wwhm() to examine the coverage profile around specified regions.
+Added profileSites() to examine the coverage profile around specified regions, with wwhm() to guess the ideal window size from the profile.
 
 \item
 Changed default window width in windowCounts() to 50 bp, default filter to 10.
