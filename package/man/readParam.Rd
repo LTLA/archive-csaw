@@ -52,7 +52,7 @@ The fragment interval is defined as that bounded by the 5' ends of the two reads
 Fragment sizes above \code{max.frag} are removed; use \code{\link{getPESizes}} to pick an appropriate value. 
 
 By default, only reads in proper pairs are used to construct a fragment interval.
-If \code{rescue.ext=NA}, the function will also attempt to recover reads from improper pairs.
+If \code{rescue.ext!=NA}, the function will also attempt to recover reads from improper pairs.
 For each improper pair, the read with the higher MAPQ score will be directionally extended with \code{rescue.ext}.
 Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPESizes}}.
 The extended read will then be used as the fragment interval.
