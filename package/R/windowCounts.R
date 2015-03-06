@@ -130,7 +130,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 
 	dim(paramlist) <- c(nbam, 1)
 	colnames(paramlist) <- "param"
-	return(SummarizedExperiment(assays=do.call(rbind, all.out), 
+	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowData=all.regions, 
 		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext.data$ext, paramlist),
 		exptData=SimpleList(spacing=spacing, width=width, shift=shift, 

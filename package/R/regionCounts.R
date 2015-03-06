@@ -58,7 +58,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	strand(regions) <- .decideStrand(paramlist)
 	dim(paramlist) <- c(nbam, 1)
 	colnames(paramlist) <- "param"
-	return(SummarizedExperiment(assays=counts, 
+	return(SummarizedExperiment(assays=SimpleList(counts=counts), 
 		rowData=regions, 
 		colData=DataFrame(bam.files, totals=totals, ext=ext.data$ext, paramlist),
 		exptData=List(final.ext=ext.data$final)))
