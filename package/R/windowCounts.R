@@ -26,7 +26,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		right <- spacing - 1L - left
 		ext <- 1L
 		final.ext <- NA
-		filter <- 1
+		filter <- min(1, filter)
 	}
 	ext.data <- .collateExt(nbam, ext)
 

@@ -42,7 +42,7 @@ Increasing \code{spacing} will reduce the frequency at which counts are extracte
 This results in some loss of resolution but it may be necessary when machine memory is limited. 
 
 If \code{bin} is set, settings are internally adjusted so that all reads are counted into non-overlapping adjacent bins of size \code{width}. 
-Specifically, \code{spacing} is set to \code{bin} and \code{filter} is set to 1. 
+Specifically, \code{spacing} is set to \code{width} and \code{filter} is capped at a maximum value of 1 (empty bins can be retained with \code{filter=0}).
 Only the 5' end of each read or the midpoint of each fragment (for paired-end data) is used in counting.
 }
 
