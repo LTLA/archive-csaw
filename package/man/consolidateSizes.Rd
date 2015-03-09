@@ -21,7 +21,7 @@ consolidateSizes(data.list, result.list, equiweight=TRUE,
 \value{
 A list is returned, containing:
 \item{id}{a list of integer vectors, where each vector corresponds to an object in \code{data.list}; the entries of the vector specify the cluster to which each row of that object is assigned}
-\item{region}{a \code{GRanges} object containing the genomic coordinates of the merged windows (or other regions, depending on \code{FUN})}
+\item{region}{a \code{GRanges} object containing the genomic coordinates of the clusters of merged windows (or other regions, depending on \code{FUN})}
 \item{table}{a data frame containing the combined DB results for each \code{region}}	
 }
 
