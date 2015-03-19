@@ -1,5 +1,6 @@
 \name{csawUsersGuide}
 \alias{csawUsersGuide}
+\alias{csaw}
 
 \title{View csaw user's guide}
 \description{Finds the location of the user's guide and opens it for viewing.}
@@ -17,17 +18,16 @@ system's default PDF document reader is started and the user's guide is
 opened.}
 
 \details{
-Calling \code{vignette("csaw")} will yield a short vignette that contains
-little information. Instead, the user guide can be obtained with this function.
-The user's guide is not a true vignette as it is not generated using
-\code{\link{Sweave}} when the package is built. This is due to the
-time-consuming nature of the code when run on realistic case studies.
+The csaw package is designed for de novo detection of differentially bound regions from ChIP-seq data. 
+It provides methods for window-based counting, normalization, filtering and statistical analyses via edgeR.
+The user guide for this package can be obtained by running this function.
 
-For non-Windows operating systems, the PDF viewer is taken from
-\code{Sys.getenv("R_PDFVIEWER")}. This can be changed to \code{x} by using
-\code{Sys.putenv(R_PDFVIEWER=x)}. For Windows, the default viewer will be
-selected to open the file. Note that for Windows, the user's guide can
-also be accessed from the `Vignettes' drop-down menu in the R GUI.
+For non-Windows operating systems, the PDF viewer is taken from \code{Sys.getenv("R_PDFVIEWER")}. 
+This can be changed to \code{x} by using \code{Sys.putenv(R_PDFVIEWER=x)}. 
+For Windows, the default viewer will be selected to open the file. 
+
+Note that the user's guide is not a true vignette as it is not generated using \code{\link{Sweave}} when the package is built. 
+This is due to the time-consuming nature of the code when run on realistic case studies.
 }
 
 \seealso{
