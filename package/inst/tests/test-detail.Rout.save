@@ -20,11 +20,9 @@ Type 'q()' to quit R.
 > # This tests the behaviour of the detailRanges function, by comparing the output of the
 > # strings to the output of the function proper.
 > 
-> suppressPackageStartupMessages(require(csaw))
-Warning message:
-multiple methods tables found for ‘score’ 
-> suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene))
-> suppressPackageStartupMessages(require(org.Mm.eg.db))
+> suppressWarnings(suppressPackageStartupMessages(require(csaw)))
+> suppressWarnings(suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene)))
+> suppressWarnings(suppressPackageStartupMessages(require(org.Mm.eg.db)))
 > source("simsam.R")
 > require(parallel)
 > 
@@ -356,4 +354,4 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-278.860   9.693  98.648 
+268.160   9.583  86.575 

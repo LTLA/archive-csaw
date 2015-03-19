@@ -1,9 +1,9 @@
 # This tests the behaviour of the detailRanges function, by comparing the output of the
 # strings to the output of the function proper.
 
-suppressPackageStartupMessages(require(csaw))
-suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene))
-suppressPackageStartupMessages(require(org.Mm.eg.db))
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
+suppressWarnings(suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene)))
+suppressWarnings(suppressPackageStartupMessages(require(org.Mm.eg.db)))
 source("simsam.R")
 require(parallel)
 
