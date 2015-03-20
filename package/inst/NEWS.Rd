@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.31}{\itemize{
+\section{Version 1.1.32}{\itemize{
 \item 
 Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison of abundances during filtering.
 
@@ -65,6 +65,9 @@ Added support for read extension within extractReads().
 
 \item 
 Updated the user's guide to reflect new and modified functions.
+
+\item 
+Added sra2bam.sh in inst/doc to reproducibly generate BAM files to run UG examples.
 
 \item 
 Cleaned up code in inst/tests for modified functions, added new tests for new functions.
