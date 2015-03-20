@@ -100,8 +100,8 @@ do
 		else 
 			fastq-dump --split-files $sra
 			prefix=`echo $sra | sed "s/\.sra//g"`
-			fastq1=`ls | egrep "$prefix_1\.(fastq|fq)"`
-			fastq2=`ls | egrep "$prefix_2\.(fastq|fq)"`
+			fastq1=`ls | egrep "${prefix}_1\.(fastq|fq)"`
+			fastq2=`ls | egrep "${prefix}_2\.(fastq|fq)"`
 			${aligncmd} -r $fastq1 -R $fastq2 -o $rawbam
 		fi
 
@@ -112,6 +112,7 @@ do
 		${samcmd} index $finalbam
 
 		rm $rawbam
+		rm ${rawbam}.indel
 		if [[ $pet -eq 0 ]]; then
 			rm $fastq
 		else
@@ -151,7 +152,7 @@ done
 ###############################################################
 # Mopping up.
 
-rm $dummyfile
+rm $tmpfile
 rm -r $vtmp
 
 ###############################################################
