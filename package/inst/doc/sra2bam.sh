@@ -128,21 +128,21 @@ do
 		renameBAM SRR074418 tn_2
 		renameBAM SRR074401 input
 	elif [[ $i -eq 2 ]]; then
-		${samcmd} merge h3k4me3_pro.bam SRR499716.bam SRR499717.bam
+		${samcmd} merge -f h3k4me3_pro.bam SRR499716.bam SRR499717.bam
 		${samcmd} index h3k4me3_pro.bam
-		${samcmd} merge h3k4me3_pro_2.bam SRR499714.bam SRR499715.bam
+		${samcmd} merge -f h3k4me3_pro_2.bam SRR499714.bam SRR499715.bam
 		${samcmd} index h3k4me3_pro_2.bam
-		${samcmd} merge h3k4me3_mat.bam SRR499732.bam SRR499733.bam
+		${samcmd} merge -f h3k4me3_mat.bam SRR499732.bam SRR499733.bam
 		${samcmd} index h3k4me3_mat.bam
-		${samcmd} merge h3k4me3_mat_2.bam SRR499729.bam SRR499730.bam SRR499731.bam
+		${samcmd} merge -f h3k4me3_mat_2.bam SRR499729.bam SRR499730.bam SRR499731.bam
 		${samcmd} index h3k4me3_mat_2.bam
 	elif [[ $i -eq 3 ]]; then
-		${samcmd} merge h3ac.bam SRR330784.bam SRR330785.bam
+		${samcmd} merge -f h3ac.bam SRR330784.bam SRR330785.bam
 		${samcmd} index h3ac.bam
 		renameBAM SRR330786 h3ac_2
-		${samcmd} merge h3k4me2.bam SRR330800.bam SRR330801.bam
+		${samcmd} merge -f h3k4me2.bam SRR330800.bam SRR330801.bam
 		${samcmd} index h3k4me2.bam
-		${samcmd} merge h3k27me3.bam SRR330814.bam SRR330815.bam SRR330816.bam
+		${samcmd} merge -f h3k27me3.bam SRR330814.bam SRR330815.bam SRR330816.bam
 		${samcmd} index h3k27me3.bam
 	elif [[ $i -eq 4 ]]; then
 		renameBAM SRR642390 example-pet
