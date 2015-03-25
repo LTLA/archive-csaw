@@ -24,7 +24,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 \value{
 A \code{SummarizedExperiment} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each window (row).
-The coordinates of each window are stored as the \code{rowData}.
+The coordinates of each window are stored as the \code{rowRanges}.
 The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length and \code{param} used in each library.
 Other window counting parameters (e.g., \code{spacing}, \code{width}) are stored in the \code{exptData}.
 }
@@ -57,7 +57,7 @@ The number of fragments overlapping the window for each library is then counted 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
  
-The strandedness of the output \code{rowData} is set based on the strand(s) from which the reads are extracted and counted.
+The strandedness of the output \code{rowRanges} is set based on the strand(s) from which the reads are extracted and counted.
 This is determined by the value of the \code{forward} slot in the input \code{param} object.
 }
 
