@@ -1,4 +1,4 @@
-getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval.col=NULL, cpm.col=NULL)
+getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.col=NULL)
 # This uses Holms' method to provide strong control of the FWER within each
 # cluster. The idea is that it returns the test with the lowest p-value in the
 # cluster. You can then use one test as the representative of the entire cluster,
@@ -6,7 +6,8 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval
 # event is somewhere in there). 
 #
 # written by Aaron Lun
-# 17 April 2014
+# created 17 April 2014
+# last modified 25 March 2015
 {
 	if (!is.integer(ids)) { ids <- as.integer(ids + 0.5) }
 	id.order <- order(ids)
@@ -29,11 +30,13 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval
 
 	if (by.pval) { 
 		# Identifying the minimum P-value, and Bonferroni-correcting it.
-		if (!is.double(weight)) { weight <- as.double(weight) }
+		if (is.null(weight)) { weight <- rep(1, length(ids)) } 
+		else if (!is.double(weight)) { weight <- as.double(weight) }
 		weight <- weight[id.order]
 		out <- .Call(cxx_best_in_cluster, tab[,pval.col], ids, weight)
 		if (is.character(out)) { stop(out) }
-		result <- data.frame(id.order[out[[2]]], out[[1]], p.adjust(out[[1]], method="BH"))
+		pval <- out[[1]]
+		best <- out[[2]]
 
 	} else {
 		if (length(cpm.col)==0L) {
@@ -53,12 +56,15 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval
 		# Identifying the window with the maximum logCPM.
 		out <- .Call(cxx_best_in_cluster, -tab[,cpm.col], ids, weight)
 		if (is.character(out)) { stop(out) }
-		pval <- tab[out[[2]], pval.col]
-		result <- data.frame(id.order[out[[2]]], pval, p.adjust(pval, method="BH"))
+		best <- out[[2]]
+		pval <- tab[best, pval.col]
 	}
 	
-	colnames(result) <- c("best", colnames(tab)[pval.col], "FDR")
+	subtab <- tab[best,]
+	subtab[,pval.col] <- pval
+	result <- data.frame(best=id.order[best], subtab, FDR=p.adjust(pval, method="BH"))
 	rownames(result) <- ids[c(TRUE, diff(ids)!=0L)]
+
 	return(result)
 }
 
