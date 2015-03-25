@@ -1,15 +1,15 @@
 #include "csaw.h"
 
-SEXP get_cluster_stats (SEXP otherdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight) try {
+SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight, SEXP fcthreshold) try {
 	// Checking indices.
-	if (!isInteger(otherdex) || !isInteger(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
-	if (LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for log-CPM and p-value columns"); }
+	if (!isInteger(fcdex) || !isInteger(pvaldex)) { throw std::runtime_error("table indices should be integer"); }
+	if (LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for the p-value column"); }
 	const int pdex=asInteger(pvaldex);
-	const int ocn=LENGTH(otherdex);
-	if (!ocn) { throw std::runtime_error("at least one index should be supplied for the other columns"); }
-	const int* odptr=INTEGER(otherdex);
+	const int fcn=LENGTH(fcdex);
+	if (!fcn) { throw std::runtime_error("at least one index should be supplied for the log-FC columns"); }
+	const int* odptr=INTEGER(fcdex);
 
-	// Setting up the columns.
+	// Setting up the p-value columns.
 	if (!isNewList(tab)) { throw std::runtime_error("data values should be supplied as a list or dataframe"); }
 	SEXP pval=VECTOR_ELT(tab, pdex);
 	if (!isNumeric(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
@@ -17,14 +17,16 @@ SEXP get_cluster_stats (SEXP otherdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP wei
 	const int n=LENGTH(pval);
 	if (n==0) { throw std::runtime_error("no elements supplied to compute cluster statistics"); }
 
-	// Setting up the columns (II), for log-FCs.
-	double** optrs=(double**)R_alloc(ocn, sizeof(double*));
-	for (int i=0; i<ocn; ++i) { 
-		SEXP other=VECTOR_ELT(tab, odptr[i]);
-		if (!isNumeric(other)) { throw std::runtime_error("vector of other statistics should be double precision"); }
-	    if (n!=LENGTH(other)) { throw std::runtime_error("vector lengths are not equal"); }
-		optrs[i]=REAL(other);
+	// Setting up the log-FC columns.
+	double** fcptrs=(double**)R_alloc(fcn, sizeof(double*));
+	for (int i=0; i<fcn; ++i) { 
+		SEXP logfc=VECTOR_ELT(tab, odptr[i]);
+		if (!isNumeric(logfc)) { throw std::runtime_error("vector of logfc statistics should be double precision"); }
+	    if (n!=LENGTH(logfc)) { throw std::runtime_error("vector lengths are not equal"); }
+		fcptrs[i]=REAL(logfc);
 	}
+	if (!isReal(fcthreshold) || LENGTH(fcthreshold)!=1) { throw std::runtime_error("log-fold change threshold should be a numeric scalar"); }
+	const double fcthresh=asReal(fcthreshold);
 
 	// Setting up the remaining inputs. 
 	if (!isInteger(by)) { throw std::runtime_error("vector of cluster ids should be integer"); }
@@ -46,14 +48,16 @@ SEXP get_cluster_stats (SEXP otherdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP wei
 	sort_row_index<double> pcomp(pptr);
 
 	// Pulling out results.
-	SEXP output=PROTECT(allocVector(VECSXP, 2));
+	SEXP output=PROTECT(allocVector(VECSXP, 3));
 	try {
-		SET_VECTOR_ELT(output, 0, allocMatrix(REALSXP, total, ocn));
-		double** ooptrs=(double**)R_alloc(ocn, sizeof(double*));
-		ooptrs[0]=REAL(VECTOR_ELT(output, 0));
-		for (int i=1; i<ocn; ++i) { ooptrs[i]=ooptrs[i-1]+total; }
-		SET_VECTOR_ELT(output, 1, allocVector(REALSXP, total));
-		double* opptr=REAL(VECTOR_ELT(output, 1));
+		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, total));
+		int* otptr=INTEGER(VECTOR_ELT(output, 0));
+		SET_VECTOR_ELT(output, 1, allocMatrix(INTSXP, total, fcn*2));
+		int** ofptrs=(int**)R_alloc(fcn, sizeof(int*));
+		ofptrs[0]=INTEGER(VECTOR_ELT(output, 1));
+		for (int i=1; i<fcn*2; ++i) { ofptrs[i]=ofptrs[i-1]+total; }
+		SET_VECTOR_ELT(output, 2, allocVector(REALSXP, total));
+		double* opptr=REAL(VECTOR_ELT(output, 2));
 	
 		int i=0, k, x;
 		while (i<n) {
@@ -64,12 +68,18 @@ SEXP get_cluster_stats (SEXP otherdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP wei
 				++j; 
 			}
 
-			// Computing the weighted mean of log-FC(s) and log-CPM values.
-			for (k=0; k<ocn; ++k) { 
-				double& out_other=(ooptrs[k][0]=0);
-				for (x=i; x<j; ++x) {  out_other+=optrs[k][x]*wptr[x]; }
-				out_other/=subweight;
-				++(ooptrs[k]);
+			// Computing the total number of windows, and that up/down for each fold change.
+			*(otptr)=j-i;
+			++otptr;
+			for (k=0; k<fcn; ++k) { 
+				int& allup=(ofptrs[k*2][0]=0);
+				int& alldown=(ofptrs[k*2+1][0]=0);
+				for (x=i; x<j; ++x) {  
+					if (fcptrs[k][x] > fcthresh) { ++allup; } 
+					else if (fcptrs[k][x] < -fcthresh) { ++alldown; }
+				}
+				++(ofptrs[k*2]);
+				++(ofptrs[k*2+1]);
 			}
 
 			/* Computing the weighted Simes value. The weights are implemented as frequency 
