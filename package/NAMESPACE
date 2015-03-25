@@ -12,6 +12,7 @@ export(csawUsersGuide,
 	getWidths, scaledAverage, findMaxima, filterWindows,
 	combineTests, getBestTest, mergeWindows,
 	consolidateSizes, upweightSummit,
+	combineOverlaps, getBestOverlaps, summitOverlaps,
 	detailRanges,
 	extractReads)
 
