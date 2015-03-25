@@ -6,25 +6,27 @@
 \description{Find the test with the strongest evidence for rejection of the null in each cluster.}
 
 \usage{
-getBestTest(ids, tab, by.pval=TRUE, weight=rep(1, length(ids)), pval.col=NULL, cpm.col=NULL)
+getBestTest(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.col=NULL)
 }
 
 \arguments{
 	\item{ids}{an integer vector containing the cluster ID for each test}
 	\item{tab}{a table of results with a \code{PValue} field for each test}
 	\item{by.pval}{a logical scalar, indicating whether selection should be performed on corrected p-values}
-	\item{weight}{a numeric vector of weights for each window}
+	\item{weight}{a numeric vector of weights for each window, defaults to 1 for each test}
 	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values, or a character string containing the name of that column}
 	\item{cpm.col}{an integer scalar specifying the column of \code{tab} containing the log-CPM values, or a character string containing the name of that column}
 }
 
 \value{
-A dataframe with one row per cluster and the numeric fields \code{best}, the index for the best test in the cluster; \code{PValue}, the adjusted p-value for that test; and \code{FDR}, the q-value corresponding to the adjusted p-value.
+A dataframe with one row per cluster and the numeric fields \code{best}, the index for the best test in the cluster; \code{PValue}, the (possibly adjusted) p-value for that test; and \code{FDR}, the q-value corresponding to the adjusted p-value.
 Note that the p-value column may be named differently if \code{pval.col} is specified.
+Other fields in \code{tab} corresponding to the best test inthe cluster are also returned.
 Cluster IDs are stored as the row names.
 }
 
 \details{
+Clusters are identified as those tests with the same value of \code{ids}.
 If \code{by.pval=TRUE}, this function identifies the test with the lowest p-value as that with the strongest evidence against the null in each cluster.
 The p-value of the chosen test is adjusted using the Bonferroni correction, based on the total number of tests in the parent cluster. 
 This is necessary to obtain strong control of the family-wise error rate such that the best test can be taken from each cluster for further consideration.
@@ -50,33 +52,34 @@ This should be independent of the p-value so no adjustment is necessary. Weights
 This mode may be useful when abundance is correlated to rejection under the alternative hypothesis, e.g., picking high-abundance regions that are more likely to contain peaks.
 
 By default, the relevant fields in \code{tab} are identified by matching the column names to their expected values.
-If the column names are different from what is expected, specification of the correct column can be performed using \code{pval.col} and \code{cpm.col}
+If the column names are different from what is expected, specification of the correct column can be performed using \code{pval.col} and \code{cpm.col}.
 }
 
 \examples{ 
 ids <- round(runif(100, 1, 10))
 tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
-combined <- getBestTest(ids, tab)
-head(combined)
+best <- getBestTest(ids, tab)
+head(best)
 
-combined <- getBestTest(ids, tab, cpm.col="logCPM", pval.col="PValue")
-head(combined)
+best <- getBestTest(ids, tab, cpm.col="logCPM", pval.col="PValue")
+head(best)
 
 # With window weighting.
 w <- round(runif(100, 1, 5))
-combined <- getBestTest(ids, tab, weight=w)
-head(combined)
+best <- getBestTest(ids, tab, weight=w)
+head(best)
 
 # By logCPM.
-combined <- getBestTest(ids, tab, by.pval=FALSE)
-head(combined)
+best <- getBestTest(ids, tab, by.pval=FALSE)
+head(best)
 
-combined <- getBestTest(ids, tab, by.pval=FALSE, cpm.col=2, pval.col=3)
-head(combined)
+best <- getBestTest(ids, tab, by.pval=FALSE, cpm.col=2, pval.col=3)
+head(best)
 }
 
 \seealso{
-\code{\link{combineTests}}, \code{\link{mergeWindows}} 
+\code{\link{combineTests}}, 
+\code{\link{mergeWindows}} 
 }
 
 \author{Aaron Lun}

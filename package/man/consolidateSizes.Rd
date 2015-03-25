@@ -5,23 +5,24 @@
 \description{Consolidate DB results from multiple window sizes.}
 
 \usage{
-consolidateSizes(data.list, result.list, equiweight=TRUE,
-    merge.args=list(tol=1000), combine.args=list(), region) 
+consolidateSizes(data.list, result.list, equiweight=TRUE,  merge.args=list(tol=1000), 
+    combine.args=list(), region=NULL, overlap.args=list()) 
 }
 
 \arguments{
-\item{data.list}{a list of \code{SummarizedExperiment} objects, produced by \code{\link{windowCounts}}; or, a list of integer vectors (see details)}
+\item{data.list}{a list of \code{SummarizedExperiment} objects, produced by \code{\link{windowCounts}}}
 \item{result.list}{a list of data frames containing the DB test results for each entry of \code{data.list}}
 \item{equiweight}{a logical scalar indicating whether equal weighting from each window size should be enforced}
 \item{merge.args}{a list of parameters to pass to \code{\link{mergeWindows}} when \code{FUN=NULL}}
 \item{combine.args}{a list of parameters to pass to \code{\link{combineTests}}}
-\item{region}{a \code{GRanges} object to supply when \code{data.list} is a list of integer vectors}
+\item{region}{a \code{GRanges} object specifying regions of interest for overlapping with windows}
+\item{overlap.args}{a list of parameters to pass to \code{\link{findOverlaps}}}
 }
 
 \value{
 A list is returned, containing:
 \item{id}{a list of integer vectors, where each vector corresponds to an object in \code{data.list}; the entries of the vector specify the cluster to which each row of that object is assigned}
-\item{region}{a \code{GRanges} object containing the genomic coordinates of the clusters of merged windows (or other regions, depending on \code{FUN})}
+\item{region}{a \code{GRanges} object containing the genomic coordinates of the clusters of merged windows (or other regions, if \code{region} is specified)}
 \item{table}{a data frame containing the combined DB results for each \code{region}}	
 }
 
@@ -34,15 +35,15 @@ Some effort is required to equalize the contribution of each window size to the 
 This is done by setting \code{equiweight=TRUE}, where the weight of each window is inversely proportional to the number of windows of that size.
 Otherwise, the combined p-value would be determined by numerous small windows in each cluster.
 
-Other forms of clustering can be performed outside of \code{consolidateSizes}, and the cluster IDs can be supplied as a list of integer vectors in \code{data.list}.
-Each vector should correspond to a window size, and each entry of that vector should specifies the cluster to which the corresponding window belongs.
-This format is equivalent to the returned \code{id} list.
-Coordinates must be supplied separately in \code{region}, or will be set to \code{NA} if nothing is specified.
+If \code{region} is specified, each entry of \code{region} is defined as a cluster.
+Windows in each cluster are identified using \code{\link{findOverlaps}}, and consolidation is performed across multiple window sizes like before.
+Note that the returned \code{id} will be a list of \code{\link{Hits}} objects rather than integer vectors, as one window (subject) may overlap more than one region (query).
 }
 
 \seealso{
 \code{\link{windowCounts}},
 \code{\link{mergeWindows}},
+\code{\link{findOverlaps}},
 \code{\link{combineTests}}
 }
 
@@ -71,12 +72,15 @@ cons$table
 # Trying with a custom function.
 of.interest <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'), 
     IRanges(c(1, 500, 100, 1000), c(200, 1000, 700, 1500)))
-llap <- findOverlaps(rowRanges(low), of.interest)
-mlap <- findOverlaps(rowRanges(med), of.interest)
-hlap <- findOverlaps(rowRanges(high), of.interest)
-cons <- consolidateSizes(list(subjectHits(llap), subjectHits(mlap), subjectHits(hlap)), 
-    list(dbl[queryHits(llap),], dbm[queryHits(mlap),], dbh[queryHits(hlap),]),
+cons <- consolidateSizes(list(low, med, high), list(dbl, dbm, dbh),
     region=of.interest)
+cons$table
+cons$id
+
+# Trying with limited numbers of overlaps; empty regions are ignored.
+cons <- consolidateSizes(list(low[1,], med[1,], high[1,]), 
+    list(dbl[1,], dbm[1,], dbh[1,]), region=of.interest)
+cons$region
 cons$table
 }
 

@@ -55,6 +55,8 @@ set.seed(20)
 ids <- sample(5, nwin, replace=TRUE)	
 summits <- sample(5, nwin, replace=TRUE)==1L
 weights <- upweightSummit(ids, summits)
+
+# Checking that the summit is upweighted in each cluster.
 split(data.frame(summits, weights), ids)
 }
 
