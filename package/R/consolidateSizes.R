@@ -38,10 +38,10 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 		all.ranges <- list()
 		final.ids <- list()
 		for (x in 1:nset) {
-			olap <- do.call(findOverlaps, c(query=rowRanges(data.list[[x]]), subject=region, overlap.args))
+			olap <- do.call(findOverlaps, c(query=region, subject=rowRanges(data.list[[x]]), overlap.args))
 			final.ids[[x]] <- olap
-			all.ranges[[x]] <- subjectHits(olap)
-			result.list[[x]] <- result.list[[x]][queryHits(olap),]
+			all.ranges[[x]] <- queryHits(olap)
+			result.list[[x]] <- result.list[[x]][subjectHits(olap),]
 		}
 		merged <- list(id=unlist(all.ranges), region=region)
 		names(final.ids) <- names(data.list)
