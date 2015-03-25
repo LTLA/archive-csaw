@@ -1,42 +1,50 @@
 consolidateSizes <- function(data.list, result.list, equiweight=TRUE, 
-    merge.args=list(tol=1000), combine.args=list(), region) 
+    merge.args=list(tol=1000), combine.args=list(), region=NULL, overlap.args=list()) 
 # Consolidates results for multiple window sizes into a result for the
 # genomic region over which those windows are tiled. Returns the combined
 # results, as well as ID vectors for cross-referencing and inspection.
 #
 # written by Aaron Lun
 # created 26 February 2015
+# last modified 25 March 2015
 {
 	nset <- length(data.list)
 	if (nset!=length(result.list)) { stop("data list must have same length as result list") }
-	has.integer <- has.sumexp <- FALSE
 	nall <- 0L
 	for (x in 1:nset) {
-		if (is.integer(data.list[[x]])) { 
-			currows <- length(data.list[[x]])
-			has.integer <- TRUE
-		} else {
-			currows <- nrow(data.list[[x]])
-			has.sumexp <- TRUE
-		}
+		currows <- nrow(data.list[[x]])
 		ntab <- nrow(result.list[[x]])
 		if (currows!=ntab) { stop("corresponding entries of data and result lists must have same number of entries") }
 		nall <- nall + ntab
 	}
-	if (has.integer==has.sumexp) { stop("mixing of integer vectors and SummarizedExperiments is not supported") }
 
-	# Merging windows.	
-	if (!has.integer) { 
+	# Merging windows, or finding overlaps.
+	if (is.null(region)) { 
 		all.ranges <- list()
 		for (x in 1:nset) { all.ranges[[x]] <- rowRanges(data.list[[x]]) }
 		all.ranges <- do.call(c, all.ranges)
 		merged <- do.call(mergeWindows, c(merge.args, regions=all.ranges)) 
-	} else {
-		if (missing(region)) { 
-			warning("region should be supplied when clustering is manually performed") 
-			region <- NA
+
+		# Formatting for nice output.
+		final.ids <- list()
+		last <- 0L
+		for (x in 1:nset) { 
+			currows <- nrow(result.list[[x]])
+			final.ids[[x]] <- merged$id[last+1:currows]
+			last <- last + currows
 		}
-		merged <- list(id=unlist(data.list), region=region)
+		names(final.ids) <- names(data.list)
+	} else {
+		all.ranges <- list()
+		final.ids <- list()
+		for (x in 1:nset) {
+			olap <- do.call(findOverlaps, c(query=rowRanges(data.list[[x]]), subject=region, overlap.args))
+			final.ids[[x]] <- olap
+			all.ranges[[x]] <- subjectHits(olap)
+			result.list[[x]] <- result.list[[x]][queryHits(olap),]
+		}
+		merged <- list(id=unlist(all.ranges), region=region)
+		names(final.ids) <- names(data.list)
 	}
 
 	# Calculating weights, so each window size (or spacing) has the same contribution to the final outcome.
@@ -59,19 +67,15 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	tabres <- do.call(rbind, result.list)
 	tabcom <- do.call(combineTests, c(list(ids=merged$id, tab=tabres, weight=rel.weights), combine.args))
 
-	# Returning output.
-	if (!has.integer) { 
-		ids <- list()
-		last <- 0L
-		for (x in 1:nset) { 
-			currows <- nrow(result.list[[x]])
-			ids[[x]] <- merged$id[last+1:currows]
-			last <- last + currows
-		}
-		names(ids) <- names(data.list)
-	} else { 
-		ids <- data.list 
+	if (!is.null(region)) { 
+		nregions <- length(region)
+		expand.vec <- rep(NA, nregions)
+		row.dex <- as.integer(rownames(tabcom))
+		if (any(row.dex <= 0L | row.dex > nregions)) { stop("cluster IDs are not within [1, nregions]") }
+		expand.vec[row.dex] <- 1:nrow(tabcom)
+		tabcom <- tabcom[expand.vec,]
+		rownames(tabcom) <- NULL
 	}
 
-	return(list(id=ids, region=merged$region, table=tabcom))
+	return(list(id=final.ids, region=merged$region, table=tabcom))
 }
