@@ -2,21 +2,24 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.32}{\itemize{
+\section{Version 1.1.33}{\itemize{
 \item 
 Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison of abundances during filtering.
 
 \item 
-Added findMaxima() to identify locally maximal windows.
+Added findMaxima() to identify locally maximal windows from range data.
 
 \item 
 Added profileSites() to examine the coverage profile around specified regions, with wwhm() to guess the ideal window size from the profile.
 
 \item
-Changed default window width in windowCounts() to 50 bp, default filter to 10.
+Changed default window width in windowCounts() to 50 bp, default filter to a fixed count of 10. Also, filter=0 is honored when bin=TRUE.
+
+\item
+Switched from the depracated rowData to rowRanges for all manipulations of SummarizedExperiment.
 
 \item 
-Changed all instances of \code{pet} to \code{pe} in read parameter specification, and renamed getPETSizes() to getPESizes().
+Changed all instances of `pet' to `pe' in read parameter specification, and renamed getPETSizes() to getPESizes().
 
 \item 
 Removed the redundant rescue.pairs parameter in readParam().
@@ -27,11 +30,20 @@ Added fast.pe parameter in readParam(), for fast paired-end data extraction. Add
 \item 
 Added support for custom column specification in getBestTest(), combineTests().
 
-\item 
-Added consolidateSizes(), to consolidate DB results from multiple window sizes.
+\item
+Switched from reporting average log-FC to numbers of up/down windows in combineTests().
 
 \item
-Added upweightSummits(), to compute weights favouring high-abundance windows during Simes.
+Allowed getBestTest() to return all fields associated with the best window in the output table.
+
+\item
+Added upweightSummits() to compute weights favouring high-abundance windows.
+
+\item 
+Added combineOverlaps(), getBestOverlaps() and summitOverlaps() wrapper functions for processing of Hits objects.
+
+\item 
+Added consolidateSizes(), to consolidate DB results from multiple window sizes.
 
 \item
 Added support for custom key/name specification in detailRanges() for non-human/mouse systems.
