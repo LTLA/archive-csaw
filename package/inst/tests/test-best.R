@@ -33,6 +33,7 @@ comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 }
 
 set.seed(3479102)
+options(width=120)
 
 comp()
 comp(1,1)
