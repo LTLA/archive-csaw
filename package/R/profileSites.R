@@ -149,7 +149,7 @@ wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, r
 	nlibs <- length(ext)
 	ext.data <- .collateExt(nlibs, ext)
 	dummy.data <- SummarizedExperiment(colData=DataFrame(ext=ext.data$ext), 
-		exptData=List(final.ext=ext.data$final), rowData=GRanges("chrA", IRanges(1, 1))) 
+		exptData=List(final.ext=ext.data$final), rowRanges=GRanges("chrA", IRanges(1, 1))) 
 	if (!is.null(rlen)) { dummy.data$rlen <- rlen }
 	ext.len <- getWidths(dummy.data)
 

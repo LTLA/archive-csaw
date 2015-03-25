@@ -131,7 +131,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	dim(paramlist) <- c(nbam, 1)
 	colnames(paramlist) <- "param"
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
-		rowData=all.regions, 
+		rowRanges=all.regions, 
 		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext.data$ext, paramlist),
 		exptData=SimpleList(spacing=spacing, width=width, shift=shift, 
 			final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
