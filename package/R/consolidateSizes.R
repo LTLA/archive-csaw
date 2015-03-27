@@ -66,16 +66,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	# Combining statistics.
 	tabres <- do.call(rbind, result.list)
 	tabcom <- do.call(combineTests, c(list(ids=merged$id, tab=tabres, weight=rel.weights), combine.args))
-
-	if (!is.null(region)) { 
-		nregions <- length(region)
-		expand.vec <- rep(NA, nregions)
-		row.dex <- as.integer(rownames(tabcom))
-		if (any(row.dex <= 0L | row.dex > nregions)) { stop("cluster IDs are not within [1, nregions]") }
-		expand.vec[row.dex] <- 1:nrow(tabcom)
-		tabcom <- tabcom[expand.vec,]
-		rownames(tabcom) <- NULL
-	}
+	if (!is.null(region)) { tabcom <- .expandNA(tabcom, length(region)) }
 
 	return(list(id=final.ids, region=merged$region, table=tabcom))
 }
