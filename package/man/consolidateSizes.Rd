@@ -69,7 +69,12 @@ cons$region
 cons$id
 cons$table
 
-# Trying with a custom function.
+# Without weights.
+cons <- consolidateSizes(list(low, med, high), list(dbl, dbm, dbh),
+	merge.args=list(tol=100, max.width=300), equiweight=FALSE)
+cons$table
+
+# Trying with a custom region.
 of.interest <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'), 
     IRanges(c(1, 500, 100, 1000), c(200, 1000, 700, 1500)))
 cons <- consolidateSizes(list(low, med, high), list(dbl, dbm, dbh),
