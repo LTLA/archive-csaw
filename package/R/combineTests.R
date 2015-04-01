@@ -12,6 +12,9 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	if (!is.integer(ids)) { ids <- as.integer(ids+0.5) }
 	if (is.null(weight)) { weight <- rep(1, length(ids)) }
 	else if (!is.double(weight)) { weight <- as.double(weight) }
+	stopifnot(length(ids)==nrow(tab))
+	stopifnot(length(ids)==length(weight))
+
 	id.order <- order(ids)
 	ids <- ids[id.order]
 	tab <- tab[id.order,]

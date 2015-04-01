@@ -10,6 +10,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 # last modified 25 March 2015
 {
 	if (!is.integer(ids)) { ids <- as.integer(ids + 0.5) }
+	stopifnot(length(ids)==nrow(tab))
 	id.order <- order(ids)
 	ids <- ids[id.order]
 	tab <- tab[id.order,]
@@ -32,6 +33,8 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 		# Identifying the minimum P-value, and Bonferroni-correcting it.
 		if (is.null(weight)) { weight <- rep(1, length(ids)) } 
 		else if (!is.double(weight)) { weight <- as.double(weight) }
+		stopifnot(length(ids)==length(weight))
+
 		weight <- weight[id.order]
 		out <- .Call(cxx_best_in_cluster, tab[,pval.col], ids, weight)
 		if (is.character(out)) { stop(out) }
