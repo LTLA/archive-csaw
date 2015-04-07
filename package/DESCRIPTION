@@ -1,6 +1,6 @@
 Package: csaw
-Version: 1.1.28
-Date: 2015/04/02
+Version: 1.1.29
+Date: 2015/04/07
 Title: ChIP-seq analysis with windows
 Author: Aaron Lun <alun@wehi.edu.au>, Gordon Smyth <smyth@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
@@ -14,3 +14,4 @@ Description: Detection of differentially bound regions in ChIP-seq data
         with sliding windows, with methods for normalization and proper
         FDR control.
 License: GPL-3
+NeedsCompilation: yes
