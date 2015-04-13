@@ -13,7 +13,7 @@ clusterFDR(ids, threshold)
 \item{threshold}{a numeric scalar, specifying the FDR threshold used to define the significant tests}
 } 
 
-\description{
+\details{
 This function computes an informal estimate of the cluster-level FDR, where each cluster is formed by aggregating only significant tests.
 In the context of ChIP-seq, each significant test refers to a DB window that is detected at a FDR below \code{threshold}.
 The idea is to obtain an error rate while reporting the precise coordinates of a DB subinterval in a complex region.
