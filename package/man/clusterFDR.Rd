@@ -19,7 +19,7 @@ In the context of ChIP-seq, each significant test refers to a DB window that is 
 The idea is to obtain an error rate while reporting the precise coordinates of a DB subinterval in a complex region.
 
 The cluster-level FDR is defined as the proportion of reported clusters that have no true positives.
-Simply using \code{threhsold} is not appropriate, as the cluster- and window-level FDRs are not equivalent. 
+Simply using \code{threshold} is not appropriate, as the cluster- and window-level FDRs are not equivalent. 
 This function also differs from the standard pipeline that is based on \code{\link{combineTests}}.
 Specifically, region definition in the standard pipeline must be independent of DB.
 Precise coordinates of the DB subinterval cannot be reported.
@@ -27,6 +27,9 @@ Precise coordinates of the DB subinterval cannot be reported.
 Users should note that the calculation of the cluster-level FDR here is not statistically rigorous.
 In particular, the observed number of false positive tests is estimated based on \code{threshold} and the total number of significant tests.
 This is not guaranteed to be an upper bound, especially when the observed window-level FDR is variable.
+
+In conclusion, users should use the standard \code{\link{combineTests}}-based pipeline wherever possible.
+Clustering on significant windows should only be performed where the precise coordinates of the DB subinterval are important for interpretation.
 }
 
 \value{
