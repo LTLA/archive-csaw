@@ -29,6 +29,10 @@ In particular, the observed number of false positive tests is estimated based on
 This is not guaranteed to be an upper bound, especially when the observed window-level FDR is variable.
 }
 
+\value{
+A numeric scalar as the cluster-level FDR.
+}
+
 \author{
 Aaron Lun
 }
