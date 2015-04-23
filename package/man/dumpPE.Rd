@@ -53,7 +53,6 @@ out2 <- windowCounts(outBam, param=reform(xparam, fast.pe=TRUE), filter=1)
 
 stopifnot(identical(assay(out), assay(out2)))
 stopifnot(identical(out$totals, out2$totals))
-unlink("whee.bam")
 
 # Comparing it to a more complex scenario.
 xparam <- readParam(pe="both", rescue.ext=200)
@@ -71,7 +70,11 @@ reg1 <- extractReads(last.reg, bamFile, param=xparam)
 reg2 <- extractReads(last.reg, outBam, param=reform(xparam, fast.pe=TRUE))
 
 stopifnot(identical(sort(reg1), sort(reg2)))
+
+\dontshow{
 unlink("whee.bam")
+unlink("whee.bam.bai")
+}
 }
 
 \keyword{counting}
