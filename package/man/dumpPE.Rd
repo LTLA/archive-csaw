@@ -30,6 +30,10 @@ The idea is to generate a pre-filtered BAM file by specifying the appropriate se
 The output BAM file can then be efficiently analyzed with, e.g., \code{\link{windowCounts}} with \code{fast.pe=TRUE}.
 This avoids the need to load and match read names in every function.
 Note that all alignment-specific information is lost, e.g., MAPQ scores, duplicate information, CIGAR strings.
+
+Only proper pairs with sizes less than \code{param$max.frag} will be retained in the output file.
+If \code{max.frag} is increased in downstream calls on the output file, the results may not be correct as proper pairs with sizes between the two settings will not be considered.
+Users are recommended to keep \code{max.frag} constant throughout the pipeline.
 }
 
 \seealso{
