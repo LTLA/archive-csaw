@@ -58,6 +58,7 @@ Users should set \code{rescue.ext} as the median fragment length from \code{\lin
 The extended read will then be used as the fragment interval.
 Similarly, any reads without a mapped mate will be extended. 
 For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
+This is acceptable as these reads will never be counted twice into the same region.
 
 Each run through the position-sorted BAM file tends to be time-consuming, as read names must be extracted and matched.
 This can be avoided by setting \code{fast.pe=TRUE}.
