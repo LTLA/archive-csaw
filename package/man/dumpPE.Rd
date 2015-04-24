@@ -58,7 +58,7 @@ stopifnot(identical(out$totals, out2$totals))
 xparam <- readParam(pe="both", rescue.ext=200)
 out <- windowCounts(bamFile, param=xparam, filter=1)
 
-outBam <- dumpPE(bamFile, "whee", param=xparam)
+outBam <- dumpPE(bamFile, "whee", param=xparam, overwrite=TRUE)
 out2 <- windowCounts(outBam, param=reform(xparam, fast.pe=TRUE), filter=1)
 
 stopifnot(identical(assay(out), assay(out2)))
