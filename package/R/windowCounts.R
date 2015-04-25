@@ -2,8 +2,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	filter=10, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
-# Returns a DGEList with count and total information, as well as a GRanges
-# object specifying the window intervals.
+# Returns a SummarizedExperiment object with counts and genomic coordinates.
 # 
 # written by Aaron Lun
 # created 5 April 2012

@@ -2,7 +2,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 # This just counts reads over regions. The only reason I'm using this and not
 # some other package, is because (a) I want to avoid loading in more packages
 # than I need, and (b) I need to count using the same reads (i.e., same values
-# for ext, pe, and so on).
+# for 'ext', 'pe', and so on).
 #
 # written by Aaron Lun
 # created 14 May 2014
