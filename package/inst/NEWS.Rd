@@ -2,7 +2,18 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.1.28}{\itemize{
+\section{Version 1.3.1}{\itemize{
+\item
+Added clusterFDR() function to compute the FDR for clusters of DB windows.
+
+\item
+Modified normalize(), asDGEList() to allow manual specification of library sizes.
+
+\item
+Slight updates to documentation, user's guide.
+}}
+
+\section{Version 1.2.0}{\itemize{
 \item 
 Added getWidths(), scaledAverage() and filterWindows(), to facilitate comparison of abundances during filtering.
 
