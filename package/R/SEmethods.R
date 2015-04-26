@@ -8,10 +8,10 @@
 # last modified 26 April 2015
 
 setMethod("normalize", "SummarizedExperiment", function(object, ...) {
-	opt <- list(...)
-	is.libsize <- pmatch(names(opt), "lib.sizes")
+	opt <- match.call(normalizeCounts, do.call(call, list("normalizeCounts", 
+		counts=assay(object), ...)))
 
-	if (all(is.na(is.libsize))) { 
+	if (is.null(opt$lib.sizes)) { 
 		if (is.null(object$totals)) {
 			warning("library sizes not found in 'totals'")
 		} else {
@@ -19,23 +19,21 @@ setMethod("normalize", "SummarizedExperiment", function(object, ...) {
 		}
 	}
 
-	opt$counts <- assay(object)
-	do.call(normalizeCounts, opt)
+	eval(opt)
 })
 
 setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
 setMethod("asDGEList", "SummarizedExperiment", function(object, ...) {
-	opt <- list(...)
-	is.libsize <- pmatch(names(opt), "lib.size")
-
-	if (all(is.na(is.libsize))) { 
+	opt <- match.call(DGEList, do.call(call, list("DGEList", 
+		counts=assay(object), ...)))
+	
+	if (is.null(opt$lib.size)) { 
 		if (is.null(object$totals)) { 
-			warning("library sizes not found in 'totals'") 			
+			warning("library sizes not found in 'totals'")	
 		} else {
 			opt$lib.size <- object$totals
 		}
 	}
-
-	opt$counts <- assay(object)
-	do.call(DGEList, opt)
+	
+	eval(opt)
 })

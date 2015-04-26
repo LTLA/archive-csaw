@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
-Copyright (C) 2014 The R Foundation for Statistical Computing
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -70,8 +70,8 @@ GRanges object with 71 ranges and 0 metadata columns:
   [71]     chrC [1301, 1345]      *
   -------
   seqinfo: 3 sequences from an unspecified genome
-> data$total
-NULL
+> data$totals
+[1] 1349 3291
 > 
 > data <- windowCounts(both.files, width=500, spacing=200)
 > head(assay(data))
@@ -186,25 +186,94 @@ GRanges object with 6 ranges and 0 metadata columns:
   -------
   seqinfo: 2 sequences from an unspecified genome
 > 
+> # Trying to convert it to a DGEList.
+> asDGEList(data)
+An object of class "DGEList"
+$counts
+  Sample1 Sample2
+1      43      71
+2      57      89
+3      56     120
+4      53     141
+5      40     152
+21 more rows ...
+
+$samples
+        group lib.size norm.factors
+Sample1     1      451            1
+Sample2     1     1093            1
+
+> asDGEList(data, lib.size=c(10, 10))
+An object of class "DGEList"
+$counts
+  Sample1 Sample2
+1      43      71
+2      57      89
+3      56     120
+4      53     141
+5      40     152
+21 more rows ...
+
+$samples
+        group lib.size norm.factors
+Sample1     1       10            1
+Sample2     1       10            1
+
+> asDGEList(data, norm=c(1,2))
+An object of class "DGEList"
+$counts
+  Sample1 Sample2
+1      43      71
+2      57      89
+3      56     120
+4      53     141
+5      40     152
+21 more rows ...
+
+$samples
+        group lib.size norm.factors
+Sample1     1      451            1
+Sample2     1     1093            2
+
+> 
+> temp <- data 
+> temp$totals <- NULL 
+> asDGEList(temp) # Should spit out a warning.
+An object of class "DGEList"
+$counts
+  Sample1 Sample2
+1      43      71
+2      57      89
+3      56     120
+4      53     141
+5      40     152
+21 more rows ...
+
+$samples
+        group lib.size norm.factors
+Sample1     1     1293            1
+Sample2     1     3142            1
+
+Warning message:
+In asDGEList(temp) : library sizes not found in 'totals'
+> 
 > # Running some basic normalization.
 > data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
+> 
 > normalizeCounts(assay(data), lib.size=data$totals)
-[1] 1.001197 0.998804
-> normalize(data)
 [1] 1.001197 0.998804
 > normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
 [1] 1.003816 0.996199
 > normalizeCounts(assay(data), lib.size=data$totals, method="RLE")
 [1] 1.0037890 0.9962253
+> normalize(data)
+[1] 1.001197 0.998804
+> normalize(data, logratioTrim=0.1)
+[1] 1.0026764 0.9973307
+> normalize(data, method="upperquartile")
+[1] 0.9834651 1.0168129
+> 
 > head(normalizeCounts(assay(data), lib.size=data$totals, type="loess"))
-           [,1]      [,2]
-[1,] -0.4047876 0.4047876
-[2,] -0.4328410 0.4328410
-[3,] -0.3864553 0.3864553
-[4,] -0.4101296 0.4101296
-[5,] -0.3788945 0.3788945
-[6,] -0.3514597 0.3514597
-> head(normalize(data, type="loess"))
            [,1]      [,2]
 [1,] -0.4047876 0.4047876
 [2,] -0.4328410 0.4328410
@@ -220,6 +289,22 @@ GRanges object with 6 ranges and 0 metadata columns:
 [4,] -0.4215479 0.4215479
 [5,] -0.3858107 0.3858107
 [6,] -0.3915074 0.3915074
+> head(normalize(data, type="loess"))
+           [,1]      [,2]
+[1,] -0.4047876 0.4047876
+[2,] -0.4328410 0.4328410
+[3,] -0.3864553 0.3864553
+[4,] -0.4101296 0.4101296
+[5,] -0.3788945 0.3788945
+[6,] -0.3514597 0.3514597
+> head(normalize(data, type="loess", span=0.5))
+           [,1]      [,2]
+[1,] -0.4120470 0.4120470
+[2,] -0.4350054 0.4350054
+[3,] -0.3740611 0.3740611
+[4,] -0.4122536 0.4122536
+[5,] -0.3722926 0.3722926
+[6,] -0.3835921 0.3835921
 > 
 > # Assuming someone went around and pulled out some p-values for everybody.
 > set.seed(128145-19238)
@@ -445,4 +530,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 16.522   0.239  16.774 
+ 12.722   0.228  12.934 

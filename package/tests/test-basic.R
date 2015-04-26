@@ -17,7 +17,7 @@ getPESizes(pe.file)
 data <- windowCounts(both.files, ext=100)
 head(assay(data))
 rowRanges(data)
-data$total
+data$totals
 
 data <- windowCounts(both.files, width=500, spacing=200)
 head(assay(data))
@@ -47,15 +47,29 @@ assay(out)
 out$totals
 rowRanges(out)
 
+# Trying to convert it to a DGEList.
+asDGEList(data)
+asDGEList(data, lib.size=c(10, 10))
+asDGEList(data, norm=c(1,2))
+
+temp <- data 
+temp$totals <- NULL 
+asDGEList(temp) # Should spit out a warning.
+
 # Running some basic normalization.
 data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
+
 normalizeCounts(assay(data), lib.size=data$totals)
-normalize(data)
 normalizeCounts(assay(data), lib.size=data$totals, logratioTrim=.2)
 normalizeCounts(assay(data), lib.size=data$totals, method="RLE")
+normalize(data)
+normalize(data, logratioTrim=0.1)
+normalize(data, method="upperquartile")
+
 head(normalizeCounts(assay(data), lib.size=data$totals, type="loess"))
-head(normalize(data, type="loess"))
 head(normalizeCounts(assay(data), lib.size=data$totals, type="loess", span=0.7))
+head(normalize(data, type="loess"))
+head(normalize(data, type="loess", span=0.5))
 
 # Assuming someone went around and pulled out some p-values for everybody.
 set.seed(128145-19238)
