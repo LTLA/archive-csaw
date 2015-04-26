@@ -9,7 +9,10 @@ normalizeCounts <- function(counts, lib.sizes=NULL, type=c("scaling", "loess"), 
 # created 19 November 2013
 # last modified 26 April 2015
 {
-	if (is.null(lib.sizes)) { lib.sizes <- colSums(counts) }
+	if (is.null(lib.sizes)) { 
+		warning("library sizes not specified, column sums used instead")
+		lib.sizes <- colSums(counts) 
+	}
 
 	type <- match.arg(type)
 	if (type=="scaling") { 

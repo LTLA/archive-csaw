@@ -37,8 +37,8 @@ For each sample, a lowess curve is fitted to the log-counts against the log-aver
 The fitted value for each bin pair is used as the generalized linear model offset for that sample. 
 The use of the average count provides more stability than the average log-count when low counts are present for differentially bound regions.
 
-If \code{lib.sizes} is not specified, the column sums of \code{counts} are used instead.
-The same \code{lib.sizes} should be used throughout the analysis if \code{\link{normalizeCounts}} is called multiple times on the same data.
+If \code{lib.sizes} is not specified, a warning is issued and the column sums of \code{counts} are used instead.
+Note that the same \code{lib.sizes} should be used throughout the analysis if \code{\link{normalizeCounts}} is called multiple times on the same libraries, e.g., with different bin or window sizes or after different filtering steps.
 This ensures that the normalization factors or offsets are comparable between calls.
 }
 
