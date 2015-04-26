@@ -9,11 +9,9 @@
 setMethod("normalize", "SummarizedExperiment", function(object, lib.sizes=NULL, ...) {
 	if (is.null(lib.sizes)) { 
 		if (is.null(object$totals)) {
- 	   		warning("library sizes not found in 'totals'")
 			return(normalizeCounts(counts=assay(object), ...))
-		} else {
-			lib.sizes <- object$totals
-		}
+		} 
+		lib.sizes <- object$totals
 	}
 	normalizeCounts(counts=assay(object), lib.sizes=lib.sizes, ...)
 })
