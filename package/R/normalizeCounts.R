@@ -1,4 +1,4 @@
-normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weighted=FALSE, ...) 
+normalizeCounts <- function(counts, lib.sizes=NULL, type=c("scaling", "loess"), weighted=FALSE, ...) 
 # This provides a wrapper to perform TMM normalization with non-standard
 # library sizes (e.g. due to filtering) and weighting turned off.
 # Alternatively, it can do a form a fast loess-like normalization which uses
@@ -6,19 +6,17 @@ normalizeCounts <- function(counts, lib.sizes, type=c("scaling", "loess"), weigh
 # shenanigans. This avoids instability at low counts.
 #
 # written by Aaron Lun
-# 19 November, 2013
-# modified 11 December, 2014
+# created 19 November 2013
+# last modified 26 April 2015
 {
-	if (missing(lib.sizes)) { 
-		lib.sizes <- colSums(counts)
-		warning("library sizes not specified, column sums used instead")
-	}
+	if (is.null(lib.sizes)) { lib.sizes <- colSums(counts) }
 
 	type <- match.arg(type)
 	if (type=="scaling") { 
 		y <- DGEList(counts, lib.size=lib.sizes)
 		y <- calcNormFactors(y, doWeighting=weighted, ...)
 		return(y$samples$norm.factors)
+
 	} else if (type=="loess") { 
 		# Scaled corrections squeeze offsets towards relative log-library sizes.
 		# Constant value of `cont.cor' would squeeze them towards zero.
