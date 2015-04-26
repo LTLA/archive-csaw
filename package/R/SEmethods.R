@@ -6,14 +6,20 @@
 # written by Aaron Lun
 # created 2 September 2014
 
-setMethod("normalize", "SummarizedExperiment", function(object, ...) {
-	if (is.null(object$totals)) { 
-		return(normalizeCounts(counts=assay(object), ...))
+setMethod("normalize", "SummarizedExperiment", function(object, lib.sizes=NULL, ...) {
+	if (is.null(lib.sizes)) { 
+		if (is.null(object$totals)) {
+ 	   		warning("library sizes not found in 'totals'")
+			return(normalizeCounts(counts=assay(object), ...))
+		} else {
+			lib.sizes <- object$totals
+		}
 	}
-	normalizeCounts(counts=assay(object), lib.sizes=object$totals, ...)
+	normalizeCounts(counts=assay(object), lib.sizes=lib.sizes, ...)
 })
 
-setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
-setMethod("asDGEList", "SummarizedExperiment", function(object, ...) {
-	DGEList(assay(object), lib.size=object$totals, ...)
+setGeneric("asDGEList", function(object, lib.sizes=NULL, ...) { standardGeneric("asDGEList") })
+setMethod("asDGEList", "SummarizedExperiment", function(object, lib.sizes=NULL, ...) {
+	if (is.null(lib.sizes)) { lib.sizes <- object$totals }
+	DGEList(assay(object), lib.size=lib.sizes, ...)
 })
