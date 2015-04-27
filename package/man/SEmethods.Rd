@@ -9,23 +9,24 @@
 \description{Convenience wrappers for statistical routines operating on SummarizedExperiment objects}
 
 \usage{
-normalize(object, ...)
-asDGEList(object, ...)
+\S4method{normalize}{SummarizedExperiment}(object, lib.sizes, ...)
+\S4method{asDGEList}{SummarizedExperiment}(object, lib.sizes, ...)
 }
 
 \arguments{
   \item{object}{a \code{SummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
+  \item{lib.sizes}{an (optional) integer vector of library sizes}
   \item{...}{other arguments to be passed to the function being wrapped}
 }
 
 \details{
 Counts are extracted from the matrix corresponding to the first assay in the \code{SummarizedExperiment} object.
-The total library size is taken from the \code{totals} field in the column data of \code{object}.
+If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.
 Warnings will be generated if this field is not present.
 
-In the \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normalizeCounts}}, along wth arguments in \code{...}.
+In the \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normalizeCounts}}.
 Similarly, the \code{asDGEList} method wraps the \code{\link{DGEList}} constructor.
-Library sizes can be manually specified in \code{...} by setting \code{lib.sizes} for \code{normalize}, or \code{lib.size} for \code{asDGEList}.
+In both cases, any arguments in \code{...} are also passed to the wrapped functions.
 }
 
 \value{
@@ -44,7 +45,7 @@ normalize(data, lib.sizes=c(10, 100))
 head(normalize(data, type="loess"))
 
 asDGEList(data)
-asDGEList(data, lib.size=c(10, 100))
+asDGEList(data, lib.sizes=c(10, 100))
 asDGEList(data, norm.factors=c(1.11, 2.23), group=c("a", "b"))
 }
 

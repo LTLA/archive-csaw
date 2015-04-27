@@ -5,35 +5,21 @@
 #
 # written by Aaron Lun
 # created 2 September 2014
-# last modified 26 April 2015
+# last modified 27 April 2015
 
-setMethod("normalize", "SummarizedExperiment", function(object, ...) {
-	opt <- match.call(normalizeCounts, do.call(call, list("normalizeCounts", 
-		counts=assay(object), ...)))
-
-	if (is.null(opt$lib.sizes)) { 
-		if (is.null(object$totals)) {
-			warning("library sizes not found in 'totals'")
-		} else {
-			opt$lib.sizes <- object$totals
-		}
+setMethod("normalize", "SummarizedExperiment", function(object, lib.sizes, ...) {
+	if (missing(lib.sizes)) { 
+		if (is.null(object$totals)) { warning("library sizes not found in 'totals', setting to NULL") }
+		lib.sizes <- object$totals 
 	}
-
-	eval(opt)
+	normalizeCounts(assay(object), lib.sizes=lib.sizes, ...)
 })
 
 setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
-setMethod("asDGEList", "SummarizedExperiment", function(object, ...) {
-	opt <- match.call(DGEList, do.call(call, list("DGEList", 
-		counts=assay(object), ...)))
-	
-	if (is.null(opt$lib.size)) { 
-		if (is.null(object$totals)) { 
-			warning("library sizes not found in 'totals'")	
-		} else {
-			opt$lib.size <- object$totals
-		}
+setMethod("asDGEList", "SummarizedExperiment", function(object, lib.sizes, ...) {
+	if (missing(lib.sizes)) { 
+		if (is.null(object$totals)) { warning("library sizes not found in 'totals', setting to NULL") }
+		lib.sizes <- object$totals
 	}
-	
-	eval(opt)
+	DGEList(assay(object), lib.size=lib.sizes, ...)
 })

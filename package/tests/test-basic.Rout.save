@@ -255,7 +255,8 @@ Sample1     1     1293            1
 Sample2     1     3142            1
 
 Warning message:
-In asDGEList(temp) : library sizes not found in 'totals'
+In .local(object, ...) :
+  library sizes not found in 'totals', setting to NULL
 > 
 > # Running some basic normalization.
 > data <- windowCounts(both.files, ext=100, param=readParam(minq=100, dedup=TRUE))
@@ -530,4 +531,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 12.722   0.228  12.934 
+ 19.541   0.315  22.789 
