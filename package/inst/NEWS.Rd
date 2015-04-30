@@ -9,6 +9,9 @@ Added clusterFDR() function to compute the FDR for clusters of DB windows.
 \item
 Modified normalize(), asDGEList() to allow manual specification of library sizes.
 
+\item 
+Modified default parameter specification in strandedCounts(), to avoid errors.
+
 \item
 Slight updates to documentation, user's guide.
 }}
