@@ -5,7 +5,7 @@
 \description{Obtain strand-specific counts for each genomic window or region.}
 
 \usage{
-strandedCounts(bam.files, param=readParam(), regions=NULL, ...)
+strandedCounts(bam.files, param=readParam(forward=NULL), regions=NULL, ...)
 }
 
 \arguments{

@@ -1,4 +1,4 @@
-strandedCounts <- function(bam.files, param=readParam(), regions=NULL, ...) 
+strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NULL, ...) 
 # This is a convenience wrapper for strand-specific window counting.  It
 # returns a SummarizedExperiment object with up to two sets of counts for each
 # window. This is logistically easier than doing it inside windowCounts itself.
