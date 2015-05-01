@@ -87,7 +87,7 @@
 #
 # written by Aaron Lun
 # created 13 May 2014
-# last modified 12 December 2012
+# last modified 1 May 2015
 {
 	reads <- .extractSE(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
 		param=param, isPaired=TRUE)
@@ -109,10 +109,16 @@
 	additor[nok.first][first.paired][is.better] <- TRUE
 	additor[nok.second][second.paired][!is.better] <- TRUE
 
+	# Computing rescued positions.
+	rescued.reverse <- bitwAnd(reads$flag[additor], 0x10)!=0L
+	rescued.pos <- reads$pos[additor]
+	if (any(rescued.reverse)) { 
+		rescued.pos[rescued.reverse] <- rescued.pos[rescued.reverse] + reads$qwidth[additor][rescued.reverse] - param$rescue.ext
+	}
+
 	# Returning the loot.
 	if (is.na(param$rescue.ext)) { stop("rescue extension length must be specified for improper pair rescuing") }
-	return( list( pos=c(output$pos, ifelse(bitwAnd(reads$flag[additor], 0x10)==0L, reads$pos[additor], 
-					reads$pos[additor]+reads$qwidth[additor]-param$rescue.ext)),
+	return( list( pos=c(output$pos, rescued.pos),
 		      size=c(output$size, rep(param$rescue.ext, sum(additor))) ) )
 }
 
@@ -167,13 +173,17 @@
 #
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 13 February 2015
+# last modified 1 May 2015
 {
 	if (is.na(ext)) {   
 		frag.start <- reads$pos
 		frag.end <- frag.start + reads$qwidth - 1L	
 	} else {
-		frag.start <- ifelse(reads$strand=="+", reads$pos, reads$pos + reads$qwidth - ext)
+		is.reverse <- reads$strand!="+"
+		frag.start <- reads$pos
+		if (any(is.reverse)) { 
+			frag.start[is.reverse] <- reads$pos[is.reverse] + reads$qwidth[is.reverse] - ext
+		}
 		frag.end <- frag.start + ext - 1L
 	}
 	return(list(start=frag.start, end=frag.end))
