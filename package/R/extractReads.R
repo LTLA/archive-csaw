@@ -12,7 +12,7 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 
     chrs <- scanBamHeader(bam.file)[[1]][[1]]
 	cur.chr <- as.character(seqnames(cur.region)[1])
-	if (length(param$restrict) && ! cur.chr %in% param$restrict) { stop("current chromosome not in restricted subset") }
+	if (length(param$restrict) && ! cur.chr %in% param$restrict) { warning("current chromosome not in restricted subset") }
 	if (! cur.chr %in% names(chrs)) { stop("cannot find current chromosome in the BAM file header") }
 	max.len <- chrs[[cur.chr]]
 	sqi <- Seqinfo(cur.chr, max.len)
