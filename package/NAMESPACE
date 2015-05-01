@@ -14,6 +14,7 @@ export(csawUsersGuide,
 	consolidateSizes, upweightSummit,
 	combineOverlaps, getBestOverlaps, summitOverlaps,
 	detailRanges,
+	checkBimodality,
 	extractReads)
 
 #  Importing required packages

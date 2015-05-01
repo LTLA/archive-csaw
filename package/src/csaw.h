@@ -61,6 +61,10 @@ SEXP get_profile(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 SEXP find_maxima(SEXP, SEXP, SEXP, SEXP, SEXP);
 
+/* check_bimodality.cpp */
+
+SEXP check_bimodality(SEXP, SEXP, SEXP, SEXP);
+
 }
 
 #endif
