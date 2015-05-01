@@ -5,7 +5,7 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 #
 # written by Aaron Lun
 # created 1 September 2014
-# last modified 10 February 2015
+# last modified 1 May 2015
 {
     if (length(cur.region)!=1L) { stop("exactly one range is required for plotting") }
 	if (as.logical(strand(cur.region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
