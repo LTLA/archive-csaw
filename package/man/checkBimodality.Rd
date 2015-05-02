@@ -6,7 +6,7 @@
 \description{Compute the maximum bimodality score across all base pairs in each region.}
 
 \usage{
-checkBimodality(bam.files, regions, width=500, param=readParam(), prior.count=2) 
+checkBimodality(bam.files, regions, width=100, param=readParam(), prior.count=2) 
 }
 
 \arguments{
