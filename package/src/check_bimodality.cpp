@@ -13,44 +13,47 @@ struct signpost {
 	}
 };
 
-inline int get_end(int start, int width) { return start + width*2 -1; }
-
 SEXP check_bimodality (SEXP all, SEXP regstart, SEXP regend, SEXP priorcount) try {
 	// Setting structures for the data.
     if (!isNewList(all)) { throw std::runtime_error("data on fragments must be contained within a list"); }
     const int nlibs=LENGTH(all);
-	std::deque<const int*> start_ptrs(nlibs), strand_ptrs(nlibs);
+	std::deque<const int*> left_ptrs(nlibs), right_ptrs(nlibs), strand_ptrs(nlibs);
 	std::deque<int> nums(nlibs), indices(nlibs), widths(nlibs);
 	std::priority_queue<signpost, std::deque<signpost>, std::greater<signpost> > next;
 	
 	for (int i=0; i<nlibs; ++i) {
 		SEXP current=VECTOR_ELT(all, i);
-		if (!isNewList(current) || LENGTH(current)!=3) { 
+		if (!isNewList(current) || LENGTH(current)!=4) { 
 			throw std::runtime_error("fragment data must be supplied as a list with start, strand and width"); }
 		
-		for (int j=0; j<2; ++j) {
+		for (int j=0; j<3; ++j) {
 			SEXP current_col=VECTOR_ELT(current, j);
 			if (!isInteger(current_col)) { throw std::runtime_error("fragment data must be in integer format"); }
 			const int* ptr=INTEGER(current_col);
 			switch (j) {
 				case 0: 
-					start_ptrs[i]=ptr; 
+					left_ptrs[i]=ptr; 
 					nums[i]=LENGTH(current_col);
 					break;
 				case 1:
+					right_ptrs[i]=ptr;
+					if (LENGTH(current_col)!=nums[i]) { throw std::runtime_error("length of vectors must be equal"); }
+					break;
+				case 2:
 					strand_ptrs[i]=ptr;
+					if (LENGTH(current_col)!=nums[i]) { throw std::runtime_error("length of vectors must be equal"); }
 					break;
 				default: 
 					break;
 			}
 		}
 		
-		SEXP curwidth=VECTOR_ELT(current, 2);
+		SEXP curwidth=VECTOR_ELT(current, 3);
 		if (!isInteger(curwidth) || LENGTH(curwidth)!=1) { throw std::runtime_error("width must be an integer vector"); }
 		widths[i]=asInteger(curwidth);
 
 		// Populating the priority queue.
-		if (nums[i]) { next.push(signpost(start_ptrs[i][0], START, i, 0)); }
+		if (nums[i]) { next.push(signpost(left_ptrs[i][0]-widths[i]+1, START, i, 0)); }
 	}
 
 	// Setting up structures for the regions.
@@ -82,7 +85,6 @@ try {
 
 	std::deque<int> new_regs;
 	bool modified_stats=false;
-	int nmid_forward=0, nmid_reverse=0;
 	size_t itnr;
 	std::set<int>::iterator itcr;
 
@@ -91,10 +93,12 @@ try {
 
 		// Pulling out all features at this current position.
 		current_position=next.top().position;
+//		Rprintf("At position %i\n", current_position);
 		do {
 			current_library=next.top().library;
 			current_type=next.top().type;
 			current_index=next.top().index;
+//			Rprintf("\t\t processing %i: %i -> %i\n", current_type, current_library, current_index);
 			next.pop();
 
 			if (current_library<0) {
@@ -121,23 +125,23 @@ try {
 					case START:
 						if (isforward) { ++right_forward; }
 						else { ++right_reverse; }
-						next.push(signpost(start_ptrs[current_library][current_index]+widths[current_library]-1,
+						next.push(signpost(left_ptrs[current_library][current_index],
 									MIDSTART, current_library, current_index));
 						break;
 					case MIDSTART:
 						if (isforward) { ++left_forward; } 
 						else { ++left_reverse; }
-						next.push(signpost(start_ptrs[current_library][current_index]+widths[current_library], 
+						next.push(signpost(right_ptrs[current_library][current_index]+1,
 									MIDEND, current_library, current_index));
 						break;
 					case MIDEND:
 						if (isforward) { --right_forward; }
 						else { --right_reverse; }
-						next.push(signpost(get_end(start_ptrs[current_library][current_index], widths[current_library]), 
+						next.push(signpost(right_ptrs[current_library][current_index] + widths[current_library], 
 									END, current_library, current_index));
 						break;
 					case END:
-						if (isforward) { --left_forward;}
+						if (isforward) { --left_forward; }
 						else { --left_reverse; }
 						break;
 					default:
@@ -149,10 +153,11 @@ try {
 					int& next_index=indices[current_library];
 					while ((++next_index) < nums[current_library]) { 
 						if (current_regs.empty() && next_regstart >=0 &&
-								next_regstart > get_end(start_ptrs[current_library][next_index], widths[current_library])) {
+								next_regstart >= right_ptrs[current_library][next_index] + widths[current_library]) {
  							continue; 
 						}
-						next.push(signpost(start_ptrs[current_library][next_index], START, current_library, next_index));
+						next.push(signpost(left_ptrs[current_library][next_index] - widths[current_library]+1, 
+									START, current_library, next_index));
 						break;
 					}
 				}
@@ -164,6 +169,8 @@ try {
  		    current_score = std::min((double(left_forward)+pc)/(double(left_reverse)+pc), 
 					(double(right_reverse)+pc)/(double(right_forward)+pc));
 		}
+//		Rprintf("\t values are Left forward/reverse: %i/%i, right reverse/forward %i/%i\n", left_forward, left_reverse, right_reverse, right_forward);
+//		Rprintf("\t score is %.3f\n", current_score);
 		if (!new_regs.empty()) { 
 			for (itnr=0; itnr<new_regs.size(); ++itnr) { 
 				optr[new_regs[itnr]]=current_score; 
@@ -175,19 +182,6 @@ try {
  			    if (optr[*itcr] < current_score) { optr[*itcr]=current_score; }
 			}
 			modified_stats=false;
-		}
-
-		// If we've hit midpoints, these must be eliminated from their respective 'right' after calculating the stats.
-		// It also means that the stats need to be recalculated in the next step.
-		if (nmid_forward) { 
-			right_forward-=nmid_forward;
-			nmid_forward=0;
-			modified_stats=true;
-		}
-		if (nmid_reverse) { 
-			right_reverse-=nmid_reverse;
-			nmid_reverse=0;
-			modified_stats=true;
 		}
  	   	
 		// Quitting if there's no more regions to process.

@@ -34,25 +34,30 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 				reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
 			}
 			
-			is.reverse <- reads$strand!="+"
-			five.prime <- reads$pos
-			five.prime[is.reverse] <- reads$pos[is.reverse] + reads$qwidth[is.reverse] - 1L
+			is.forward <- as.integer(reads$strand=="+")
+			left.pos <- reads$pos
+			right.pos <- reads$pos + reads$qwidth - 1L 
+
+			if (is.unsorted(left.pos)) { 
+				o <- order(left.pos)
+				left.pos <- left.pos[o]
+				right.pos <- right.pos[o]
+				is.forward <- is.forward[o]
+			}
 
 			curwidth <- ext.data$ext[bf]
-			start.point <- five.prime - curwidth + 1L
 			if (curwidth < 1L || !is.finite(curwidth)) { stop('width must be a non-negative integer') }
-
-			o <- order(start.point)
-			collected[[bf]] <- list(start.point[o], as.integer(!is.reverse[o]), curwidth)
+			collected[[bf]] <- list(left.pos, right.pos, is.forward, curwidth)
 		}
 
-		# Computing bimodality scores.
+		# Checking region order.
 		rstarts <- start(regions)[chosen]
 		rends <- end(regions)[chosen]
 		ro <- order(rstarts)
+		
+		# Computing bimodality scores.
 		out <- .Call(cxx_check_bimodality, collected, rstarts[ro], rends[ro], prior.count)
 		if (is.character(out)) { stop(out) }
-
 		out.scores[chosen][ro] <- out 
 	}
 
