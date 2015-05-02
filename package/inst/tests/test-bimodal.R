@@ -34,16 +34,21 @@ comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL,
 			for (b in 1:length(bamFiles)) { 
 				all.reads <- extractReads(full.chr, bamFiles[b], param=repar)
 
-				# Computing coverage, somewhat counterintuitively; 'left.forward', for example, is extended to the right, as it
-				# must find all overlaps to the left of the region of interest.
+				# Computing coverage, somewhat counterintuitively; 'left.forward', for example, is extended to 
+				# the right, as it must find all overlaps to the left of the region of interest.
 				is.forward <- strand(all.reads)=="+"
 				forward.reads <- all.reads[is.forward]
 				reverse.reads <- all.reads[!is.forward]
 	
-				left.forward <- left.forward + coverage(IRanges(start(forward.reads), start(forward.reads)+width[b]-1), width=end(full.chr))
-				right.forward <- right.forward + coverage(IRanges(start(forward.reads)-width[b]+1, start(forward.reads)), width=end(full.chr))
-				left.reverse <- left.reverse + coverage(IRanges(end(reverse.reads), end(reverse.reads)+width[b]-1), width=end(full.chr))
-				right.reverse <- right.reverse + coverage(IRanges(end(reverse.reads)-width[b]+1, end(reverse.reads)), width=end(full.chr))
+				start.F <- start(forward.reads)
+				end.F <- end(forward.reads)
+				left.forward <- left.forward + coverage(IRanges(start.F, end.F+width[b]-1), width=end(full.chr))
+				right.forward <- right.forward + coverage(IRanges(start.F-width[b]+1, end.F), width=end(full.chr))
+
+				end.R <- end(reverse.reads)
+				start.R <- start(reverse.reads)
+				left.reverse <- left.reverse + coverage(IRanges(start.R, end.R+width[b]-1), width=end(full.chr))
+				right.reverse <- right.reverse + coverage(IRanges(start.R-width[b]+1, end.R), width=end(full.chr))
 			}
 
 			for (r in by.chr[[chr]]) { 
@@ -54,7 +59,7 @@ comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL,
 				rf.set <- as.integer(right.forward[start(cur.reg):end(cur.reg)])
 				lr.set <- as.integer(left.reverse[start(cur.reg):end(cur.reg)])
 				rr.set <- as.integer(right.reverse[start(cur.reg):end(cur.reg)])
-			
+
 	  			bistat <- max(pmin((lf.set+prior.count)/(lr.set+prior.count), (rr.set+prior.count)/(rf.set+prior.count)))
   				output[r] <- bistat
 			}
