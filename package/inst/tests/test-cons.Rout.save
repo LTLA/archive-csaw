@@ -1,0 +1,335 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This tests the consolidateSizes function.
+> 
+> suppressWarnings(suppressPackageStartupMessages(require(csaw)))
+> source("simsam.R")
+> chromos <- c(chrA=12332, chrB=34892)
+> 
+> #########################################################################################################
+> 
+> compcons <- function(sizes, merge.args=list(tol=100), combine.args=list())  {
++ 	data.list <- result.list <- list()
++ 	for (s in 1:length(sizes)) {
++ 		windows <- generateWindows(chromos, winsize=sizes[s], nwin=50)
++ 		ns <- length(windows)
++ 		result.list[[s]] <- data.frame(logFC=rnorm(ns), PValue=rbeta(ns, 1, 3), logCPM=rnorm(ns))
++ 		
++ 		counts <- matrix(0, ncol=1, nrow=ns)
++ 		colnames(counts) <- "whee"
++ 		data.list[[s]] <- SummarizedExperiment(assays=SimpleList(counts=counts), rowRanges=windows)
++ 	}
++ 
++ 	# Running consolidation.
++ 	cons <- consolidateSizes(data.list, result.list, merge.args=merge.args, combine.args=combine.args)
++ 
++ 	# Checking all regions.
++ 	refbunch <- list()
++ 	for (s in 1:length(sizes)) { 
++ 		current <- rowRanges(data.list[[s]])
++ 		comparator <- cons$region[cons$id[[s]]]
++ 		if (any(seqnames(current)!=seqnames(comparator) | start(current) < start(comparator) | end(current) > end(comparator))) { 
++ 				stop("merged regions do not include assigned windows")
++ 		}
++ 		refbunch[[s]] <- current
++ 	}
++ 	reference <- do.call(mergeWindows, c(regions=do.call(c, refbunch), merge.args))
++ 	if (!identical(reference$region, cons$region)) { stop("merged regions don't match up with reference call") }
++ 	refids <- unlist(cons$id)
++ 	o <- order(refids, reference$id)
++ 	if (any((diff(refids[o])!=0L)!=(diff(reference$id[o])!=0L))) { stop("merged ID's don't match up with reference call") }
++ 
++ 	# Checking what happens with equi-weighting.
++ 	new.weights <- list()
++ 	for (s in 1:length(sizes)) { 
++ 		counted <- tabulate(cons$id[[s]])
++ 		new.weights[[s]] <- 1/counted[cons$id[[s]]]
++ 	}	
++ 	ref <- combineTests(reference$id, do.call(rbind, result.list), weight=unlist(new.weights))
++ 	if (!identical(cons$table, ref)) { stop("mismatch in equiweighted results") }
++ 
++ 	# Checking what happens without equi-weighting.		
++ 	noe.cons <- consolidateSizes(data.list, result.list, merge.args=merge.args, combine.args=combine.args, equiweight=FALSE)
++ 	ref <- combineTests(reference$id, do.call(rbind, result.list))
++ 	if (!identical(noe.cons$table, ref)) { stop("mismatch in equiweighted results") }
++ 	
++ 	return(cons$region)	
++ }
+> 
+> set.seed(2384)
+> 
+> compcons(c(100, 50))
+GRanges object with 43 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA   [  49,  610]      *
+   [2]     chrA   [ 741, 3259]      *
+   [3]     chrA   [3370, 4314]      *
+   [4]     chrA   [4440, 6636]      *
+   [5]     chrB   [ 460,  559]      *
+   ...      ...            ...    ...
+  [39]     chrB [16144, 16334]      *
+  [40]     chrB [16540, 16589]      *
+  [41]     chrB [16730, 17078]      *
+  [42]     chrB [17256, 17355]      *
+  [43]     chrB [17635, 17734]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> compcons(c(100, 50), merge.args=list(tol=100, max.width=1000))
+GRanges object with 45 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA   [  29,  950]      *
+   [2]     chrA   [ 903, 1809]      *
+   [3]     chrA   [1792, 2740]      *
+   [4]     chrA   [2825, 3607]      *
+   [5]     chrA   [3628, 4450]      *
+   ...      ...            ...    ...
+  [41]     chrB [13583, 13753]      *
+  [42]     chrB [13889, 14081]      *
+  [43]     chrB [14190, 14239]      *
+  [44]     chrB [14564, 14906]      *
+  [45]     chrB [15052, 15101]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> compcons(c(100, 50), merge.args=list(tol=1))
+GRanges object with 106 ranges and 0 metadata columns:
+        seqnames         ranges strand
+           <Rle>      <IRanges>  <Rle>
+    [1]     chrA     [  6, 105]      *
+    [2]     chrA     [124, 260]      *
+    [3]     chrA     [358, 462]      *
+    [4]     chrA     [490, 589]      *
+    [5]     chrA     [625, 955]      *
+    ...      ...            ...    ...
+  [102]     chrB [17469, 17568]      *
+  [103]     chrB [17842, 17891]      *
+  [104]     chrB [17950, 18049]      *
+  [105]     chrB [18442, 18545]      *
+  [106]     chrB [18704, 18753]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> compcons(c(100, 50), combine.args=list(pval.col="PValue", fc.col="logFC"))
+GRanges object with 53 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA   [  30, 1000]      *
+   [2]     chrA   [1129, 1521]      *
+   [3]     chrA   [1627, 2395]      *
+   [4]     chrA   [2511, 5522]      *
+   [5]     chrA   [5635, 5802]      *
+   ...      ...            ...    ...
+  [49]     chrB [18506, 18605]      *
+  [50]     chrB [18989, 19194]      *
+  [51]     chrB [19373, 19472]      *
+  [52]     chrB [19874, 19973]      *
+  [53]     chrB [20217, 20316]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> 
+> compcons(c(100, 500))
+GRanges object with 10 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA [  184,  7118]      *
+   [2]     chrB [   56,   155]      *
+   [3]     chrB [  565,  1791]      *
+   [4]     chrB [ 1929,  3021]      *
+   [5]     chrB [ 3126,  4018]      *
+   [6]     chrB [ 4214,  9421]      *
+   [7]     chrB [ 9599, 15822]      *
+   [8]     chrB [15926, 18058]      *
+   [9]     chrB [18183, 19181]      *
+  [10]     chrB [19349, 19848]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> compcons(c(100, 500), merge.args=list(tol=100, max.width=1000))
+GRanges object with 28 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA   [ 194, 1307]      *
+   [2]     chrA   [ 949, 2247]      *
+   [3]     chrA   [1880, 3081]      *
+   [4]     chrA   [2760, 4186]      *
+   [5]     chrA   [3885, 5117]      *
+   ...      ...            ...    ...
+  [24]     chrB [13689, 14848]      *
+  [25]     chrB [14809, 15751]      *
+  [26]     chrB [15791, 16416]      *
+  [27]     chrB [16484, 17663]      *
+  [28]     chrB [17564, 18498]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> compcons(c(100, 500), merge.args=list(tol=1))
+GRanges object with 15 ranges and 0 metadata columns:
+       seqnames         ranges strand
+          <Rle>      <IRanges>  <Rle>
+   [1]     chrA   [ 149, 6553]      *
+   [2]     chrB   [ 214, 2856]      *
+   [3]     chrB   [2892, 3915]      *
+   [4]     chrB   [3925, 5529]      *
+   [5]     chrB   [5538, 6390]      *
+   ...      ...            ...    ...
+  [11]     chrB [13528, 15139]      *
+  [12]     chrB [15314, 15813]      *
+  [13]     chrB [15864, 17126]      *
+  [14]     chrB [17473, 17572]      *
+  [15]     chrB [17829, 17928]      *
+  -------
+  seqinfo: 2 sequences from an unspecified genome; no seqlengths
+> try(compcons(c(100, 50), combine.args=list(weight=1)))
+Error in (function (ids, tab, weight = NULL, pval.col = NULL, fc.col = NULL)  : 
+  formal argument "weight" matched by multiple actual arguments
+> 
+> #########################################################################################################
+> 
+> compcons2 <- function(sizes, regions, overlap.args=list())  {
++ 	data.list <- result.list <- list()
++ 	for (s in 1:length(sizes)) {
++ 		windows <- generateWindows(chromos, winsize=sizes[s], nwin=50)
++ 		ns <- length(windows)
++ 		result.list[[s]] <- data.frame(logFC=rnorm(ns), PValue=rbeta(ns, 1, 3), logCPM=rnorm(ns))
++ 		counts <- matrix(0, ncol=1, nrow=ns)
++ 		colnames(counts) <- "whee"
++ 		data.list[[s]] <- SummarizedExperiment(assays=SimpleList(counts=counts), rowRanges=windows)
++ 	}
++ 
++ 	# Running consolidation.
++ 	cons <- consolidateSizes(data.list, result.list, region=regions, overlap.args=overlap.args)
++ 
++ 	# Checking all regions.
++ 	refids <- list()
++ 	for (s in 1:length(sizes)) { 
++ 		current <- rowRanges(data.list[[s]])
++ 		cur.lap <- do.call(findOverlaps, c(query=regions, subject=current, overlap.args))
++ 		if (!identical(cons$id[[s]], cur.lap)) { stop("overlaps don't match up") } 
++ 		refids[[s]] <- queryHits(cur.lap)
++ 	}
++ 
++ 	# Expanding out.
++ 	neo.results <- list()
++ 	for (s in 1:length(sizes)) { 
++ 		neo.results[[s]] <- result.list[[s]][subjectHits(cons$id[[s]]),]
++ 	}
++ 
++ 	# Checking what happens with equi-weighting.
++ 	new.weights <- list()
++ 	for (s in 1:length(sizes)) { 
++ 		counted <- tabulate(refids[[s]])
++ 		new.weights[[s]] <- 1/counted[refids[[s]]]
++ 	}	
++ 	ref <- combineTests(unlist(refids), do.call(rbind, neo.results), weight=unlist(new.weights))
++ 	if (!identical(cons$table[!is.na(cons$table$PValue),], ref)) { stop("mismatch in equiweighted results") }
++ 
++ 	# Checking what happens without equi-weighting.		
++ 	noe.cons <- consolidateSizes(data.list, result.list, region=regions, overlap.args=overlap.args, equiweight=FALSE)
++ 	ref <- combineTests(unlist(refids), do.call(rbind, neo.results))
++ 	if (!identical(noe.cons$table[!is.na(noe.cons$table$PValue),], ref)) { stop("mismatch in equiweighted results") }
++ 	
++ 	return(head(cons$table)	)
++ }
+> 
+> set.seed(2384)
+> 
+> regions <- generateWindows(chromos, winsize=1000, nwin=5)
+> compcons2(c(100, 50), regions)
+  nWindows logFC.up logFC.down     PValue       FDR
+1       17        6          6 0.16134834 0.2904270
+2       16        6          3 0.07525834 0.2902822
+3       19        7          1 0.09676072 0.2902822
+4       14        3          1 0.30508676 0.3922544
+5       16        5          3 0.14405038 0.2904270
+6        4        2          2 0.30141306 0.3922544
+> compcons2(c(100, 50), regions, overlap.args=list(type="within"))
+  nWindows logFC.up logFC.down PValue FDR
+1       NA       NA         NA     NA  NA
+2       NA       NA         NA     NA  NA
+3       NA       NA         NA     NA  NA
+4       NA       NA         NA     NA  NA
+5       NA       NA         NA     NA  NA
+6       NA       NA         NA     NA  NA
+> compcons2(c(100, 50), regions, overlap.args=list(minoverlap=10))
+  nWindows logFC.up logFC.down    PValue       FDR
+1       22        6          8 0.0280216 0.2521944
+2       26        7         11 0.5596200 0.5596200
+3       21        9          7 0.1804048 0.3728032
+4       15        8          3 0.2485354 0.3728032
+5       10        7          2 0.1367147 0.3728032
+6        5        3          0 0.4633778 0.5213000
+> 
+> regions <- generateWindows(chromos, winsize=1000, nwin=5)
+> compcons2(c(10, 50), regions)
+  nWindows logFC.up logFC.down     PValue       FDR
+1       18        5          7 0.23056484 0.2927387
+2       20        5          8 0.06951365 0.1848741
+3       16        4          7 0.01473458 0.0663056
+4       16        6          4 0.38540261 0.3854026
+5       NA       NA         NA         NA        NA
+6        7        3          2 0.16392981 0.2458947
+> compcons2(c(10, 50), regions, overlap.args=list(type="within"))
+  nWindows logFC.up logFC.down PValue FDR
+1       NA       NA         NA     NA  NA
+2       NA       NA         NA     NA  NA
+3       NA       NA         NA     NA  NA
+4       NA       NA         NA     NA  NA
+5       NA       NA         NA     NA  NA
+6       NA       NA         NA     NA  NA
+> compcons2(c(10, 50), regions, overlap.args=list(minoverlap=10))
+  nWindows logFC.up logFC.down     PValue       FDR
+1       17        4          8 0.38889519 0.4118974
+2       13        3          5 0.17784318 0.2602695
+3       22        9          7 0.14750937 0.2602695
+4       19        4          8 0.08068105 0.2602695
+5       NA       NA         NA         NA        NA
+6        4        0          4 0.41189738 0.4118974
+> 
+> regions <- generateWindows(chromos, winsize=1000, nwin=5)
+> compcons2(c(100, 500), regions)
+  nWindows logFC.up logFC.down      PValue        FDR
+1       23        9          6 0.036741548 0.11022464
+2       22        9          5 0.018699894 0.08414953
+3       17        6          9 0.001039102 0.00935192
+4       15        3          7 0.324627475 0.41737818
+5       NA       NA         NA          NA         NA
+6        7        1          3 0.053768140 0.12097832
+> compcons2(c(100, 500), regions, overlap.args=list(type="within"))
+  nWindows logFC.up logFC.down PValue FDR
+1       NA       NA         NA     NA  NA
+2       NA       NA         NA     NA  NA
+3       NA       NA         NA     NA  NA
+4       NA       NA         NA     NA  NA
+5       NA       NA         NA     NA  NA
+6       NA       NA         NA     NA  NA
+> compcons2(c(100, 500), regions, overlap.args=list(minoverlap=10))
+  nWindows logFC.up logFC.down    PValue       FDR
+1       24        8          7 0.2352814 0.3025046
+2       25        7          8 0.2229659 0.3025046
+3       19        3          8 0.1999549 0.3025046
+4       12        2          3 0.2204560 0.3025046
+5       NA       NA         NA        NA        NA
+6        8        1          3 0.4693346 0.4693346
+> 
+> #########################################################################################################
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  7.069   0.130   7.203 
