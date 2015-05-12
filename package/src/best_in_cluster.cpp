@@ -8,12 +8,24 @@ SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 	if (!isNumeric(weight)) { throw std::runtime_error("vector of weights should be double precision"); }
 	const double *wptr=REAL(weight);
 	const int* bptr=INTEGER(by);
-	if (!n) { throw std::runtime_error("nothing to cluster"); }
 	if (n!=LENGTH(by) || n!=LENGTH(weight)) { throw std::runtime_error("vector lengths are not equal"); }
+
+	// Quitting now, if we're empty.
+	if (n==0) { 
+		SEXP output=PROTECT(allocVector(VECSXP, 2));
+		try {
+			SET_VECTOR_ELT(output, 0, allocVector(REALSXP, 0));
+			SET_VECTOR_ELT(output, 1, allocVector(REALSXP, 0));
+		} catch (std::exception& e) {
+			UNPROTECT(1);
+			throw;
+		}
+		UNPROTECT(1);
+		return output;
+	}
 
 	// Checking that the 'by' is sorted, counting the number of elements.
 	int total=1;
-	if (n==0) { throw std::runtime_error("no p-values supplied to identify the best test"); }
 	for (int i=1; i<n; ++i) { 
 		if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
 		else if (bptr[i]!=bptr[i-1]) { ++total; }

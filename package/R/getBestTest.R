@@ -66,7 +66,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 	subtab <- tab[best,]
 	subtab[,pval.col] <- pval
 	result <- data.frame(best=id.order[best], subtab, FDR=p.adjust(pval, method="BH"))
-	rownames(result) <- ids[c(TRUE, diff(ids)!=0L)]
+	if (length(ids)) { rownames(result) <- ids[c(TRUE, diff(ids)!=0L)] }
 
 	return(result)
 }

@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
-Copyright (C) 2014 The R Foundation for Statistical Computing
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -218,7 +218,16 @@ Type 'q()' to quit R.
 6 9796  1.6184653  0.15927010      1   1
 > 
 > ##################################################################
+> # Checking for sane behaviour when no IDs are supplied.
+> 
+> getBestTest(integer(0), data.frame(PValue=numeric(0), logCPM=numeric(0), logFC=numeric(0)), weight=numeric(0))
+[1] best   PValue logCPM logFC  FDR   
+<0 rows> (or 0-length row.names)
+> 
+> ##################################################################
+> # End.
+> 
 > 
 > proc.time()
    user  system elapsed 
- 13.790   0.164  13.946 
+  9.042   0.153   9.229 

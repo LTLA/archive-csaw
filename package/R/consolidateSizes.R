@@ -28,8 +28,12 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 		last <- 0L
 		for (x in 1:nset) { 
 			currows <- nrow(result.list[[x]])
-			final.ids[[x]] <- merged$id[last+1:currows]
-			last <- last + currows
+			if (currows) { 
+				final.ids[[x]] <- merged$id[last+1:currows]
+				last <- last + currows
+			} else {
+				final.ids[[x]] <- integer(0)
+			}
 		}
 		names(final.ids) <- names(data.list)
 	} else {
@@ -51,9 +55,13 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 		rel.weights <- list()
 		for (x in 1:nset) {
 			currows <- nrow(result.list[[x]])
-			curid <- merged$id[last + 1:currows]
-			rel.weights[[x]] <- (1/tabulate(curid))[curid]
-			last <- last + currows
+			if (currows) { 
+				curid <- merged$id[last + 1:currows]
+				rel.weights[[x]] <- (1/tabulate(curid))[curid]
+				last <- last + currows
+			} else {
+				rel.weights[[x]] <- numeric(0)
+			}
 		}
 		rel.weights <- unlist(rel.weights)
 	} else { 

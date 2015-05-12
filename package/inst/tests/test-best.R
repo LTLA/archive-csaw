@@ -59,3 +59,10 @@ comp(2,3, nids=30, max.weight=50)
 comp(2,5, nids=50, max.weight=100)
 
 ##################################################################
+# Checking for sane behaviour when no IDs are supplied.
+
+getBestTest(integer(0), data.frame(PValue=numeric(0), logCPM=numeric(0), logFC=numeric(0)), weight=numeric(0))
+
+##################################################################
+# End.
+

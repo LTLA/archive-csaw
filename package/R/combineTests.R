@@ -49,8 +49,8 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	# Running the clustering procedure.
 	out <- .Call(cxx_get_cluster_stats, fc.col, is.pval, tab, ids, weight, 0.5)
 	if (is.character(out)) { stop(out) }
-	combined <- data.frame(out[[1]], out[[2]], out[[3]], p.adjust(out[[3]], method="BH"), 
-			row.names=ids[c(TRUE, diff(ids)!=0L)])
+	combined <- data.frame(out[[1]], out[[2]], out[[3]], p.adjust(out[[3]], method="BH"))
+ 	if (length(ids)) { rownames(combined) <- ids[c(TRUE, diff(ids)!=0L)] } 
 	colnames(combined) <- c("nWindows", 
 			paste0(rep(colnames(tab)[fc.col+1L], each=2), ".", c("up", "down")), 
 			colnames(tab)[is.pval+1L], "FDR")
