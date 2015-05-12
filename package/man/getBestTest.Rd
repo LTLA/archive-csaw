@@ -85,8 +85,7 @@ head(best)
 \author{Aaron Lun}
 
 \references{
-Genovese CR, Roeder K and Wasserman L (2006). False discovery control with
-p-value weighting. \emph{Biometrika} 93, 509-524.
+Wasserman, L, and Roeder, K (2006). Weighted hypothesis testing. \emph{arXiv preprint math/0604172}.
 }
 
 \keyword{testing}
