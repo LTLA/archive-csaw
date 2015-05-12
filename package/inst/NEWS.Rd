@@ -18,6 +18,9 @@ Modified default parameter specification in strandedCounts(), to avoid errors.
 \item
 Switched to warning from error when a restricted chromosome is specified in extractReads().
 
+\item 
+Added normalization options to filterWindows() when using control samples.
+
 \item
 Slight updates to documentation, user's guide.
 }}

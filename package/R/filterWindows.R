@@ -1,4 +1,4 @@
-filterWindows <- function(data, background, type="global", prior.count=2) 
+filterWindows <- function(data, background, type="global", prior.count=2, norm.fac=NULL)
 # This is a function for proportion- or background-based filtering of a
 # SummarizedExperiment object. For the former, it computes the relative ranks
 # that can be used to determine the proportion of highest-abundance windows to
@@ -49,11 +49,32 @@ filterWindows <- function(data, background, type="global", prior.count=2)
 			filter.stat <- abundances - bg.ab
 
 		} else {
+			# Need to account for composition bias between ChIP and control libraries.
+			if (!is.null(norm.fac)) {
+				if (!is.numeric(norm.fac)) { 
+					if (!is.list(norm.fac) || length(norm.fac)!=2L) { 
+						stop("norm.fac list should contain two SummarizedExperiment objects") 
+					}
+					if (!identical(norm.fac[[1]]$totals, data$totals) || 
+							!identical(norm.fac[[2]]$totals, background$totals)) { 
+						stop("norm.fac SE objects should have same totals as 'data' and 'background'")
+					}
+					adjusted <- filterWindows(norm.fac[[1]], norm.fac[[2]], type="control", 
+						prior.count=prior.count, norm.fac=0)
+					norm.fac <- -median(adjusted$filter) # Subtract to remove composition bias.
+				} else if (length(norm.fac)!=1L) { 
+					stop("numeric norm.fac should be a scalar")
+				}
+			} else {
+				warning("normalization factor not specified for composition bias")
+				norm.fac <- 0
+			}
+
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
 			relative.width <- bwidth/dwidth
 			lib.adjust <- prior.count * mean(background$totals)/mean(data$totals) # Account for library size differences.
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=lib.adjust)
-			filter.stat <- abundances - bg.ab
+			filter.stat <- abundances - bg.ab + norm.fac
 		}
 
 		return(list(abundances=abundances, back.abundances=bg.ab, filter=filter.stat))

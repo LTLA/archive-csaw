@@ -5,7 +5,7 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=2) 
+filterWindows(data, background, type="global", prior.count=2, norm.fac=NULL) 
 }
 
 \arguments{
@@ -13,6 +13,7 @@ filterWindows(data, background, type="global", prior.count=2)
 \item{background}{another \code{SummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
 \item{type}{a character string specifying the type of filtering to perform; can be any of \code{c("global", "local", "control", "proportion")}}
 \item{prior.count}{a numeric scalar, specifying the prior count to use in \code{\link{aveLogCPM}}}
+\item{norm.fac}{a numeric scalar representing the normalization factor between ChIP and control samples, or a list of two \code{SummarizedExperiment} objects; only used when \code{type="control"}}
 }
 
 \value{
@@ -67,6 +68,23 @@ Otherwise, \code{prior.count} should be increased to a larger value like 5.
 This may be necessary in \code{type="control"}, where \code{background} contains counts for small windows in the control sample.
 }
 
+\section{Normalization for composition bias}{
+When \code{type=="control"}, ChIP samples will be compared to control samples to compute the filter statistic.
+Composition biases are likely to be present, where increased binding at some loci reduces coverage of other loci in the ChIP samples.
+This incorrectly results in smaller filter statistics for the latter loci, as the fold-change over the input is reduced.
+To correct for this, a normalization factor between ChIP and control samples can be computed from \code{norm.fac}.
+
+Users should supply a list containing two \code{SummarizedExperiment} objects, each containing the counts for large (~10 kbp) bins.
+The first and second objects should contain counts for the libraries in \code{data} and \code{background}, respectively.
+The median difference in the average abundance between the two objects is then computed across all bins.
+This is used as a normalization factor to correct the filter statistics for each window.
+
+The idea is that most bins represent background regions, such that a systematic difference in abundance between ChIP and control should represent the composition bias.
+Alternatively, a normalization factor can be specified manually in \code{norm.fac}.
+This should represent the log2-fold increase in average coverage of the control samples over the ChIP samples for background regions.
+However, if the value is left as \code{NULL}, a warning will be issued.
+}
+
 \seealso{
 \code{\link{windowCounts}},
 \code{\link{aveLogCPM}},
@@ -100,6 +118,11 @@ keep <- stats$filter > log2(3)
 stats <- filterWindows(data[,1], data[,2], type="control", prior.count=5)
 head(stats$filter)
 keep <- stats$filter > log2(3)
+
+# Control-based with binning for normalization.
+binned <- windowCounts(bamFiles, width=10000, bin=TRUE)
+stats <- filterWindows(data[,1], data[,2], type="control", prior.count=5,
+	norm.fac=list(binned[,1], binned[,2]))
 }
 
 \keyword{filtering}
