@@ -6,12 +6,13 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 # 
 # written by Aaron Lun
 # a long long time ago
-# last modified 12 December 2014
+# last modified 13 May 2015
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
     extracted.chrs <- .activeChrs(bam.file, param$restrict)
 
-	singles <- totals <- others <- one.unmapped <- 0L
+	totals <- countBam(bam.file)$records # Simplest way, as filtering is implicit in .extractSE loading.
+	singles <- mapped <- others <- one.unmapped <- 0L
 	stopifnot(length(bam.file)==1L)
 	norm.list <- loose.names.1 <- loose.names.2 <- list()
 
@@ -21,7 +22,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 		reads <- .extractSE(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
 
 		# Getting rid of unpaired reads.
-		totals <- totals + length(reads$flag)
+		mapped <- mapped + length(reads$flag)
 		is.single <- bitwAnd(reads$flag, 0x1)==0L
 		singles <- singles + sum(is.single)
  		only.one <- bitwAnd(reads$flag, 0x8)!=0L
@@ -58,9 +59,9 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 	inter.chr <- sum(loose.names.1 %in% loose.names.2)
 	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
-	# Returning sizes and some diagnostic data.
-    return(list(sizes=unlist(norm.list), diagnostics=c(total=totals, single=singles, 
-		mate.unmapped=one.unmapped, unoriented=others, inter.chr=inter.chr)))
+   	# Returning sizes and some diagnostic data.
+    return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=totals, mapped.reads=mapped, 
+		single=singles, mate.unmapped=one.unmapped, unoriented=others, inter.chr=inter.chr)))
 }
 
 ##################################

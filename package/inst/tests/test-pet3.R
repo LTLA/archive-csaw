@@ -6,6 +6,7 @@ suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 dir<-"pe-test"
 dir.create(dir)
+options(width=120)
 
 checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
 	stuff<-file.path(dir, paste("x", 1:2, sep=""))
@@ -146,9 +147,11 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 		        	stuff<-getPESizes(fnames[lib], readParam(pe="both", minq=minq, dedup=dedup, restrict=restrict, discard=discard))
 					if (stuff$diagnostics[["single"]]!=sum(skeep)) { 
 						stop("mismatch in number of singles")
-					} else if (stuff$diagnostics[["total"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
+					} else if (stuff$diagnostics[["total.reads"]]!=npairs*2L+nsingles) {
 						stop("mismatch in total number of reads")
-					} 
+					} else if (stuff$diagnostics[["mapped.reads"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
+						stop("mismatch in number of mapped reads")
+					}
 			        if (sum(paired & chr1!=chr2)!=stuff$diagnostics[["inter.chr"]]) { stop("mismatch in interchromosomal PEs") }
 			        if (sum(paired & chr1==chr2 & !valid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
 			        if (sum(keep1!=keep2)!=stuff$diagnostics[["mate.unmapped"]]) { stop("mismatch in unmapped numbers") }
