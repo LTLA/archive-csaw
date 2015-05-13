@@ -28,6 +28,7 @@ Sites with high bimodality scores will be enriched for forward- and reverse-stra
 Given a genomic region, this function will treat each base position as a site.
 The largest bimodality score across all positions will be reported for each region.
 The idea is to assist with the identification of transcription factor binding sites, which exhibit strong strand bimodality.
+The function will be less useful for broad targets like histone marks.
 
 If multiple \code{bam.files} are specified, they are effectively pooled so that counting uses all reads in all files.
 The value of \code{width} should be set to the average fragment length, as this is allows optimal counting of reads.
@@ -38,9 +39,6 @@ A separate value can be specified for each library, to account for differences i
 % This is to avoid high bimodality scores when forward-/reverse-strand reads are stacked directly on top of each other.
 % Such read stacks are likely to be mapping artifacts rather than genuine binding sites.
 % More generally, symmetry avoids spuriously high scores when you have very high enrichment; if you shift by the read length, there's an opening to get one strand and not the other.
-
-Obviously, this function will be less useful for broad targets like histone marks.
-It will also return an error when \code{pe="both"} for \code{param}, as fragments from paired-end data are not stranded.
 }
 
 \value{
@@ -58,6 +56,12 @@ checkBimodality(bamFiles, incoming)
 checkBimodality(bamFiles, incoming, width=c(100, 200))
 checkBimodality(bamFiles, incoming, param=readParam(minq=20, dedup=TRUE))
 checkBimodality(bamFiles, incoming, prior.count=5)
+
+# Works on PE data; scores are computed from paired/rescued reads.
+bamFile <- system.file("exdata", "pet.bam", package="csaw")
+checkBimodality(bamFile, incoming[1:3], param=readParam(pe="both"))
+checkBimodality(bamFile, incoming[1:3], param=readParam(pe="both", 
+    rescue.ext=50, max.frag=100))
 }
 
 \keyword{diagnostics}

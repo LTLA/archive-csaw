@@ -37,6 +37,7 @@ If the reads are on different chromosomes, the read pair will be recorded as bei
 Each valid read pair corresponds to a DNA fragment where both ends are sequenced. 
 The size of the fragment can be determined by calculating the distance between the 5' ends of the mapped reads. 
 The distribution of sizes is useful for assessing the quality of the library preparation, along with all of the recorded diagnostics. 
+Note that any \code{max.frag} specification in \code{param} will be ignored; sizes for all valid pairs will be returned.
 }
 
 % Note; length(out$sizes)*2 == out$diagnostics[2] - sum(out$diagnostics[3:4]) - sum(out$diagnostics[5:6])*2. Because, read pairs with one mapped = 1 read in total.
