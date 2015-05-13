@@ -7,14 +7,11 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 12 December 2014
+# last modified 13 May 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
-	for (x in paramlist) { 
-		if (x$pe=="both") { stop("paired-end read extraction not supported") }
-	}
 
 	max.dist <- as.integer(max.dist)
     if (max.dist <=0) { stop("maximum distance must be positive") }
@@ -32,11 +29,23 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		forward.reads <- 0L
 		for (b in 1:nbam) { 
 			curpar <- paramlist[[b]]
-			if (curpar$pe=="none") { 
-				reads <- .extractSE(bam.files[b], where=where, param=curpar)
+
+			if (curpar$pe=="both") { 
+				if (.rescueMe(curpar)) { 
+					out <- .rescuePE(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+					reads <- mapply(c, out$left, out$right, out$rescued, SIMPLIFY=FALSE)
+				} else {
+					out <- .extractPE(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+					reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
+				}
 			} else {
-				reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
+				if (curpar$pe=="none") { 
+					reads <- .extractSE(bam.files[b], where=where, param=curpar)
+				} else {
+					reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
+				}
 			}
+
 			forwards <- reads$strand=="+"
 			num.reads <- num.reads+length(forwards)
 			forward.reads <- forward.reads+sum(forwards)

@@ -16,6 +16,7 @@
 	all.fields <- unique(all.fields)
 
 	if (length(param$forward)==0L) { stop("read strand extraction must be specified") }
+	if (length(where)!=1L) { stop("extraction not supported for multiple ranges at once") }
 	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
 		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
 		isDuplicate=ifelse(param$dedup, FALSE, NA), 
@@ -43,7 +44,7 @@
 	return(reads)
 }
 
-.extractPE <- function(bam.file, where, param)
+.extractPE <- function(bam.file, where, param, with.reads=FALSE)
 # A function to extract PE data for a particular chromosome. Synchronisation
 # is expected.  We avoid sorting by name  as it'd mean we have to process the
 # entire genome at once (can't go chromosome-by-chromosome).  This probably
@@ -52,9 +53,10 @@
 # 
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 14 February 2015
+# last modified 13 May 2015
 {
 	if (param$fast.pe) {
+		if (with.reads) { stop("fast PE extraction with reads is not supported yet") }
 		# In fast mode, we can take some shortcuts and ignore read-based parameters.
 		reads <- .extractSE(bam.file, where=where, extras="isize", 
 			param=readParam(forward=TRUE), isPaired=TRUE, 
@@ -65,7 +67,18 @@
 
 	reads <- .extractSE(bam.file, extras=c("qname", "flag"), where=where, 	
 		param=param, isPaired=TRUE, hasUnmappedMate=FALSE)
-	.yieldInterestingBits(reads, max(end(where)), max.frag=param$max.frag)
+	output <- .yieldInterestingBits(reads, end(where), max.frag=param$max.frag,	diag=with.reads)
+
+	if (with.reads) {
+		left <- list(pos=reads$pos[output$left], qwidth=reads$qwidth[output$left],
+			strand=rep("+", length(output$left)))
+		right <- list(pos=reads$pos[output$right], qwidth=reads$qwidth[output$right],
+			strand=rep("-", length(output$right)))
+		output$left <- left
+ 	   	output$right <- right
+		output$is.ok <- NULL
+	}
+	return(output)
 }
 
 .extractBrokenPE <- function(bam.file, where, param)
@@ -78,7 +91,7 @@
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }
 
-.rescuePE <- function(bam.file, where, param)
+.rescuePE <- function(bam.file, where, param, with.reads=FALSE)
 # A function to extract PE data where possible, but to rescue those that
 # are invalid by using them as single-end data with read extension. Those
 # reads that form invalid pairs are broken up and the read with the better
@@ -87,11 +100,11 @@
 #
 # written by Aaron Lun
 # created 13 May 2014
-# last modified 1 May 2015
+# last modified 13 May 2015
 {
 	reads <- .extractSE(bam.file, extras=c("qname", "flag", "mapq"), where=where, 
 		param=param, isPaired=TRUE)
-	output <- .yieldInterestingBits(reads, max(end(where)), diag=TRUE, max.frag=param$max.frag)
+	output <- .yieldInterestingBits(reads, end(where), diag=TRUE, max.frag=param$max.frag)
 
 	# Figuring out which reads do pair up.
 	is.first <- bitwAnd(reads$flag, 0x40) != 0L
@@ -112,15 +125,34 @@
 	# Computing rescued positions.
 	rescued.reverse <- bitwAnd(reads$flag[additor], 0x10)!=0L
 	rescued.pos <- reads$pos[additor]
+	rescued.qwidth <- reads$qwidth[additor]
 	if (any(rescued.reverse)) { 
-		rescued.pos[rescued.reverse] <- rescued.pos[rescued.reverse] + reads$qwidth[additor][rescued.reverse] - param$rescue.ext
+		rescued.pos[rescued.reverse] <- rescued.pos[rescued.reverse] + rescued.qwidth[rescued.reverse] - param$rescue.ext
 	}
 
-	# Returning the loot.
+	# Setting up the return values.
 	if (is.na(param$rescue.ext)) { stop("rescue extension length must be specified for improper pair rescuing") }
-	return( list( pos=c(output$pos, rescued.pos),
-		      size=c(output$size, rep(param$rescue.ext, sum(additor))) ) )
+	nrescued <- sum(additor)
+	all.data <- list( pos=c(output$pos, rescued.pos), size=c(output$size, rep(param$rescue.ext, nrescued)) )
+
+	# Adding read data, if requested.		
+	if (with.reads) { 
+		left <- list(pos=reads$pos[output$left], qwidth=reads$qwidth[output$left],
+			strand=rep("+", length(output$left)))
+		right <- list(pos=reads$pos[output$right], qwidth=reads$qwidth[output$right],
+			strand=rep("-", length(output$right)))
+		rescued.str <- rep("+", nrescued)
+		rescued.str[rescued.reverse] <- "-"
+		rescued <- list(pos=rescued.pos, qwidth=rescued.qwidth, strand=rescued.str)
+		
+		all.data$left <- left
+ 	   	all.data$right <- right
+		all.data$rescued <- rescued
+	}
+	return(all.data)
 }
+
+###########################################################
 
 .makeParamList <- function(nbam, param) 
 # Converts a readParam object into a list, if it isn't so already.
@@ -254,7 +286,12 @@
 	else { return("-") }
 }
 
-.rescueMe <- function(param) {
+.rescueMe <- function(param) 
+# Decides whether or not rescuing should be performed.
+#
+# written by Aaron Lun
+# created 10 February 2015
+{
 	if (param$fast.pe) { return(FALSE) } 
 	return(!is.na(param$rescue.ext)) 
 }
