@@ -5,6 +5,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 #
 # written by Aaron Lun
 # created 1 May 2015
+# last modified 13 May 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -19,6 +20,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 
 	for (chr in names(extracted.chrs)) {
 		chosen <- indices[[chr]]
+		if (length(chosen)==0L) { next } 
 		outlen <- extracted.chrs[[chr]]
 		where <- GRanges(chr, IRanges(1, outlen))
 
