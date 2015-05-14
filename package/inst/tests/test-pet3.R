@@ -234,6 +234,44 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 					width=right+left+1, filter=0, param=fast.param)
 				if (!identical(fast.out$totals, x$totals)) { stop("mismatches in totals upon fast PE extraction") }
 				if (!identical(assay(fast.out), assay(x))) { stop("mismatches in counts upon fast PE extraction") }
+
+				# Checking behaviour with `with.reads=TRUE`, to avoid having to check other functions with PE data.
+				where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
+				ref <- csaw:::.getPairedEnd(fnames[1], where=where, param=rpam, with.reads=TRUE)
+				paired <- 1:length(ref$left$pos)
+				if (!identical(ref$pos[paired], ref$left$pos) || 
+						any(ref$pos[paired] + ref$size[paired] <= ref$right$pos) || 
+						any(ref$left$pos > ref$right$pos)) { 
+					stop("inconsistent read intervals reported for pairs") 
+				}
+				if (!is.na(rpam$rescue.ext)) { 
+					rescued <- length(ref$left$pos) + 1:length(ref$rescued$pos)
+					is.forward <- ref$rescued$strand == "+"
+					if (!identical(ref$pos[rescued][is.forward], ref$rescued$pos[is.forward]) ||
+							any((ref$pos + ref$size)[rescued][!is.forward] <= ref$rescued$pos[!is.forward]) ||
+							any(ref$pos[rescued] > ref$rescued$pos) ||
+							any(ref$rescued$pos <= 0L)) { 
+						stop("inconsistent read intervals reported for rescued pairs") 
+					}
+				}
+
+				# Comparing to fast extraction of a dumped file.
+				fast.ref <- csaw:::.getPairedEnd(dumped[[1]], where=where, param=fast.param, with.reads=TRUE)
+				for (read in c("left", "right", "rescued")) { 
+					curslow <- ref[[read]]
+					curfast <- fast.ref[[read]]
+					stopifnot(is.null(curslow)==is.null(curfast))
+					if (is.null(curslow)) { next }
+
+					os <- order(curslow$pos, curslow$qwidth, curslow$strand)
+					of <- order(curfast$pos, curfast$qwidth, curfast$strand)
+					if (!identical(curslow$pos[os], curfast$pos[of]) ||
+							!identical(curslow$qwidth[os], curfast$qwidth[of]) ||
+							!identical(curslow$strand[os], curfast$strand[of])) {
+						stop("mismatches in extracted reads between fast and slow modes") 
+					}
+				}
+				
 				unlink(unlist(dumped))
 			}
 		}
