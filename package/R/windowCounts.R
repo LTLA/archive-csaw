@@ -68,23 +68,14 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		for (bf in 1:nbam) {
 			curpar <- paramlist[[bf]]
 			if (curpar$pe!="both") {
-				if (curpar$pe=="none") { 
-   					reads <- .extractSE(bam.files[bf], where=where, param=curpar)
-				} else {
-					reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
-				}
+   				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
 				extended <- .extendSE(reads, ext=ext.data$ext[bf])
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
-				if (.rescueMe(curpar)) {
-					out <- .rescuePE(bam.files[bf], where=where, param=curpar)
-				} else {
-					out <- .extractPE(bam.files[bf], where=where, param=curpar)
-				}
-
-				# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
+				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				if (bin) { 
+					# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
 					mid <- as.integer(out$pos + out$size/2)
 					frag.end <- frag.start <- mid
 				} else {

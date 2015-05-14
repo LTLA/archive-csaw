@@ -5,7 +5,7 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 #
 # written by Aaron Lun
 # created 1 September 2014
-# last modified 1 May 2015
+# last modified 14 May 2015
 {
     if (length(cur.region)!=1L) { stop("exactly one range is required for plotting") }
 	if (as.logical(strand(cur.region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
@@ -18,7 +18,7 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 	sqi <- Seqinfo(cur.chr, max.len)
 
 	# Extracting all-of-chromosome for paired-end rescue, as you need to find the read with the higher MAPQ.
-	if (param$pe=="both" && .rescueMe(param)) { 
+	if (param$pe=="both" && !param$fast.pe && .needsRescue(param)) { 
 		actual.region <- GRanges(cur.chr, IRanges(1L, max.len)) 
 	} else {
 		if (param$pe=="both") {
@@ -33,31 +33,21 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 	# Pulling out reads from a region and setting up coverage RLE's.
 	ext.data <- .collateExt(1, ext)
 	if (param$pe!="both") {
-		if (param$pe=="none") { 
-			cur.reads <- .extractSE(bam.file, where=actual.region, param=param)
-		} else {
-			cur.reads <- .extractBrokenPE(bam.file, where=actual.region, param=param)
-		}
+		cur.reads <- .getSingleEnd(bam.file, where=actual.region, param=param)
 		stranded <- cur.reads$strand
 		cur.reads <- .extendSE(cur.reads, ext=ext.data$ext[1])
 		cur.reads <- .checkFragments(cur.reads$start, cur.reads$end, final=ext.data$final, chrlen=max.len)
 
 		if (length(stranded)) { 
-			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)),
-				strand=stranded, seqinfo=sqi))
+			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)), strand=stranded, seqinfo=sqi))
 		}
 	} else {
-		if (.rescueMe(param)) {
-			cur.frags <- .rescuePE(bam.file, where=actual.region, param=param)
-		} else {
-			cur.frags <- .extractPE(bam.file, where=actual.region, param=param)
-		}
+		cur.frags <- .getPairedEnd(bam.file, where=actual.region, param=param)
 		cur.frags <- .checkFragments(cur.frags$pos, cur.frags$pos + cur.frags$size - 1L, final=ext.data$final, chrlen=max.len)
 
 		# Filtering to retain those that don't actually overlap.
 		if (length(cur.frags$start)) { 
-			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.frags$start), pmin(max.len, cur.frags$end)), 
-				seqinfo=sqi)
+			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.frags$start), pmin(max.len, cur.frags$end)), seqinfo=sqi)
 			keep <- overlapsAny(of.interest, cur.region)
 			return(of.interest[keep])
 		}

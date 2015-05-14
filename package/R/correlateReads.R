@@ -7,7 +7,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 13 May 2015
+# last modified 14 May 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -30,20 +30,15 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		for (b in 1:nbam) { 
 			curpar <- paramlist[[b]]
 
-			if (curpar$pe=="both") { 
-				if (.rescueMe(curpar)) { 
-					out <- .rescuePE(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+			if (curpar$pe=="both") {
+				out <- .getPairedEnd(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+				if (.needsRescue(curpar)) { 
 					reads <- mapply(c, out$left, out$right, out$rescued, SIMPLIFY=FALSE)
 				} else {
-					out <- .extractPE(bam.files[b], where=where, param=curpar, with.reads=TRUE)
 					reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
 				}
 			} else {
-				if (curpar$pe=="none") { 
-					reads <- .extractSE(bam.files[b], where=where, param=curpar)
-				} else {
-					reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
-				}
+				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
 			}
 
 			forwards <- reads$strand=="+"

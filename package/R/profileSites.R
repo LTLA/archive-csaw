@@ -7,7 +7,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 10 February 2015
+# last modified 14 May 2015
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
@@ -63,20 +63,12 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 		for (b in 1:nbam) {
 			curpar <- paramlist[[b]]
             if (curpar$pe!="both") {
-				if (curpar$pe=="none") { 
-					reads <- .extractSE(bam.files[b], where=where, param=curpar)
-				} else {
-					reads <- .extractBrokenPE(bam.files[b], where=where, param=curpar)
-				}
-   				extended <- .extendSE(reads, ext=ext.data$ext[b])
+				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
+				extended <- .extendSE(reads, ext=ext.data$ext[b])
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
-                if (.rescueMe(curpar)) { 
-					out <- .rescuePE(bam.files[b], where=where, param=curpar)
-				} else {
-					out <- .extractPE(bam.files[b], where=where, param=curpar)
-				}
+				out <- .getPairedEnd(bam.files[b], where=where, param=curpar)
 				start.pos <- out$pos
 				end.pos <- out$pos + out$size - 1L
 			}

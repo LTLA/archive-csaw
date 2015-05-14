@@ -28,21 +28,16 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 		collected <- list()
 		for (bf in 1:nbam) {
 			curpar <- paramlist[[bf]]
-
-			if (curpar$pe=="both") { 
-				if (.rescueMe(curpar)) { 
-					out <- .rescuePE(bam.files[bf], where=where, param=curpar, with.reads=TRUE)
+    
+       		if (curpar$pe=="both") {
+				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar, with.reads=TRUE)
+				if (.needsRescue(curpar)) { 
 					reads <- mapply(c, out$left, out$right, out$rescued, SIMPLIFY=FALSE)
 				} else {
-					out <- .extractPE(bam.files[bf], where=where, param=curpar, with.reads=TRUE)
 					reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
 				}
 			} else {
-				if (curpar$pe=="none") {
-					reads <- .extractSE(bam.files[bf], where=where, param=curpar)
-				} else {
-					reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
-				}
+				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
 			}
 			
 			is.forward <- as.integer(reads$strand=="+")

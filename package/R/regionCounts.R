@@ -27,20 +27,12 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
         for (bf in 1:nbam) {
 			curpar <- paramlist[[bf]]
             if (curpar$pe!="both") {
-                if (curpar$pe=="none") {
-                    reads <- .extractSE(bam.files[bf], where=where, param=curpar)
-                } else {
-                    reads <- .extractBrokenPE(bam.files[bf], where=where, param=curpar)
-                }
+				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
 				extended <- .extendSE(reads, ext=ext.data$ext[bf])
 				frag.start <- extended$start
 				frag.end <- extended$end
             } else {
-                if (.rescueMe(curpar)) { 
-                    out <- .rescuePE(bam.files[bf], where=where, param=curpar)
-                } else {
-                    out <- .extractPE(bam.files[bf], where=where, param=curpar)
-                }
+				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				frag.start <- out$pos
 				frag.end <- out$pos + out$size - 1L
             }
