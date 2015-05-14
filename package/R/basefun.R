@@ -144,6 +144,8 @@
 .extractFastPE <- function(bam.file, where, param, with.reads=FALSE)
 # A command for fast paired-end read extraction, where we pull out fragments 
 # based on their position and isize. No name loading or matching required!
+# We just look for forward reads where the mate is mapped and reverse, and 
+# we throw out those with negative insert distances to get inward-facing ones.
 #
 # written by Aaron Lun
 # created 14 May 2015
@@ -195,9 +197,9 @@
 		# Otherwise, we estimate the width of the mate from the relative positioning.
 		left <- right <- list()
 		left$pos <- output$pos
-		left$width <- reads$qwidth[keep]
+		left$qwidth <- reads$qwidth[keep]
 		right$pos <- reads$mpos[keep]
-		right$width <- left$pos + output$size - right$pos
+		right$qwidth <- left$pos + output$size - right$pos
 		left$strand <- rep("+", length(output$pos))
 		right$strand <- rep("-", length(output$pos))
 		output$left <- left

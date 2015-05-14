@@ -278,6 +278,19 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 			}
 		}
 	}
+
+	# Checking what happens if you load fast.pe=TRUE on the raw files.
+	where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
+	stopifnot(!csaw:::.isDumpedBam(fnames[1]))
+	extracted.reads <- csaw:::.getPairedEnd(fnames[1], where=where, 
+		param=readParam(pe="both", fast.pe=TRUE), with.reads=TRUE)
+	if (!identical(extracted.reads$pos, extracted.reads$left$pos) || 
+			!identical(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos)) {
+		print(cbind(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos))
+		print(extracted.reads)
+		stop("lengths and widths of rapidly extracted reads don't match up")
+	}
+
 	return(rowRanges(x))
 }
 
@@ -323,7 +336,7 @@ checkcount(5000, 20, c(chrA=1000, chrB=2000), spacing=25, ext=200)
 ###################################################################################################
 # Cleaning up.
 
-unlink(dir, recursive=TRUE);
+unlink(dir, recursive=TRUE)
 
 ###################################################################################################
 # End.
