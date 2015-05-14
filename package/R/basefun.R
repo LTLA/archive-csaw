@@ -279,29 +279,6 @@
 	return(originals)
 }
 
-.extendSE <- function(reads, ext)
-# This decides how long to extend reads. The addition of the remainder kicks
-# out (or truncates) the fragments to reach the desired 'final.ext'. If 'ext'
-# is NA, the read length is used instead.
-#
-# written by Aaron Lun
-# created 12 December 2014
-# last modified 1 May 2015
-{
-	if (is.na(ext)) {   
-		frag.start <- reads$pos
-		frag.end <- frag.start + reads$qwidth - 1L	
-	} else {
-		is.reverse <- reads$strand!="+"
-		frag.start <- reads$pos
-		if (any(is.reverse)) { 
-			frag.start[is.reverse] <- reads$pos[is.reverse] + reads$qwidth[is.reverse] - ext
-		}
-		frag.end <- frag.start + ext - 1L
-	}
-	return(list(start=frag.start, end=frag.end))
-}
-
 .collateExt <- function(nbam, ext)
 # Collates the extension parameters into a set of ext and remainder values.
 # The idea is to extend each read directionally to 'ext', and then extend in
@@ -329,20 +306,45 @@
 	list(ext=ext, final=final.ext)
 }
 
+.extendSE <- function(reads, ext, final, chrlen)
+# This decides how long to extend reads. The addition of the remainder kicks
+# out (or truncates) the fragments to reach the desired 'final.ext'. If 'ext'
+# is NA, the read length is used instead.
+#
+# written by Aaron Lun
+# created 12 December 2014
+# last modified 14 May 2015
+{
+	if (is.na(ext)) {   
+		frag.start <- reads$pos
+		frag.end <- frag.start + reads$qwidth - 1L	
+	} else {
+		is.reverse <- reads$strand!="+"
+		frag.start <- reads$pos
+		if (any(is.reverse)) { 
+			frag.start[is.reverse] <- reads$pos[is.reverse] + reads$qwidth[is.reverse] - ext
+		}
+		frag.end <- frag.start + ext - 1L
+	}
+	.checkFragments(frag.start, frag.end, final=final, chrlen=chrlen)
+}
+
 .checkFragments <- function(starts, ends, final, chrlen) 
 # Coerces the fragments to the desired 'final.ext', and ensures
-# that manipulations do not redefine fragment beyond chromosome boundaries.
+# that prior manipulations do not redefine fragment beyond chromosome 
+# boundaries (e.g., due to read extension or rescaling).
 #
 # written by Aaron Lun
 # created 13 February 2014
-# last modified 13 February 2015
+# last modified 14 May 2015
 {
 	if (!is.na(final)) { 
 		remainders <- as.integer((ends - starts + 1L - final)/2)
-		starts <- starts + remainders
-		ends <- ends - remainders
+		if (any(remainders!=0L)) { 
+			starts <- starts + remainders
+			ends <- ends - remainders
+		} 
 	}
-
 	if (length(starts)) { starts <- pmin(starts, chrlen) } 
 	if (length(ends)) { ends <- pmax(1L, ends) }
 	return(list(start=starts, end=ends)) 

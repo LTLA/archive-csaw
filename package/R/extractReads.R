@@ -24,20 +24,20 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 		actual.region <- GRanges(cur.chr, IRanges(1L, max.len)) 
 	} else {
 		max.ext <- suppressWarnings(max(ext.data$ext, ext.data$final, param$max.frag, na.rm=TRUE))
-		if (max.ext==-Inf) { max.ext <- 0L }
+		if (max.ext < 0L) { max.ext <- 0L }
 		actual.region <- GRanges(cur.chr, IRanges(max(1L, start(region)-max.ext),
 			min(max.len, end(region)+max.ext)))
 	}
 
 	# Pulling out reads from a region and setting up coverage RLE's.
 	if (param$pe!="both") {
-		cur.reads <- .getSingleEnd(bam.file, where=actual.region, param=param)
-		stranded <- cur.reads$strand
-		cur.reads <- .extendSE(cur.reads, ext=ext.data$ext[1])
-		cur.reads <- .checkFragments(cur.reads$start, cur.reads$end, final=ext.data$final, chrlen=max.len)
+		read.data <- .getSingleEnd(bam.file, where=actual.region, param=param)
+		stranded <- read.data$strand
 
 		if (length(stranded)) { 
+			cur.reads <- .extendSE(read.data, ext=ext.data$ext[1], final=ext.data$final, chrlen=max.len)
 			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)), strand=stranded, seqinfo=sqi)
+
 			if (max.ext) { 
  			   	# Filtering to retain those extended reads that actually overlap.	
 				keep <- overlapsAny(of.interest, region)

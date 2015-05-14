@@ -34,17 +34,15 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 			curpar <- paramlist[[bf]]
             if (curpar$pe!="both") {
 				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
-				extended <- .extendSE(reads, ext=ext.data$ext[bf])
+				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
             } else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
-				frag.start <- out$pos
-				frag.end <- out$pos + out$size - 1L
-            }
-			checked <- .checkFragments(frag.start, frag.end, final=ext.data$final, chrlen=outlen)
-			frag.start <- checked$start
-			frag.end <- checked$end
+				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+   				frag.start <- checked$start
+				frag.end <- checked$end
+        	 }
 		
 			# Counting the number of overlaps of any type with the known regions.
 			totals[bf] <- totals[bf] + length(frag.start)

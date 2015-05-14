@@ -69,7 +69,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 			curpar <- paramlist[[bf]]
 			if (curpar$pe!="both") {
    				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
-				extended <- .extendSE(reads, ext=ext.data$ext[bf])
+				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
 			} else {
@@ -79,13 +79,11 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 					mid <- as.integer(out$pos + out$size/2)
 					frag.end <- frag.start <- mid
 				} else {
-					frag.start <- out$pos
-					frag.end <- out$pos + out$size - 1L
+					checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+					frag.start <- checked$start
+					frag.end <- checked$end
 				}
 			}
-			checked <- .checkFragments(frag.start, frag.end, final=ext.data$final, chrlen=outlen)
-			frag.start <- checked$start
-			frag.end <- checked$end
 
 			# Extending reads to account for window sizes > 1 bp. The start of each read
 			# must be extended by 'right' and the end of each read must be extended by

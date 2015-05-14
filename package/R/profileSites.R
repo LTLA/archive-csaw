@@ -64,17 +64,15 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 			curpar <- paramlist[[b]]
             if (curpar$pe!="both") {
 				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
-				extended <- .extendSE(reads, ext=ext.data$ext[b])
+				extended <- .extendSE(reads, ext=ext.data$ext[b], final=ext.data$final, chrlen=outlen)
 				start.pos <- extended$start
 				end.pos <- extended$end
 			} else {
 				out <- .getPairedEnd(bam.files[b], where=where, param=curpar)
-				start.pos <- out$pos
-				end.pos <- out$pos + out$size - 1L
+				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+				start.pos <- checked$start
+				end.pos <- checked$end
 			}
-			checked <- .checkFragments(start.pos, end.pos, final=ext.data$final, chrlen=outlen)
-			start.pos <- checked$start
-			end.pos <- checked$end
 
 			if (!length(start.pos)) { next }
 			ix <- length(starts) + 1L
