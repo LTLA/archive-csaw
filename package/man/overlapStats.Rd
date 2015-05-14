@@ -32,7 +32,7 @@ A wrapper is necessary as a window may overlap multiple regions.
 If so, the multiple instances of that window are defined as distinct ``overlapped'' windows, where each overlapped window is assigned to a different region.
 Each overlapped window is represented by a row of \code{olap}.
 In contrast, the ``individual'' window just refers to the window itself, regardless of what it overlaps.
-This is represented by each row of the \code{SummarizedExperiment} object and the \code{tab} derived from it.
+This is represented by each row of the \code{RangedSummarizedExperiment} object and the \code{tab} derived from it.
 
 The distinction between these two definitions is required to describe the weight arguments.
 The \code{o.weight} argument refers to the weights for each region-window relationship.

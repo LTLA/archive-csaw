@@ -1,26 +1,26 @@
 \name{SEmethods}
-\alias{normalize,SummarizedExperiment-method}
+\alias{normalize,RangedSummarizedExperiment-method}
 \alias{normalize}
-\alias{asDGEList,SummarizedExperiment-method}
+\alias{asDGEList,RangedSummarizedExperiment-method}
 \alias{asDGEList}
 
-\title{Statistical wrappers for SummarizedExperiment objects}
+\title{Statistical wrappers for RangedSummarizedExperiment objects}
 
-\description{Convenience wrappers for statistical routines operating on SummarizedExperiment objects}
+\description{Convenience wrappers for statistical routines operating on RangedSummarizedExperiment objects}
 
 \usage{
-\S4method{normalize}{SummarizedExperiment}(object, lib.sizes, ...)
-\S4method{asDGEList}{SummarizedExperiment}(object, lib.sizes, ...)
+\S4method{normalize}{RangedSummarizedExperiment}(object, lib.sizes, ...)
+\S4method{asDGEList}{RangedSummarizedExperiment}(object, lib.sizes, ...)
 }
 
 \arguments{
-  \item{object}{a \code{SummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
+  \item{object}{a \code{RangedSummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
   \item{lib.sizes}{an (optional) integer vector of library sizes}
   \item{...}{other arguments to be passed to the function being wrapped}
 }
 
 \details{
-Counts are extracted from the matrix corresponding to the first assay in the \code{SummarizedExperiment} object.
+Counts are extracted from the matrix corresponding to the first assay in the \code{RangedSummarizedExperiment} object.
 If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.
 Warnings will be generated if this field is not present.
 

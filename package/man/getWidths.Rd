@@ -9,7 +9,7 @@ getWidths(data)
 }
 
 \arguments{
-\item{data}{a \code{SummarizedExperiment} object, produced by \code{\link{windowCounts}} or \code{\link{regionCounts}}}
+\item{data}{a \code{RangedSummarizedExperiment} object, produced by \code{\link{windowCounts}} or \code{\link{regionCounts}}}
 }
 
 \details{
@@ -25,13 +25,14 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 % strand reads, respectively). This logic holds regardless of which strand the read was from, 
 % so there's no need to adjust things if data$param$forward is not NA.
 
-The fragment length is taken from \code{exptData(data)$final.ext}, if it is not \code{NA}.
+The fragment length is taken from \code{metadata(data)$final.ext}, if it is not \code{NA}.
 Otherwise, it is taken from \code{data$ext}.
 For paired-end data, the average fragment length should be the median of the values obtained with \code{\link{getPESizes}}.
 If the fragment lengths are different between libraries, the average is used to computed the effective width of the window.
 
 If \code{final.ext} is \code{NA} and any of \code{ext} are \code{NA}, the function will throw an error.
 Users should set the read length in \code{data$rlen} to avoid this, as \code{NA} values of \code{ext} correspond to the use of unextended reads.
+This information must be manually supplied as it is not automatically stored when constructing \code{data}.
 }
 
 \value{

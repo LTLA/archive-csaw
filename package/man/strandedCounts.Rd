@@ -16,7 +16,7 @@ strandedCounts(bam.files, param=readParam(forward=NULL), regions=NULL, ...)
 }
 
 \value{
-A \code{SummarizedExperiment} object containing strand-specific counts for genomic regions.
+A \code{RangedSummarizedExperiment} object containing strand-specific counts for genomic regions.
 }
 
 \details{
@@ -25,10 +25,10 @@ This function calls \code{\link{windowCounts}} after setting \code{param$forward
 Any existing value of \code{param$forward} is ignored.
 If \code{regions} is specified, \code{\link{regionCounts}} is used instead of \code{\link{windowCounts}}.
 
-The function then concatenates the two \code{SummarizedExperiment} objects (one from each strand).
+The function then concatenates the two \code{RangedSummarizedExperiment} objects (one from each strand).
 The total numbers of reads are added together to form the new \code{totals}.
 However, the total numbers of reads for each strand are also stored for future reference.
-Count loading parameters are also stored in the \code{exptData}.
+Count loading parameters are also stored in the \code{metadata}.
 
 Each row in the concatenated object corresponds to a stranded genomic region, where the strand of the region indicates the strand of the reads that were counted in that row.
 Note that there may not be two rows for each genomic region.

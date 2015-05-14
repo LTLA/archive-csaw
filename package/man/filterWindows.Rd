@@ -1,7 +1,7 @@
 \name{filterWindows}
 \alias{filterWindows}
 
-\title{Filtering methods for SummarizedExperiment objects}
+\title{Filtering methods for RangedSummarizedExperiment objects}
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
@@ -9,11 +9,11 @@ filterWindows(data, background, type="global", prior.count=2, norm.fac=NULL)
 }
 
 \arguments{
-\item{data}{a \code{SummarizedExperiment} object containing window- or bin-level counts}
-\item{background}{another \code{SummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
+\item{data}{a \code{RangedSummarizedExperiment} object containing window- or bin-level counts}
+\item{background}{another \code{RangedSummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
 \item{type}{a character string specifying the type of filtering to perform; can be any of \code{c("global", "local", "control", "proportion")}}
 \item{prior.count}{a numeric scalar, specifying the prior count to use in \code{\link{aveLogCPM}}}
-\item{norm.fac}{a numeric scalar representing the normalization factor between ChIP and control samples, or a list of two \code{SummarizedExperiment} objects; only used when \code{type="control"}}
+\item{norm.fac}{a numeric scalar representing the normalization factor between ChIP and control samples, or a list of two \code{RangedSummarizedExperiment} objects; only used when \code{type="control"}}
 }
 
 \value{
@@ -74,7 +74,7 @@ Composition biases are likely to be present, where increased binding at some loc
 This incorrectly results in smaller filter statistics for the latter loci, as the fold-change over the input is reduced.
 To correct for this, a normalization factor between ChIP and control samples can be computed from \code{norm.fac}.
 
-Users should supply a list containing two \code{SummarizedExperiment} objects, each containing the counts for large (~10 kbp) bins.
+Users should supply a list containing two \code{RangedSummarizedExperiment} objects, each containing the counts for large (~10 kbp) bins.
 The first and second objects should contain counts for the libraries in \code{data} and \code{background}, respectively.
 The median difference in the average abundance between the two objects is then computed across all bins.
 This is used as a normalization factor to correct the filter statistics for each window.
