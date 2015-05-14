@@ -1,5 +1,5 @@
 detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000), 
-    max.intron=1e6, key.field="ENTREZID", name.field="SYMBOL")
+    max.intron=1e6, key.field="ENTREZID", name.field="SYMBOL", ignore.strand=TRUE)
 # This gives three character vectors for each 'incoming'. The first specifies
 # which features are wholly or partially overlapped by the current range.
 # The second specifies what features are within 'tol' of the 5' end of 
@@ -87,31 +87,31 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	# we're so-and-so base pairs away from the end of the promoter. We also
 	# rule out negative or zero distances i.e. those that would overlap the
 	# region itself (zero distance means 1-based end and start are equal).
-	# Strandedness in the incoming data is eliminated, as we're looking for 
-	# any annotated features that overlap.
+	# We may or may not consider strandedness (flanking sets ignore.true
+	# so that we always get left/right flanks).
 
-	if (any(strand(incoming)!="*")) { 
- 	   	warning("strandedness in incoming regions is ignored when overlapping")
-		strand(incoming) <- "*" 
-	}
-	full.lap <- findOverlaps(incoming, curex)
+	full.lap <- findOverlaps(incoming, curex, ignore.strand=ignore.strand)
 	flank.only <- ex.num > 0L
 	to.flank <- curex[flank.only]
 
-	left.flank <- suppressWarnings(trim(flank(incoming, dist)))
-	left.lap <- findOverlaps(left.flank, to.flank)
+	left.flank <- suppressWarnings(trim(flank(incoming, dist, ignore.strand=TRUE)))
+	left.lap <- findOverlaps(left.flank, to.flank, ignore.strand=ignore.strand)
 	left.dist <- start(incoming)[queryHits(left.lap)] - end(to.flank)[subjectHits(left.lap)]
 	left.nolap <- left.dist > 0L
+	left.lap <- left.lap[left.nolap,]
+	left.dist <- left.dist[left.nolap]
 
-	right.flank <- suppressWarnings(trim(flank(incoming, dist, start=FALSE)))
-	right.lap <- findOverlaps(right.flank, to.flank)
+	right.flank <- suppressWarnings(trim(flank(incoming, dist, start=FALSE, ignore.strand=TRUE)))
+	right.lap <- findOverlaps(right.flank, to.flank, ignore.strand=ignore.strand)
 	right.dist <- start(to.flank)[subjectHits(right.lap)] - end(incoming)[queryHits(right.lap)]  
 	right.nolap <- right.dist > 0L
+	right.lap <- right.lap[right.nolap,]
+	right.dist <- right.dist[right.nolap]
 	
 	# Collating the left-overs.
 	all.strs <- .Call(cxx_annotate_overlaps, length(incoming), queryHits(full.lap)-1L, subjectHits(full.lap)-1L,
-			queryHits(left.lap)[left.nolap]-1L, which(flank.only)[subjectHits(left.lap)][left.nolap]-1L, left.dist[left.nolap],
-			queryHits(right.lap)[right.nolap]-1L, which(flank.only)[subjectHits(right.lap)][right.nolap]-1L, right.dist[right.nolap],
+			queryHits(left.lap)-1L, which(flank.only)[subjectHits(left.lap)]-1L, left.dist,
+			queryHits(right.lap)-1L, which(flank.only)[subjectHits(right.lap)]-1L, right.dist,
 			gene.name, ex.num, gene.id, gene.str)
 	if (is.character(all.strs)) { stop(all.strs) }
 	names(all.strs) <- c("overlap", "left", "right")
