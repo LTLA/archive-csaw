@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.3.2}{\itemize{
+\section{Version 1.3.4}{\itemize{
 \item
 Added clusterFDR() function to compute the FDR for clusters of DB windows.
 
@@ -19,7 +19,19 @@ Modified default parameter specification in strandedCounts(), to avoid errors.
 Switched to warning from error when a restricted chromosome is specified in extractReads().
 
 \item 
+Modified extractReads() interface with improved support for extended read and paired read extraction.
+
+\item 
 Added normalization options to filterWindows() when using control samples.
+
+\item
+Allowed correlateReads() to accept paired-end specification when extracting data.
+
+\item 
+Added support for strand-specific overlapping in detailRanges().
+
+\item
+Increased the fidelity of retained information in dumped BAM file from dumpPE().
 
 \item 
 Switched to RangedSummarizedExperiment conventions for all relevant functions.
