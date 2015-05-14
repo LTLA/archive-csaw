@@ -21,6 +21,9 @@ Switched to warning from error when a restricted chromosome is specified in extr
 \item 
 Added normalization options to filterWindows() when using control samples.
 
+\item 
+Switched to RangedSummarizedExperiment conventions for all relevant functions.
+
 \item
 Slight updates to documentation, user's guide.
 }}
