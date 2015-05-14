@@ -224,18 +224,15 @@ Type 'q()' to quit R.
 + 			my.reg <- rowRanges(x)[chosen]
 + 			if (rpam$pe=="both") {
 + 				for (f in 1:length(fnames)) {
-+ 					collected <- extractReads(my.reg, fnames[f], param=rpam)
++ 					collected <- extractReads(fnames[f], my.reg, param=rpam)
 + 					if (!identical(assay(x)[chosen,f], length(collected))) {
 + 						stop("mismatch in the number of fragments from extractReads")
 + 					}
 + 				}
 + 			} else {
-+ 				my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+ext*2))
 + 				for (f in 1:length(fnames)) {
-+ 					collected <- extractReads(my.reg2, fnames[f], param=rpam)
-+ 					collected <- suppressWarnings(resize(collected, width=ext))
-+ 					strand(collected) <- "*"
-+ 					if (!identical(assay(x)[chosen,f], suppressWarnings(countOverlaps(my.reg, collected)))) {
++ 					collected <- extractReads(fnames[f], my.reg, param=rpam, ext=ext)
++ 					if (!identical(assay(x)[chosen,f], length(collected))) { 
 + 						stop("mismatch in the number of single reads from extractReads")
 + 					}
 + 				}
@@ -256,29 +253,32 @@ Type 'q()' to quit R.
 + 
 + 				# Checking behaviour with `with.reads=TRUE`, to avoid having to check other functions with PE data.
 + 				where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
-+ 				ref <- csaw:::.getPairedEnd(fnames[1], where=where, param=rpam, with.reads=TRUE)
-+ 				paired <- 1:length(ref$left$pos)
-+ 				if (!identical(ref$pos[paired], ref$left$pos) || 
-+ 						any(ref$pos[paired] + ref$size[paired] <= ref$right$pos) || 
-+ 						any(ref$left$pos > ref$right$pos)) { 
-+ 					stop("inconsistent read intervals reported for pairs") 
-+ 				}
-+ 				if (!is.na(rpam$rescue.ext)) { 
-+ 					rescued <- length(ref$left$pos) + 1:length(ref$rescued$pos)
-+ 					is.forward <- ref$rescued$strand == "+"
-+ 					if (!identical(ref$pos[rescued][is.forward], ref$rescued$pos[is.forward]) ||
-+ 							any((ref$pos + ref$size)[rescued][!is.forward] <= ref$rescued$pos[!is.forward]) ||
-+ 							any(ref$pos[rescued] > ref$rescued$pos) ||
-+ 							any(ref$rescued$pos <= 0L)) { 
-+ 						stop("inconsistent read intervals reported for rescued pairs") 
++ 				extracted.reads <- csaw:::.getPairedEnd(fnames[1], where=where, param=rpam, with.reads=TRUE)
++ 				fast.extracted <- csaw:::.getPairedEnd(dumped[[1]], where=where, param=fast.param, with.reads=TRUE)
++ 
++ 				for (ref in list(extracted.reads, fast.extracted)) { 
++ 					paired <- 1:length(ref$left$pos)
++ 					if (!identical(ref$pos[paired], ref$left$pos) || 
++ 							any(ref$pos[paired] + ref$size[paired] <= ref$right$pos) || 
++ 							any(ref$left$pos > ref$right$pos)) { 
++ 						stop("inconsistent read intervals reported for pairs") 
++ 					}	
++ 					if (!is.na(rpam$rescue.ext)) { 
++ 						rescued <- length(ref$left$pos) + 1:length(ref$rescued$pos)
++ 						is.forward <- ref$rescued$strand == "+"
++ 						if (!identical(ref$pos[rescued][is.forward], ref$rescued$pos[is.forward]) ||
++ 								any((ref$pos + ref$size)[rescued][!is.forward] <= ref$rescued$pos[!is.forward]) ||
++ 								any(ref$pos[rescued] > ref$rescued$pos) ||
++ 								any(ref$rescued$pos <= 0L)) { 
++ 							stop("inconsistent read intervals reported for rescued pairs") 
++ 						}
 + 					}
 + 				}
 + 
-+ 				# Comparing to fast extraction of a dumped file.
-+ 				fast.ref <- csaw:::.getPairedEnd(dumped[[1]], where=where, param=fast.param, with.reads=TRUE)
-+ 				for (read in c("left", "right", "rescued")) { 
-+ 					curslow <- ref[[read]]
-+ 					curfast <- fast.ref[[read]]
++ 				# Comparing fast and slow extraction of a dumped file.
++ 				for (type in c("left", "right", "rescued")) { 
++ 					curslow <- extracted.reads[[type]]
++ 					curfast <- fast.extracted[[type]]
 + 					stopifnot(is.null(curslow)==is.null(curfast))
 + 					if (is.null(curslow)) { next }
 + 
@@ -290,6 +290,8 @@ Type 'q()' to quit R.
 + 						stop("mismatches in extracted reads between fast and slow modes") 
 + 					}
 + 				}
++ 				stopifnot(length(extracted.reads$pos)==length(fast.extracted$pos))
++ 				stopifnot(length(extracted.reads$size)==length(fast.extracted$size))
 + 				
 + 				unlink(unlist(dumped))
 + 			}
@@ -707,4 +709,4 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-125.013   0.746 125.749 
+124.239   0.679 125.003 

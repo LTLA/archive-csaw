@@ -32,7 +32,7 @@ comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL,
 			left.forward <- right.forward <- left.reverse <- right.reverse <- 0
 
 			for (b in 1:length(bamFiles)) { 
-				all.reads <- extractReads(full.chr, bamFiles[b], param=repar)
+				all.reads <- extractReads(bamFiles[b], full.chr, param=repar)
 
 				# Computing coverage, somewhat counterintuitively; 'left.forward', for example, is extended to 
 				# the right, as it must find all overlaps to the left of the region of interest.

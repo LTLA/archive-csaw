@@ -27,20 +27,21 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 		repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward)
 		x<-windowCounts(bamFiles, ext=ext, width=right+left+1, shift=left, spacing=spacing, 
 			filter=filter, param=repar)
-		y <- regionCounts(bamFiles, regions=rowRanges(x), ext=ext, param=repar)
+		all.regs <- rowRanges(x)
+		if (!is.na(forward)) { strand(all.regs) <- "*" }
+
+		y <- regionCounts(bamFiles, regions=all.regs, ext=ext, param=repar)
 		if (!identical(assay(y), assay(x))) { stop("mismatch in count matrices") }
 		if (!identical(y$totals, x$totals)) { stop("mismatch in total counts") }
 
 		# If there's no rescaling, we pick a region in the middle and we check it with extractReads.
 		chosen <- round(nrow(x)/2)
-		my.reg <- rowRanges(x)[chosen]
-		my.reg2 <- suppressWarnings(resize(my.reg, fix="center", width=width(my.reg)+max(y$ext)*2))
-		strand(my.reg2) <- "*"
+		my.reg <- all.regs[chosen]
 	
 		for (f in 1:length(bamFiles)) {
-			collected <- extractReads(my.reg2, bamFiles[f], param=repar, ext=ext[f])
+			collected <- extractReads(bamFiles[f], my.reg, param=repar, ext=ext[f])
 			strand(collected) <- "*"
-			if (!identical(assay(x)[chosen,f], suppressWarnings(countOverlaps(my.reg, collected)))) { 
+			if (!identical(assay(x)[chosen,f], length(collected))) { 
 				stop("mismatch in the number of counts from extractReads")
 			}
 		}

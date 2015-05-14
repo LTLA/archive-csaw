@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2014-12-14 r67167) -- "Unsuffered Consequences"
-Copyright (C) 2014 The R Foundation for Statistical Computing
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -38,7 +38,7 @@ Type 'q()' to quit R.
 + 	# Running profileSites.
 + 	xparam <- readParam(minq=minq, dedup=dedup)
 + 	if (weight) {
-+ 		by.win <- regionCounts(bam, windows, ext=ext, param=xparam)
++ 		suppressWarnings(by.win <- regionCounts(bam, windows, ext=ext, param=xparam))
 + 		metric <- rowSums(assay(by.win))
 + 	} else {
 + 		metric <- rep(1, nwin)
@@ -49,7 +49,7 @@ Type 'q()' to quit R.
 + 	# Running the reference analysis.
 + 	totally <- list()
 + 	for (chr in names(chromos)) {
-+ 		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam, ext=ext)
++ 		out <- extractReads(bam, GRanges(chr, IRanges(1, chromos[[chr]])), param=xparam, ext=ext)
 + 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 + 	} 
 + 
@@ -163,4 +163,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 25.673   0.262  27.151 
+ 18.998   0.156  19.156 

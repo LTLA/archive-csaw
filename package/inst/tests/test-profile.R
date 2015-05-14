@@ -19,7 +19,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	# Running profileSites.
 	xparam <- readParam(minq=minq, dedup=dedup)
 	if (weight) {
-		by.win <- regionCounts(bam, windows, ext=ext, param=xparam)
+		suppressWarnings(by.win <- regionCounts(bam, windows, ext=ext, param=xparam))
 		metric <- rowSums(assay(by.win))
 	} else {
 		metric <- rep(1, nwin)
@@ -30,7 +30,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	# Running the reference analysis.
 	totally <- list()
 	for (chr in names(chromos)) {
-		out <- extractReads(GRanges(chr, IRanges(1, chromos[[chr]])), bam, param=xparam, ext=ext)
+		out <- extractReads(bam, GRanges(chr, IRanges(1, chromos[[chr]])), param=xparam, ext=ext)
 		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 	} 
 

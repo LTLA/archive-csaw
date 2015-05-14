@@ -101,9 +101,9 @@ head(output$right)
 head(output$left)
 
 # Pulling out some reads. 
-extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
-extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
-extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
-extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="both"))
-extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="second"))
+extractReads(both.files[1], GRanges("chrA", IRanges(100, 500)))
+extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)))
+extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)), param=readParam(dedup=TRUE))
+extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="both"))
+extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="second"))
 

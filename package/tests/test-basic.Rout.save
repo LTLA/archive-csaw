@@ -460,7 +460,7 @@ GRanges object with 43 ranges and 0 metadata columns:
 [5] ""                        ""                       
 > 
 > # Pulling out some reads. 
-> extractReads(GRanges("chrA", IRanges(100, 500)), both.files[1])
+> extractReads(both.files[1], GRanges("chrA", IRanges(100, 500)))
 GRanges object with 143 ranges and 0 metadata columns:
         seqnames     ranges strand
            <Rle>  <IRanges>  <Rle>
@@ -477,7 +477,7 @@ GRanges object with 143 ranges and 0 metadata columns:
   [143]     chrA [500, 509]      +
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1])
+> extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)))
 GRanges object with 27 ranges and 0 metadata columns:
        seqnames    ranges strand
           <Rle> <IRanges>  <Rle>
@@ -494,7 +494,7 @@ GRanges object with 27 ranges and 0 metadata columns:
   [27]     chrA [94, 103]      +
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrA", IRanges(50, 100)), both.files[1], param=readParam(dedup=TRUE))
+> extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)), param=readParam(dedup=TRUE))
 GRanges object with 19 ranges and 0 metadata columns:
        seqnames    ranges strand
           <Rle> <IRanges>  <Rle>
@@ -511,7 +511,7 @@ GRanges object with 19 ranges and 0 metadata columns:
   [19]     chrA [93, 102]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="both"))
+> extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="both"))
 GRanges object with 2 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
@@ -519,7 +519,7 @@ GRanges object with 2 ranges and 0 metadata columns:
   [2]     chrB [99, 100]      *
   -------
   seqinfo: 1 sequence from an unspecified genome
-> extractReads(GRanges("chrB", IRanges(50, 100)), pe.file, param=readParam(pe="second"))
+> extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="second"))
 GRanges object with 4 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
@@ -533,4 +533,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 11.865   0.289  18.346 
+ 12.391   0.207  12.599 
