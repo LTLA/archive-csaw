@@ -18,6 +18,12 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	counts <- matrix(0L, nrow=nx, ncol=nbam)
 	indices <- split(1:nx, seqnames(regions))
 
+	# No sense in doing so; you can set param$forward for strand-specific counting.
+	if (any(strand(regions)!="*")) { 
+		warning("ignoring strandedness of supplied regions") 
+		strand(regions) <- "*"
+	}
+
     for (chr in names(extracted.chrs)) {
 		chosen <- indices[[chr]]
         outlen <- extracted.chrs[[chr]]
