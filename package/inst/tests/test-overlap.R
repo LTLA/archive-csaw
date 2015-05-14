@@ -10,6 +10,7 @@ compcombine <- function(ranges, windows) {
 	ns <- length(windows)
 	tab <- data.frame(logFC=rnorm(ns), PValue=rbeta(ns, 1, 3), logCPM=rnorm(ns))
 
+	# Straight-up comparison to combineTests, after discarding all NA's.
 	output <- combineOverlaps(olap, tab)
 	refstats <- combineTests(queryHits(olap), tab[subjectHits(olap),])
 	if (!identical(data.frame(output[!is.na(output$PValue),]), refstats)) { stop("mismatch in stats from near-identical calls!") }
@@ -20,7 +21,7 @@ compcombine <- function(ranges, windows) {
 	refstats <- combineTests(queryHits(olap), tab[subjectHits(olap),], weight=test.weight[subjectHits(olap)])
 	if (!identical(data.frame(output[!is.na(output$PValue),]), refstats)) { stop("mismatch in stats from near-identical calls!") }
 
-	# More weight testing.
+	# More weight testing, where o.weight is constructed from the weight for each i.weight.
 	output2 <- combineOverlaps(olap, tab, o.weight=test.weight[subjectHits(olap)])
 	if (!identical(output, output2)) { stop("mismatch in stats from near-identical calls!") }
 
@@ -104,7 +105,7 @@ compsummit <- function(ranges, windows) {
 	re.weight4 <- summitOverlaps(olap, i.summit=isummits)
 	if (!identical(re.weight3, re.weight4)) { stop("mismatch in weighting of summits") }
 
-	# Checking the core machinery function itself.
+	# Checking the core upweightSummit machinery itself.
 	by.region <- split(is.summit, queryHits(olap))	
 	nu.weight <- sapply(by.region, FUN=function(x) {
 		N <- length(x)

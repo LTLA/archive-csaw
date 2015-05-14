@@ -1,4 +1,5 @@
-# This tests the consolidateSizes function.
+# This tests the consolidateSizes function. As that function is basically written in fairly easy R, the
+# test function below doesn't really do much except repeat the function itself.
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 source("simsam.R")
@@ -34,8 +35,7 @@ compcons <- function(sizes, merge.args=list(tol=100), combine.args=list())  {
 	reference <- do.call(mergeWindows, c(regions=do.call(c, refbunch), merge.args))
 	if (!identical(reference$region, cons$region)) { stop("merged regions don't match up with reference call") }
 	refids <- unlist(cons$id)
-	o <- order(refids, reference$id)
-	if (any((diff(refids[o])!=0L)!=(diff(reference$id[o])!=0L))) { stop("merged ID's don't match up with reference call") }
+	if (!identical(refids, reference$id)) { stop("merged ID's don't match up with reference call") }
 
 	# Checking what happens with equi-weighting.
 	new.weights <- list()
@@ -49,7 +49,7 @@ compcons <- function(sizes, merge.args=list(tol=100), combine.args=list())  {
 	# Checking what happens without equi-weighting.		
 	noe.cons <- consolidateSizes(data.list, result.list, merge.args=merge.args, combine.args=combine.args, equiweight=FALSE)
 	ref <- combineTests(reference$id, do.call(rbind, result.list))
-	if (!identical(noe.cons$table, ref)) { stop("mismatch in equiweighted results") }
+	if (!identical(noe.cons$table, ref)) { stop("mismatch in unweighted results") }
 	
 	return(cons$region)	
 }

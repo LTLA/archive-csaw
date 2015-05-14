@@ -17,7 +17,8 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-> # This tests the consolidateSizes function.
+> # This tests the consolidateSizes function. As that function is basically written in fairly easy R, the
+> # test function below doesn't really do much except repeat the function itself.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > source("simsam.R")
@@ -53,8 +54,7 @@ Type 'q()' to quit R.
 + 	reference <- do.call(mergeWindows, c(regions=do.call(c, refbunch), merge.args))
 + 	if (!identical(reference$region, cons$region)) { stop("merged regions don't match up with reference call") }
 + 	refids <- unlist(cons$id)
-+ 	o <- order(refids, reference$id)
-+ 	if (any((diff(refids[o])!=0L)!=(diff(reference$id[o])!=0L))) { stop("merged ID's don't match up with reference call") }
++ 	if (!identical(refids, reference$id)) { stop("merged ID's don't match up with reference call") }
 + 
 + 	# Checking what happens with equi-weighting.
 + 	new.weights <- list()
@@ -68,7 +68,7 @@ Type 'q()' to quit R.
 + 	# Checking what happens without equi-weighting.		
 + 	noe.cons <- consolidateSizes(data.list, result.list, merge.args=merge.args, combine.args=combine.args, equiweight=FALSE)
 + 	ref <- combineTests(reference$id, do.call(rbind, result.list))
-+ 	if (!identical(noe.cons$table, ref)) { stop("mismatch in equiweighted results") }
++ 	if (!identical(noe.cons$table, ref)) { stop("mismatch in unweighted results") }
 + 	
 + 	return(cons$region)	
 + }
@@ -332,4 +332,4 @@ Error in (function (ids, tab, weight = NULL, pval.col = NULL, fc.col = NULL)  :
 > 
 > proc.time()
    user  system elapsed 
-  7.069   0.130   7.203 
+  7.162   0.179   7.329 
