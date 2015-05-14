@@ -99,7 +99,9 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 
 .getGlobalBg <- function(data, ab, prior.count)
 # Getting the quantile of those windows that were seen, corresponding to 
-# the median of all windows in the genome.
+# the median of all windows in the genome. Assumes that all lost windows
+# have lower abundances than those that are seen, which should be the
+# case for binned data (where all those lost have zero counts).
 {
 	prop.seen <- length(ab)/.getWindowNum(data)
  	if (prop.seen > 1) { return(median(ab)) }
