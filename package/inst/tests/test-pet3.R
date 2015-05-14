@@ -239,17 +239,21 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 
 				for (ref in list(extracted.reads, fast.extracted)) { 
 					paired <- 1:length(ref$left$pos)
+					endpoint <- ref$pos[paired] + ref$size[paired]
 					if (!identical(ref$pos[paired], ref$left$pos) || 
-							any(ref$pos[paired] + ref$size[paired] <= ref$right$pos) || 
+							any(endpoint <= ref$right$pos) || 
+							any(endpoint > ref$right$pos + ref$right$qwidth) || 
 							any(ref$left$pos > ref$right$pos)) { 
 						stop("inconsistent read intervals reported for pairs") 
 					}	
 					if (!is.na(rpam$rescue.ext)) { 
 						rescued <- length(ref$left$pos) + 1:length(ref$rescued$pos)
 						is.forward <- ref$rescued$strand == "+"
+						endpoint <- ref$pos[rescued] + ref$size[rescued]
 						if (!identical(ref$pos[rescued][is.forward], ref$rescued$pos[is.forward]) ||
-								any((ref$pos + ref$size)[rescued][!is.forward] <= ref$rescued$pos[!is.forward]) ||
-								any(ref$pos[rescued] > ref$rescued$pos) ||
+								any(endpoint[!is.forward] <= ref$rescued$pos[!is.forward]) ||
+								any(endpoint[!is.forward] > ref$rescued$pos[!is.forward] + ref$rescued$qwidth[!is.forward]) ||
+								any(ref$pos[rescued][!is.forward] > ref$rescued$pos[!is.forward]) ||
 								any(ref$rescued$pos <= 0L)) { 
 							stop("inconsistent read intervals reported for rescued pairs") 
 						}
