@@ -1,4 +1,4 @@
-extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
+extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=FALSE)
 # Exactly as specified. Takes a region and plots it in bimodal mode, with
 # options for duplicate removal, mapping quality enhancement, colorization,
 # and PE manipulation.
@@ -7,31 +7,29 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 # created 1 September 2014
 # last modified 14 May 2015
 {
-    if (length(cur.region)!=1L) { stop("exactly one range is required for plotting") }
-	if (as.logical(strand(cur.region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
+    if (length(region)!=1L) { stop("exactly one range is required for plotting") }
+	if (as.logical(strand(region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
+	ext.data <- .collateExt(1, ext)
 
     chrs <- scanBamHeader(bam.file)[[1]][[1]]
-	cur.chr <- as.character(seqnames(cur.region)[1])
+	cur.chr <- as.character(seqnames(region)[1])
 	if (length(param$restrict) && ! cur.chr %in% param$restrict) { warning("current chromosome not in restricted subset") }
 	if (! cur.chr %in% names(chrs)) { stop("cannot find current chromosome in the BAM file header") }
 	max.len <- chrs[[cur.chr]]
 	sqi <- Seqinfo(cur.chr, max.len)
 
 	# Extracting all-of-chromosome for paired-end rescue, as you need to find the read with the higher MAPQ.
+	# Otherwise, kicking out the region by 'max.frag' or 'ext' to guarantee capture of all participants.
 	if (param$pe=="both" && !param$fast.pe && .needsRescue(param)) { 
 		actual.region <- GRanges(cur.chr, IRanges(1L, max.len)) 
 	} else {
-		if (param$pe=="both") {
-			actual.region <- GRanges(cur.chr, IRanges(max(1L, start(cur.region)-param$max.frag),
-				min(max.len, end(cur.region)+param$max.frag)))
-		} else {
-			actual.region <- cur.region
-			seqlevels(actual.region) <- cur.chr
-		}
+		max.ext <- suppressWarnings(max(ext.data$ext, ext.data$final, param$max.frag, na.rm=TRUE))
+		if (max.ext==-Inf) { max.ext <- 0L }
+		actual.region <- GRanges(cur.chr, IRanges(max(1L, start(region)-max.ext),
+			min(max.len, end(region)+max.ext)))
 	}
 
 	# Pulling out reads from a region and setting up coverage RLE's.
-	ext.data <- .collateExt(1, ext)
 	if (param$pe!="both") {
 		cur.reads <- .getSingleEnd(bam.file, where=actual.region, param=param)
 		stranded <- cur.reads$strand
@@ -39,17 +37,47 @@ extractReads <- function(cur.region, bam.file, ext=NA, param=readParam())
 		cur.reads <- .checkFragments(cur.reads$start, cur.reads$end, final=ext.data$final, chrlen=max.len)
 
 		if (length(stranded)) { 
-			return(GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)), strand=stranded, seqinfo=sqi))
+			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)), strand=stranded, seqinfo=sqi)
+			if (max.ext) { 
+ 			   	# Filtering to retain those extended reads that actually overlap.	
+				keep <- overlapsAny(of.interest, region)
+				of.interest <- of.interest[keep]
+			}
+			return(of.interest)
 		}
 	} else {
-		cur.frags <- .getPairedEnd(bam.file, where=actual.region, param=param)
-		cur.frags <- .checkFragments(cur.frags$pos, cur.frags$pos + cur.frags$size - 1L, final=ext.data$final, chrlen=max.len)
+		frag.data <- .getPairedEnd(bam.file, where=actual.region, param=param, with.reads=as.reads)
+		cur.frags <- .checkFragments(frag.data$pos, frag.data$pos + frag.data$size - 1L, final=ext.data$final, chrlen=max.len)
 
-		# Filtering to retain those that don't actually overlap.
 		if (length(cur.frags$start)) { 
+			# Filtering to retain those fragments that actually overlap.
 			of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.frags$start), pmin(max.len, cur.frags$end)), seqinfo=sqi)
-			keep <- overlapsAny(of.interest, cur.region)
-			return(of.interest[keep])
+			keep <- overlapsAny(of.interest, region)
+			if (!as.reads) { return(of.interest[keep]) }
+
+			# Reporting the individual reads, if requested.
+			npairs <- length(frag.data$left$pos)
+			if (npairs) { 
+				left <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$left$pos, frag.data$left$pos+frag.data$left$qwidth-1L), 
+					seqinfo=sqi, strand=frag.data$left$strand))
+				right <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$right$pos, frag.data$right$pos+frag.data$right$qwidth-1L), 
+					seqinfo=sqi, strand=frag.data$right$strand))
+
+				left <- left[keep[1:npairs]]
+				right <- right[keep[1:npairs]]
+				left$pair <- right$pair <- 1:length(left)
+				reads <- suppressWarnings(c(left, right))
+			} else { reads <- NULL }
+
+			nrescue <- length(frag.data$rescued$pos)
+			if (nrescue) { 
+				rescued <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$rescued$pos, frag.data$rescued$pos+frag.data$rescued$qwidth), 
+					seqinfo=sqi, strand=frag.data$rescued$strand, pair=integer(length(frag.data$rescued$pos))))
+				rescued <- rescued[keep[npairs + 1:nrescue]]
+				reads <- suppressWarnings(c(reads, rescued))
+			}
+
+			return(reads)
 		}
 	}
 			
