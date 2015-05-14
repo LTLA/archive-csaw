@@ -1,13 +1,13 @@
 filterWindows <- function(data, background, type="global", prior.count=2, norm.fac=NULL)
 # This is a function for proportion- or background-based filtering of a
-# SummarizedExperiment object. For the former, it computes the relative ranks
-# that can be used to determine the proportion of highest-abundance windows to
-# keep. For the latter, it returns the enrichment term between data and
-# background.
+# RangedSummarizedExperiment object. For the former, it computes the relative
+# ranks that can be used to determine the proportion of highest-abundance
+# windows to keep. For the latter, it returns the enrichment term between data
+# and background.
 #
 # written by Aaron Lun
 # created 18 February 2015	
-# last modified 6 March 2015
+# last modified 14 May 2015
 {
 	type <- match.arg(type, c("global", "local", "control", "proportion"))
 	abundances <- scaledAverage(asDGEList(data), scale=1, prior.count=prior.count)
@@ -92,7 +92,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 # Get the total number of windows, to account for those not 
 # reported in windowCounts (for empty windows/those lost by filter > 1).
 {
-	spacing <- exptData(data)$spacing
+	spacing <- metadata(data)$spacing
 	if (is.null(spacing)) { stop("failed to find spacing for windows") }
 	sum(ceiling(seqlengths(rowRanges(data))/spacing)) 
 }

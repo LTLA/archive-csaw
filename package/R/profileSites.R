@@ -119,7 +119,7 @@ wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, r
 # 
 # written by Aaron Lun
 # created 2 March 2015
-# last modified 6 March 2015
+# last modified 14 May 2015
 {
 	if (proportion <= 0 | proportion >= 1) { stop("proportion should be between 0 and 1") }
 	is.max <- which.max(profile)
@@ -149,7 +149,7 @@ wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, r
 	nlibs <- length(ext)
 	ext.data <- .collateExt(nlibs, ext)
 	dummy.data <- SummarizedExperiment(colData=DataFrame(ext=ext.data$ext), 
-		exptData=List(final.ext=ext.data$final), rowRanges=GRanges("chrA", IRanges(1, 1))) 
+		metadata=list(final.ext=ext.data$final), rowRanges=GRanges("chrA", IRanges(1000, 1000))) 
 	if (!is.null(rlen)) { dummy.data$rlen <- rlen }
 	ext.len <- getWidths(dummy.data)
 

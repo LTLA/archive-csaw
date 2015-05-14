@@ -6,7 +6,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 7 February 2015
+# last modified 14 May 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -61,5 +61,5 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	return(SummarizedExperiment(assays=SimpleList(counts=counts), 
 		rowRanges=regions, 
 		colData=DataFrame(bam.files, totals=totals, ext=ext.data$ext, paramlist),
-		exptData=List(final.ext=ext.data$final)))
+		metadata=list(final.ext=ext.data$final)))
 }

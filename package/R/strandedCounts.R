@@ -1,11 +1,12 @@
 strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NULL, ...) 
 # This is a convenience wrapper for strand-specific window counting.  It
-# returns a SummarizedExperiment object with up to two sets of counts for each
-# window. This is logistically easier than doing it inside windowCounts itself.
+# returns a RangedSummarizedExperiment object with up to two sets of counts
+# for each window. This is logistically easier than doing it inside
+# windowCounts itself.
 #
 # written by Aaron Lun
 # created 9 February 2015
-# last modified 10 February 2015
+# last modified 14 May 2015
 {
 	nbam <- length(bam.files)
 	plist <- .makeParamList(nbam, param)
@@ -26,7 +27,7 @@ strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NUL
 	# Combining them together.
 	combined <- SummarizedExperiment(rbind(assay(fdata), assay(rdata)),
 		rowRanges=c(rowRanges(fdata), rowRanges(rdata)),
-		colData=colData(fdata), exptData=exptData(fdata))
+		colData=colData(fdata), metadata=metadata(fdata))
 
 	o <- GenomicRanges::order(rowRanges(combined))
 	combined <- combined[o]

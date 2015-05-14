@@ -2,11 +2,12 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	filter=10, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
-# Returns a SummarizedExperiment object with counts and genomic coordinates.
+# Returns a RangedSummarizedExperiment object with counts and genomic
+# coordinates.
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 10 February 2015
+# last modified 14 May 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -132,7 +133,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowRanges=all.regions, 
 		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext.data$ext, paramlist),
-		exptData=SimpleList(spacing=spacing, width=width, shift=shift, 
+		metadata=list(spacing=spacing, width=width, shift=shift, 
 			final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }
 

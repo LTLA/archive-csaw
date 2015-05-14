@@ -269,7 +269,7 @@
 
 .decideStrand <- function(paramlist) 
 # Decides what strand we should assign to the output GRanges in the
-# SummarizedExperiment object, after counting.
+# RangedSummarizedExperiment object, after counting.
 #
 # written by Aaron Lun
 # created 10 February 2015

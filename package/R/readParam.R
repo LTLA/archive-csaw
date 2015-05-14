@@ -103,9 +103,9 @@ setMethod("show", signature("readParam"), function(object) {
 
 readParam <- function(pe="none", max.frag=500, rescue.ext=NA, fast.pe=FALSE, 
 	dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())
-# This creates a SimpleList of parameter objects, specifying
-# how reads should be extracted from the BAM files. The aim is
-# to synchronize read loading throughout the package, such that
+# This creates a list of parameters, formally represented as a readParam
+# object, specifying how reads should be extracted from the BAM files. The
+# aim is to synchronize read loading throughout the package, such that
 # you don't have to manually respecify them in each function.
 #
 # written by Aaron Lun
