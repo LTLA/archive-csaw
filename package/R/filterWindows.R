@@ -7,14 +7,21 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 #
 # written by Aaron Lun
 # created 18 February 2015	
-# last modified 14 May 2015
+# last modified 15 May 2015
 {
 	type <- match.arg(type, c("global", "local", "control", "proportion"))
 	abundances <- scaledAverage(asDGEList(data), scale=1, prior.count=prior.count)
 
 	if (type=="proportion") {
 		genome.windows <- .getWindowNum(data)
-		relative.rank <- 1 - (rank(abundances) - 1)/genome.windows
+		ranked.win <- rank(abundances)
+		nwin <- nrow(data)
+
+		if (genome.windows <= nwin) {
+			relative.rank <- ranked.win/nwin
+		} else {
+			relative.rank <- 1 + (ranked.win - nwin)/genome.windows
+		}
 		return(list(abundances=abundances, filter=relative.rank))
 
 	} else {
@@ -59,8 +66,9 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 							!identical(norm.fac[[2]]$totals, background$totals)) { 
 						stop("norm.fac SE objects should have same totals as 'data' and 'background'")
 					}
+					rel.width <- median(getWidths(norm.fac[[1]]))/median(dwidth) # Same relative size of prior.
 					adjusted <- filterWindows(norm.fac[[1]], norm.fac[[2]], type="control", 
-						prior.count=prior.count, norm.fac=0)
+						prior.count=prior.count*rel.width, norm.fac=0)
 					norm.fac <- -median(adjusted$filter) # Subtract to remove composition bias.
 				} else if (length(norm.fac)!=1L) { 
 					stop("numeric norm.fac should be a scalar")
