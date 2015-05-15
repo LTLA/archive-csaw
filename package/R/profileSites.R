@@ -7,7 +7,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 14 May 2015
+# last modified 15 May 2015
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }

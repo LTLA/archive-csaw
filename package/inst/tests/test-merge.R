@@ -205,6 +205,26 @@ strcomp <- function(tol=100, maxd=200, ...) {
 	# Checking what we get if we set ignore.strand=TRUE.
 	combo2 <- mergeWindows(stuff, tol=tol, max.width=maxd, ignore.strand=TRUE)
 	stopifnot(all(strand(combo2$region)=="*"))
+
+	# Running separately on each strand, and checking that the boundaries are the same.
+	is.forward <- as.logical(strand(stuff)=="+")
+	forward <- mergeWindows(stuff[is.forward], tol=tol, max.width=maxd)
+	is.reverse <- as.logical(strand(stuff)=="-")
+	reverse <- mergeWindows(stuff[is.reverse], tol=tol, max.width=maxd)
+	is.unstrand <- as.logical(strand(stuff)=="*")
+	unstrand <- mergeWindows(stuff[is.unstrand], tol=tol, max.width=maxd)
+	
+	strand(forward$region) <- "+"
+	strand(reverse$region) <- "-"
+	strand(unstrand$region) <- "*"
+	if (!identical(c(forward$region, reverse$region, unstrand$region), combo$region)) { 
+		stop("mismatch in regions after stranded merging") }
+
+	final.out <- integer(length(stuff))
+	final.out[is.forward] <- forward$id
+	final.out[is.reverse] <- reverse$id+length(forward$region) 
+	final.out[is.unstrand] <- unstrand$id+length(forward$region)+length(reverse$region)
+	if (!identical(final.out, combo$id)) { stop("mismatch in IDs after stranded merging") }
 	
 	return(combo$region)	
 }
