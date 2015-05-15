@@ -5,7 +5,6 @@ suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 suppressWarnings(suppressPackageStartupMessages(require(TxDb.Mmusculus.UCSC.mm10.knownGene)))
 suppressWarnings(suppressPackageStartupMessages(require(org.Mm.eg.db)))
 source("simsam.R")
-require(parallel)
 
 ########################################################################################
 # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
@@ -62,6 +61,90 @@ ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db,
 checkranges(ref, up, down)
 
 ########################################################################################
+### Setting up a comparator function, in C++.
+
+library(inline)
+
+# Assumes sorting by 'queries' and then 'subjects', zero-indexing for both.
+# This is basically a rehash of the C++ code in the csaw package; running
+# it in R is unacceptably slow as we need loops within loops (no easy vectorization
+# to construct each string). My hope is that two separate implementations can't be 
+# wrong, or won't stuff up at the same time.
+
+compiled <- cxxfunction(sig=c(id="integer", name="character", exon="integer", strand="character", 
+		nquery="integer", queries="integer", subjects="integer", distances="integer"), body='
+const int* gids=INTEGER(id);
+const int* exonnum=INTEGER(exon);
+const int* qid=INTEGER(queries);
+const int nqid=LENGTH(queries);
+const int* sid=INTEGER(subjects);
+const int* dists=INTEGER(distances);
+const bool dodist=LENGTH(distances)>0;
+
+SEXP output=PROTECT(allocVector(STRSXP, INTEGER(nquery)[0]));
+for (int i=0; i<nqid; ++i) { SET_STRING_ELT(output, i, mkChar("")); }
+
+int counter=0, lastpos=0;
+while (counter < nqid) { 
+	lastpos=counter;
+	std::map<int, std::deque<std::pair<int, int> > > collected;
+    do { 
+		collected[gids[sid[counter]]].push_back(std::make_pair(exonnum[sid[counter]], counter));
+		++counter; 
+	} while (counter < nqid && qid[counter-1]==qid[counter]);
+	
+	// Manufacturing a string.
+	std::stringstream out;
+	for (std::map<int, std::deque<std::pair<int, int> > >::iterator itc=collected.begin(); itc!=collected.end(); ++itc) {
+		int holding=-1;
+		std::deque<std::pair<int, int> >& current=itc->second;
+		std::sort(current.begin(), current.end());
+		out << CHAR(STRING_ELT(name, sid[current.front().second])) << "|";
+
+		// Deciding whether to add an intron, or skip to the next non-intronic element.
+		if (current.front().first==-1) {
+			if (current.size()==1) {  out << "I"; } 
+			else {
+				current.pop_front(); 
+				out << current.front().first;
+			} 
+		} else { out << current.front().first; }
+			
+		// Constructing the full string.
+		for (size_t c=1; c<current.size(); ++c) { 
+			if (current[c-1].first+1==current[c].first) { holding=current[c].first; } 
+			else {
+				if (holding >= 0) {
+					out << "-" << holding;
+					holding=-1;
+				}
+				out << "," << current[c].first;
+			}
+		}
+
+		if (holding >= 0) { out << "-" << holding; }
+		out << "|" << CHAR(STRING_ELT(strand, sid[current.front().second]));
+			
+		// Taking the distance to the first element (assuming introns and promoters have been tossed out).
+		if (dodist) { 
+			std::deque<int> temp(current.size());
+			for (size_t c=0; c<current.size(); ++c) { temp[c]=dists[current[c].second]; }
+			out << "[" << *std::min_element(temp.begin(), temp.end()) << "]"; 
+		}
+		out << ",";  
+	}
+
+	// Getting rid of the loose comma.
+	std::string blah=out.str();
+	blah.erase(blah.size()-1);
+	SET_STRING_ELT(output, qid[counter-1], mkChar(blah.c_str()));
+}
+
+UNPROTECT(1);
+return output;
+', includes="#include <sstream>\n#include <deque>\n#include <map>\n#include <algorithm>")
+
+########################################################################################
 ### Making a comparator function, to check proper string construction.
 
 comp <- function(incoming, up, down, dist=5000) {
@@ -69,89 +152,31 @@ comp <- function(incoming, up, down, dist=5000) {
 	olap <- findOverlaps(incoming, ref)	
 	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist, promoter=c(up, down))	
 
-	.getmode <- function(collected.modes) {
-		collected.modes <- sort(collected.modes)
-		if (collected.modes[1]==-1L) {
-			if (length(collected.modes)==1L) { curmode <- "I" } 
-			collected.modes <- collected.modes[-1]
-		}
-		if (length(collected.modes)) {
-			consec.start <- which(c(TRUE, diff(collected.modes)!=1L))
-			consec.end <- c(consec.start[-1] - 1L, length(collected.modes))
-			all.strings <- ifelse(consec.start==consec.end, collected.modes[consec.start], paste0(collected.modes[consec.start], "-", collected.modes[consec.end]	))
-			curmode <- paste(all.strings, collapse=",")
-		}
-		return(curmode)
-	}
-
 	# Checking overlaps.
-	relevants <- split(subjectHits(olap), queryHits(olap))
-	test.anno <- mclapply(names(relevants), FUN=function(it) { 
-		actual.index <- as.integer(it)
-		by.gene <- split(relevants[[it]], ref$internal[relevants[[it]]])
-		cur.anno <- anno$overlap[actual.index]
+	olap <- findOverlaps(incoming, ref)	
+	obs <- compiled(ref$internal, ref$symbol, ref$exon, as.character(strand(ref)),
+			length(incoming), queryHits(olap)-1L, subjectHits(olap)-1L, integer(0))
+	stopifnot(identical(anno$overlap, obs))
 
-		# Assembling the string based on what's going on.
-		for (g in names(by.gene)) { 
-			collected.modes <- ref$exon[by.gene[[g]]]
-			curmode <- .getmode(collected.modes)
-			fstring <- paste(ref$symbol[by.gene[[g]][1]], curmode, strand(ref[by.gene[[g]][1]]), sep="|") 
-			if (!grepl(fstring, cur.anno, fixed=TRUE)) {
-				print(fstring)
-				print(cur.anno)
-				stop("could not find overlap")
-			} 
-			cur.anno <- sub(fstring, "", cur.anno, fixed=TRUE)
-		}
-		return(cur.anno)
-	}, mc.cores=8)
-	stopifnot(all(nchar(gsub(",", "", unlist(test.anno)))==0L))
-
-	# Checking left and right overlaps.
+	# Checking flanks.
 	for (mode in 1:2) { 
 		if (mode==1L) { 
 			test.anno <- anno$left
 			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(start(incoming)-dist, start(incoming)-1L)), ref)	
-			relevant.x <- split(subjectHits(olap), queryHits(olap)) 
+			relative.dist <- start(incoming)[queryHits(olap)] - end(ref)[subjectHits(olap)]
 		} else {
 			test.anno <- anno$right
 			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(end(incoming)+1L, end(incoming)+dist)), ref)	
-			relevant.x <- split(subjectHits(olap), queryHits(olap)) 
+			relative.dist <- start(ref)[subjectHits(olap)] - end(incoming)[queryHits(olap)]
 		}
 
-		new.anno <- mclapply(names(relevant.x), FUN=function(it) { 
-			actual.index <- as.integer(it)
-			relevant.x[[it]] <- setdiff(relevant.x[[it]], relevants[[it]]) # Getting rid of the centers.
-			by.gene <- split(relevant.x[[it]], ref$internal[relevant.x[[it]]])
-			cur.anno <- test.anno[actual.index]
-
-			# Assembling the string based on what's going on.
-			for (g in names(by.gene)) { 
-				chosen <- ref[by.gene[[g]]]
-				collected.modes <- chosen$exon
-				keep <- collected.modes > 0L
-				collected.modes <- collected.modes[keep]
-				chosen <- chosen[keep]
-				if (!any(keep)) { next }
-
-				curmode <- .getmode(collected.modes)
-				fstring <- paste(chosen$symbol[1], curmode, strand(chosen[1]), sep="|")
-				all.dist <- pmax(start(incoming[actual.index]), start(chosen)) - pmin(end(incoming[actual.index]), end(chosen))
-				if (any(all.dist <= 0L || all.dist > dist)) { stop("distances out of range") }
-				fstring <- paste0(fstring, "[", min(all.dist), "]")
-					
-				if (!grepl(fstring, cur.anno, fixed=TRUE)) {
-					print(fstring)
-					print(cur.anno)
-					stop("could not find flank")
-				} 
-				cur.anno <- sub(fstring, "", cur.anno, fixed=TRUE)
-			}
-			return(cur.anno)
-		}, mc.cores=8)
-		stopifnot(all(nchar(gsub(",", "", unlist(new.anno)))==0L))
+		keep <- relative.dist > 0L &  ref$exon[subjectHits(olap)] > 0L
+		olap <- olap[keep,]
+		relative.dist <- relative.dist[keep]
+		obs <- compiled(ref$internal, ref$symbol, ref$exon, as.character(strand(ref)),
+				length(incoming), queryHits(olap)-1L, subjectHits(olap)-1L, relative.dist)
+		stopifnot(identical(obs, test.anno))
 	}
-	
 	return(c(O=sum(nchar(anno$overlap)!=0L), L=sum(nchar(anno$left)!=0L), R=sum(nchar(anno$right)!=0L)))
 }
 
@@ -182,7 +207,7 @@ head(output$overlap, 30)
 suppressPackageStartupMessages(require(TxDb.Scerevisiae.UCSC.sacCer3.sgdGene))
 suppressPackageStartupMessages(require(org.Sc.sgd.db))
 
-allr <-detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
+allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
 allr
 
 ########################################################################################
