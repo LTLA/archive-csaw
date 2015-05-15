@@ -1,6 +1,6 @@
 
-R version 3.1.1 (2014-07-10) -- "Sock it to Me"
-Copyright (C) 2014 The R Foundation for Statistical Computing
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
 Platform: x86_64-unknown-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -263,7 +263,6 @@ GRanges object with 9 ranges and 0 metadata columns:
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > ###################################################################################################
-> ###################################################################################################
 > # Sticking some tests for merging of fixed-size windows with switched fold changes.
 > 
 > mcomp <- function(tol=100, ...) {
@@ -465,8 +464,6 @@ Error in mergeWindows(gr, tol = 10, sign = c(TRUE, FALSE, TRUE)) :
 > x <- mergeWindows(gr, tol=98)
 > stopifnot(length(unique(x$id))==2L)
 > 
-> ###################################################################################################
-> ###################################################################################################
 > ###################################################################################################
 > # Testing the maximum limit.
 > 
@@ -819,8 +816,188 @@ GRanges object with 48 ranges and 0 metadata columns:
   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 > 
 > ###################################################################################################
+> # Testing the strand-specific nature of clustering.
+> 
+> strcomp <- function(tol=100, maxd=200, ...) {
++ 	stuff <- generateWindows(...)
++ 	strand(stuff) <- sample(c("+", "-", "*"), length(stuff), replace=TRUE)
++ 	combo <- mergeWindows(stuff, tol=tol, max.width=maxd, ignore.strand=FALSE)
++ 
++ 	# Checking that each set of strands forms unique IDs.
++ 	out <- split(strand(stuff), combo$id)
++ 	stopifnot(all(sapply(out, FUN=anyDuplicated)==0L))
++ 
++ 	# Checking that the strandedness of the output is okay.
++ 	stopifnot(all(strand(combo$region)[combo$id]==strand(stuff)))
++ 	
++ 	# Checking what we get if we set ignore.strand=TRUE.
++ 	combo2 <- mergeWindows(stuff, tol=tol, max.width=maxd, ignore.strand=TRUE)
++ 	stopifnot(all(strand(combo2$region)=="*"))
++ 	
++ 	return(combo$region)	
++ }
+> 
+> set.seed(1235213)
+> 
+> strcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=1)
+GRanges object with 187 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [131, 131]      +
+    [2]     chrA   [330, 534]      +
+    [3]     chrA   [594, 594]      +
+    [4]     chrA   [838, 838]      +
+    [5]     chrA   [897, 897]      +
+    ...      ...          ...    ...
+  [183]     chrB [2545, 2582]      *
+  [184]     chrB [2641, 2641]      *
+  [185]     chrC [   9,  287]      *
+  [186]     chrC [ 313,  613]      *
+  [187]     chrC [ 665, 1114]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=10)
+GRanges object with 137 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA  [ 54,   63]      +
+    [2]     chrA  [193,  301]      +
+    [3]     chrA  [513,  577]      +
+    [4]     chrA  [725,  876]      +
+    [5]     chrA  [944, 1045]      +
+    ...      ...          ...    ...
+  [133]     chrB [1980, 2050]      *
+  [134]     chrB [2105, 2448]      *
+  [135]     chrC [   6,  315]      *
+  [136]     chrC [ 377,  760]      *
+  [137]     chrC [ 760, 1140]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(10, maxd=500, chrs=chrs, nwin=200, winsize=100)
+GRanges object with 87 ranges and 0 metadata columns:
+       seqnames       ranges strand
+          <Rle>    <IRanges>  <Rle>
+   [1]     chrA  [ 15,  114]      +
+   [2]     chrA  [128,  379]      +
+   [3]     chrA  [407,  564]      +
+   [4]     chrA  [577,  904]      +
+   [5]     chrA  [875, 1183]      +
+   ...      ...          ...    ...
+  [83]     chrB [2225, 2517]      *
+  [84]     chrB [2573, 2749]      *
+  [85]     chrC [  94,  518]      *
+  [86]     chrC [ 433,  907]      *
+  [87]     chrC [ 814, 1244]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> 	
+> strcomp(50, chrs=chrs, nwin=500, winsize=1)
+GRanges object with 176 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 46,  46]      +
+    [2]     chrA   [144, 259]      +
+    [3]     chrA   [275, 393]      +
+    [4]     chrA   [490, 504]      +
+    [5]     chrA   [558, 562]      +
+    ...      ...          ...    ...
+  [172]     chrC [ 367,  520]      *
+  [173]     chrC [ 548,  705]      *
+  [174]     chrC [ 716,  888]      *
+  [175]     chrC [ 892, 1065]      *
+  [176]     chrC [1075, 1242]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(50, chrs=chrs, nwin=500, winsize=10)
+GRanges object with 158 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 11, 114]      +
+    [2]     chrA   [142, 248]      +
+    [3]     chrA   [311, 484]      +
+    [4]     chrA   [539, 642]      +
+    [5]     chrA   [737, 865]      +
+    ...      ...          ...    ...
+  [154]     chrC [ 374,  561]      *
+  [155]     chrC [ 563,  741]      *
+  [156]     chrC [ 743,  926]      *
+  [157]     chrC [ 926, 1108]      *
+  [158]     chrC [1107, 1294]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(10, chrs=chrs, nwin=500, winsize=100)
+GRanges object with 146 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 18, 212]      +
+    [2]     chrA   [147, 393]      +
+    [3]     chrA   [370, 507]      +
+    [4]     chrA   [534, 753]      +
+    [5]     chrA   [674, 944]      +
+    ...      ...          ...    ...
+  [142]     chrC [ 342,  626]      *
+  [143]     chrC [ 537,  813]      *
+  [144]     chrC [ 727, 1015]      *
+  [145]     chrC [ 920, 1206]      *
+  [146]     chrC [1112, 1351]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> 
+> strcomp(10, maxd=200, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
+GRanges object with 176 ranges and 0 metadata columns:
+        seqnames      ranges strand
+           <Rle>   <IRanges>  <Rle>
+    [1]     chrA  [ 44,  95]      +
+    [2]     chrA  [137, 190]      +
+    [3]     chrA  [213, 290]      +
+    [4]     chrA  [379, 511]      +
+    [5]     chrA  [557, 643]      +
+    ...      ...         ...    ...
+  [172]     chrC [247,  474]      *
+  [173]     chrC [417,  642]      *
+  [174]     chrC [606,  809]      *
+  [175]     chrC [755,  941]      *
+  [176]     chrC [931, 1120]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(10, maxd=200, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
+GRanges object with 180 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 61, 217]      +
+    [2]     chrA   [245, 368]      +
+    [3]     chrA   [373, 470]      +
+    [4]     chrA   [540, 672]      +
+    [5]     chrA   [662, 824]      +
+    ...      ...          ...    ...
+  [176]     chrC [ 349,  604]      *
+  [177]     chrC [ 559,  813]      *
+  [178]     chrC [ 727,  977]      *
+  [179]     chrC [ 938, 1175]      *
+  [180]     chrC [1130, 1341]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> strcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
+GRanges object with 161 ranges and 0 metadata columns:
+        seqnames       ranges strand
+           <Rle>    <IRanges>  <Rle>
+    [1]     chrA   [ 14, 193]      +
+    [2]     chrA   [207, 373]      +
+    [3]     chrA   [347, 571]      +
+    [4]     chrA   [566, 694]      +
+    [5]     chrA   [843, 972]      +
+    ...      ...          ...    ...
+  [157]     chrC [ 335,  570]      *
+  [158]     chrC [ 503,  766]      *
+  [159]     chrC [ 690,  929]      *
+  [160]     chrC [ 886, 1119]      *
+  [161]     chrC [1055, 1255]      *
+  -------
+  seqinfo: 3 sequences from an unspecified genome; no seqlengths
+> 
+> ###################################################################################################
 > # End.
 > 
 > proc.time()
    user  system elapsed 
- 12.946   0.149  13.118 
+ 11.524   0.142  11.681 

@@ -69,7 +69,6 @@ basecomp(chrs=chrs, nwin=200, winsize=runif(200, 5, 50), tol=5)
 basecomp(chrs=chrs, nwin=500, winsize=runif(500, 5, 50), tol=5)
 
 ###################################################################################################
-###################################################################################################
 # Sticking some tests for merging of fixed-size windows with switched fold changes.
 
 mcomp <- function(tol=100, ...) {
@@ -125,8 +124,6 @@ stopifnot(length(unique(x$id))==1L)
 x <- mergeWindows(gr, tol=98)
 stopifnot(length(unique(x$id))==2L)
 
-###################################################################################################
-###################################################################################################
 ###################################################################################################
 # Testing the maximum limit.
 
@@ -189,6 +186,42 @@ maxcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=10)
 maxcomp(10, maxd=200, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
 maxcomp(10, maxd=200, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
 maxcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
+
+###################################################################################################
+# Testing the strand-specific nature of clustering.
+
+strcomp <- function(tol=100, maxd=200, ...) {
+	stuff <- generateWindows(...)
+	strand(stuff) <- sample(c("+", "-", "*"), length(stuff), replace=TRUE)
+	combo <- mergeWindows(stuff, tol=tol, max.width=maxd, ignore.strand=FALSE)
+
+	# Checking that each set of strands forms unique IDs.
+	out <- split(strand(stuff), combo$id)
+	stopifnot(all(sapply(out, FUN=anyDuplicated)==0L))
+
+	# Checking that the strandedness of the output is okay.
+	stopifnot(all(strand(combo$region)[combo$id]==strand(stuff)))
+	
+	# Checking what we get if we set ignore.strand=TRUE.
+	combo2 <- mergeWindows(stuff, tol=tol, max.width=maxd, ignore.strand=TRUE)
+	stopifnot(all(strand(combo2$region)=="*"))
+	
+	return(combo$region)	
+}
+
+set.seed(1235213)
+
+strcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=1)
+strcomp(50, maxd=500, chrs=chrs, nwin=200, winsize=10)
+strcomp(10, maxd=500, chrs=chrs, nwin=200, winsize=100)
+	
+strcomp(50, chrs=chrs, nwin=500, winsize=1)
+strcomp(50, chrs=chrs, nwin=500, winsize=10)
+strcomp(10, chrs=chrs, nwin=500, winsize=100)
+
+strcomp(10, maxd=200, chrs=chrs, nwin=200, winsize=runif(200, 1, 100))
+strcomp(10, maxd=200, chrs=chrs, nwin=500, winsize=runif(500, 1, 100))
+strcomp(10, maxd=200, chrs=chrs, nwin=600, winsize=runif(600, 1, 100))
 
 ###################################################################################################
 # End.
