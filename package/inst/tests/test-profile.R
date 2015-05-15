@@ -9,12 +9,14 @@ outfname <- file.path(sdir, "out")
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
-comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, sim.strand=TRUE, final.mode=NA) { 
+comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, 
+		use.strand=FALSE, match.strand=FALSE, final.mode=NA) { 
 	# Simulating first.
 	bam <- regen(nreads, chromos, outfname)
 	windows <- generateWindows(chrs=chromos, winsize=res, nwin=20)
 	nwin <- length(windows)
-	if (!sim.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
+	if (match.strand) { use.strand <- TRUE }
+	if (use.strand) { strand(windows) <- sample(c("+", "-", "*"), nwin, replace=TRUE) }
 
 	# Running profileSites.
 	xparam <- readParam(minq=minq, dedup=dedup)
@@ -25,20 +27,30 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 		metric <- rep(1, nwin)
 	}
 	ext <- makeExtVector(ext, final.mode)
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam, weight=1/metric)
+	
+	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
+	else { xparam2 <- xparam } 	
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, 
+		use.strand=use.strand, match.strand=match.strand, weight=1/metric)
 
 	# Running the reference analysis.
-	totally <- list()
+	totally <- totally.reverse <- list()
 	for (chr in names(chromos)) {
 		out <- extractReads(bam, GRanges(chr, IRanges(1, chromos[[chr]])), param=xparam, ext=ext)
-		totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
+		if (!match.strand) { 
+			totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
+		} else {
+			rev.read <- strand(out)=="-"
+			totally[[chr]] <- coverage(ranges(out)[!rev.read], width=chromos[[chr]]) 
+			totally.reverse[[chr]] <- coverage(ranges(out)[rev.read], width=chromos[[chr]]) 
+		}
 	} 
 
 	relevant.start <- start(windows) - width
 	relevant.end <- start(windows) + width
-	if (!sim.strand) {
+	if (use.strand) { 
 		reverse <- as.logical(strand(windows)=="-")
-		relevant.start[reverse] <- end(windows[reverse]) + width # Automatic reversal.
+		relevant.start[reverse] <- end(windows[reverse]) + width # Automatic reversal for reverse-stranded regions.
 		relevant.end[reverse] <- end(windows[reverse]) - width
 	}
 	totes.prof <- integer(width*2+1)
@@ -46,7 +58,14 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 		curchr <- as.character(seqnames(windows[x]))
 		relevant <- relevant.start[x]:relevant.end[x]
 		valid <- relevant > 0L & relevant <= chromos[[curchr]]
-		totes.prof[valid] <- totes.prof[valid] + as.integer(totally[[curchr]][relevant[valid]])/metric[x]
+				
+		# Using reverse coverage if match.strand is TRUE.
+		if (match.strand && reverse[x]) { 
+			chosen <- totally.reverse			
+		} else {
+			chosen <- totally
+		}
+		totes.prof[valid] <- totes.prof[valid] + as.integer(chosen[[curchr]][relevant[valid]])/metric[x]
 	}
 
 	# Evaluating the two methods.
@@ -81,10 +100,17 @@ comp(nreads, chromos, res=100, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
 comp(nreads, chromos, weight=FALSE)
 
-comp(nreads, chromos, res=20, sim.strand=FALSE)
-comp(nreads, chromos, res=100, sim.strand=FALSE)
-comp(nreads, chromos, sim.strand=FALSE)
-comp(nreads, chromos, sim.strand=FALSE)
+# Checking effect of stranded options.
+
+comp(nreads, chromos, res=20, use.strand=TRUE)
+comp(nreads, chromos, res=100, use.strand=TRUE)
+comp(nreads, chromos, use.strand=TRUE)
+comp(nreads, chromos, use.strand=TRUE)
+
+comp(nreads, chromos, res=20, match.strand=TRUE)
+comp(nreads, chromos, res=100, match.strand=TRUE)
+comp(nreads, chromos, match.strand=TRUE)
+comp(nreads, chromos, match.strand=TRUE)
 
 # Just exercising the multi-fragment length options here.
 comp(nreads, chromos, ext=50, final.mode=NULL)
