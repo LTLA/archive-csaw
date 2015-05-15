@@ -147,13 +147,14 @@ return output;
 ########################################################################################
 ### Making a comparator function, to check proper string construction.
 
-comp <- function(incoming, up, down, dist=5000) {
+comp <- function(incoming, up, down, dist=5000, ignore.strand=TRUE) {
 	ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 	olap <- findOverlaps(incoming, ref)	
-	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist, promoter=c(up, down))	
+	anno <- detailRanges(incoming, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, dist=dist, 
+		promoter=c(up, down), ignore.strand=ignore.strand)
 
 	# Checking overlaps.
-	olap <- findOverlaps(incoming, ref)	
+	olap <- findOverlaps(incoming, ref, ignore.strand=ignore.strand)	
 	obs <- compiled(ref$internal, ref$symbol, ref$exon, as.character(strand(ref)),
 			length(incoming), queryHits(olap)-1L, subjectHits(olap)-1L, integer(0))
 	stopifnot(identical(anno$overlap, obs))
@@ -162,11 +163,13 @@ comp <- function(incoming, up, down, dist=5000) {
 	for (mode in 1:2) { 
 		if (mode==1L) { 
 			test.anno <- anno$left
-			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(start(incoming)-dist, start(incoming)-1L)), ref)	
+			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(start(incoming)-dist, start(incoming)-1L), 
+				strand=strand(incoming)), ref, ignore.strand=ignore.strand)
 			relative.dist <- start(incoming)[queryHits(olap)] - end(ref)[subjectHits(olap)]
 		} else {
 			test.anno <- anno$right
-			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(end(incoming)+1L, end(incoming)+dist)), ref)	
+			olap <- findOverlaps(GRanges(seqnames(incoming), IRanges(end(incoming)+1L, end(incoming)+dist),
+				strand=strand(incoming)), ref, ignore.strand=ignore.strand)
 			relative.dist <- start(ref)[subjectHits(olap)] - end(incoming)[queryHits(olap)]
 		}
 
@@ -192,6 +195,12 @@ comp(all.win, up=3000, down=1000, dist=2000)
 
 all.win <- generateWindows(chromos*1.8, 1e2, 2000)
 comp(all.win, up=5000, down=500, dist=10000)
+
+# Checking behaviour upon strandedness.
+strand(all.win) <- sample(c("+", "-"), length(all.win), replace=TRUE) 
+comp(all.win, up=5000, down=500, dist=10000, ignore.strand=FALSE)
+comp(all.win, up=2000, down=1000, dist=5000, ignore.strand=FALSE)
+strand(all.win) <- "*"
 
 ########################################################################################
 #### Checking key, name field options.
