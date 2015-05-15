@@ -84,9 +84,9 @@ regs <- rowRanges(data)[maxed]
 strand(regs) <- sample(c("-", "+", "*"), sum(maxed), replace=TRUE)
 x <- profileSites(bamFile, regs, range=500)
 plot(as.integer(names(x)), x)
-x2 <- profileSites(bamFile, regs, range=500, use.strand=FALSE)
+x2 <- profileSites(bamFile, regs, range=500, strand="use")
 points(as.integer(names(x2)), x2, col="red")
-x3 <- profileSites(bamFile, regs, range=500, match.strand=TRUE, 
+x3 <- profileSites(bamFile, regs, range=500, strand="match",
     param=readParam(forward=NULL))
 points(as.integer(names(x3)), x3, col="blue")
 }
