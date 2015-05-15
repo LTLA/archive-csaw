@@ -51,6 +51,7 @@ bamFiles <- system.file("exdata", c("rep1.bam", "rep2.bam"), package="csaw")
 xparam <- readParam(forward=NULL)
 out <- strandedCounts(bamFiles, filter=1, param=xparam)
 out
+
 strandedCounts(bamFiles, filter=1, width=100, param=xparam)
 strandedCounts(bamFiles, filter=1, param=reform(xparam, minq=20))
 
@@ -62,7 +63,12 @@ strandedCounts(bamFiles, regions=incoming, param=reform(xparam, dedup=TRUE))
 # Throws an error, as the same reads are not involved.
 try(windowCounts(bamFiles, filter=1, width=100, param=xparam))
 
-# Running mergeWindows with strand-specificity.
+# Library sizes should be the same as that without strand-specificity.
+colData(out)
+out.ref <- windowCounts(bamFiles, param=reform(xparam, forward=NA))
+stopifnot(identical(out.ref$totals, out$totals))
+
+# Running assorted functions on strandedCounts output.
 mergeWindows(rowRanges(out), tol=100)
 mergeWindows(rowRanges(out), tol=100, ignore.strand=FALSE)
 
