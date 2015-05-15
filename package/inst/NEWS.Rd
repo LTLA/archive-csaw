@@ -25,6 +25,9 @@ Modified extractReads() interface with improved support for extended read and pa
 Added normalization options to filterWindows() when using control samples.
 
 \item
+Fixed bug for proportional filtering in filterWindows().
+
+\item
 Allowed correlateReads() to accept paired-end specification when extracting data.
 
 \item 
@@ -33,8 +36,14 @@ Added support for strand-specific overlapping in detailRanges().
 \item
 Increased the fidelity of retained information in dumped BAM file from dumpPE().
 
+\item
+Modified strand specification arguments for profileSites().
+
 \item 
 Switched to RangedSummarizedExperiment conventions for all relevant functions.
+
+\item
+Added tests for previously untested functions.
 
 \item
 Slight updates to documentation, user's guide.

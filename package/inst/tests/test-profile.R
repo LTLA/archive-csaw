@@ -31,7 +31,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
 	else { xparam2 <- xparam } 	
 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, 
-		use.strand=use.strand, match.strand=match.strand, weight=1/metric)
+		strand=ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore"), weight=1/metric)
 
 	# Running the reference analysis.
 	totally <- totally.reverse <- list()

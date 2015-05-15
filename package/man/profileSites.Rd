@@ -6,7 +6,7 @@
 
 \usage{
 profileSites(bam.files, regions, range=5000, ext=100, weight=1,
-    param=readParam(), use.strand=TRUE, match.strand=FALSE) 
+    param=readParam(), strand=c("ignore", "use", "match"))
 }
 
 \arguments{
@@ -16,8 +16,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1,
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
-	\item{use.strand}{a logical scalar indicating whether to consider the strandedness of \code{regions}}
-	\item{match.strand}{a logical scalar indicating whether to match the strandedness of the regions to the reads}
+	\item{strand}{a string indicating how stranded \code{regions} should be handled}
 }
 
 \details{
@@ -38,14 +37,14 @@ This will ensure that each region contributes equally to the final profile.
 }
 
 \section{Comments on strand specificity}{
-If \code{use.strand=TRUE}, the function is recalled on the reverse-stranded regions.
+If \code{strand="use"}, the function is called separately on the reverse-stranded regions.
 The profile for these regions is computed such that the left side of the profile corresponds to the upstream flank on the reverse strand (i.e., the profile is flipped).
 The center of the profile corresponds to the 5' end of the region on the reverse strand.
 This may be useful for features where strandedness is important, e.g., TSS's.
-Otherwise, if \code{use.strand=FALSE}, no special treatment is given to reverse-stranded features.
+Otherwise, if \code{strand="ignore"}, no special treatment is given to reverse-stranded features.
 
 By default, the strandedness of the region has no effect on read extraction.
-If \code{match.strand=TRUE}, the profile for reverse-strand regions is made with reverse-strand reads only (this profile is also flipped, as described for \code{use.strand=TRUE}).
+If \code{strand="match"}, the profile for reverse-strand regions is made with reverse-strand reads only (this profile is also flipped, as described for \code{strand="use"}).
 Similarly, only forward-strand reads are used for forward- or unstranded regions.
 Note that \code{param$forward} must be set to \code{NULL} for this to work.
 }

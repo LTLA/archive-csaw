@@ -1,5 +1,5 @@
 profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, 
-	param=readParam(), use.strand=TRUE, match.strand=FALSE)
+	param=readParam(), strand=c("ignore", "use", "match")) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -15,8 +15,10 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	paramlist <- .makeParamList(nbam, param)
 
 	# A bit of work for strand-specificity.
+	strand <- match.arg(strand)
+	use.strand <- (strand!="ignore")
+	match.strand <- (strand=="match")
 	if (match.strand) { 
-		use.strand <- TRUE
 	    for (i in 1:nbam) { 
 			if (length(paramlist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific profiling") } 
 		}
@@ -28,17 +30,15 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
 			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], 
-				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), 
-				use.strand=FALSE, match.strand=FALSE)
+				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), strand="ignore") 
 			if (any(!reverse)) { 
 				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse],
- 					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), 
-					use.strand=FALSE, match.strand=FALSE)
+ 					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), strand="ignore") 
 			} else { 
 				fprof <- 0 
 			}
-			prop.rev <- sum(reverse)/length(reverse)
-			return(fprof * (1-prop.rev) + rev(rprof) * prop.rev) # Flipping the profile.
+			prop.rstr <- sum(reverse)/length(reverse) # Weighting by the number of regions with each strand.
+			return(fprof * (1-prop.rstr) + rev(rprof) * prop.rstr) # Flipping the profile for reverse-strand.
 		}
 	}
 
