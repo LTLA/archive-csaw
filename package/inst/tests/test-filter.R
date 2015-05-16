@@ -89,7 +89,7 @@ suppressWarnings(comp(windowed, countered, type="control", prior.count=5))
 
 # With normalization.
 
-comp(windowed, countered, type="control", norm.fac=0)$filter
+comp(windowed, countered, type="control", norm.fac=1)$filter
 
 binned.chip <- SummarizedExperiment(assays=SimpleList(counts=matrix(100, 1, 1)),
 	rowRanges=GRanges("chrA", IRanges(1, 1000)), colData=DataFrame(totals=1e6, ext=1),
@@ -102,6 +102,7 @@ comp(windowed, countered, type="control", norm.fac=list(binned.chip, binned.con)
 assay(countered)[1] <- 5 # assuming undersampling in control.
 assay(binned.con)[1] <- 50
 comp(windowed, countered, type="control", norm.fac=list(binned.chip, binned.con))
+comp(windowed, countered, type="control", norm.fac=list(binned.chip, binned.con), prior.count=5)
 
 # Also seeing what happens when the library size of the control changes.
 

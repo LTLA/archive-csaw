@@ -66,23 +66,21 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 							!identical(norm.fac[[2]]$totals, background$totals)) { 
 						stop("norm.fac SE objects should have same totals as 'data' and 'background'")
 					}
-					rel.width <- median(getWidths(norm.fac[[1]]))/median(dwidth) # Same relative size of prior.
-					adjusted <- filterWindows(norm.fac[[1]], norm.fac[[2]], type="control", 
-						prior.count=prior.count*rel.width, norm.fac=0)
-					norm.fac <- -median(adjusted$filter) # Subtract to remove composition bias.
+					adjusted <- filterWindows(norm.fac[[1]], norm.fac[[2]], type="control", prior.count=0, norm.fac=1)
+					norm.fac <- 2^-median(adjusted$filter) 
 				} else if (length(norm.fac)!=1L) { 
 					stop("numeric norm.fac should be a scalar")
 				}
+ 				background$totals <- background$totals * norm.fac
 			} else {
 				warning("normalization factor not specified for composition bias")
-				norm.fac <- 0
 			}
 
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
 			relative.width <- bwidth/dwidth
 			lib.adjust <- prior.count * mean(background$totals)/mean(data$totals) # Account for library size differences.
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=lib.adjust)
-			filter.stat <- abundances - bg.ab + norm.fac
+			filter.stat <- abundances - bg.ab 
 		}
 
 		return(list(abundances=abundances, back.abundances=bg.ab, filter=filter.stat))

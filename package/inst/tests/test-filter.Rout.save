@@ -224,7 +224,7 @@ $filter
 > 
 > # With normalization.
 > 
-> comp(windowed, countered, type="control", norm.fac=0)$filter
+> comp(windowed, countered, type="control", norm.fac=1)$filter
 [1] 0
 > 
 > binned.chip <- SummarizedExperiment(assays=SimpleList(counts=matrix(100, 1, 1)),
@@ -243,10 +243,20 @@ $abundances
 [1] 3.584957
 
 $back.abundances
-[1] 2.807349
+[1] 3.584957
 
 $filter
-[1] -2.664535e-15
+[1] 0
+
+> comp(windowed, countered, type="control", norm.fac=list(binned.chip, binned.con), prior.count=5)
+$abundances
+[1] 3.906876
+
+$back.abundances
+[1] 3.906876
+
+$filter
+[1] 0
 
 > 
 > # Also seeing what happens when the library size of the control changes.
@@ -289,4 +299,4 @@ $filter
 > 
 > proc.time()
    user  system elapsed 
-  5.189   0.124   5.320 
+  5.444   0.135   5.566 
