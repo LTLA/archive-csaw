@@ -35,7 +35,7 @@ subcmd=subread-align
 #	... and then running "subread-buildindex mm10.fa -o mm10_index/mm10" in the shell.
 #	Alternatively, you can use your own FASTA file.
 
-genome=mm10_index/mm10_full
+genome=mm10_index/mm10
 
 # <<ASSUMPTION>>: FixMateInformation and MarkDuplicates are available from the Picard suite.
 
@@ -154,5 +154,22 @@ done
 
 rm $tmpfile
 rm -r $vtmp
+
+# Printing out a log file with version numbers.
+ticket=success.log
+if [[ -e $ticket ]]; then
+        rm $ticket
+fi
+
+set +e
+stored=`subread-align -v 2>&1 | sed "s/.*v/v/" | sed "s/\n//g"`
+printf "$subcmd (" >> $ticket
+printf $stored >> $ticket
+printf ")\n" >> $ticket
+stored=`$samcmd 2>&1 | grep -i "Version:"`
+printf "Samtools $stored\n" >> $ticket
+stored=`$markcmd --version 2>&1`
+printf "MarkDuplicates version $stored\n" >> $ticket
+$fqdcmd --version | grep "." >> $ticket
 
 ###############################################################
