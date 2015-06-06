@@ -6,7 +6,8 @@
 \description{Compute the maximum bimodality score across all base pairs in each region.}
 
 \usage{
-checkBimodality(bam.files, regions, width=100, param=readParam(), prior.count=2) 
+checkBimodality(bam.files, regions, width=100, param=readParam(), 
+    prior.count=2, invert=FALSE) 
 }
 
 \arguments{
@@ -15,6 +16,7 @@ checkBimodality(bam.files, regions, width=100, param=readParam(), prior.count=2)
 \item{width}{an integer vector indicating the span with which to compute bimodality}
 \item{param}{a \code{readParam} object containing read extraction parameters}
 \item{prior.count}{a numeric scalar specifying the prior count to compute bimodality scores}
+\item{invert}{a logical scalar indicating whether bimodality score should be inverted}
 }
 
 \details{
@@ -34,6 +36,9 @@ If multiple \code{bam.files} are specified, they are effectively pooled so that 
 The value of \code{width} should be set to the average fragment length, as this is allows optimal counting of reads.
 Specifically, all reads in the subpeaks on either strand will be counted when \code{x} is set to the center of the peak.
 A separate value can be specified for each library, to account for differences in fragmentation.
+
+If \code{invert} is set, the bimodality score will be flipped around, i.e., it will be maximized when reverse-strand coverage dominates on the left, and forward-strand coverage dominates on the right.
+This is designed for use in CAGE analyses where this inverted bimodality is symptomatic of enhancer RNAs.
 
 % Note that the entirety of each read is used for counting, to guarantee symmetry for both forward- and reverse-strand reads.
 % This is to avoid high bimodality scores when forward-/reverse-strand reads are stacked directly on top of each other.

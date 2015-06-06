@@ -1,4 +1,5 @@
-checkBimodality <- function(bam.files, regions, width=100, param=readParam(), prior.count=2) 
+checkBimodality <- function(bam.files, regions, width=100, param=readParam(), 
+	prior.count=2, invert=FALSE) 
 # This gives the maximum strand bimodality score for any base pair in each
 # region. The idea is to try to distinguish between genuine TF binding sites
 # and read stacks or other artifacts.
@@ -11,6 +12,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 	ext.data <- .collateExt(nbam, width) 
+	invert <- as.logical(invert)
 
 	totals <- integer(nbam)
 	nx <- length(regions)
@@ -62,7 +64,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(), pr
 		ro <- order(rstarts)
 		
 		# Computing bimodality scores.
-		out <- .Call(cxx_check_bimodality, collected, rstarts[ro], rends[ro], prior.count)
+		out <- .Call(cxx_check_bimodality, collected, rstarts[ro], rends[ro], prior.count, invert)
 		if (is.character(out)) { stop(out) }
 		out.scores[chosen][ro] <- out 
 	}

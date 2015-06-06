@@ -13,7 +13,7 @@ struct signpost {
 	}
 };
 
-SEXP check_bimodality (SEXP all, SEXP regstart, SEXP regend, SEXP priorcount) try {
+SEXP check_bimodality (SEXP all, SEXP regstart, SEXP regend, SEXP priorcount, SEXP invert) try {
 	// Setting structures for the data.
     if (!isNewList(all)) { throw std::runtime_error("data on fragments must be contained within a list"); }
     const int nlibs=LENGTH(all);
@@ -68,9 +68,11 @@ SEXP check_bimodality (SEXP all, SEXP regstart, SEXP regend, SEXP priorcount) tr
 		next_regstart=rs_ptr[0];
 	}
 
-	// Setting up the prior count.
+	// Setting up the prior count and inversion flag.
 	if (!isReal(priorcount) || LENGTH(priorcount)!=1) { throw std::runtime_error("double-precision scalar required for the prior count"); }
 	const double pc=asReal(priorcount);
+	if (!isLogical(invert) || LENGTH(invert)!=1) { throw std::runtime_error("inversion flag should be a logical scalar"); }
+	const int inv=asLogical(invert);
 	
 	SEXP output=PROTECT(allocVector(REALSXP, nregs));
 try {
@@ -166,8 +168,13 @@ try {
 
 		// Running through and asking if the updated bimodality score is higher or lower.
 		if (modified_stats) {
- 		    current_score = std::min((double(left_forward)+pc)/(double(left_reverse)+pc), 
+			if (inv) {
+				current_score = std::min((double(left_reverse)+pc)/(double(left_forward)+pc), 				
+					(double(right_forward)+pc)/(double(right_reverse)+pc));
+			} else {
+				current_score = std::min((double(left_forward)+pc)/(double(left_reverse)+pc), 				
 					(double(right_reverse)+pc)/(double(right_forward)+pc));
+			}
 		}
 //		Rprintf("\t values are Left forward/reverse: %i/%i, right reverse/forward %i/%i\n", left_forward, left_reverse, right_reverse, right_forward);
 //		Rprintf("\t score is %.3f\n", current_score);

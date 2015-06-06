@@ -12,7 +12,7 @@ static const R_CallMethodDef all_call_entries[] = {
 	{"get_rle_counts", (DL_FUNC) &get_rle_counts, 5}, 
 	{"get_profile", (DL_FUNC) &get_profile, 5}, 
 	{"find_maxima", (DL_FUNC) &find_maxima, 5}, 
-	{"check_bimodality", (DL_FUNC) &check_bimodality, 4}, 
+	{"check_bimodality", (DL_FUNC) &check_bimodality, 5}, 
 	{NULL, NULL, 0}
 };
 
