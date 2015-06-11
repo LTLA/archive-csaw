@@ -21,18 +21,23 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	curex$exon_name <- NULL
 
 	# Getting name annotation.
-	anno <- select(orgdb, keys=gene.id, columns=name.field, keytype=key.field)
-	n.entries <- length(gene.id)
-	if (nrow(anno)!=n.entries) { stop("possible many-to-one relationship between key and name fields") }
+	summarized <- rle(gene.id)
+	anno <- suppressMessages(select(orgdb, keys=summarized$values, columns=name.field, keytype=key.field))
+	re.summarized <- rle(as.character(anno[[key.field]]))
+	if (any(re.summarized$length!=1L)) { 
+		warning("many-to-one relationship between key and name fields, using first value only") 
+		first.of.each <- c(1L, cumsum(re.summarized$length)[-length(re.summarized$length)] + 1L)
+		anno <- anno[first.of.each,]
+	}
 
 	all.names <- list()	
 	do.check <- !key.field %in% name.field # Redundant, if it's already being reported.
 	for (x in 1:length(name.field)) { 
-		cur.name <- anno[[name.field[x]]]
+		cur.name <- inverse.rle(list(values=anno[[name.field[x]]], lengths=summarized$length))
 		if (!is.character(cur.name)) { cur.name <- as.character(cur.name) } 
 		if (do.check) { 
 			failed <- is.na(cur.name)
-			if (any(failed)) { cur.name[failed] <- paste0("<", anno[[key.field]][failed], ">") }
+			if (any(failed)) { cur.name[failed] <- paste0("<", gene.id[failed], ">") }
 		}
 		all.names[[x]] <- cur.name
 	}
@@ -41,8 +46,9 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	# Splitting IDs, to avoid problems when genes are assigned to multiple locations.
 	# exonBy should give sorted locations by chr/strand/start/end, so gap between 
 	# start of each exon and the end of the previous one should give the intron length (ignore nesting).
-	is.diff <- c(TRUE, gene.id[-1]!=gene.id[-n.entries] | diff(as.integer(seqnames(curex)))!=0L
-		| diff(gene.str)!=0L | start(curex)[-1] - end(curex)[-n.entries] - 1L > max.intron)
+	nexons <- length(gene.id)
+	is.diff <- c(TRUE, gene.id[-1]!=gene.id[-nexons] | diff(as.integer(seqnames(curex)))!=0L
+		| diff(gene.str)!=0L | start(curex)[-1] - end(curex)[-nexons] - 1L > max.intron)
 	gene.id <- cumsum(is.diff)
 	ngenes <- sum(is.diff)
 
