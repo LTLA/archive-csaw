@@ -28,6 +28,15 @@ Type 'q()' to quit R.
 > ########################################################################################
 > # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
 > 
+> checknames <- function(ref) {
++ 	gene.ids <- names(ref)
++ 	gene.sym <- ref$symbol
++ 	nuniq1 <- sapply(split(gene.ids,gene.sym), FUN=function(x) { length(unique(x)) })
++ 	nuniq2 <- sapply(split(gene.sym,gene.ids), FUN=function(x) { length(unique(x)) })
++ 	if (any(nuniq1!=1L) || any(nuniq2!=1L)) { stop("name to symbol assignment is not unique") }
++ 	return(invisible(NULL))
++ }
+> 
 > checkranges <- function(ref, up, down) {
 + 	exonic <- ref[ref$exon>=1L]
 + 	gb <- unlist(range(split(exonic, exonic$internal)))
@@ -61,6 +70,8 @@ Type 'q()' to quit R.
 + 	out.of.order <- c(FALSE, reverse.exons$internal[-1]==reverse.exons$internal[-n] & 
 + 		end(reverse.exons)[-n] < end(reverse.exons)[-1])
 + 	if (any(out.of.order)) { stop("exon ranking for reverse-strand genes is incorrect") }
++ 
++ 	checknames(ref)	
 + 	return(promoters)
 + }
 > 
@@ -354,6 +365,7 @@ GRanges object with 23885 ranges and 3 metadata columns:
 > suppressPackageStartupMessages(require(org.Sc.sgd.db))
 > 
 > allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
+> checknames(allr)
 > allr
 GRanges object with 20102 ranges and 3 metadata columns:
             seqnames           ranges strand   |      symbol      exon
@@ -385,6 +397,39 @@ GRanges object with 20102 ranges and 3 metadata columns:
   -------
   seqinfo: 17 sequences (1 circular) from sacCer3 genome
 > 
+> allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field=c('GENENAME', 'ORF'))
+> checknames(allr)
+> allr
+GRanges object with 20102 ranges and 3 metadata columns:
+            seqnames           ranges strand   |       symbol      exon
+               <Rle>        <IRanges>  <Rle>   |  <character> <integer>
+      Q0010     chrM   [ 3952,  4338]      +   |     NA;Q0010         1
+      Q0010     chrM   [ 4254,  4415]      +   |     NA;Q0010         2
+      Q0032     chrM   [11667, 11957]      +   |     NA;Q0032         1
+      Q0055     chrM   [13818, 13986]      +   |    AI2;Q0055         1
+      Q0055     chrM   [13818, 16322]      +   |    AI2;Q0055         2
+        ...      ...              ...    ... ...          ...       ...
+    YPR200C   chrXVI [939279, 939671]      -   | ARR2;YPR200C        -1
+    YPR201W   chrXVI [939922, 941136]      +   | ARR3;YPR201W        -1
+    YPR202W   chrXVI [943032, 944188]      +   |   NA;YPR202W        -1
+  YPR204C-A   chrXVI [946856, 947338]      -   | NA;YPR204C-A        -1
+    YPR204W   chrXVI [944603, 947701]      +   |   NA;YPR204W        -1
+             internal
+            <integer>
+      Q0010         1
+      Q0010         1
+      Q0032         2
+      Q0055         3
+      Q0055         3
+        ...       ...
+    YPR200C      6530
+    YPR201W      6531
+    YPR202W      6532
+  YPR204C-A      6533
+    YPR204W      6534
+  -------
+  seqinfo: 17 sequences (1 circular) from sacCer3 genome
+> 
 > ########################################################################################
 > ########################################################################################
 > ########################################################################################
@@ -392,4 +437,4 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 64.185   0.904  65.325 
+ 54.719   0.768  55.474 

@@ -9,6 +9,15 @@ source("simsam.R")
 ########################################################################################
 # Checking the sensibility of the exon numbering, the promoters and gene bodies, in each case.
 
+checknames <- function(ref) {
+	gene.ids <- names(ref)
+	gene.sym <- ref$symbol
+	nuniq1 <- sapply(split(gene.ids,gene.sym), FUN=function(x) { length(unique(x)) })
+	nuniq2 <- sapply(split(gene.sym,gene.ids), FUN=function(x) { length(unique(x)) })
+	if (any(nuniq1!=1L) || any(nuniq2!=1L)) { stop("name to symbol assignment is not unique") }
+	return(invisible(NULL))
+}
+
 checkranges <- function(ref, up, down) {
 	exonic <- ref[ref$exon>=1L]
 	gb <- unlist(range(split(exonic, exonic$internal)))
@@ -42,6 +51,8 @@ checkranges <- function(ref, up, down) {
 	out.of.order <- c(FALSE, reverse.exons$internal[-1]==reverse.exons$internal[-n] & 
 		end(reverse.exons)[-n] < end(reverse.exons)[-1])
 	if (any(out.of.order)) { stop("exon ranking for reverse-strand genes is incorrect") }
+
+	checknames(ref)	
 	return(promoters)
 }
 
@@ -217,6 +228,11 @@ suppressPackageStartupMessages(require(TxDb.Scerevisiae.UCSC.sacCer3.sgdGene))
 suppressPackageStartupMessages(require(org.Sc.sgd.db))
 
 allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
+checknames(allr)
+allr
+
+allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field=c('GENENAME', 'ORF'))
+checknames(allr)
 allr
 
 ########################################################################################
