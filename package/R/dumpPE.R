@@ -16,9 +16,9 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 	ofile <- tempfile(tmpdir='.')
    	on.exit({ if (file.exists(ofile)) { unlink(ofile) } })	
 	ohandle <- file(ofile, open='w')
-	write.table(file=ohandle, data.frame("@SQ", paste0("SN:", names(extracted.chrs)),
+	utils::write.table(file=ohandle, data.frame("@SQ", paste0("SN:", names(extracted.chrs)),
  		paste0("LN:", extracted.chrs)), sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE)	
-	write.table(file=ohandle, data.frame("@PG", "ID:dumped", dump.prog.name),
+	utils::write.table(file=ohandle, data.frame("@PG", "ID:dumped", dump.prog.name),
 		sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE, append=TRUE)	
 
 	# Paired, properly paired, forward strand, mate is reverse strand.
@@ -76,7 +76,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 				out$size[subzero] <- ending 
 			}
 
-			write.table(file=ohandle, data.frame(all.names, active.flag, chr, out$pos, 255, 
+			utils::write.table(file=ohandle, data.frame(all.names, active.flag, chr, out$pos, 255, 
 				all.cig, "=", all.end, out$size, all.seq[all.widths], all.qual[all.widths]),
 				sep="\t", quote=FALSE, col.names=FALSE, row.names=FALSE, append=TRUE)
 		}	
