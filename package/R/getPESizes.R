@@ -35,7 +35,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 		left.names <- reads$qname[!okay$is.ok]
 		left.flags <- reads$flag[!okay$is.ok]
 		
-		# Setting up some more filters.
+		# Setting up some more filters (note, inter-chromosomality is checked more rigorously later).
 		on.same.chr <- reads$isize[!okay$is.ok]!=0L
 		is.first <- bitwAnd(left.flags, 0x40)!=0L
 		is.second <- bitwAnd(left.flags, 0x80)!=0L
@@ -53,7 +53,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 	}
 
 	# Checking whether a read is positively matched to a mapped counterpart on another chromosome.
-	# If not, then it's just an read in an unmapped pair.
+	# If not, then it's just a read in an unmapped pair.
 	loose.names.1 <- unlist(loose.names.1)
 	loose.names.2 <- unlist(loose.names.2)
 	inter.chr <- sum(loose.names.1 %in% loose.names.2)
