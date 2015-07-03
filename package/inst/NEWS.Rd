@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.3.4}{\itemize{
+\section{Version 1.3.9}{\itemize{
 \item
 Added clusterFDR() function to compute the FDR for clusters of DB windows.
 
@@ -41,6 +41,9 @@ Modified strand specification arguments for profileSites().
 
 \item 
 Switched to RangedSummarizedExperiment conventions for all relevant functions.
+
+\item
+Switched to mapqFilter for scanBam() when filtering on mapping quality.
 
 \item
 Added tests for previously untested functions.

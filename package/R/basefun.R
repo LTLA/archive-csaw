@@ -11,25 +11,15 @@
 # last modified 9 February 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
-	if (!is.na(param$minq)) { all.fields <- c(all.fields, "mapq") }
 	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
 	all.fields <- unique(all.fields)
 
 	if (length(param$forward)==0L) { stop("read strand extraction must be specified") }
 	if (length(where)!=1L) { stop("extraction not supported for multiple ranges at once") }
-	reads <- scanBam(bam, param=ScanBamParam(what=all.fields,
-		which=where, flag=scanBamFlag(isUnmappedQuery=FALSE, 
-		isDuplicate=ifelse(param$dedup, FALSE, NA), 
-		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), 
-		...)))[[1]]
-   
-	# Filtering by MAPQ.
-	if (!is.na(param$minq)) { 
-		keep <- reads$mapq >= param$minq & !is.na(reads$mapq) 
-		if (!"mapq" %in% extras) { reads$mapq <- NULL }
-		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	}
-	
+	reads <- scanBam(bam, param=ScanBamParam(what=all.fields, which=where, mapqFilter=param$minq,
+		flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(param$dedup, FALSE, NA), 
+		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), ...)))[[1]]
+  	
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
 	if (length(param$discard)) {
 		relevant <- seqnames(param$discard)==as.character(seqnames(where[1]))
