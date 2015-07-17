@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{Introducing the csaw package}
+\title{Introducing the \texttt{csaw} package}
 \author{Aaron Lun}
 \date{First edition 21 June 2014\\[0.05in]
 Last revised 19 March 2015}
