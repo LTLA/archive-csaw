@@ -102,7 +102,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	return(out)
 }
 
-wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, rlen=NULL)
+wwhm <- function(profile, regions, ext=100, proportion=0.5, rlen=NULL)
 # This function computes the window width at half its maximum. This uses
 # the output of profileSites to get the full width of the peak; it then
 # subtracts twice the extension length to obtain the window width. 

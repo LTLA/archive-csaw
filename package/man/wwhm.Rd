@@ -5,21 +5,20 @@
 \description{Get the width of the window from the half-maximum of the coverage profile.}
 
 \usage{
-wwhm(profile, regions, ext=100, param=readParam(), proportion=0.5, rlen=NULL)
+wwhm(profile, regions, ext=100, proportion=0.5, rlen=NULL)
 }
 
 \arguments{
 \item{profile}{a numeric vector containing a coverage profile, as produced by \code{\link{profileSites}}}
 \item{regions}{the \code{GRanges} object with which the profile was constructed}
 \item{ext}{an integer scalar specifying the average fragment length for single-end data}
-\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects}
 \item{proportion}{a numeric scalar specifying the proportion of the maximum coverage at which to compute the window width}
 \item{rlen}{a numeric scalar or vector containing read lengths, if any \code{ext=NA}, i.e., fragments are unextended reads}
 }
 
 \details{
 This function computes the ideal window size, based on the width of the peak in the coverage profile at the specified \code{proportion} of the maximum.
-Obviously, the values of \code{regions}, \code{ext} and \code{param} should be the same as those used in \code{\link{profileSites}}.
+Obviously, the values of \code{regions} and \code{ext} should be the same as those used in \code{\link{profileSites}} (set \code{ext} to the median fragment length for paired-end data).
 The \code{regions} should contain windows of a constant size.
 
 Some subtleties are involved in obtaining the window width.
