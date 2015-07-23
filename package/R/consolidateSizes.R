@@ -54,6 +54,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 			currows <- nrow(result.list[[x]])
 			curid <- merged$id[last + seq_len(currows)]
 			rel.weights[[x]] <- (1/tabulate(curid))[curid]	
+			last <- last + currows		
 		}
 		rel.weights <- unlist(rel.weights)
 	} else { 
