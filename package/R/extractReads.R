@@ -7,7 +7,7 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 # created 1 September 2014
 # last modified 22 July 2015
 {
-    if (length(region)!=1L) { stop("exactly one range is required for plotting") }
+    if (length(region)!=1L) { stop("exactly one range is required for read extraction") }
 	if (as.logical(strand(region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
 	ext.data <- .collateExt(1, ext)
 
