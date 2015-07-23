@@ -10,33 +10,26 @@ SEXP best_in_cluster(SEXP pval, SEXP by, SEXP weight) try {
 	const int* bptr=INTEGER(by);
 	if (n!=LENGTH(by) || n!=LENGTH(weight)) { throw std::runtime_error("vector lengths are not equal"); }
 
-	// Quitting now, if we're empty.
-	if (n==0) { 
-		SEXP output=PROTECT(allocVector(VECSXP, 2));
-		try {
-			SET_VECTOR_ELT(output, 0, allocVector(REALSXP, 0));
-			SET_VECTOR_ELT(output, 1, allocVector(REALSXP, 0));
-		} catch (std::exception& e) {
-			UNPROTECT(1);
-			throw;
-		}
-		UNPROTECT(1);
-		return output;
-	}
-
 	// Checking that the 'by' is sorted, counting the number of elements.
-	int total=1;
-	for (int i=1; i<n; ++i) { 
-		if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
-		else if (bptr[i]!=bptr[i-1]) { ++total; }
+	int total=0;
+	if (n > 0) {
+		total=1;
+		for (int i=1; i<n; ++i) {
+			if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
+			else if (bptr[i]!=bptr[i-1]) { ++total; }
+		}
 	}
 
 	// Pulling out results.
 	SEXP output=PROTECT(allocVector(VECSXP, 2));
 	try {
 		SET_VECTOR_ELT(output, 0, allocVector(REALSXP, total));
-		double* opptr=REAL(VECTOR_ELT(output, 0));
 		SET_VECTOR_ELT(output, 1, allocVector(INTSXP, total));
+		if (total==0) {
+			UNPROTECT(1);
+			return output;
+		}
+		double* opptr=REAL(VECTOR_ELT(output, 0));
 		int* oiptr=INTEGER(VECTOR_ELT(output, 1));
 	
 		int i=0;

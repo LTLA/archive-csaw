@@ -18,7 +18,7 @@ SEXP find_maxima(SEXP chrs, SEXP starts, SEXP ends, SEXP metric, SEXP range) try
 	if (!isInteger(chrs) || !isInteger(starts) || !isInteger(ends)) { throw std::runtime_error("chr, start and end vectors must be integer"); }
 	const int nlen=LENGTH(starts);
 	if (!isReal(metric)) { throw std::runtime_error("metric must be a double-precision vector"); }
-	if (nlen==0 || LENGTH(chrs)!=nlen || LENGTH(metric) != nlen || LENGTH(ends)!=nlen) { throw std::runtime_error("vectors must be non-empty and of equal length"); }
+	if (LENGTH(chrs)!=nlen || LENGTH(metric) != nlen || LENGTH(ends)!=nlen) { throw std::runtime_error("vectors must be of equal length"); }
 
 	// Pulling out scalars and pointers.	
 	if (!isInteger(range) || LENGTH(range)!=1) { throw std::runtime_error("range should be an integer scalar"); }
@@ -36,6 +36,10 @@ SEXP find_maxima(SEXP chrs, SEXP starts, SEXP ends, SEXP metric, SEXP range) try
 
 	SEXP output=PROTECT(allocVector(LGLSXP, nlen));
 try {
+	if (nlen==0) { 
+		UNPROTECT(1);
+		return output;
+	}
 	int* optr=LOGICAL(output);
 
 	// Assuming we're sorted by sptr.

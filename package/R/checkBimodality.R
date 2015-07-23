@@ -16,7 +16,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 
 	totals <- integer(nbam)
 	nx <- length(regions)
-	out.scores <- rep(NA, nx)
+	out.scores <- rep(NA_real_, nx)
 	indices <- split(seq_len(nx), seqnames(regions))
 	prior.count <- as.double(prior.count)
 

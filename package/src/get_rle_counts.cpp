@@ -16,6 +16,10 @@ SEXP get_rle_counts(SEXP start, SEXP end, SEXP nr, SEXP space, SEXP first) try {
 	const int* eptr=INTEGER(end);	
 
 	SEXP output=PROTECT(allocVector(INTSXP, nrows));
+	if (nrows==0) { 
+		UNPROTECT(1);
+		return output;
+	}
 	try {
 		int* optr=INTEGER(output);
 		for (int i=0; i<nrows; ++i) { optr[i]=0; }

@@ -16,27 +16,12 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 	const double *pptr=REAL(pval);
 	const int n=LENGTH(pval);
 
-	// Quitting now, if we're empty.
-	if (n==0) { 
-		SEXP output=PROTECT(allocVector(VECSXP, 3));
-		try {
-			SET_VECTOR_ELT(output, 0, allocVector(INTSXP, 0));
-			SET_VECTOR_ELT(output, 1, allocMatrix(INTSXP, 0, fcn*2));
-			SET_VECTOR_ELT(output, 2, allocVector(REALSXP, 0));
-		} catch (std::exception& e) {
-			UNPROTECT(1);
-			throw;
-		}
-		UNPROTECT(1);
-		return output;
-	}
-
 	// Setting up the log-FC columns.
 	double** fcptrs=(double**)R_alloc(fcn, sizeof(double*));
 	for (int i=0; i<fcn; ++i) { 
 		SEXP logfc=VECTOR_ELT(tab, odptr[i]);
 		if (!isNumeric(logfc)) { throw std::runtime_error("vector of logfc statistics should be double precision"); }
-	    if (n!=LENGTH(logfc)) { throw std::runtime_error("vector lengths are not equal"); }
+		if (n!=LENGTH(logfc)) { throw std::runtime_error("vector lengths are not equal"); }
 		fcptrs[i]=REAL(logfc);
 	}
 	if (!isReal(fcthreshold) || LENGTH(fcthreshold)!=1) { throw std::runtime_error("log-fold change threshold should be a numeric scalar"); }
@@ -50,26 +35,35 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 	if (n!=LENGTH(by) || n!=LENGTH(weight)) { throw std::runtime_error("vector lengths are not equal"); }
 
 	// Checking that the 'by' is sorted, counting the number of elements and setting up a vector of [0, n).
-	int total=1;
-	int* sortvec=(int*)R_alloc(n, sizeof(int));
-	sortvec[0]=0;
-	for (int i=1; i<n; ++i) { 
-		if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
-		else if (bptr[i]!=bptr[i-1]) { ++total; }
-		sortvec[i]=i;
-	}
+	int total=0;
+	int* sortvec=NULL;
 	sort_row_index<double> pcomp(pptr);
+	if (n > 0) {
+		total=1;
+		sortvec=(int*)R_alloc(n, sizeof(int));
+		sortvec[0]=0;
+		for (int i=1; i<n; ++i) {
+			if (bptr[i] < bptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
+			else if (bptr[i]!=bptr[i-1]) { ++total; }
+			sortvec[i]=i;
+		}
+	}
 
 	// Pulling out results.
 	SEXP output=PROTECT(allocVector(VECSXP, 3));
 	try {
 		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, total));
-		int* otptr=INTEGER(VECTOR_ELT(output, 0));
 		SET_VECTOR_ELT(output, 1, allocMatrix(INTSXP, total, fcn*2));
+		SET_VECTOR_ELT(output, 2, allocVector(REALSXP, total));
+		if (total==0) {
+			UNPROTECT(1);
+			return output;
+		}
+
+		int* otptr=INTEGER(VECTOR_ELT(output, 0));
 		int** ofptrs=(int**)R_alloc(fcn, sizeof(int*));
 		ofptrs[0]=INTEGER(VECTOR_ELT(output, 1));
 		for (int i=1; i<fcn*2; ++i) { ofptrs[i]=ofptrs[i-1]+total; }
-		SET_VECTOR_ELT(output, 2, allocVector(REALSXP, total));
 		double* opptr=REAL(VECTOR_ELT(output, 2));
 	
 		int i=0, k, x;

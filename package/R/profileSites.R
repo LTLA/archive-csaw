@@ -47,7 +47,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	ext.data <- .collateExt(nbam, ext)
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
-	total.profile <- 0
+	total.profile <- numeric(range*2 + 1)
 	indices <- split(seq_along(regions), seqnames(regions))
 		
 	# Running through the chromosomes.

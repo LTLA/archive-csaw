@@ -23,28 +23,35 @@ SEXP collate_exon_data (SEXP geneid, SEXP strand, SEXP start, SEXP end) try {
 	sort_row_index<int> endcomp(endptr);
 	
 	// Scanning through to determine the number of unique genes.
-	if (n==0) { throw std::runtime_error("no genes supplied for exonic aggregation"); }
-	int nuniq=1;
-	for (int x=1; x<n; ++x) {
-		if (gixptr[x]!=gixptr[x-1]) { 
-			++nuniq; 
-		} else if (strptr[x]!=strptr[x-1]) { 
-			throw std::runtime_error("exons of the same gene should have the same strand"); 
-		} else if (staptr[x]<staptr[x-1]) {
-			throw std::runtime_error("exons of the same gene should be sorted by the start index"); 
-		}	
+	int nuniq=0;
+	if (n > 0) {
+		nuniq=1;
+		for (int x=1; x<n; ++x) {
+			if (gixptr[x]!=gixptr[x-1]) {
+				++nuniq;
+			} else if (strptr[x]!=strptr[x-1]) {
+				throw std::runtime_error("exons of the same gene should have the same strand");
+			} else if (staptr[x]<staptr[x-1]) {
+				throw std::runtime_error("exons of the same gene should be sorted by the start index");
+			}
+		}
 	}
 
 	// Setting up output structures.
 	SEXP output=PROTECT(allocVector(VECSXP, 2));
 try {
 	SET_VECTOR_ELT(output, 0, allocVector(INTSXP, n));
-	int* eiptr=INTEGER(VECTOR_ELT(output, 0));
 	SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 3));
 	SEXP genebody=VECTOR_ELT(output, 1);
 	SET_VECTOR_ELT(genebody, 0, allocVector(INTSXP, nuniq));
 	SET_VECTOR_ELT(genebody, 1, allocVector(INTSXP, nuniq));
 	SET_VECTOR_ELT(genebody, 2, allocVector(INTSXP, nuniq));
+	if (nuniq==0) {
+		UNPROTECT(1);
+		return output;
+	}
+
+	int* eiptr=INTEGER(VECTOR_ELT(output, 0));
 	int * oiptr=INTEGER(VECTOR_ELT(genebody, 0)),
 		* osptr=INTEGER(VECTOR_ELT(genebody, 1)),
 		* oeptr=INTEGER(VECTOR_ELT(genebody, 2));

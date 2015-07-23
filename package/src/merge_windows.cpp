@@ -2,6 +2,8 @@
 
 int split_cluster(const int*, const int*, const int&, const int&, const int&, const int&, int*);
 
+void fillSEXP(SEXP&, const int);
+
 /* We assume that incoming elements are sorted by chr -> start -> end. We then proceed 
  * to aggregate elements by chaining together elements that are less than 'tolerance'
  * apart and, if required, have the same 'sign'. We also split them if the difference
@@ -29,13 +31,17 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 	
 	// Providing some protection against an input empty list.
 	const int n = LENGTH(chrs);
-	if (n!=LENGTH(start) || n!=LENGTH(end) || n!=LENGTH(sign)) { throw std::runtime_error("lengths of vectors are not equal"); 	}
-	if (n==0) { throw std::runtime_error("no elements provided for clustering"); }
+	if (n!=LENGTH(start) || n!=LENGTH(end) || n!=LENGTH(sign)) { throw std::runtime_error("lengths of vectors are not equal"); }
 		
 	// Proceeding with the merge operation.
 	SEXP output=PROTECT(allocVector(VECSXP, 4));
 	try {
 		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, n));
+		if (n==0) {
+			fillSEXP(output, 0);
+			UNPROTECT(1);
+			return output;
+		}
 		int* optr=INTEGER(VECTOR_ELT(output, 0));
 		int start_index=0, last_end=*eptr;
 		bool diffchr, diffsign;
@@ -83,11 +89,9 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
   	  	if (limit_size) { ngroups=split_cluster(sptr, eptr, last_end, start_index, n, maxs, optr); }
 
 		// Now, identifying the chromosome, start and end of each region.
-		SET_VECTOR_ELT(output, 1, allocVector(INTSXP, ngroups));
+		fillSEXP(output, ngroups);
 		int* ocptr=INTEGER(VECTOR_ELT(output, 1));
-		SET_VECTOR_ELT(output, 2, allocVector(INTSXP, ngroups));
 		int* osptr=INTEGER(VECTOR_ELT(output, 2));
-		SET_VECTOR_ELT(output, 3, allocVector(INTSXP, ngroups));
 		int* oeptr=INTEGER(VECTOR_ELT(output, 3));
 		for (i=0; i<ngroups; ++i) { ocptr[i] = -1; }
 
@@ -151,4 +155,11 @@ int split_cluster(const int* starts, const int* ends, const int& actual_end, con
 
 	// Returning the last group index that was used.
 	return output_index-1;	
+}
+
+void fillSEXP(SEXP& output, const int ngroups) {
+	SET_VECTOR_ELT(output, 1, allocVector(INTSXP, ngroups));
+	SET_VECTOR_ELT(output, 2, allocVector(INTSXP, ngroups));
+	SET_VECTOR_ELT(output, 3, allocVector(INTSXP, ngroups));
+	return;
 }
