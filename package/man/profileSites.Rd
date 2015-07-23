@@ -30,7 +30,7 @@ Single-end reads are directionally extended to \code{ext} to impute the fragment
 For paired-end reads, the interval between each pair is used as the fragment.
 If multiple \code{bam.files} are specified, reads are pooled across files for counting into each profile.
 
-Direct aggregation will favour high-abundance regions as these have higher counts.
+Direct aggregation will favor high-abundance regions as these have higher counts.
 If this is undesirable, high-abundance regions can be downweighted using the \code{weight} argument.
 For example, this can be set to the inverse of the sum of counts across all libraries for each region in \code{regions}.
 This will ensure that each region contributes equally to the final profile.
