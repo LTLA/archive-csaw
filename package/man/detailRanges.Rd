@@ -39,7 +39,7 @@ annotated feature is also included.
 This function adds exon-based annotations to a given set of genomic regions, in the form of compact character strings specifying the features overlapping and flanking each region.
 The aim is to determine the genic context of empirically identified regions. 
 This allows some basic biological interpretation of binding/marking in those regions. 
-All neighbouring genes within a specified range are reported, rather than just the closest gene to the region.
+All neighboring genes within a specified range are reported, rather than just the closest gene to the region.
 If a region in \code{incoming} is stranded and \code{ignore.strand=FALSE}, annotated features will only be reported if they lie on the same strand as that region.
 
 If \code{incoming} is missing, then the annotation will be provided directly to the user in the form of a \code{GRanges} object. 
