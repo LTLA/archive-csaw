@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 14 May 2015
+# last modified 22 July 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -52,7 +52,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	all.regions <- list(GRanges())
 	ix <- 1
 
-	for (i in 1:length(extracted.chrs)) {
+	for (i in seq_along(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		outlen <- extracted.chrs[i]		
 		where <- GRanges(chr, IRanges(1, outlen))
@@ -65,7 +65,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
 		outcome <- matrix(0L, total.pts, nbam) 
 
-		for (bf in 1:nbam) {
+		for (bf in seq_len(nbam)) {
 			curpar <- paramlist[[bf]]
 			if (curpar$pe!="both") {
    				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)

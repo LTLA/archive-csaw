@@ -28,7 +28,7 @@
 	expand.vec <- rep(NA, N)
 	row.dex <- as.integer(rownames(tab))
 	if (any(N <= 0L | row.dex > N)) { stop("cluster IDs are not within [1, nregions]") }
-	expand.vec[row.dex] <- 1:nrow(tab)
+	expand.vec[row.dex] <- seq_len(nrow(tab))
 	tab <- tab[expand.vec,]
 	rownames(tab) <- NULL
 	return(tab)

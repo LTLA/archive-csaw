@@ -7,27 +7,27 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 14 May 2015
+# last modified 22 July 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 
 	max.dist <- as.integer(max.dist)
-    if (max.dist <=0) { stop("maximum distance must be positive") }
-    total.cor <- numeric(max.dist+1L)
-    total.read.num <- 0L
+	if (max.dist <=0) { stop("maximum distance must be positive") }
+	total.cor <- numeric(max.dist+1L)
+	total.read.num <- 0L
 
-    for (i in 1:length(extracted.chrs)) {
+	for (i in seq_along(extracted.chrs)) {
 		if (extracted.chrs[i]<2L) { next } # No way to compute variance if there's only one base.
 		chr <- names(extracted.chrs)[i]
 		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
 
-        # Reading in the reads for the current chromosome for all the BAM files.
+		# Reading in the reads for the current chromosome for all the BAM files.
 		all.f <- all.r <- list()
 		num.reads <- 0L
 		forward.reads <- 0L
-		for (b in 1:nbam) { 
+		for (b in seq_len(nbam)) { 
 			curpar <- paramlist[[b]]
 
 			if (curpar$pe=="both") {
@@ -63,19 +63,19 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 			all.r <- all.f
 		}
 
-	    # We call the C++ function to compute correlations. 
+		# We call the C++ function to compute correlations. 
 		ccfs <- .Call(cxx_correlate_reads, all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, extracted.chrs[i])
 		if (is.character(ccfs)) { stop(ccfs) }
 
 		# Returning some output. Note that the coefficient is weighted according to the number
-        # of reads on each chromosome, as described in as described by Kharchenko et al. (2008).
-        total.read.num <- total.read.num+num.reads
-        total.cor <- total.cor+ccfs*num.reads
-    }
+		# of reads on each chromosome, as described in as described by Kharchenko et al. (2008).
+		total.read.num <- total.read.num+num.reads
+		total.cor <- total.cor+ccfs*num.reads
+	}
 
 	# Cleaning up and returning the correlations.
 	if (total.read.num) { total.cor <- total.cor/total.read.num }
-    return(total.cor)
+	return(total.cor)
 }
 
 

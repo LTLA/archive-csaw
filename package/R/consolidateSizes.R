@@ -6,11 +6,12 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 #
 # written by Aaron Lun
 # created 26 February 2015
-# last modified 25 March 2015
+# last modified 22 July 2015
 {
 	nset <- length(data.list)
+	set.it.vec <- seq_len(nset)
 	if (nset!=length(result.list)) { stop("data list must have same length as result list") }
-	for (x in 1:nset) {
+	for (x in set.it.vec) {
 		currows <- nrow(data.list[[x]])
 		ntab <- nrow(result.list[[x]])
 		if (currows!=ntab) { stop("corresponding entries of data and result lists must have same number of entries") }
@@ -19,27 +20,23 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	# Merging windows, or finding overlaps.
 	if (is.null(region)) { 
 		all.ranges <- list()
-		for (x in 1:nset) { all.ranges[[x]] <- rowRanges(data.list[[x]]) }
+		for (x in set.it.vec) { all.ranges[[x]] <- rowRanges(data.list[[x]]) }
 		all.ranges <- do.call(c, all.ranges)
 		merged <- do.call(mergeWindows, c(merge.args, regions=all.ranges)) 
 
 		# Formatting for nice output.
 		final.ids <- list()
 		last <- 0L
-		for (x in 1:nset) { 
+		for (x in set.it.vec) { 
 			currows <- nrow(result.list[[x]])
-			if (currows) { 
-				final.ids[[x]] <- merged$id[last+1:currows]
-				last <- last + currows
-			} else {
-				final.ids[[x]] <- integer(0)
-			}
+			final.ids[[x]] <- merged$id[last+seq_len(currows)]
+			last <- last + currows
 		}
 		names(final.ids) <- names(data.list)
 	} else {
 		all.ranges <- list()
 		final.ids <- list()
-		for (x in 1:nset) {
+		for (x in set.it.vec) {
 			olap <- do.call(findOverlaps, c(query=region, subject=rowRanges(data.list[[x]]), overlap.args))
 			final.ids[[x]] <- olap
 			all.ranges[[x]] <- queryHits(olap)
@@ -53,15 +50,10 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	if (equiweight) {
 		last <- 0L
 		rel.weights <- list()
-		for (x in 1:nset) {
+		for (x in set.it.vec) {
 			currows <- nrow(result.list[[x]])
-			if (currows) { 
-				curid <- merged$id[last + 1:currows]
-				rel.weights[[x]] <- (1/tabulate(curid))[curid]
-				last <- last + currows
-			} else {
-				rel.weights[[x]] <- numeric(0)
-			}
+			curid <- merged$id[last + seq_len(currows)]
+			rel.weights[[x]] <- (1/tabulate(curid))[curid]	
 		}
 		rel.weights <- unlist(rel.weights)
 	} else { 

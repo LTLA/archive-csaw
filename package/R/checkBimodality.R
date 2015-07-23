@@ -6,7 +6,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 #
 # written by Aaron Lun
 # created 1 May 2015
-# last modified 13 May 2015
+# last modified 22 July 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -17,7 +17,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 	totals <- integer(nbam)
 	nx <- length(regions)
 	out.scores <- rep(NA, nx)
-	indices <- split(1:nx, seqnames(regions))
+	indices <- split(seq_len(nx), seqnames(regions))
 	prior.count <- as.double(prior.count)
 
 	for (chr in names(extracted.chrs)) {
@@ -28,7 +28,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 
 		# Pulling out reads as previously described.
 		collected <- list()
-		for (bf in 1:nbam) {
+		for (bf in seq_len(nbam)) {
 			curpar <- paramlist[[bf]]
     
        		if (curpar$pe=="both") {

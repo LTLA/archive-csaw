@@ -5,7 +5,7 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 #
 # written by Aaron Lun
 # created 1 September 2014
-# last modified 14 May 2015
+# last modified 22 July 2015
 {
     if (length(region)!=1L) { stop("exactly one range is required for plotting") }
 	if (as.logical(strand(region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
@@ -60,12 +60,13 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 			if (npairs) { 
 				left <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$left$pos, frag.data$left$pos+frag.data$left$qwidth-1L), 
 					seqinfo=sqi, strand=frag.data$left$strand))
-				right <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$right$pos, frag.data$right$pos+frag.data$right$qwidth-1L), 
+				right <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$right$pos, frag.data$right$pos+frag.data$right$qwidth-1L),
 					seqinfo=sqi, strand=frag.data$right$strand))
 
-				left <- left[keep[1:npairs]]
-				right <- right[keep[1:npairs]]
-				left$pair <- right$pair <- 1:length(left)
+				pairdex <- seq_len(npairs) # first lot of fragments correspond to proper pairs.
+				left <- left[keep[pairdex]]
+				right <- right[keep[pairdex]]
+				left$pair <- right$pair <- seq_along(left)
 				reads <- suppressWarnings(c(left, right))
 			} else { reads <- NULL }
 
@@ -73,7 +74,7 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 			if (nrescue) { 
 				rescued <- suppressWarnings(GRanges(cur.chr, IRanges(frag.data$rescued$pos, frag.data$rescued$pos+frag.data$rescued$qwidth), 
 					seqinfo=sqi, strand=frag.data$rescued$strand, pair=integer(length(frag.data$rescued$pos))))
-				rescued <- rescued[keep[npairs + 1:nrescue]]
+				rescued <- rescued[keep[npairs + seq_len(nrescue)]] # second lot correspond to rescued reads.
 				reads <- suppressWarnings(c(reads, rescued))
 			}
 

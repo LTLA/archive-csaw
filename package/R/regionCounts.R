@@ -6,17 +6,17 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 14 May 2015
+# last modified 22 July 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
 	ext.data <- .collateExt(nbam, ext) 
 
-    totals <- integer(nbam)
+	totals <- integer(nbam)
 	nx <- length(regions)
 	counts <- matrix(0L, nrow=nx, ncol=nbam)
-	indices <- split(1:nx, seqnames(regions))
+	indices <- split(seq_len(nx), seqnames(regions))
 
 	# No sense in doing so; you can set param$forward for strand-specific counting.
 	if (any(strand(regions)!="*")) { 
@@ -24,25 +24,25 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		strand(regions) <- "*"
 	}
 
-    for (chr in names(extracted.chrs)) {
+	for (chr in names(extracted.chrs)) {
 		chosen <- indices[[chr]]
-        outlen <- extracted.chrs[[chr]]
-        where <- GRanges(chr, IRanges(1, outlen))
+		outlen <- extracted.chrs[[chr]]
+		where <- GRanges(chr, IRanges(1, outlen))
 
 		# Pulling out reads as previously described.
-        for (bf in 1:nbam) {
+		for (bf in seq_len(nbam)) {
 			curpar <- paramlist[[bf]]
-            if (curpar$pe!="both") {
+			if (curpar$pe!="both") {
 				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
-            } else {
+			} else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
    				frag.start <- checked$start
 				frag.end <- checked$end
-        	 }
+			}
 		
 			# Counting the number of overlaps of any type with the known regions.
 			totals[bf] <- totals[bf] + length(frag.start)

@@ -8,7 +8,7 @@
 #
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 9 February 2015
+# last modified 2 July 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
 	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
@@ -230,9 +230,10 @@
 # 
 # written by Aaron Lun
 # created 12 December 2014
+# last modified 22 July 2015
 {
 	if (!is.list(param)) { 
-		paramlist <- lapply(1:nbam, FUN=function(x) { param })
+		paramlist <- lapply(seq_len(nbam), FUN=function(x) { param })
 	} else if (nbam!=length(param)) {
 		stop("number of readParam objects is not equal to the number of BAM files")
 	} else {

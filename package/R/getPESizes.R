@@ -6,17 +6,17 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 # 
 # written by Aaron Lun
 # a long long time ago
-# last modified 13 May 2015
+# last modified 22 July 2015
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
-    extracted.chrs <- .activeChrs(bam.file, param$restrict)
+	extracted.chrs <- .activeChrs(bam.file, param$restrict)
 
 	totals <- countBam(bam.file)$records # Simplest way, as filtering is implicit in .extractSE loading.
 	singles <- mapped <- others <- one.unmapped <- 0L
 	stopifnot(length(bam.file)==1L)
 	norm.list <- loose.names.1 <- loose.names.2 <- list()
 
-	for (i in 1:length(extracted.chrs)) {
+	for (i in seq_along(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
 		reads <- .extractSE(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
@@ -27,19 +27,19 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 		singles <- singles + sum(is.single)
  		only.one <- bitwAnd(reads$flag, 0x8)!=0L
 		one.unmapped <- one.unmapped + sum(!is.single & only.one)
-	    for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }	
-		
+		for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }
+
 		# Identifying valid reads.
 		okay <- .yieldInterestingBits(reads, extracted.chrs[i], diag=TRUE)
 		norm.list[[i]] <- okay$size
 		left.names <- reads$qname[!okay$is.ok]
 		left.flags <- reads$flag[!okay$is.ok]
-		
+
 		# Setting up some more filters (note, inter-chromosomality is checked more rigorously later).
 		on.same.chr <- reads$isize[!okay$is.ok]!=0L
 		is.first <- bitwAnd(left.flags, 0x40)!=0L
 		is.second <- bitwAnd(left.flags, 0x80)!=0L
-		
+
 		# Identifying improperly orientated pairs and reads with unmapped counterparts.
 		leftovers.first <- left.names[on.same.chr & is.first]
 		leftovers.second <- left.names[on.same.chr & is.second]
@@ -60,7 +60,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
    	# Returning sizes and some diagnostic data.
-    return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=totals, mapped.reads=mapped, 
+	return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=totals, mapped.reads=mapped,
 		single=singles, mate.unmapped=one.unmapped, unoriented=others, inter.chr=inter.chr)))
 }
 
@@ -85,8 +85,8 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
  	is.mate.reverse <- bitwAnd(reads$flag, 0x20) != 0L
 	should.be.left <- is.forward & is.mate.reverse
 	should.be.right <- !is.forward & !is.mate.reverse
-    is.first <- bitwAnd(reads$flag, 0x40) != 0L
-	is.second <- bitwAnd(reads$flag, 0x80) != 0L	
+	is.first <- bitwAnd(reads$flag, 0x40) != 0L
+	is.second <- bitwAnd(reads$flag, 0x80) != 0L
 	stopifnot(all(is.first!=is.second))
 
 	# Matching the reads in each pair so only valid PEs are formed.
@@ -114,7 +114,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 	fend <- pmin(fpos+fwidth, clen+1L)
 	rend <- pmin(rpos+rwidth, clen+1L)
 	total.size <- rend - fpos
-    valid <- fpos <= rpos & fend <= rend & total.size <= max.frag
+	valid <- fpos <= rpos & fend <= rend & total.size <= max.frag
 	fpos <- fpos[valid]
 	total.size <- total.size[valid]
 

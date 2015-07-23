@@ -6,7 +6,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 #
 # written by Aaron Lun
 # created 14 February 2015
-# last modified 14 May 2015
+# last modified 22 July 2015
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
@@ -26,7 +26,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 	counter <- 0L
 	all.seq <- all.qual <- character(0)
 
-    for (i in 1:length(extracted.chrs)) {
+	for (i in seq_along(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
 		out <- .getPairedEnd(bam.file, where=where, param=param, with.reads=TRUE)
@@ -39,7 +39,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 		if (nl) { 
 			all.cig[[index]] <- paste0(out$left$qwidth, "M")
 			all.end[[index]] <- out$right$pos		
-			all.names[[index]] <- paste0("paired:", counter+1:nl, ":", out$right$qwidth)
+			all.names[[index]] <- paste0("paired:", counter+seq_len(nl), ":", out$right$qwidth)
 			all.widths[[index]] <- out$left$qwidth
 			index <- index + 1L
 			counter <- counter + nl
@@ -48,10 +48,10 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 		if (nr) { 
 			all.cig[[index]] <- paste0(out$rescued$qwidth, "M")
 			all.end[[index]] <- out$rescued$pos
-			all.names[[index]] <- paste0("rescued:", counter+1:nr, ":", out$rescued$strand)
+			all.names[[index]] <- paste0("rescued:", counter+seq_len(nr), ":", out$rescued$strand)
 			all.widths[[index]] <- out$rescued$qwidth
 			counter <- counter + nr
-		}	
+		}
 
 		if (length(out$pos)) {
 			all.cig <- unlist(all.cig)

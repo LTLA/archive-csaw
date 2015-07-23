@@ -6,8 +6,8 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 # records the coverage of the resulting bases, up to `range`.
 #
 # written by Aaron Lun
-# created 2 July 2012
-# last modified 15 May 2015
+# created 2 July 2014
+# last modified 22 July 2015
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
@@ -19,7 +19,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	use.strand <- (strand!="ignore")
 	match.strand <- (strand=="match")
 	if (match.strand) { 
-	    for (i in 1:nbam) { 
+		for (i in seq_len(nbam)) {
 			if (length(paramlist[[i]]$forward)) { stop("set forward=NULL in param for strand-specific profiling") } 
 		}
 	}
@@ -48,21 +48,21 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
 	total.profile <- 0
-	indices <- split(1:length(regions), seqnames(regions))
+	indices <- split(seq_along(regions), seqnames(regions))
 		
 	# Running through the chromosomes.
-	for (i in 1:length(extracted.chrs)) {
+	for (i in seq_along(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
 		chosen <- indices[[chr]]
 		if (!length(chosen)) { next }
 		outlen <- extracted.chrs[i]
 		where <- GRanges(chr, IRanges(1L, outlen))
 
-        # Reading in the reads for the current chromosome for all the BAM files.
+		# Reading in the reads for the current chromosome for all the BAM files.
 		starts <- ends <- list()
-		for (b in 1:nbam) {
+		for (b in seq_len(nbam)) {
 			curpar <- paramlist[[b]]
-            if (curpar$pe!="both") {
+			if (curpar$pe!="both") {
 				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
 				extended <- .extendSE(reads, ext=ext.data$ext[b], final=ext.data$final, chrlen=outlen)
 				start.pos <- extended$start
@@ -86,20 +86,20 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 		all.starts <- all.starts[os]
 		all.weights <- weight[chosen][os]
 
-	    # We call the C++ functions to aggregate profiles.
+		# We call the C++ functions to aggregate profiles.
 		starts <- unlist(starts)
 		ends <- unlist(ends)
 		if (!length(starts)) { next }
 		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, range) 
 		if (is.character(cur.profile)) { stop(cur.profile) }
 		total.profile <- total.profile + cur.profile
-    }
+	}
 
 	# Cleaning up and returning the profiles. We divide by 2 to get the coverage,
 	# as total.profile counts both sides of each summit (and is twice as large as it should be).
 	out <- total.profile/length(regions)
 	names(out) <- (-range):range
-    return(out)
+	return(out)
 }
 
 wwhm <- function(profile, regions, ext=100, param=readParam(), proportion=0.5, rlen=NULL)
