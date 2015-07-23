@@ -42,5 +42,5 @@ checkList(list())
 makeExtVector(integer(0))
 
 # normalizeCounts, filterWindows and scaledAverage will break on zero-length inputs,
-# due to the failure of aveLogCPM to handle them for variable priors.
+# due to the failure of expandAsMatrix() and calcNormFactors() to handle dimensions of zero.
 

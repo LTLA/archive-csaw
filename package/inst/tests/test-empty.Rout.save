@@ -152,9 +152,9 @@ attr(,"class")
 [1] "extVector"
 > 
 > # normalizeCounts, filterWindows and scaledAverage will break on zero-length inputs,
-> # due to the failure of aveLogCPM to handle them for variable priors.
+> # due to the failure of expandAsMatrix() and calcNormFactors() to handle dimensions of zero.
 > 
 > 
 > proc.time()
    user  system elapsed 
- 16.965   0.545  17.597 
+ 15.277   0.463  15.753 
