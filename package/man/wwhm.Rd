@@ -23,7 +23,7 @@ The \code{regions} should contain windows of a constant size.
 
 Some subtleties are involved in obtaining the window width.
 First, twice the average fragment length must be subtracted from the peak width, as the profile is constructed from (inferred) fragments.
-The size of the viewpoints in \code{regions} must also be subtracted, to account for the inflated peak width when spatial resolution is lost.
+The size of the viewpoints in \code{regions} must also be subtracted, to account for the inflated peak width when spatial resolution is lost after aggregation across many windows.
 
 % Imagine if binding occured at 1 bp; random placement within the 50 bp bin would give a summit width of 50 bp.
 }

@@ -109,10 +109,11 @@ wwhm <- function(profile, regions, ext=100, proportion=0.5, rlen=NULL)
 # 
 # written by Aaron Lun
 # created 2 March 2015
-# last modified 14 May 2015
+# last modified 23 July 2015
 {
 	if (proportion <= 0 | proportion >= 1) { stop("proportion should be between 0 and 1") }
 	is.max <- which.max(profile)
+	if (length(is.max)!=1L) { stop("profile cannot be empty or all-NA") }
 	cutoff <- proportion * profile[is.max]
 	above.max <- profile >= cutoff
 
@@ -120,26 +121,30 @@ wwhm <- function(profile, regions, ext=100, proportion=0.5, rlen=NULL)
 	out <- rle(above.max)
 	ends <- cumsum(out$lengths)
 	starts <- c(1L, ends[-length(ends)]+1L)
-	for (ok in which(out$values)) { 
-		if (is.max <= ends[ok] & is.max >= starts[ok]) {
-			chosen.start <- starts[ok]
-			chosen.end <- ends[ok]
-			break
-		}
-	}
-	if (chosen.end==length(profile) || chosen.start==1L) { 
+	chosen <- findInterval(is.max, starts)
+	chosen.start <- starts[chosen]
+	chosen.end <- ends[chosen]
+	if (chosen.end==length(profile) || chosen.start==1L) {
 		warning("width at specified proportion exceeds length of profile")
 	}
 	peak.width <- chosen.end - chosen.start + 1L
 
 	# Getting the median size of the regions.
-	ref.size <- median(width(regions))
+	if (!missing(regions)) {
+		ref.size <- median(width(regions))
+	} else {
+		warning("regions not supplied, assuming width of 1 bp")
+		ref.size <- 1L
+	}
 
 	# To get the average extension length across libraries, via getWidths.
+	# Using a range of width 1 bp, so extension length is directly returned.
+	# Setting start above 1, to future-proof against potential issues with extending before chromosome start.
 	nlibs <- length(ext)
 	ext.data <- .collateExt(nlibs, ext)
 	dummy.data <- SummarizedExperiment(colData=DataFrame(ext=ext.data$ext), 
-		metadata=list(final.ext=ext.data$final), rowRanges=GRanges("chrA", IRanges(1000, 1000))) 
+		metadata=list(final.ext=ext.data$final),
+		rowRanges=GRanges("chrA", IRanges(start=100000, width=1)))
 	if (!is.null(rlen)) { dummy.data$rlen <- rlen }
 	ext.len <- getWidths(dummy.data)
 
