@@ -41,7 +41,7 @@ checkList(list())
 
 makeExtVector(integer(0))
 
-normalize(out)
+normalize(out) # 1 is correct, as calcNormFactors() just diverts to that.
 normalize(out, type="loess")
 
 scaledAverage(asDGEList(out))
