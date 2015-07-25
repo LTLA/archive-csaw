@@ -36,6 +36,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 		if (type=="global") { 
 			.checkLibSizes(data, background)
 			relative.width <- median(bwidth)/median(dwidth)
+			if (is.na(relative.width)) { relative.width <- 1 }
 			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
 			filter.stat <- abundances - .getGlobalBg(background, bg.ab, prior.count)
 			

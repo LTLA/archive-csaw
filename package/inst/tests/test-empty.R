@@ -41,6 +41,17 @@ checkList(list())
 
 makeExtVector(integer(0))
 
-# normalizeCounts, filterWindows and scaledAverage will break on zero-length inputs,
-# due to the failure of expandAsMatrix() and calcNormFactors() to handle dimensions of zero.
+normalize(out)
+normalize(out, type="loess")
+
+scaledAverage(asDGEList(out))
+scaledAverage(asDGEList(out), scale=numeric(0))
+
+metadata(out)$spacing <- 50 # Converting to a window-based object.
+chrs <- Rsamtools::scanBamHeader(bamFile)[[1]]$targets
+seqinfo(rowRanges(out)) <- Seqinfo(names(chrs), chrs)
+filterWindows(out, out, type="global")
+filterWindows(out, out, type="local")
+filterWindows(out, out, type="control", norm.fac=1) # TMM normalization fails for empty DGELists.
+filterWindows(out, type="proportion")
 
