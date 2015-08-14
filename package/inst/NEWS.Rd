@@ -30,6 +30,9 @@ Fixed bug for proportional filtering in filterWindows().
 \item
 Allowed correlateReads() to accept paired-end specification when extracting data.
 
+\item
+Added maximizeCcf() function to estimate the average fragment length.
+
 \item 
 Added support for strand-specific overlapping in detailRanges().
 
