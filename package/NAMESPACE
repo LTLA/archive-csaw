@@ -5,7 +5,7 @@ useDynLib(csaw, .registration=TRUE, .fixes="cxx_")
 export(csawUsersGuide,
 	readParam, reformList, checkList,
 	makeExtVector, "[.extVector",
-	correlateReads, profileSites, wwhm,
+	correlateReads, maximizeCcf, profileSites, wwhm,
 	getPESizes, dumpPE,
 	regionCounts, windowCounts, strandedCounts,
 	normalizeCounts, 
