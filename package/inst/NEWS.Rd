@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.3.10}{\itemize{
+\section{Version 1.3.12}{\itemize{
 \item
 Added clusterFDR() function to compute the FDR for clusters of DB windows.
 
@@ -11,6 +11,9 @@ Added checkBimodality() function to compute bimodality scores for regions.
 
 \item
 Modified normalize(), asDGEList() to allow manual specification of library sizes.
+
+\item
+Renamed normalizeCounts() to normOffsets().
 
 \item 
 Modified default parameter specification in strandedCounts(), to avoid errors.

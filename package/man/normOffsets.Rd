@@ -1,12 +1,12 @@
-\name{normalizeCounts}
-\alias{normalizeCounts}
+\name{normOffsets}
+\alias{normOffsets}
 
 \title{Normalize counts between libraries}
 
 \description{Calculate normalization factors or offsets using count data from multiple libraries.}
 
 \usage{
-normalizeCounts(counts, lib.sizes=NULL, type=c("scaling", "loess"), 
+normOffsets(counts, lib.sizes=NULL, type=c("scaling", "loess"), 
     weighted=FALSE, ...)
 }
 
@@ -38,7 +38,7 @@ The fitted value for each bin pair is used as the generalized linear model offse
 The use of the average count provides more stability than the average log-count when low counts are present for differentially bound regions.
 
 If \code{lib.sizes} is not specified, a warning is issued and the column sums of \code{counts} are used instead.
-Note that the same \code{lib.sizes} should be used throughout the analysis if \code{\link{normalizeCounts}} is called multiple times on the same libraries, e.g., with different bin or window sizes or after different filtering steps.
+Note that the same \code{lib.sizes} should be used throughout the analysis if \code{\link{normOffsets}} is called multiple times on the same libraries, e.g., with different bin or window sizes or after different filtering steps.
 This ensures that the normalization factors or offsets are comparable between calls.
 }
 
@@ -61,8 +61,8 @@ normalizing RNA arrays via linear models. \emph{Bioinformatics} 20, 2778-86.
 \examples{
 # A trivial example
 counts <- matrix(rnbinom(400, mu=10, size=20), ncol=4)
-normalizeCounts(counts)
-normalizeCounts(counts, lib.sizes=rep(400, 4))
+normOffsets(counts)
+normOffsets(counts, lib.sizes=rep(400, 4))
 
 # Adding undersampling
 n <- 1000L
@@ -72,9 +72,9 @@ mu2[1:100] <- 100
 mu2 <- mu2/sum(mu2)*sum(mu1)
 counts <- cbind(rnbinom(n, mu=mu1, size=20), rnbinom(n, mu=mu2, size=20))
 actual.lib.size <- rep(sum(mu1), 2)
-normalizeCounts(counts, lib.sizes=actual.lib.size)
-normalizeCounts(counts, logratioTrim=0.4, lib.sizes=actual.lib.size)
-normalizeCounts(counts, sumTrim=0.3, lib.size=actual.lib.size)
+normOffsets(counts, lib.sizes=actual.lib.size)
+normOffsets(counts, logratioTrim=0.4, lib.sizes=actual.lib.size)
+normOffsets(counts, sumTrim=0.3, lib.size=actual.lib.size)
 
 # With and without weighting, for high-abundance spike-ins.
 n <- 100000
@@ -84,17 +84,17 @@ blah[1:tospike,1] <- rnbinom(tospike, mu=1000, size=20)
 blah[1:tospike,2] <- rnbinom(tospike, mu=2000, size=20)
 full.lib.size <- colSums(blah)
 
-normalizeCounts(blah, weighted=TRUE, lib.sizes=full.lib.size)
-normalizeCounts(blah, lib.sizes=full.lib.size)
+normOffsets(blah, weighted=TRUE, lib.sizes=full.lib.size)
+normOffsets(blah, lib.sizes=full.lib.size)
 true.value <- colSums(blah[(tospike+1):n,])/colSums(blah)
 true.value <- true.value/exp(mean(log(true.value)))
 true.value
 
 # Using loess-based normalization, instead.
-offsets <- normalizeCounts(counts, type="loess", lib.size=full.lib.size)
+offsets <- normOffsets(counts, type="loess", lib.size=full.lib.size)
 head(offsets)
-offsets <- normalizeCounts(counts, type="loess", span=0.4, lib.size=full.lib.size)
-offsets <- normalizeCounts(counts, type="loess", iterations=1, lib.size=full.lib.size)
+offsets <- normOffsets(counts, type="loess", span=0.4, lib.size=full.lib.size)
+offsets <- normOffsets(counts, type="loess", iterations=1, lib.size=full.lib.size)
 }
 
 \seealso{

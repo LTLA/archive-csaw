@@ -24,13 +24,13 @@ Counts are extracted from the matrix corresponding to the first assay in the \co
 If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.
 Warnings will be generated if this field is not present.
 
-In the \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normalizeCounts}}.
+In the \code{normalize} method, the extracted counts and library sizes are supplied to \code{\link{normOffsets}}.
 Similarly, the \code{asDGEList} method wraps the \code{\link{DGEList}} constructor.
 In both cases, any arguments in \code{...} are also passed to the wrapped functions.
 }
 
 \value{
-For \code{normalize}, either a numeric matrix or vector is returned; see \code{\link{normalizeCounts}}.
+For \code{normalize}, either a numeric matrix or vector is returned; see \code{\link{normOffsets}}.
 
 For \code{asDGEList}, a \code{DGEList} object is returned.
 }
@@ -50,7 +50,7 @@ asDGEList(data, norm.factors=c(1.11, 2.23), group=c("a", "b"))
 }
 
 \seealso{
-\code{\link{normalizeCounts}},
+\code{\link{normOffsets}},
 \code{\link{DGEList}},
 \code{\link{windowCounts}}
 }

@@ -1,4 +1,4 @@
-normalizeCounts <- function(counts, lib.sizes=NULL, type=c("scaling", "loess"), weighted=FALSE, ...) 
+normOffsets <- function(counts, lib.sizes=NULL, type=c("scaling", "loess"), weighted=FALSE, ...) 
 # This provides a wrapper to perform TMM normalization with non-standard
 # library sizes (e.g. due to filtering) and weighting turned off.
 # Alternatively, it can do a form a fast loess-like normalization which uses
