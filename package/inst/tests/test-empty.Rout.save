@@ -151,9 +151,9 @@ attr(,"final.ext")
 attr(,"class")
 [1] "extVector"
 > 
-> normalize(out) # 1 is correct, as calcNormFactors() just diverts to that.
+> normOffsets(out) # 1 is correct, as calcNormFactors() just diverts to that.
 [1] 1
-> normalize(out, type="loess")
+> normOffsets(out, type="loess")
      [,1]
 > 
 > scaledAverage(asDGEList(out))

@@ -13,7 +13,7 @@ Added checkBimodality() function to compute bimodality scores for regions.
 Modified normalize(), asDGEList() to allow manual specification of library sizes.
 
 \item
-Renamed normalizeCounts() to normOffsets().
+Switched from normalizeCounts(), normalize() to S4 method normOffsets().
 
 \item 
 Modified default parameter specification in strandedCounts(), to avoid errors.
