@@ -8,7 +8,6 @@ export(csawUsersGuide,
 	correlateReads, maximizeCcf, profileSites, wwhm,
 	getPESizes, dumpPE,
 	regionCounts, windowCounts, strandedCounts,
-	normOffsets, 
 	getWidths, scaledAverage, findMaxima, filterWindows,
 	combineTests, getBestTest, mergeWindows, clusterFDR,
 	consolidateSizes, upweightSummit,
@@ -34,6 +33,6 @@ exportClasses(
 )
 
 exportMethods(
-	show, "$", reform, normalize, asDGEList
+	show, "$", reform, normOffsets, asDGEList
 )
 

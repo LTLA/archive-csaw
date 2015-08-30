@@ -269,11 +269,11 @@ In .local(object, ...) :
 [1] 1.003816 0.996199
 > normOffsets(assay(data), lib.size=data$totals, method="RLE")
 [1] 1.0037890 0.9962253
-> normalize(data)
+> normOffsets(data)
 [1] 1.001197 0.998804
-> normalize(data, logratioTrim=0.1)
+> normOffsets(data, logratioTrim=0.1)
 [1] 1.0026764 0.9973307
-> normalize(data, method="upperquartile")
+> normOffsets(data, method="upperquartile")
 [1] 0.9834651 1.0168129
 > 
 > head(normOffsets(assay(data), lib.size=data$totals, type="loess"))
@@ -292,7 +292,7 @@ In .local(object, ...) :
 [4,] -0.4215479 0.4215479
 [5,] -0.3858107 0.3858107
 [6,] -0.3915074 0.3915074
-> head(normalize(data, type="loess"))
+> head(normOffsets(data, type="loess"))
            [,1]      [,2]
 [1,] -0.4047876 0.4047876
 [2,] -0.4328410 0.4328410
@@ -300,7 +300,7 @@ In .local(object, ...) :
 [4,] -0.4101296 0.4101296
 [5,] -0.3788945 0.3788945
 [6,] -0.3514597 0.3514597
-> head(normalize(data, type="loess", span=0.5))
+> head(normOffsets(data, type="loess", span=0.5))
            [,1]      [,2]
 [1,] -0.4120470 0.4120470
 [2,] -0.4350054 0.4350054

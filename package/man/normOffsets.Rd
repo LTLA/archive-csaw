@@ -1,17 +1,18 @@
 \name{normOffsets}
 \alias{normOffsets}
+\alias{normOffsets,matrix-method}
 
 \title{Normalize counts between libraries}
 
 \description{Calculate normalization factors or offsets using count data from multiple libraries.}
 
 \usage{
-normOffsets(counts, lib.sizes=NULL, type=c("scaling", "loess"), 
+\S4method{normOffsets}{matrix}(object, lib.sizes=NULL, type=c("scaling", "loess"), 
     weighted=FALSE, ...)
 }
 
 \arguments{
-  \item{counts}{a matrix of integer counts with one column per library}
+  \item{object}{a matrix of integer counts with one column per library}
   \item{lib.sizes}{a numeric vector specifying the total number of reads per library}
   \item{type}{a character string indicating what type of normalization is to be performed}
   \item{weighted}{a logical scalar indicating whether precision weights should be used for TMM normalization}
