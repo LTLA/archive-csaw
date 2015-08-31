@@ -11,7 +11,7 @@
 
 \usage{
 \S4method{normOffsets}{RangedSummarizedExperiment}(object, lib.sizes, ...)
-\S4method{normalize}{RangedSummarizedExperiment}(object, lib.sizes, ...) # depracated, use normOffsets instead
+\S4method{normalize}{RangedSummarizedExperiment}(object, lib.sizes, ...) # deprecated, use normOffsets
 \S4method{asDGEList}{RangedSummarizedExperiment}(object, lib.sizes, ...)
 }
 
@@ -32,7 +32,7 @@ In both cases, any arguments in \code{...} are also passed to the wrapped functi
 }
 
 \value{
-For \code{normOffsets}, either a numeric matrix or vector is returned; see \code{\link{normOffsets}}.
+For \code{normOffsets}, either a numeric matrix or vector is returned; see \code{\link{normOffsets,matrix-method}}.
 
 For \code{asDGEList}, a \code{DGEList} object is returned.
 }

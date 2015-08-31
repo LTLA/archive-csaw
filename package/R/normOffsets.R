@@ -50,6 +50,6 @@ setMethod("normOffsets", "RangedSummarizedExperiment", function(object, lib.size
 })
 
 setMethod("normalize", "RangedSummarizedExperiment", function(object, lib.sizes, ...) {
-    .Depracated("normOffsets")
+    .Deprecated("normOffsets")
     normOffsets(object, lib.sizes)
 })
