@@ -48,3 +48,8 @@ setMethod("normOffsets", "RangedSummarizedExperiment", function(object, lib.size
 	}
 	normOffsets(assay(object), lib.sizes=lib.sizes, ...)
 })
+
+setMethod("normalize", "RangedSummarizedExperiment", function(object, lib.sizes, ...) {
+    .Depracated("normOffsets")
+    normOffsets(object, lib.sizes)
+})

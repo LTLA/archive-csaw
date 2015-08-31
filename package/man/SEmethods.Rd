@@ -1,14 +1,17 @@
 \name{SEmethods}
+\alias{normalize}
+\alias{normalize,RangedSummarizedExperiment-method}
 \alias{normOffsets,RangedSummarizedExperiment-method}
 \alias{asDGEList,RangedSummarizedExperiment-method}
 \alias{asDGEList}
 
 \title{Statistical wrappers for RangedSummarizedExperiment objects}
 
-\description{Convenience wrappers for statistical routines operating on RangedSummarizedExperiment objects}
+\description{Convenience wrappers for statistical routines operating on RangedSummarizedExperiment objects.}
 
 \usage{
 \S4method{normOffsets}{RangedSummarizedExperiment}(object, lib.sizes, ...)
+\S4method{normalize}{RangedSummarizedExperiment}(object, lib.sizes, ...) # depracated, use normOffsets instead
 \S4method{asDGEList}{RangedSummarizedExperiment}(object, lib.sizes, ...)
 }
 

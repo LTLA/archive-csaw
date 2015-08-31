@@ -34,5 +34,6 @@ exportClasses(
 
 exportMethods(
 	show, "$", reform, normOffsets, asDGEList
+    , normalize
 )
 
