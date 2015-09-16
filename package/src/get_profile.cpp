@@ -31,8 +31,10 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	 */
 	const int totallen=2*maxrange+1;
 	std::deque<int*> all_profiles(nregs);
+	int index=0;
 	for (int curreg=0; curreg<nregs; ++curreg) {
 		all_profiles[curreg]=(int*)R_alloc(totallen, sizeof(int));
+		for (index=0; index<totallen; ++index) { all_profiles[curreg][index]=0; }
 		all_profiles[curreg]+=maxrange; // so index of 0 = distance of 0.
 	}
 
@@ -87,7 +89,7 @@ try{
 		curprof=all_profiles[curreg];
 		const double& curweight=wptr[curreg];
 		optr[-maxrange]+=curprof[-maxrange]*curweight;
-		for (int i=-maxrange+1; i<maxrange; ++i) {
+		for (int i=-maxrange+1; i<=maxrange; ++i) {
 			curprof[i]+=curprof[i-1]; // Compiling profile based on addition/subtraction instructions
 			optr[i]+=curprof[i]*curweight;
 		}
