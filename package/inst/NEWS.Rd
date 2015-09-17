@@ -43,7 +43,7 @@ Added support for strand-specific overlapping in detailRanges().
 Increased the fidelity of retained information in dumped BAM file from dumpPE().
 
 \item
-Modified strand specification arguments for profileSites().
+Modified strand specification arguments for profileSites(), allowed reporting of individual profiles.
 
 \item
 Removed param= specification from wwhm().
