@@ -100,6 +100,10 @@ points(as.integer(names(x2)), x2, col="red")
 x3 <- profileSites(bamFile, regs, range=500, strand="match",
     param=readParam(forward=NULL))
 points(as.integer(names(x3)), x3, col="blue")
+
+# Returning separate profiles.
+y <- profileSites(bamFile, rowRanges(data)[maxed], range=500, average=FALSE)
+dim(y)
 }
 
 \keyword{diagnostics}
