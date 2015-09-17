@@ -1,4 +1,4 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1, 
+profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, weight=1, 
 	param=readParam(), strand=c("ignore", "use", "match")) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
@@ -11,6 +11,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
+	average <- as.logical(average)
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
 
@@ -29,16 +30,26 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 			reverse <- as.logical(reverse)
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
-			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, weight=weight[reverse], 
+			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, average=average, weight=weight[reverse], 
 				param=reformList(paramlist, forward=ifelse(match.strand, FALSE, NA)), strand="ignore") 
 			if (any(!reverse)) { 
-				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, weight=weight[!reverse],
- 					param=reformList(paramlist, forward=ifelse(match.strand, TRUE, NA)), strand="ignore") 
+				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, 
+					ext=ext, average=average, weight=weight[!reverse], param=reformList(paramlist, 
+						forward=ifelse(match.strand, TRUE, NA)), strand="ignore") 
 			} else { 
 				fprof <- 0 
 			}
-			prop.rstr <- sum(reverse)/length(reverse) # Weighting by the number of regions with each strand.
-			return(fprof * (1-prop.rstr) + rev(rprof) * prop.rstr) # Flipping the profile for reverse-strand.
+			
+			if (average) { 
+				prop.rstr <- sum(reverse)/length(reverse) # Weighting by the number of regions with each strand.
+				return(fprof * (1-prop.rstr) + rev(rprof) * prop.rstr) # Flipping the profile for reverse-strand.
+			} else {
+				total.len <- ncol(rprof)
+				final.mat <- matrix(0L, total.len, length(regions))
+				final.mat[reverse,] <- rprof[,rev(seq_len(total.len))]
+				final.mat[!reverse,] <- fprof
+				return(final.mat)
+			}
 		}
 	}
 
@@ -47,7 +58,12 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 	ext.data <- .collateExt(nbam, ext)
 	range <- as.integer(range)
 	if (range <= 0L) { stop("range should be positive") }
-	total.profile <- numeric(range*2 + 1)
+
+	if (average) { 
+		total.profile <- numeric(range*2 + 1)
+	} else {
+		total.profile <- matrix(0L, range*2 + 1, length(regions))
+	}
 	indices <- split(seq_along(regions), seqnames(regions))
 		
 	# Running through the chromosomes.
@@ -90,15 +106,23 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, weight=1,
 		starts <- unlist(starts)
 		ends <- unlist(ends)
 		if (!length(starts)) { next }
-		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, range) 
+
+		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, average, range) 
 		if (is.character(cur.profile)) { stop(cur.profile) }
-		total.profile <- total.profile + cur.profile
+		if (average) { 
+			total.profile <- total.profile + cur.profile
+		} else {
+			total.profile[chosen,][os,] <- t(cur.profile)
+		}
 	}
 
-	# Cleaning up and returning the profiles. We divide by 2 to get the coverage,
-	# as total.profile counts both sides of each summit (and is twice as large as it should be).
-	out <- total.profile/length(regions)
-	names(out) <- (-range):range
+	# Cleaning up and returning the profiles. 
+	if (average) { 
+		out <- total.profile/length(regions)
+		names(out) <- (-range):range
+	} else {
+		colnames(out) <- (-range):range
+	}
 	return(out)
 }
 

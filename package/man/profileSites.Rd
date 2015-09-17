@@ -5,8 +5,8 @@
 \description{Get the coverage profile around potential binding sites.}
 
 \usage{
-profileSites(bam.files, regions, range=5000, ext=100, weight=1,
-    param=readParam(), strand=c("ignore", "use", "match"))
+profileSites(bam.files, regions, range=5000, ext=100, average=TRUE,
+    weight=1, param=readParam(), strand=c("ignore", "use", "match"))
 }
 
 \arguments{
@@ -14,6 +14,7 @@ profileSites(bam.files, regions, range=5000, ext=100, weight=1,
 	\item{regions}{a \code{GRanges} object over which profiles are to be aggregated}
 	\item{range}{an integer scalar specifying the range over which the profile will be collected}
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
+	\item{average}{a logical scalar specifying whether the profiles should be averaged across regions}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 	\item{strand}{a string indicating how stranded \code{regions} should be handled}
@@ -34,6 +35,11 @@ Direct aggregation will favor high-abundance regions as these have higher counts
 If this is undesirable, high-abundance regions can be downweighted using the \code{weight} argument.
 For example, this can be set to the inverse of the sum of counts across all libraries for each region in \code{regions}.
 This will ensure that each region contributes equally to the final profile.
+
+Aggregation can be turned off by setting \code{average=FALSE}. 
+In such cases, a separate profile will be returned for each region, instead of the profiles being averaged across all regions.
+This may be useful, e.g., for constructing heatmaps of enrichment across many regions.
+Note that \code{weight} has no effect when aggregation is turned off.
 }
 
 \section{Comments on strand specificity}{
@@ -50,8 +56,13 @@ Note that \code{param$forward} must be set to \code{NULL} for this to work.
 }
 
 \value{
-A numeric vector of average coverages for each position within \code{range}, where the average is taken over all \code{regions}.
+If \code{average=TRUE}, a numeric vector of average coverages for each base position within \code{range} is returned, where the average is taken over all \code{regions}.
+The vector is named according to the relative position of each base to the start of the region.
 If \code{weight} is set as described above for each region, then the vector will represent average relative coverages, i.e., relative to the number of fragments counted in the region itself.
+
+If \code{average=FALSE}, an integer matrix of coverage values is returned. 
+Each row of the matrix corresponds to an entry in \code{regions}, while each column corresponds to a base position with \code{range}.
+Column names are set o the relative position of each base to the start of each region.
 }
 
 \author{

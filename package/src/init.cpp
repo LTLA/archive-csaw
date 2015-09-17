@@ -10,7 +10,7 @@ static const R_CallMethodDef all_call_entries[] = {
 	{"merge_windows", (DL_FUNC) &merge_windows, 6},
 	{"correlate_reads", (DL_FUNC) &correlate_reads, 6},
 	{"get_rle_counts", (DL_FUNC) &get_rle_counts, 5}, 
-	{"get_profile", (DL_FUNC) &get_profile, 5}, 
+	{"get_profile", (DL_FUNC) &get_profile, 6}, 
 	{"find_maxima", (DL_FUNC) &find_maxima, 5}, 
 	{"check_bimodality", (DL_FUNC) &check_bimodality, 5}, 
 	{NULL, NULL, 0}

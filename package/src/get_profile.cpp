@@ -6,7 +6,7 @@
 
 /* This function scans through the track and pulls out local maxima. */
 
-SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP range) try {
+SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP range, SEXP average) try {
 
 	if (!isInteger(starts) || !isInteger(ends)) { throw std::runtime_error("fragment start/end positions should be integer"); }
 	const int nfrags=LENGTH(starts);
@@ -20,6 +20,8 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	// Setting up constructs.
 	if (!isInteger(range) || LENGTH(range)!=1) { throw std::runtime_error("range distance should be an integer scalar"); }
 	const int maxrange=asInteger(range);
+	if (!isLogical(average) || LENGTH(average)!=1) { throw std::runtime_error("average specification should be a logical scalar"); }
+	const bool use_average=asLogical(average);
 	const int* fsptr=INTEGER(starts),
 		  *feptr=INTEGER(ends),
 		  *rsptr=INTEGER(regstarts);
@@ -30,12 +32,14 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	 * in order to preserve numerical stability.
 	 */
 	const int totallen=2*maxrange+1;
-	std::deque<int*> all_profiles(nregs);
-	int index=0;
-	for (int curreg=0; curreg<nregs; ++curreg) {
-		all_profiles[curreg]=(int*)R_alloc(totallen, sizeof(int));
-		for (index=0; index<totallen; ++index) { all_profiles[curreg][index]=0; }
-		all_profiles[curreg]+=maxrange; // so index of 0 = distance of 0.
+	SEXP profiles=PROTECT(allocMatrix(INTSXP, totallen, nregs));
+try {
+	int** all_profiles=(int**)R_alloc(nregs, sizeof(int*));
+	all_profiles[0]=INTEGER(profiles)+maxreg; // so index of 0 = distance of 0.
+	int curreg=0, index=0;
+	for (curreg=1; curreg<nregs; ++curreg) { all_profiles[curreg]=all_profiles[curreg-1]+totallen; }
+	for (curreg=0; curreg<nregs; ++curreg) {
+		for (index=-maxrange; index<=maxrange; ++index) { all_profiles[curreg][index]=0; }
 	}
 
 	/* Running through the reads. We use a strategy of identifying the
@@ -78,29 +82,42 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 		}
 	}
 
-	// Setting up output.
-	SEXP output=PROTECT(allocVector(REALSXP, totallen));
-try{
-	double* optr=REAL(output);
-	for (int i=0; i<totallen; ++i) { optr[i]=0; }
-	optr += maxrange; // 0 is now distance of zero.
-
-	for (int curreg=0; curreg<nregs; ++curreg) {
+	// Compiling profile based on addition/subtraction instructions.
+	for (curreg=0; curreg<nregs; ++curreg) {
 		curprof=all_profiles[curreg];
-		const double& curweight=wptr[curreg];
-		optr[-maxrange]+=curprof[-maxrange]*curweight;
-		for (int i=-maxrange+1; i<=maxrange; ++i) {
-			curprof[i]+=curprof[i-1]; // Compiling profile based on addition/subtraction instructions
-			optr[i]+=curprof[i]*curweight;
+		for (index=-maxrange+1; index<=maxrange; ++index) {
+			curprof[index]+=curprof[index-1]; 
 		}
 	}
+
+	// Setting up output, if we want the average.
+	if (use_average){
+	try {
+		SEXP output=PROTECT(allocVector(REALSXP, totallen));
+		double* optr=REAL(output);
+		for (index=0; index<totallen; ++index) { optr[index]=0; }
+		optr += maxrange; // 0 is now distance of zero.
+
+		for (curreg=0; curreg<nregs; ++curreg) {
+			curprof=all_profiles[curreg];
+			const double& curweight=wptr[curreg];
+			for (index=-maxrange; i<=maxrange; ++i) { optr[i]+=curprof[i]*curweight; }
+		}
+	} catch {
+		UNPROTECT(1)
+		throw;
+	}
+		UNPROTECT(2);
+		return output;
+	}
+
 } catch (std::exception& e) {
 	UNPROTECT(1);
 	throw;
 }
-
+	// Otherwise, returning the count matrix directly.
 	UNPROTECT(1);
-	return output;
+	return profiles;
 } catch (std::exception& e) {
 	return mkString(e.what());
 }
