@@ -1,6 +1,6 @@
 Package: csaw
 Version: 1.3.13
-Date: 2015/09/16
+Date: 2015/09/17
 Title: ChIP-seq analysis with windows
 Author: Aaron Lun <alun@wehi.edu.au>, Gordon Smyth <smyth@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
