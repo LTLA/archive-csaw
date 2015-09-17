@@ -45,7 +45,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 				return(fprof * (1-prop.rstr) + rev(rprof) * prop.rstr) # Flipping the profile for reverse-strand.
 			} else {
 				total.len <- ncol(rprof)
-				final.mat <- matrix(0L, total.len, length(regions))
+				final.mat <- matrix(0L, length(regions), total.len)
 				final.mat[reverse,] <- rprof[,rev(seq_len(total.len))]
 				final.mat[!reverse,] <- fprof
 				return(final.mat)
@@ -62,7 +62,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 	if (average) { 
 		total.profile <- numeric(range*2 + 1)
 	} else {
-		total.profile <- matrix(0L, range*2 + 1, length(regions))
+		total.profile <- matrix(0L, length(regions), range*2 + 1)
 	}
 	indices <- split(seq_along(regions), seqnames(regions))
 		
@@ -107,7 +107,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		ends <- unlist(ends)
 		if (!length(starts)) { next }
 
-		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, average, range) 
+		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, range, average) 
 		if (is.character(cur.profile)) { stop(cur.profile) }
 		if (average) { 
 			total.profile <- total.profile + cur.profile
@@ -118,12 +118,12 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 
 	# Cleaning up and returning the profiles. 
 	if (average) { 
-		out <- total.profile/length(regions)
-		names(out) <- (-range):range
+		total.profile <- total.profile/length(regions)
+		names(total.profile) <- (-range):range
 	} else {
-		colnames(out) <- (-range):range
+		colnames(total.profile) <- (-range):range
 	}
-	return(out)
+	return(total.profile)
 }
 
 wwhm <- function(profile, regions, ext=100, proportion=0.5, rlen=NULL)

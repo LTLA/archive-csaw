@@ -35,7 +35,7 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	SEXP profiles=PROTECT(allocMatrix(INTSXP, totallen, nregs));
 try {
 	int** all_profiles=(int**)R_alloc(nregs, sizeof(int*));
-	all_profiles[0]=INTEGER(profiles)+maxreg; // so index of 0 = distance of 0.
+	all_profiles[0]=INTEGER(profiles)+maxrange; // so index of 0 = distance of 0.
 	int curreg=0, index=0;
 	for (curreg=1; curreg<nregs; ++curreg) { all_profiles[curreg]=all_profiles[curreg-1]+totallen; }
 	for (curreg=0; curreg<nregs; ++curreg) {
@@ -92,8 +92,8 @@ try {
 
 	// Setting up output, if we want the average.
 	if (use_average){
-	try {
 		SEXP output=PROTECT(allocVector(REALSXP, totallen));
+	try {
 		double* optr=REAL(output);
 		for (index=0; index<totallen; ++index) { optr[index]=0; }
 		optr += maxrange; // 0 is now distance of zero.
@@ -101,10 +101,10 @@ try {
 		for (curreg=0; curreg<nregs; ++curreg) {
 			curprof=all_profiles[curreg];
 			const double& curweight=wptr[curreg];
-			for (index=-maxrange; i<=maxrange; ++i) { optr[i]+=curprof[i]*curweight; }
+			for (index=-maxrange; index<=maxrange; ++index) { optr[index]+=curprof[index]*curweight; }
 		}
-	} catch {
-		UNPROTECT(1)
+	} catch (std::exception& e) {
+		UNPROTECT(1);
 		throw;
 	}
 		UNPROTECT(2);
