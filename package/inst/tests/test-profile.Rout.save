@@ -24,8 +24,6 @@ Type 'q()' to quit R.
 > 
 > sdir<-"profile-test"
 > dir.create(sdir)
-Warning message:
-In dir.create(sdir) : 'profile-test' already exists
 > outfname <- file.path(sdir, "out")
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
