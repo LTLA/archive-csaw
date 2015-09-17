@@ -29,9 +29,15 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	ext <- makeExtVector(ext, final.mode)
 	
 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
-	else { xparam2 <- xparam } 	
-	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, 
-		strand=ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore"), weight=1/metric)
+	else { xparam2 <- xparam }
+	strand.string <- ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore")
+	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string, weight=1/metric)
+
+	# Checking it's the same if we do a weighted average.
+	all.profiles <- profileSites(bam, windows, ext=ext, range=width, average=FALSE, param=xparam2, strand=strand.string)
+	other.observed <- colMeans(all.profiles/metric)
+	if (length(other.observed)!=length(observed)) { stop("vectors are of differing lengths against manual average") }
+	if (any(abs(other.observed - observed) > (other.observed+1e-3)*1e-6)) { stop("coverage profiles don't match up with manual average") }
 
 	# Running the reference analysis.
 	totally <- totally.reverse <- list()

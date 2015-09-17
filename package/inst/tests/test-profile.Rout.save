@@ -24,6 +24,8 @@ Type 'q()' to quit R.
 > 
 > sdir<-"profile-test"
 > dir.create(sdir)
+Warning message:
+In dir.create(sdir) : 'profile-test' already exists
 > outfname <- file.path(sdir, "out")
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
@@ -48,9 +50,15 @@ Type 'q()' to quit R.
 + 	ext <- makeExtVector(ext, final.mode)
 + 	
 + 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
-+ 	else { xparam2 <- xparam } 	
-+ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, 
-+ 		strand=ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore"), weight=1/metric)
++ 	else { xparam2 <- xparam }
++ 	strand.string <- ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore")
++ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string, weight=1/metric)
++ 
++ 	# Checking it's the same if we do a weighted average.
++ 	all.profiles <- profileSites(bam, windows, ext=ext, range=width, average=FALSE, param=xparam2, strand=strand.string)
++ 	other.observed <- colMeans(all.profiles/metric)
++ 	if (length(other.observed)!=length(observed)) { stop("vectors are of differing lengths against manual average") }
++ 	if (any(abs(other.observed - observed) > (other.observed+1e-3)*1e-6)) { stop("coverage profiles don't match up with manual average") }
 + 
 + 	# Running the reference analysis.
 + 	totally <- totally.reverse <- list()
@@ -197,4 +205,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 23.084   0.212  23.366 
+ 50.896   0.835  54.117 
