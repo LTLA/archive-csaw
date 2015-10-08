@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.3.12}{\itemize{
+\section{Version 1.3.14}{\itemize{
 \item
 Added clusterFDR() function to compute the FDR for clusters of DB windows.
 
