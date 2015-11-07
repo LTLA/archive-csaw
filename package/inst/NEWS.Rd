@@ -2,6 +2,14 @@
 \title{csaw News}
 \encoding{UTF-8}
 
+\section{Version 1.5.1}{\itemize{
+\item 
+Restored normalize() as a S4 method returning a RangedSummarizedExperiment object.
+
+\item 
+Modified asDGEList() to use any available normalization data in the input object.
+}}
+
 \section{Version 1.4.0}{\itemize{
 \item
 Added clusterFDR() function to compute the FDR for clusters of DB windows.
