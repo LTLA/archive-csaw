@@ -26,6 +26,7 @@ importFrom("GenomicAlignments", cigarWidthAlongReferenceSpace)
 importFrom("GenomicFeatures", exonsBy)
 importFrom("AnnotationDbi", select)
 importFrom("limma", loessFit)
+importFrom("BiocGenerics", normalize)
 
 #  Exporting classes and methods
 exportClasses(
@@ -33,7 +34,6 @@ exportClasses(
 )
 
 exportMethods(
-	show, "$", reform, normOffsets, asDGEList
-    , normalize
+	show, "$", reform, normOffsets, asDGEList, normalize
 )
 
