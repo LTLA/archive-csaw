@@ -4,7 +4,7 @@ Date: 2015/11/07
 Title: ChIP-seq analysis with windows
 Author: Aaron Lun <alun@wehi.edu.au>, Gordon Smyth <smyth@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
-Depends: R (>= 3.2.0), GenomicRanges, SummarizedExperiment
+Depends: R (>= 3.3.0), GenomicRanges, SummarizedExperiment
 Imports: Rsamtools, edgeR, limma, GenomicFeatures, AnnotationDbi,
 	methods, GenomicAlignments, S4Vectors, IRanges, GenomeInfoDb,
 	BiocGenerics
