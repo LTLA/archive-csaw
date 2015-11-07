@@ -49,7 +49,12 @@ setMethod("normOffsets", "RangedSummarizedExperiment", function(object, lib.size
 	normOffsets(assay(object), lib.sizes=lib.sizes, ...)
 })
 
-setMethod("normalize", "RangedSummarizedExperiment", function(object, lib.sizes, ...) {
-    .Deprecated(new="normOffsets", old="normalize")
-    normOffsets(object, lib.sizes=lib.sizes, ...)
+setMethod("normalize", "RangedSummarizedExperiment", function(object, lib.sizes, type="scaling", ...) {
+	out <- normOffsets(object, lib.sizes=lib.sizes, type=type, ...)
+	if (type=="scaling") {
+		object$norm.factors <- out
+	} else if (type=="loess") {
+		assays(object)$offset <- out
+	}
+	return(object) 
 })
