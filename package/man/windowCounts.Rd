@@ -17,7 +17,7 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{ext}{an integer scalar or vector, containing the average length(s) of the sequenced fragments in each library}
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
-	\item{bin}{an integer scalar indicating whether binning should be performed}
+	\item{bin}{a logical scalar indicating whether binning should be performed}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 
