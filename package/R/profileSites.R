@@ -112,7 +112,9 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		if (average) { 
 			total.profile <- total.profile + cur.profile
 		} else {
-			total.profile[chosen,][os,] <- t(cur.profile)
+			cur.profile <- t(cur.profile)
+			cur.profile[os,] <- cur.profile
+			total.profile[chosen,] <- cur.profile
 		}
 	}
 
