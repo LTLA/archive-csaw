@@ -23,7 +23,12 @@ setMethod("asDGEList", "SummarizedExperiment0", function(object, lib.sizes, norm
 		all.args$norm.factors <- norm.factors 
 	}
 
-	all.args$counts <- assays(object)$counts
+    if ("counts" %in% assayNames(object)) {
+        all.args$counts <- assays(object)$counts
+    } else {
+        all.args$counts <- assay(object) # Just using the first, if unnamed.
+    }
+
 	y <- do.call(DGEList, all.args)
 	y$offset <- assays(object)$offset # just NULL, if it's not there.
 	return(y)

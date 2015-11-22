@@ -25,7 +25,9 @@
 }
 
 \details{
-Counts are extracted from the matrix corresponding to the first assay in the SummarizedExperiment0 object (different assays can be specified with the \code{assay} argument).
+For \code{normalize} and \code{normOffset}, counts are extracted from the matrix corresponding to the first assay in the SummarizedExperiment0 object 
+    (different assays can be specified with the \code{assay} argument).
+For \code{asDGEList}, counts are extracted from the assay named \code{"counts"}, with the first assay used if no such assay exists with that name.
 If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.
 Warnings will be generated if this field is not present.
 
