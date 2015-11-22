@@ -1,30 +1,31 @@
 \name{SEmethods}
 \alias{normalize}
-\alias{normalize,RangedSummarizedExperiment-method}
-\alias{normOffsets,RangedSummarizedExperiment-method}
-\alias{asDGEList,RangedSummarizedExperiment-method}
+\alias{normalize,SummarizedExperiment0-method}
+\alias{normOffsets,SummarizedExperiment0-method}
+\alias{asDGEList,SummarizedExperiment0-method}
 \alias{asDGEList}
 
-\title{Statistical wrappers for RangedSummarizedExperiment objects}
+\title{Statistical wrappers for SummarizedExperiment0 objects}
 
-\description{Convenience wrappers for statistical routines operating on RangedSummarizedExperiment objects.}
+\description{Convenience wrappers for statistical routines operating on SummarizedExperiment0 objects.}
 
 \usage{
-\S4method{normOffsets}{RangedSummarizedExperiment}(object, lib.sizes, ...)
-\S4method{normalize}{RangedSummarizedExperiment}(object, lib.sizes, type="scaling", ...) 
-\S4method{asDGEList}{RangedSummarizedExperiment}(object, lib.sizes, norm.factors, ...)
+\S4method{normOffsets}{SummarizedExperiment0}(object, lib.sizes, ...)
+\S4method{normalize}{SummarizedExperiment0}(object, lib.sizes, type="scaling", assay=1, ...) 
+\S4method{asDGEList}{SummarizedExperiment0}(object, lib.sizes, norm.factors, assay=1, ...)
 }
 
 \arguments{
-  \item{object}{a \code{RangedSummarizedExperiment} object, like that produced by \code{\link{windowCounts}}}
+  \item{object}{a SummarizedExperiment0 object or its derived classes, like that produced by \code{\link{windowCounts}}}
   \item{lib.sizes}{an (optional) integer vector of library sizes}
   \item{type}{a character scaling indicating the type of normalization, see \code{\link{normOffsets}}}
+  \item{assay}{a numeric scalar indicating which assay contains the counts}
   \item{norm.factors}{an (optional) numeric vector of normalization factors}
   \item{...}{other arguments to be passed to the function being wrapped}
 }
 
 \details{
-Counts are extracted from the matrix corresponding to the first assay in the \code{RangedSummarizedExperiment} object.
+Counts are extracted from the matrix corresponding to the first assay in the SummarizedExperiment0 object (different assays can be specified with the \code{assay} argument).
 If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.
 Warnings will be generated if this field is not present.
 
@@ -32,7 +33,7 @@ In the \code{normOffsets} and \code{normalize} methods, the extracted counts and
 Similarly, the \code{asDGEList} method wraps the \code{\link{DGEList}} constructor.
 In both cases, any arguments in \code{...} are also passed to the wrapped functions.
 
-If \code{type="scaling"} in \code{normalize}, a vector of normalization factors is stored in the \code{norm.factors} field of the \code{colData} in the output \code{RangedSummarizedExperiment} object.
+If \code{type="scaling"} in \code{normalize}, a vector of normalization factors is stored in the \code{norm.factors} field of the \code{colData} in the output object.
 If \code{type="loess"}, an offset matrix is instead stored as a named entry in the \code{assays} of the output object.
 
 If \code{norm.factors} is not specified, \code{asDGEList} will attempt to extract normalization factors from \code{object$norm.factors}.
@@ -43,7 +44,7 @@ If \code{assays(object)$offset} is present, this will be assigned to the \code{o
 \value{
 For \code{normOffsets}, either a numeric matrix or vector is returned; see \code{\link{normOffsets,matrix-method}}.
 
-For \code{normalize}, a \code{RangedSummarizedExperiment} object is returned with normalization data stored in various fields.
+For \code{normalize}, an object of the same class as \code{object} is returned with normalization data stored in various fields.
 
 For \code{asDGEList}, a \code{DGEList} object is returned.
 }

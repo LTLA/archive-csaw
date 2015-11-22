@@ -1,12 +1,12 @@
 setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
 
-setMethod("asDGEList", "RangedSummarizedExperiment", function(object, lib.sizes, norm.factors, ...) 
-# This defines a wrapper function to convert a RangedSummarizedExperiment
+setMethod("asDGEList", "SummarizedExperiment0", function(object, lib.sizes, norm.factors, ...) 
+# This defines a wrapper function to convert a SummarizedExperiment class
 # object into a DGEList object for input into edgeR.
 #
 # written by Aaron Lun
 # created 2 September 2014
-# last modified 7 November 2015
+# last modified 22 November 2015
 {
 	all.args <- list(...)
 	if (missing(lib.sizes)) { 
