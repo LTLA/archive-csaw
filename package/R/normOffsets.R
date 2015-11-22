@@ -46,7 +46,7 @@ setMethod("normOffsets", "SummarizedExperiment0", function(object, lib.sizes, as
 		if (is.null(object$totals)) { warning("library sizes not found in 'totals', setting to NULL") }
 		lib.sizes <- object$totals 
 	}
-	normOffsets(assay(object), lib.sizes=lib.sizes, ...)
+	normOffsets(assay(object, assay), lib.sizes=lib.sizes, ...)
 })
 
 setMethod("normalize", "SummarizedExperiment0", function(object, lib.sizes, type="scaling", assay=1, ...) {

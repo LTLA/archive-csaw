@@ -10,16 +10,16 @@
 \description{Convenience wrappers for statistical routines operating on SummarizedExperiment0 objects.}
 
 \usage{
-\S4method{normOffsets}{SummarizedExperiment0}(object, lib.sizes, ...)
+\S4method{normOffsets}{SummarizedExperiment0}(object, lib.sizes, assay=1, ...)
 \S4method{normalize}{SummarizedExperiment0}(object, lib.sizes, type="scaling", assay=1, ...) 
-\S4method{asDGEList}{SummarizedExperiment0}(object, lib.sizes, norm.factors, assay=1, ...)
+\S4method{asDGEList}{SummarizedExperiment0}(object, lib.sizes, norm.factors, ...)
 }
 
 \arguments{
   \item{object}{a SummarizedExperiment0 object or its derived classes, like that produced by \code{\link{windowCounts}}}
   \item{lib.sizes}{an (optional) integer vector of library sizes}
+  \item{assay}{a numeric scalar indicating which assay in \code{object} contains the count matrix}
   \item{type}{a character scaling indicating the type of normalization, see \code{\link{normOffsets}}}
-  \item{assay}{a numeric scalar indicating which assay contains the counts}
   \item{norm.factors}{an (optional) numeric vector of normalization factors}
   \item{...}{other arguments to be passed to the function being wrapped}
 }
