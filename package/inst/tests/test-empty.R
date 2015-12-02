@@ -1,6 +1,6 @@
 # Tests the behaviour of various functions when supplied with empty inputs.
 
-suppressPackageStartupMessages(require(csaw))
+suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 
 empty <- data.frame(logFC=numeric(0), PValue=numeric(0), logCPM=numeric(0))
 getBestTest(integer(0), empty)

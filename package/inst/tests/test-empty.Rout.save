@@ -1,7 +1,7 @@
 
-R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+R Under development (unstable) (2015-11-22 r69685) -- "Unsuffered Consequences"
 Copyright (C) 2015 The R Foundation for Statistical Computing
-Platform: x86_64-unknown-linux-gnu (64-bit)
+Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -19,7 +19,7 @@ Type 'q()' to quit R.
 
 > # Tests the behaviour of various functions when supplied with empty inputs.
 > 
-> suppressPackageStartupMessages(require(csaw))
+> suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
 > empty <- data.frame(logFC=numeric(0), PValue=numeric(0), logCPM=numeric(0))
 > getBestTest(integer(0), empty)
@@ -205,4 +205,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
- 24.334   1.112  29.753 
+  8.470   0.134   8.618 
