@@ -10,11 +10,11 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 #
 # written by Aaron Lun
 # created 23 November 2013
-# last modified 22 July 2015
+# last modified 2 December 2015
 {
 	# Obtain exons, and cleaning out the annotation.
 	curex <- exonsBy(txdb, by="gene")
-	curex <- GenomicRanges::unlist(curex)
+	curex <- unlist(curex)
 	gene.id <- names(curex)
 	gene.str <- as.logical(strand(curex)=="+")
 	curex$exon_id <- NULL
