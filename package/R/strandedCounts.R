@@ -6,7 +6,7 @@ strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NUL
 #
 # written by Aaron Lun
 # created 9 February 2015
-# last modified 22 July 2015
+# last modified 2 December 2015
 {
 	nbam <- length(bam.files)
 	plist <- .makeParamList(nbam, param)
@@ -29,7 +29,7 @@ strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NUL
 		rowRanges=c(rowRanges(fdata), rowRanges(rdata)),
 		colData=colData(fdata), metadata=metadata(fdata))
 
-	o <- GenomicRanges::order(rowRanges(combined))
+	o <- order(rowRanges(combined))
 	combined <- combined[o]
 	combined$totals <- fdata$totals + rdata$totals
 	combined$forward.totals <- fdata$totals
