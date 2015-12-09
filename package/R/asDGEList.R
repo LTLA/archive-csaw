@@ -1,6 +1,6 @@
 setGeneric("asDGEList", function(object, ...) { standardGeneric("asDGEList") })
 
-setMethod("asDGEList", "SummarizedExperiment0", function(object, lib.sizes, norm.factors, ...) 
+setMethod("asDGEList", "SummarizedExperiment", function(object, lib.sizes, norm.factors, ...) 
 # This defines a wrapper function to convert a SummarizedExperiment class
 # object into a DGEList object for input into edgeR.
 #

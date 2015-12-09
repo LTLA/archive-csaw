@@ -1,10 +1,10 @@
 Package: csaw
-Version: 1.5.4
+Version: 1.5.5
 Date: 2015-12-02
 Title: ChIP-Seq Analysis with Windows
 Author: Aaron Lun <alun@wehi.edu.au>, Gordon Smyth <smyth@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
-Depends: R (>= 3.3.0), GenomicRanges, SummarizedExperiment
+Depends: R (>= 3.3.0), GenomicRanges, SummarizedExperiment (>= 1.1.6)
 Imports: Rsamtools, edgeR, limma, GenomicFeatures, AnnotationDbi,
 	methods, GenomicAlignments, S4Vectors, IRanges, GenomeInfoDb,
 	BiocGenerics
