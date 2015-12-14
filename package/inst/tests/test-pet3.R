@@ -88,18 +88,15 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 		}
 
     	# Looping through a number of possible extraction scenarios.
-		for (mode in 1:3) {
+		for (mode in 1:2) {
 			if (mode==1L) {
-				rescue.ext <- NA
 				pe <- "both"
 			} else if (mode==2L) {
-				rescue.ext <- ext
-			} else if (mode==3L) {
 				pe <- "first"
 			}
 
 			# Loading windowCounts.
-			rpam <- readParam(pe=pe, rescue.ext=rescue.ext, max.frag=max.frag, 
+			rpam <- readParam(pe=pe, max.frag=max.frag, 
 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 				width=right+left+1, filter=0, param=rpam)
@@ -166,16 +163,6 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				valid <- valid & sizes <= max.frag
 				if (pe=="both") {
 					pairedness <- GRanges(chr1, IRanges(leftpos, leftpos+sizes-1))[valid & paired]
-					if (!is.na(rescue.ext)) {
-						# We pick the first if the second is inactive, if paired but interchromosomal, or if paired and intrachromosomal
-						# and otherwise invalid and has higher mapping quality.
-						better <- firsts[[lib]]$mapq > seconds[[lib]]$mapq
-						fcopy <- resize(firsts[[lib]][keep1 & (!keep2 | chr1!=chr2 | (!valid & better))], width=ext)
-						fcopy$mapq <- fcopy$dup <- NULL
-						scopy <- resize(seconds[[lib]][keep2 & (!keep1 | chr1!=chr2 | (!valid & !better))], width=ext)
-						scopy$mapq <- scopy$dup <- NULL
-						pairedness <- c(pairedness, fcopy, scopy)
-					}
 				} else {
 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 				}
@@ -219,9 +206,9 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				}
 			}
 
-			# Comparing to what happens after dumping them and reloading them with fast.pe=TRUE.
+			# Comparing to what happens after dumping them and reloading them in fast mode.
 			if (rpam$pe=="both") { 
-				fast.param <- reform(rpam, fast.pe=TRUE)
+				fast.param <- reform(rpam, pe="fast")
 				dumped <- list()
 				for (lib in 1:length(fnames)) { 
 					refix <- file.path(dir, paste0("dump_", sub('\\.bam$','', basename(fnames[lib]))))
@@ -246,22 +233,10 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 							any(ref$left$pos > ref$right$pos)) { 
 						stop("inconsistent read intervals reported for pairs") 
 					}	
-					if (!is.na(rpam$rescue.ext)) { 
-						rescued <- length(ref$left$pos) + 1:length(ref$rescued$pos)
-						is.forward <- ref$rescued$strand == "+"
-						endpoint <- ref$pos[rescued] + ref$size[rescued]
-						if (!identical(ref$pos[rescued][is.forward], ref$rescued$pos[is.forward]) ||
-								any(endpoint[!is.forward] <= ref$rescued$pos[!is.forward]) ||
-								any(endpoint[!is.forward] > ref$rescued$pos[!is.forward] + ref$rescued$qwidth[!is.forward]) ||
-								any(ref$pos[rescued][!is.forward] > ref$rescued$pos[!is.forward]) ||
-								any(ref$rescued$pos <= 0L)) { 
-							stop("inconsistent read intervals reported for rescued pairs") 
-						}
-					}
 				}
 
 				# Comparing fast and slow extraction of a dumped file.
-				for (type in c("left", "right", "rescued")) { 
+				for (type in c("left", "right")) { 
 					curslow <- extracted.reads[[type]]
 					curfast <- fast.extracted[[type]]
 					stopifnot(is.null(curslow)==is.null(curfast))
@@ -287,7 +262,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 	where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
 	stopifnot(!csaw:::.isDumpedBam(fnames[1]))
 	extracted.reads <- csaw:::.getPairedEnd(fnames[1], where=where, 
-		param=readParam(pe="both", fast.pe=TRUE), with.reads=TRUE)
+		param=readParam(pe="fast"), with.reads=TRUE)
 	if (!identical(extracted.reads$pos, extracted.reads$left$pos) || 
 			!identical(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos)) {
 		print(cbind(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos))

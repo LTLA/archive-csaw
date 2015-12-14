@@ -10,7 +10,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
-	param <- reform(param, fast.pe=FALSE) # So that it properly extracts reads.
+	param <- reform(param, pe="both") # So that it properly extracts reads.
 	
 	# Storing the chromosome lengths.
 	ofile <- tempfile(tmpdir='.')
@@ -32,32 +32,13 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 		out <- .getPairedEnd(bam.file, where=where, param=param, with.reads=TRUE)
 
 		# Setting up width data.
-		all.cig <- all.end <- all.names <- list()
-		all.widths <- list()
-		index <- 1L
 		nl <- length(out$left$pos)
 		if (nl) { 
-			all.cig[[index]] <- paste0(out$left$qwidth, "M")
-			all.end[[index]] <- out$right$pos		
-			all.names[[index]] <- paste0("paired:", counter+seq_len(nl), ":", out$right$qwidth)
-			all.widths[[index]] <- out$left$qwidth
-			index <- index + 1L
+			all.cig <- paste0(out$left$qwidth, "M")
+			all.end <- out$right$pos		
+			all.names <- paste0("paired:", counter+seq_len(nl), ":", out$right$qwidth)
+			all.widths <- out$left$qwidth
 			counter <- counter + nl
-		}
-		nr <- length(out$rescued$pos)
-		if (nr) { 
-			all.cig[[index]] <- paste0(out$rescued$qwidth, "M")
-			all.end[[index]] <- out$rescued$pos
-			all.names[[index]] <- paste0("rescued:", counter+seq_len(nr), ":", out$rescued$strand)
-			all.widths[[index]] <- out$rescued$qwidth
-			counter <- counter + nr
-		}
-
-		if (length(out$pos)) {
-			all.cig <- unlist(all.cig)
-			all.end <- unlist(all.end)
-			all.names <- unlist(all.names)
-			all.widths <- unlist(all.widths)
 
 			# Setting up sequence, quality strings.
 			ref.widths <- which(tabulate(all.widths)!=0L)
@@ -68,7 +49,7 @@ dumpPE <- function(bam.file, prefix, param=readParam(pe="both"), overwrite=FALSE
 				}
 			}	
 
-			# Shorten rescued fragment if it runs off the front (negative positions are not stored).
+			# Shorten fragment if it runs off the front (negative positions are not stored).
 			subzero <- out$pos <= 0L 
 			if (any(subzero)) { 
 				ending <- out$pos[subzero] + out$size[subzero] - 1L
