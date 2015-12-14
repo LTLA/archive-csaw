@@ -117,7 +117,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP mapq, SEXP dedup, SE
         /* Reasons to not add a read: */
        
         // If it's a singleton.
-        if (((bf.read -> core).flag & BAM_FPROPER_PAIR)==0) {
+        if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
             ++singles;
             continue;
         }
