@@ -80,12 +80,10 @@
 
     # Reporting output.
     keep <- dkeep & fkeep
-    output <- list(pos=left[keep], size=all.sizes$clipped[keep])
+    output <- list(pos=left[[1]][keep], size=all.sizes$clipped[keep])
     if (with.reads) {
-		left <- list(pos=left[[1]][keep], qwidth=left[[2]][keep], strand=rep("+", sum(keep)))
-		right <- list(pos=right[[1]][keep], qwidth=right[[2]][keep], strand=rep("-", sum(keep)))
-		output$left <- left
- 	   	output$right <- right
+		output$left <- list(pos=left[[1]][keep], qwidth=left[[2]][keep])
+		output$right <- list(pos=right[[1]][keep], qwidth=right[[2]][keep])
 	}
 	return(output)
 }
