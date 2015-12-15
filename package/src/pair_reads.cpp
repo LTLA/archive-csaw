@@ -270,6 +270,11 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     int forward_pos, forward_len, reverse_pos, reverse_len, curpos, curlen, curoff;
     bool am_mapped, is_first;
 
+    bool mate_is_in;
+    std::set<std::string> identical_pos;
+    std::set<std::string>::iterator itip;
+    int last_identipos=-1;
+
     while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){
         ++oc.totals;
 
@@ -312,10 +317,28 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         }
 
         /* Checking the map and adding it if it doesn't exist. */
+        
+        current.second.assign(bam_get_qname(bf.read));
+        mate_is_in=false;
+        if ((bf.read -> core).mpos < curpos) {
+            mate_is_in=true;
+        } else if ((bf.read -> core).mpos == curpos) {
+            // Identical mpos to curpos needs careful handling to figure out whether we've already seen it.
+            if (curpos!=last_identipos) { 
+                identical_pos.clear();
+                last_identipos=curpos;
+            }
+            itip=identical_pos.lower_bound(current.second);
+            if (itip!=identical_pos.end() && !(identical_pos.key_comp()(current.second, itip->first))) {
+                mate_is_in=true;
+                identical_pos.erase(itip);
+            } else {
+                identical_pos.insert(itip, current.second);
+            }
+        }
 
-        if ((bf.read -> core).mpos <= curpos) {
+        if (mate_is_in) {
             current.first = (bf.read -> core).mpos;
-            current.second.assign(bam_get_qname(bf.read));
             Holder& holder=( is_first ? second_holder : first_holder );
             ith=holder.find(current);
 
@@ -325,27 +348,18 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
                     oc.add_onemapped((ith->first).first, (ith->second).first);
                     holder.erase(ith);
                     continue;
-                } else if ((bf.read -> core).mpos == curpos && (ith->second).first < 0) {
-                    oc.add_onemapped(curpos, curlen);
-                    holder.erase(ith);
-                    continue;         
                 }
 
                 oc.add_genuine(curpos, curlen, curoff, 
                         (ith->first).first, (ith->second).first, (ith->second).second, 
                         bool(bam_is_rev(bf.read)), is_first);
                 holder.erase(ith);
-            } else if ((bf.read -> core).mpos == curpos) {
-                // Adding regardless of mapping status, to ensure it gets caught in the search by the mate; recording mapping in 'curlen'.
-                Holder& holder2=( is_first ? first_holder : second_holder );
-                holder2[current]=std::make_pair((am_mapped ? curlen : -1) * (bam_is_rev(bf.read) ? -1 : 1), curoff);
             } else if (am_mapped) {
                 // Only possible if the mate didn't get added because 'am_mapped' was false.
                 oc.add_onemapped(curpos, curlen);
             }
         } else if (am_mapped) {
             current.first = curpos;
-            current.second.assign(bam_get_qname(bf.read));
             Holder& holder=( is_first ? first_holder : second_holder );
             holder[current] = std::make_pair(curlen * (bam_is_rev(bf.read) ? -1 : 1), curoff);
         }
