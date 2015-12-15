@@ -9,20 +9,14 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 # last modified 15 December 2015
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
-    if (!is.na(param$max.frag)) { 
-        param <- reform(param, max.frag=NA_integer_)
-    }
-    bam.file <- path.expand(bam.file)
-    bam.index <- paste0(bam.file, ".bai")
-
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
     norm.list <- list()
     totals <- singles <- one.unmapped <- mapped <- unoriented <- 0L
     loose.names.1 <- loose.names.2 <- list()
 
 	for (i in seq_along(extracted.chrs)) {
-        cur.chr <- names(extracted.chrs)[1]
-        output <- .extractPE(bam.file, GRanges(cur.chr, IRanges(1L, extracted.chrs[1])), param=param, diagnostics=TRUE)
+        cur.chr <- names(extracted.chrs)[i]
+        output <- .extractPE(bam.file, GRanges(cur.chr, IRanges(1L, extracted.chrs[i])), param=param, diagnostics=TRUE)
         totals <- totals + output$total
         singles <- singles + output$single
 

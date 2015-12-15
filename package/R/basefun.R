@@ -31,7 +31,7 @@
 }
 
 .discardReads <- function(chr, pos, alen, discard) {
-    relevant <- seqnames(param$discard)==chr
+    relevant <- seqnames(discard)==chr
     if (any(relevant)) { 
 		keep <- !overlapsAny(IRanges(pos, pos+alen-1L), ranges(discard)[relevant], type="within")
     } else {
@@ -51,7 +51,9 @@
 # created 8 December 2013
 # last modified 15 December 2015
 {
-    cur.chr <- as.character(seqnames(where)), 
+    cur.chr <- as.character(seqnames(where)) 
+    bam.file <- path.expand(bam.file)
+    bam.index <- paste0(bam.file, ".bai")
     out <- .Call(cxx_extract_pair_data, bam.file, bam.index, cur.chr,
             start(where), end(where), param$minq, param$dedup, diagnostics)
     if (is.character(out)) { stop(out) }
@@ -64,8 +66,8 @@
     right <- out[[2]]
 
     # Filtering by discard.
-    dlkeep <- .discardReads(cur.chr, left[[1]], left[[2]], param)
-    drkeep <- .discardReads(cur.chr, right[[1]], right[[2]], param)
+    dlkeep <- .discardReads(cur.chr, left[[1]], left[[2]], param$discard)
+    drkeep <- .discardReads(cur.chr, right[[1]], right[[2]], param$discard)
     dkeep <- dlkeep & drkeep
 
     # Filtering by maximum fragment size.
