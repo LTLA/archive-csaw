@@ -53,11 +53,11 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
             left <- suppressWarnings(GRanges(cur.chr, 
                                              IRanges(pmax(1L, frag.data$left$pos), 
                                                      pmin(max.len, frag.data$left$pos+frag.data$left$qwidth-1L)), 
-                                             seqinfo=sqi, strand="+"))
+                                             seqinfo=sqi, strand=frag.data$left$strand))
             right <- suppressWarnings(GRanges(cur.chr, 
                                               IRanges(pmax(1L, frag.data$right$pos), 
                                                       pmin(max.len, frag.data$right$pos+frag.data$right$qwidth-1L)),
-                                              seqinfo=sqi, strand="-"))
+                                              seqinfo=sqi, strand=frag.data$right$strand))
             left <- left[keep]
             right <- right[keep]
             left$pair <- right$pair <- seq_along(left)
