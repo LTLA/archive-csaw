@@ -72,11 +72,7 @@
 
     # Filtering by maximum fragment size.
     all.sizes <- .getFragmentSizes(left, right)
-    if (!is.na(param$max.frag)) { 
-        fkeep <- all.sizes$full <= param$max.frag 
-    } else {
-        fkeep <- !logical(length(all.sizes$full))
-    }
+    fkeep <- all.sizes$full <= param$max.frag 
 
     # Reporting output.
     keep <- dkeep & fkeep
