@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <map>
 
 #include "csaw.h"
@@ -12,11 +13,17 @@ public:
     Bamfile(const char * path, const char* xpath) {
         in = sam_open(path, "rb");
         if (in == NULL) {
-            throw std::runtime_error("failed to open BAM file path");
+            std::stringstream err;
+            err << "failed to open BAM file at '" << path << "'";
+            throw std::runtime_error(err.str());
         }
         try {
             index = bam_index_load(xpath); 
-            if (index==NULL) { throw std::runtime_error("failed to open BAM index file path"); }
+            if (index==NULL) { 
+                std::stringstream err;
+                err << "failed to open BAM index at '" << xpath << "'";
+                throw std::runtime_error(err.str());
+            }
             try {
                 header=sam_hdr_read(in);
             } catch (std::exception& e) {
@@ -49,6 +56,11 @@ class BamIterator {
 public:
     BamIterator(const Bamfile& bf, const char* chr) : iter(NULL) {
         int cid=bam_name2id(bf.header, chr);
+        if (cid==-1) {
+            std::stringstream err;
+            err << "reference sequence '" << chr << "' missing in BAM header";
+            throw std::runtime_error(err.str());
+        }
         iter=bam_itr_queryi(bf.index, cid, 0, (bf.header->target_len)[cid]); 
     }
     ~BamIterator() { 
@@ -126,7 +138,9 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP mapq, SEXP dedup, SE
         am_mapped=is_mapped(bf.read, use_qual, minqual, rmdup);
         is_first=(((bf.read->core).flag & BAM_FREAD1)!=0);
         if (is_first==(((bf.read->core).flag & BAM_FREAD2)!=0)) { 
-            throw std::runtime_error("exactly one of the first/second BAM fields must be set"); 
+            std::stringstream err;
+            err << "read '" << bam_get_qname(bf.read) << "' must be either first or second in the pair";
+            throw std::runtime_error(err.str()); 
         }
         
         if ((bf.read -> core).mtid!=(bf.read -> core).tid) { 
