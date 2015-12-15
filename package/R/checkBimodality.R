@@ -33,11 +33,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
     
        		if (curpar$pe=="both") {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar, with.reads=TRUE)
-				if (.needsRescue(curpar)) { 
-					reads <- mapply(c, out$left, out$right, out$rescued, SIMPLIFY=FALSE)
-				} else {
-					reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
-				}
+				reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
 			} else {
 				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
 			}

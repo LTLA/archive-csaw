@@ -32,11 +32,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 
 			if (curpar$pe=="both") {
 				out <- .getPairedEnd(bam.files[b], where=where, param=curpar, with.reads=TRUE)
-				if (.needsRescue(curpar)) { 
-					reads <- mapply(c, out$left, out$right, out$rescued, SIMPLIFY=FALSE)
-				} else {
-					reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
-				}
+                reads <- mapply(c, out$left, out$right, SIMPLIFY=FALSE)
 			} else {
 				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
 			}

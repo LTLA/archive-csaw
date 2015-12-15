@@ -18,8 +18,7 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 	max.len <- chrs[[cur.chr]]
 	sqi <- Seqinfo(cur.chr, max.len)
 
-	# Extracting all-of-chromosome for paired-end rescue, as you need to find the read with the higher MAPQ.
-	# Otherwise, kicking out the region by 'max.frag' or 'ext' to guarantee capture of all participants.
+	# Kicking out the region by 'max.frag' or 'ext' to guarantee capture of all participants.
 	max.ext <- suppressWarnings(max(ext.data$ext, ext.data$final, param$max.frag, na.rm=TRUE))
     if (max.ext < 0L) { max.ext <- 0L }
     actual.region <- GRanges(cur.chr, IRanges(max(1L, start(region)-max.ext), min(max.len, end(region)+max.ext)))

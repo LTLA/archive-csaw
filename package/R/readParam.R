@@ -7,8 +7,8 @@ setClass("readParam", representation(pe="character", max.frag="integer",
 	restrict="character", discard="GRanges"))
 
 setValidity("readParam", function(object) {
-    if (length(object@pe)!=1L || ! object@pe %in%c("none", "both", "first", "second", "fast")) { 
-		return("PE specification must be a character scalar of 'none', 'both', 'fast', 'first' or 'second'") 
+    if (length(object@pe)!=1L || ! object@pe %in%c("none", "both", "first", "second")) { 
+		return("PE specification must be a character scalar of 'none', 'both', 'first' or 'second'") 
 	}
    	if (length(object@max.frag)!=1L || object@max.frag <= 0L) {
 		return("maximum fragment specifier must be a positive integer")
@@ -23,7 +23,7 @@ setValidity("readParam", function(object) {
 
 	if (length(object@forward)!=1L || !is.logical(object@forward)) { 
 		return("forward strand specification must be logical")
-	} else if (!is.na(object@forward) && object@pe %in% c("both", "fast")) {
+	} else if (!is.na(object@forward) && object@pe=="both") {
 		stop("strand-specific extraction makes no sense for paired-end data")
 	}
 
@@ -44,16 +44,11 @@ setMethod("show", signature("readParam"), function(object) {
 	cat("    ", switch(object@pe,
  	   none="Extracting reads in single-end mode",
 	   both="Extracting reads in paired-end mode",
-	   fast="Extracting reads in paired-end mode",
 	   first="Extracting the first read of each pair",
 	   second="Extracting the second read of each pair"), "\n", sep="")
 
-	if (object@pe %in% c("both", "fast")) {
+	if (object@pe=="both") {
 		cat("        Maximum allowed distance between paired reads is", object@max.frag, "bp\n")
-   		if (object@pe=="fast") {
-			cat("        Fast PE extraction enabled, ignoring other settings\n")
-			return(invisible(NULL))
-		}	
 	}
 
 	cat("    Duplicate removal is turned", ifelse(object@dedup, "on", "off"), "\n")
