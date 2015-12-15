@@ -1,4 +1,4 @@
-.extractSE <- function(bam, where, param, extras="strand", ...) 
+.extractSE <- function(bam, where, param, extras="strand", discard=NULL, ...) 
 # Extracts single-end read data from a BAM file with removal of unmapped,
 # duplicate and poorly mapped/non-unique reads. We also discard reads in the
 # specified discard regions. In such cases, the offending reads must be wholly
@@ -11,7 +11,7 @@
 # last modified 2 July 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
-	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
+	if (length(discard)) { all.fields <- c(all.fields, "cigar") }	
 	all.fields <- unique(all.fields)
 
 	if (length(param$forward)==0L) { stop("read strand extraction must be specified") }
@@ -21,20 +21,26 @@
 		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), ...)))[[1]]
   	
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
-	if (length(param$discard)) {
-		relevant <- seqnames(param$discard)==as.character(seqnames(where[1]))
-		if (any(relevant)) { 
-			awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
-			keep <- !overlapsAny(IRanges(reads$pos, reads$pos+awidth-1L), 
-				ranges(param$discard[relevant]), type="within")
-			for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-		}
+	if (length(discard)) {
+	    awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
+        keep <- .discardReads(as.character(seqnames(where)), reads$pos, awidth, param$discard)
 		if (!"cigar" %in% extras) { reads$cigar <- NULL }
+		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
 	}
 	return(reads)
 }
 
-.extractPE <- function(bam.file, where, param, with.reads=FALSE)
+.discardReads <- function(chr, pos, alen, discard) {
+    relevant <- seqnames(param$discard)==chr
+    if (any(relevant)) { 
+		keep <- !overlapsAny(IRanges(pos, pos+alen-1L), ranges(discard)[relevant], type="within")
+    } else {
+        keep <- !logical(length(pos))
+    }
+    return(keep)
+}
+
+.extractPE <- function(bam.file, where, param, with.reads=FALSE, diagnostics=FALSE)
 # A function to extract PE data for a particular chromosome. Synchronisation
 # is expected.  We avoid sorting by name  as it'd mean we have to process the
 # entire genome at once (can't go chromosome-by-chromosome).  This probably
@@ -43,20 +49,41 @@
 # 
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 14 May 2015
+# last modified 15 December 2015
 {
-	reads <- .extractSE(bam.file, extras=c("qname", "flag"), where=where, 	
-		param=param, isPaired=TRUE, hasUnmappedMate=FALSE)
-	output <- .yieldInterestingBits(reads, end(where), max.frag=param$max.frag,	diag=with.reads)
+    cur.chr <- as.character(seqnames(where)), 
+    out <- .Call(cxx_extract_pair_data, bam.file, bam.index, cur.chr,
+            start(where), end(where), param$minq, param$dedup, diagnostics)
+    if (is.character(out)) { stop(out) }
 
-	if (with.reads) {
-		left <- list(pos=reads$pos[output$left], qwidth=reads$qwidth[output$left],
-			strand=rep("+", length(output$left)))
-		right <- list(pos=reads$pos[output$right], qwidth=reads$qwidth[output$right],
-			strand=rep("-", length(output$right)))
+    if (diagnostics) {
+        names(out) <- c("forward", "reverse", "total", "single", "ufirst", "usecond", "one.mapped", "ifirst", "isecond")
+        return(out)
+    }
+    left <- out[[1]]
+    right <- out[[2]]
+
+    # Filtering by discard.
+    dlkeep <- .discardReads(cur.chr, left[[1]], left[[2]], param)
+    drkeep <- .discardReads(cur.chr, right[[1]], right[[2]], param)
+    dkeep <- dlkeep & drkeep
+
+    # Filtering by maximum fragment size.
+    all.sizes <- .getFragmentSizes(left, right)
+    if (!is.na(param$max.frag)) { 
+        fkeep <- all.sizes$full <= param$max.frag 
+    } else {
+        fkeep <- !logical(length(all.sizes$full))
+    }
+
+    # Reporting output.
+    keep <- dkeep & fkeep
+    output <- list(pos=left[keep], size=all.sizes$clipped[keep])
+    if (with.reads) {
+		left <- list(pos=left[[1]][keep], qwidth=left[[2]][keep], strand=rep("+", sum(keep)))
+		right <- list(pos=right[[1]][keep], qwidth=right[[2]][keep], strand=rep("-", sum(keep)))
 		output$left <- left
  	   	output$right <- right
-		output$is.ok <- NULL
 	}
 	return(output)
 }
@@ -70,18 +97,18 @@
 		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
 }
 
-.getReads <- function(bam, where, param, pairs.as.reads=FALSE) 
-# A wrapper that is actually to be called by everyone.
-{
+.getSingleEnd <- function(bam, where, param) {
 	if (param$pe=="none") { 
 		reads <- .extractSE(bam, where=where, param=param)
-	} else if (param$pe=="both") {
-	    reads <- .extractPE(bam, where=where, param=param, with.reads=pairs.as.reads)
     } else {
 		reads <- .extractBrokenPE(bam, where=where, param=param)
 	}
 	return(reads)
 }	
+
+.getPairedEnd <- function(bam, where, param, with.reads=FALSE) {
+	.extractPE(bam, where=where, param=param, with.reads=with.reads)
+}
 
 ###########################################################
 

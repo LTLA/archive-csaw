@@ -67,7 +67,7 @@ SEXP check_bimodality(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 /* pair_reads.cpp */
 
-SEXP extract_pair_data(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP extract_pair_data(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 }
 

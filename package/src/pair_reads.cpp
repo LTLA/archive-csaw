@@ -10,7 +10,16 @@ extern "C" {
 
 class Bamfile {
 public:
-    Bamfile(const char * path, const char* xpath) {
+    Bamfile(SEXP bam, SEXP index) {
+        if (!isString(bam) || LENGTH(bam)!=1) {
+            throw std::runtime_error("BAM file path must be a string");
+        }
+        const char* path=CHAR(STRING_ELT(bam, 0));
+        if (!isString(index) || LENGTH(index)!=1) {
+            throw std::runtime_error("BAM index file path must be a string"); 
+        }
+        const char* xpath=CHAR(STRING_ELT(index, 0));
+
         in = sam_open(path, "rb");
         if (in == NULL) {
             std::stringstream err;
@@ -54,14 +63,34 @@ public:
 
 class BamIterator {
 public:
-    BamIterator(const Bamfile& bf, const char* chr) : iter(NULL) {
+    BamIterator(const Bamfile& bf, SEXP Chr, SEXP Start, SEXP End) : iter(NULL) {
+        if (!isString(Chr) || LENGTH(Chr)!=1) { 
+            throw std::runtime_error("chromosome name should be a string"); 
+        }
+        const char* chr=CHAR(STRING_ELT(Chr));
+        if (!isInteger(Start) || LENGTH(Start)!=1) { 
+            throw std::runtime_error("region start should be an integer scalar"); 
+        }
+        int start=asInteger(Start)-1;
+        if (!isInteger(End) || LENGTH(End)!=1) { 
+            throw std::runtime_error("region end should be an integer scalar"); 
+        }
+        int end=asInteger(End);
+
         int cid=bam_name2id(bf.header, chr);
         if (cid==-1) {
             std::stringstream err;
             err << "reference sequence '" << chr << "' missing in BAM header";
             throw std::runtime_error(err.str());
         }
-        iter=bam_itr_queryi(bf.index, cid, 0, (bf.header->target_len)[cid]); 
+
+        if (start < 0) { start=0; }
+        const int curlen = (bf.header->target_len)[cid];
+        if (end > curlen) { end = curlen; }
+        if (start > end) {
+            throw std::runtime_error("invalid values for region start/end coordinates");
+        }
+        iter=bam_itr_queryi(bf.index, cid, start, end);
     }
     ~BamIterator() { 
         bam_itr_destroy(iter); 
@@ -75,23 +104,135 @@ bool is_mapped(bam1_t* read, bool use_qual, int minqual, bool rmdup) {
     return true;
 }
 
+void decompose_cigar(bam1_t* read, int& alen, int& offset) {
+    const int n_cigar=(read->core).n_cigar;
+    if (n_cigar==0) { 
+        std::stringstream err;
+        err << "zero-length CIGAR for read '" << bam_get_qname(read) << "'";
+        throw std::runtime_error(err.str());
+    }
+    uint32_t* cigar=bam_get_cigar(read);
+
+    alen=bam_cigar2rlen(n_cigar, cigar);
+    offset=0;
+    if (bam_is_rev(read)) {
+        if (bam_cigar_op(cigar[n_cigar-1])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[n_cigar-1]); }
+    } else {
+        if (bam_cigar_op(cigar[0])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[0]); }
+    }
+    return;
+}
+
+class OutputContainer {
+public:
+    OutputContainer(bool d) : diagnostics(d) {}
+    void add_geniune(int pos1, int len1, int off1, int pos2, int len2, int off2, bool isreverse1, bool isfirst1) {
+        mate_reverse = (len2 < 0);
+        if (mate_reverse) { len2*=-1; }
+        if (mate_reverse==am_reverse) {
+            add_unoriented(pos1, len1, pos2, len2, isfirst1); 
+            return;
+        }
+         
+        if (mate_reverse) { 
+            forward_pos = pos1;
+            forward_len = len1;
+            forward_off = off1;
+            reverse_pos = pos2;
+            reverse_len = len2;
+            reverse_off = off2;
+        } else {
+            forward_pos = pos2;
+            forward_len = len2;
+            forward_off = off2;
+            reverse_pos = pos1;
+            reverse_len = len1;
+            reverse_off = off1;
+        }
+
+        if (forward_pos > reverse_pos || forward_pos+forward_len > reverse_pos + reverse_len) {
+            add_unoriented(pos1, len1, pos2, len2, isfirst1);
+            return; 
+        }
+
+        forward_pos_out.push_back(forward_pos);
+        forward_len_out.push_back(forward_len);
+        forward_off_out.push_back(forward_off);
+        reverse_pos_out.push_back(reverse_pos);
+        reverse_len_out.push_back(reverse_len);
+        reverse_off_out.push_back(reverse_off);
+        return;
+    }
+
+    void add_unoriented(int pos1, int len1, int pos2, int len2, bool isfirst1) {
+        if (!diagnostics) { return; }
+        if (isfirst1) {
+            ufirst_pos.push_back(pos1);
+            ufirst_len.push_back(len1);
+            usecond.push_back(pos2);
+            usecond_len.push_back(len2);
+        } else {
+            ufirst_pos.push_back(pos2);
+            ufirst_len.push_back(len2);
+            usecond.push_back(pos1);
+            usecond_len.push_back(len1);
+        }
+    }
+
+    void add_onemapped(int pos, int len) {
+        if (!diagnostics) { return; }
+        onemap_pos.push_back(pos);
+        onemap_len.push_back(len);
+        return;
+    }
+
+    void add_interchr(int pos, int len, const char* name, bool isfirst) {
+        if (!diagnostics) { return; }
+        if (isfirst) { 
+            ifirst_pos.push_back(pos);
+            ifirst_len.push_back(len);
+            interchr_names_1.push_back(std::string(name));
+        } else {
+            isecond_pos.push_back(pos);
+            isecond_len.push_back(len);
+            interchr_names_2.push_back(std::string(name));
+        }
+        return;
+    }
+
+    void store_output(SEXP dest, int index, const std::deque<int>& host) {
+        SET_VECTOR_ELT(dest, index, allocVector(INTSXP, host.size()));
+        std::fill(host.begin(), host.end(), INTEGER(VECTOR_ELT(dest, index)));
+        return;
+    }
+
+    void store_names(SEXP dest, int index, std::deque<std::string>& names) {
+        SET_VECTOR_ELT(dest, index, allocVector(STRSXP, names.size()));
+        SEXP current=VECTOR_ELT(dest, index);
+        for (size_t i=0; i<names.size(); ++i) {
+            SET_STRING_ELT(current, i, mkChar(names[i].c_str()));
+        }
+        return;
+    }
+
+    const bool diagnostics;
+    int singles=0, totals=0;
+    bool mate_reverse;
+    std::deque<int> forward_pos_out, forward_len_out, reverse_pos_out, reverse_len_out, forward_off_out, reverse_off_out;
+    std::deque<int> ufirst_pos, ufirst_len, usecond_pos, usecond_len;
+    std::deque<int> onemap_pos, onemap_len;
+    std::deque<std::string> interchr_names_1, interchr_names_2;
+    std::deque<int> ifirst_pos, ifirst_len, isecond_pos, isecond_len;
+};
+
+
 /* Strolls through the file for each chromosome and accumulates paired-end statistics; 
  * forward and reverse reads (position and width), singles, unoriented, and names of
  * inter-chromosomals.
  */
 
-SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP mapq, SEXP dedup, SEXP get_names) try {
+SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEXP mapq, SEXP dedup, SEXP get_names) try {
     // Checking input values.
-    if (!isString(bam) || LENGTH(bam)!=1) {
-        throw std::runtime_error("BAM file path must be a string");
-    }
-    if (!isString(index) || LENGTH(index)!=1) {
-        throw std::runtime_error("BAM index file path must be a string"); 
-    }
-    if (!isString(chr) || LENGTH(chr)!=1) { 
-        throw std::runtime_error("chromosome name should be a string"); 
-    }
-
     if (!isInteger(mapq) || LENGTH(mapq)!=1) {
         throw std::runtime_error("mapping quality should be an integer scalar");
     }    
@@ -109,62 +250,59 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP mapq, SEXP dedup, SE
     const bool getnames=asLogical(get_names);
 
     // Initializing odds and ends.
-    Bamfile bf(CHAR(STRING_ELT(bam, 0)), CHAR(STRING_ELT(index, 0)));
-    BamIterator biter(bf, CHAR(STRING_ELT(chr, 0)));
+    Bamfile bf(bam, index);
+    BamIterator biter(bf, chr, start, end);
+    OutputContainer oc(getnames);
         
     typedef std::map<std::pair<int, std::string>, std::pair<int, int> > Holder;
     Holder first_holder, second_holder;
-    std::deque<std::string> interchr_names_1, interchr_names_2;
-    int singles=0, both_mapped=0, one_unmapped=0, totals=0, unoriented=0;
-
     std::pair<int, std::string> current;
     Holder::iterator ith;
-    std::deque<int> forward_pos_out, forward_len_out, reverse_pos_out, reverse_len_out;
-    int forward_pos, forward_len, reverse_pos, reverse_len, curpos, curlen;
+    int forward_pos, forward_len, reverse_pos, reverse_len, curpos, curlen, curoff;
     bool am_mapped, is_first;
 
     while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){
-        ++totals;
+        ++oc.totals;
 
         /* Reasons to not add a read: */
        
         // If it's a singleton.
         if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
-            ++singles;
+            ++oc.singles;
+            continue;
+        }
+        
+        // Or, if we can see that it is obviously unmapped.
+        if (((read->core).flag & BAM_FUNMAP) >= 0) { 
+            // We don't filter additionally here, as we need to search 'holder' to pop out the partner and to store diagnostics.
+            continue;
+        } 
+        
+        // Just getting some stats here.        
+        curpos = (bf.read -> core).pos;
+        decompose_cigar(bf.read, curlen, curoff);
+        am_mapped=is_mapped(bf.read, use_qual, minqual, rmdup);
+
+        // Or, if we can see that its partner is obviously unmapped.
+        if (((bf.read -> core).flag & BAM_FMUNMAP) >= 0) {
+            if (am_mapped) { oc.add_onemapped(curpos, curlen); }
             continue;
         }
 
         // Or if it's inter-chromosomal.
-        am_mapped=is_mapped(bf.read, use_qual, minqual, rmdup);
         is_first=(((bf.read->core).flag & BAM_FREAD1)!=0);
         if (is_first==(((bf.read->core).flag & BAM_FREAD2)!=0)) { 
             std::stringstream err;
             err << "read '" << bam_get_qname(bf.read) << "' must be either first or second in the pair";
             throw std::runtime_error(err.str()); 
         }
-        
+      
         if ((bf.read -> core).mtid!=(bf.read -> core).tid) { 
-            if (getnames && am_mapped) { 
-                (is_first ? interchr_names_1 : interchr_names_2).push_back(std::string(bam_get_qname(bf.read))); 
-            } 
-            continue;
-        }
-
-        // Or, if we can see that it is unmapped (diagnostics depend on partner).
-        if (((bf.read->core).flag & BAM_FUNMAP) >= 0) { 
-            continue;
-        } 
-        
-        // Or, if we can see that its partner is obviously unmapped.
-        if (((bf.read -> core).flag & BAM_FMUNMAP) >= 0) {
-            if (am_mapped) { ++one_unmapped; }
+            if (getnames && am_mapped) { oc.add_interchr(curpos, curlen, bam_get_qname(bf.read), is_first); } 
             continue;
         }
 
         /* Checking the map and adding it if it doesn't exist. */
-
-        curpos = (bf.read -> core).pos;
-        curlen = (bf.read -> core).l_qseq;
 
         if ((bf.read -> core).mpos < (bf.read -> core).pos) {
             current.first = (bf.read -> core).mpos;
@@ -174,88 +312,83 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP mapq, SEXP dedup, SE
 
             if (ith != holder.end()) {
                 if (!am_mapped) {
-                    ++one_unmapped;
+                    // Searching to pop out the mate, to reduce the size of 'holder' for the remaining searches (and to store diagnostics).
+                    oc.add_onemapped((ith->first).first, (ith->second).first);
                     holder.erase(ith);
                     continue;
                 }
-                ++both_mapped;
-            
-                if ( ((ith->second).second < 0) == bool(bam_is_rev(bf.read)) ) {
-                    ++unoriented; 
-                    holder.erase(ith);
-                    continue;
-                } 
 
-                if ( ((ith->second).second < 0) ) { 
-                    forward_pos = curpos;
-                    forward_len = curlen;
-                    reverse_pos = (ith->second).first;
-                    reverse_len = -((ith->second).second);
-                } else {
-                    forward_pos = (ith->second).first;
-                    forward_len = ((ith->second).second);
-                    reverse_pos = curpos;
-                    reverse_len = curlen;
-                }
-
-                if (forward_pos > reverse_pos || forward_pos+forward_len > reverse_pos + reverse_len) {
-                    ++unoriented;
-                    continue;
-                }
-
-                forward_pos_out.push_back(forward_pos);
-                forward_len_out.push_back(forward_pos);
-                reverse_pos_out.push_back(reverse_pos);
-                reverse_len_out.push_back(reverse_pos);
+                oc.add_genuine(curpos, curlen, curoff, 
+                        (ith->first).first, (ith->second).first, (ith->second).second, 
+                        bool(bam_is_rev(bf.read)), is_first);
                 holder.erase(ith);
             } else if (am_mapped) {
-                ++one_unmapped;
+                // Only possible if the mate didn't get added because 'am_mapped' was false.
+                oc.add_onemapped(curpos, curlen);
             }
         } else if (am_mapped) {
-            current.first = (bf.read -> core).pos;
+            current.first = curpos;
             current.second.assign(bam_get_qname(bf.read));
             Holder& holder=( is_first ? first_holder : second_holder );
-            holder[current] = std::make_pair(curpos, curlen * (bam_is_rev(bf.read) ? -1 : 1));
+            holder[current] = std::make_pair(curlen * (bam_is_rev(bf.read) ? -1 : 1), curoff);
         }
     }
 
     // Leftovers treated as one_unmapped.
-    one_unmapped += first_holder.size() + second_holder.size();
+    for (ith=first_holder.begin(); ith!=first_holder.end(); ++ith) { 
+        oc.add_onemapped((ith->first).first, (ith->second).first);
+    }
+    for (ith=second_holder.begin(); ith!=second_holder.end(); ++ith) { 
+        oc.add_onemapped((ith->first).first, (ith->second).first);
+    }  
     first_holder.clear();
     second_holder.clear();
 
-    SEXP output=PROTECT(allocVector(VECSXP, 4));
+    // Storing all output.
+    SEXP output=PROTECT(allocVector(VECSXP, getnames ? 9 : 2));
     try {
-        for (size_t left=0; left<1; ++left) { 
-            SET_VECTOR_ELT(output, left, allocVector(VECSXP, 2));
-            SEXP curout=VECTOR_ELT(output, left);
-            std::deque<int>& curposout=(left==0 ? forward_pos_out : reverse_pos_out);
-            SET_VECTOR_ELT(curout, 0, allocVector(INTSXP, curposout.size()));
-            std::copy(curposout.begin(), curposout.end(), INTEGER(VECTOR_ELT(curout, 0)));
-            std::deque<int>& curlenout=(left==0 ? forward_len_out : reverse_len_out);
-            SET_VECTOR_ELT(curout, 1, allocVector(INTSXP, curlenout.size()));
-            std::copy(curlenout.begin(), curlenout.end(), INTEGER(VECTOR_ELT(curout, 1)));
-        }
+        SET_VECTOR_ELT(output, 0, allocVector(VECSXP, 3));
+        SEXP left=VECTOR_ELT(output, 0);
+        oc.store_output(left, 0, oc.forward_pos_out);
+        oc.store_output(left, 1, oc.forward_len_out);
+        oc.store_output(left, 2, oc.forward_off_out);
+        
+        SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 3));
+        SEXP right=VECTOR_ELT(output, 1);
+        oc.store_output(right, 0, oc.reverse_pos_out);
+        oc.store_output(right, 1, oc.reverse_len_out);
+        oc.store_output(right, 2, oc.reverse_off_out);
+    
+        if (getnames) {
+            SET_VECTOR_ELT(output, 2, scalarInteger(oc.totals));
+            SET_VECTOR_ELT(output, 3, scalarInteger(oc.singles));
 
-        SET_VECTOR_ELT(output, 2, allocVector(INTSXP, 5));
-        int * diagptr=INTEGER(VECTOR_ELT(output, 2));
-        diagptr[0] = totals;
-        diagptr[1] = both_mapped;
-        diagptr[2] = singles;
-        diagptr[3] = one_unmapped;
-        diagptr[4] = unoriented;
+            SET_VECTOR_ELT(output, 4, allocVector(VECSXP, 2));
+            SEXP first=VECTOR_ELT(output, 4);
+            oc.store_output(first, 0, oc.ufirst_pos);
+            oc.store_output(first, 1, oc.ufirst_len);
+            
+            SET_VECTOR_ELT(output, 5, allocVector(VECSXP, 2));
+            SEXP second=VECTOR_ELT(output, 5);
+            oc.store_output(second, 0, oc.usecond_pos);
+            oc.store_output(second, 1, oc.usecond_len);
 
-        SET_VECTOR_ELT(output, 3, allocVector(VECSXP, 2));
-        SEXP allnames=VECTOR_ELT(output, 3);
-        SET_VECTOR_ELT(allnames, 0, allocVector(STRSXP, interchr_names_1.size()));
-        SET_VECTOR_ELT(allnames, 1, allocVector(STRSXP, interchr_names_2.size()));
-        SEXP outnames=VECTOR_ELT(allnames, 0);
-        for (size_t i=0; i<interchr_names_1.size(); ++i) {
-            SET_STRING_ELT(outnames, i, mkChar(interchr_names_1[i].c_str()));
-        }
-        outnames=VECTOR_ELT(allnames, 1);
-        for (size_t i=0; i<interchr_names_2.size(); ++i) {
-            SET_STRING_ELT(outnames, i, mkChar(interchr_names_2[i].c_str()));
+            SET_VECTOR_ELT(output, 6, allocVector(VECSXP, 2));
+            SEXP onemap=VECTOR_ELT(output, 6);
+            oc.store_output(onemap, 0, oc.onemap_pos);
+            oc.store_output(onemap, 1, oc.onemap_len);
+
+            SET_VECTOR_ELT(output, 7, allocVector(VECSXP, 3));
+            SEXP interchr1=VECTOR_ELT(output, 7);
+            oc.store_output(interchr1, 0, oc.ifirst_pos);
+            oc.store_output(interchr1, 1, oc.ifirst_len);
+            oc.store_names(interchr1, 2, oc.interchr_names_1);
+
+            SET_VECTOR_ELT(output, 8, allocVector(VECSXP, 3));
+            SEXP interchr2=VECTOR_ELT(output, 8);
+            oc.store_output(interchr2, 0, oc.isecond_pos);
+            oc.store_output(interchr2, 1, oc.isecond_len);
+            oc.store_names(interchr2, 2, oc.interchr_names_2);
         }
     } catch (std::exception &e) {
         UNPROTECT(1);

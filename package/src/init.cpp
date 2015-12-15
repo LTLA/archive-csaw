@@ -13,7 +13,7 @@ static const R_CallMethodDef all_call_entries[] = {
 	{"get_profile", (DL_FUNC) &get_profile, 6}, 
 	{"find_maxima", (DL_FUNC) &find_maxima, 5}, 
 	{"check_bimodality", (DL_FUNC) &check_bimodality, 5}, 
-	{"extract_pair_data", (DL_FUNC) &extract_pair_data, 6}, 
+	{"extract_pair_data", (DL_FUNC) &extract_pair_data, 8}, 
 	{NULL, NULL, 0}
 };
 
