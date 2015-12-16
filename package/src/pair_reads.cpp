@@ -271,7 +271,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     Holder first_holder, second_holder;
     std::pair<int, std::string> current;
     Holder::iterator ith;
-    int forward_pos, forward_len, reverse_pos, reverse_len, curpos, curlen, curoff;
+    int curpos, curlen, curoff;
     bool am_mapped, is_first;
 
     bool mate_is_in;
