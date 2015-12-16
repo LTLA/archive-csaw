@@ -61,7 +61,7 @@ This can be done using standard tools like FixMateInformation from the Picard su
 \section{Parameter settings for single-end data}{
 If \code{pe="none"}, reads are assumed to be single-end.
 Read extraction from BAM files is performed with the same quality filters described above.
-If \code{forward=NA}, reads are extracted from all strands.
+If \code{forward} is \code{NA}, reads are extracted from all strands.
 Otherwise, reads are only extracted from the forward or reverse strands for \code{TRUE} or \code{FALSE}, respectively.
 This may be useful for applications requiring strand-specific counting.
 A special case is \code{forward=NULL} - see \code{\link{strandedCounts}} for more details.

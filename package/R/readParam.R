@@ -21,9 +21,9 @@ setValidity("readParam", function(object) {
 		return("minimum mapping quality must be a numeric scalar")
 	}
 
-	if (length(object@forward)!=1L || !is.logical(object@forward)) { 
-		return("forward strand specification must be logical")
-	} else if (!is.na(object@forward) && object@pe=="both") {
+	if (length(object@forward)>1L || !is.logical(object@forward)) { 
+		return("forward strand specification must be a logical scalar or NULL")
+	} else if (length(object@forward)==1L && !is.na(object@forward) && object@pe=="both") {
 		stop("strand-specific extraction makes no sense for paired-end data")
 	}
 
