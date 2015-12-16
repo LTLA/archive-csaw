@@ -26,7 +26,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-	ext <- makeExtVector(ext, final.mode)
+    if (!is.na(final.mode)){ ext <- DataFrame(ext, final.mode) }
 	
 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
 	else { xparam2 <- xparam }
@@ -42,7 +42,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	# Running the reference analysis.
 	totally <- totally.reverse <- list()
 	for (chr in names(chromos)) {
-		out <- extractReads(bam, GRanges(chr, IRanges(1, chromos[[chr]])), param=xparam, ext=ext)
+        out <- extractReads(bam, GRanges(chr, IRanges(1, chromos[[chr]])), param=xparam, ext=ext)
 		if (!match.strand) { 
 			totally[[chr]] <- coverage(ranges(out), width=chromos[[chr]]) 
 		} else {
@@ -119,7 +119,7 @@ comp(nreads, chromos, match.strand=TRUE)
 comp(nreads, chromos, match.strand=TRUE)
 
 # Just exercising the multi-fragment length options here.
-comp(nreads, chromos, ext=50, final.mode=NULL)
+comp(nreads, chromos, ext=50, final.mode=50)
 comp(nreads, chromos, ext=50, final.mode=100)
 comp(nreads, chromos, ext=50, final.mode=20)
 

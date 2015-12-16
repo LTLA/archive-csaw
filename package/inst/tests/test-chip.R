@@ -41,12 +41,12 @@ compare2Ranges <- function(left, right) {
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL, forward=NA) {
 	if (length(fraglen)==1L) { 
-		fraglen <- rep(fraglen, length.out=length(bamFiles))
+		submit <- fraglen <- rep(fraglen, length.out=length(bamFiles))
 		remainder <- integer(length(bamFiles))
 	} else {
 		final.out <- as.integer(mean(fraglen))
 		remainder <- as.integer((final.out - fraglen)/2)
-		fraglen <- makeExtVector(fraglen, final.out)
+		submit <- DataFrame(fraglen, final.out)
 	}
 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 	
@@ -104,7 +104,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 		if (filter==-1) {
 			x2 <- x
 		} else {
-	    	x2<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
+	    	x2<-windowCounts(bamFiles, ext=submit, width=right+left+1, shift=left, spacing=spacing, filter=-1, 
 				param=readParam(discard=discard, restrict=restrict, dedup=dedup, minq=minq, forward=forward))
 			keep<-rowSums(assay(x2))>=filter
 			if (!identical(assay(x), assay(x2)[keep,])) { stop("mismatch in filtered counts") }

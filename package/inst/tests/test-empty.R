@@ -39,8 +39,6 @@ consolidateSizes(list(out), list(empty), region=GRanges())
 reformList(list())
 checkList(list())
 
-makeExtVector(integer(0))
-
 normOffsets(out) # 1 is correct, as calcNormFactors() just diverts to that.
 normOffsets(out, type="loess")
 

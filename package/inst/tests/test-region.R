@@ -5,11 +5,8 @@ suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL, forward=NA, final.len=NA) {
-	if (length(final.len) && is.na(final.len)) { 
-		ext <- rep(fraglen, length.out=length(bamFiles))
-	} else {
-		ext <- makeExtVector(fraglen, final.len)
-	}
+	ext <- rep(fraglen, length.out=length(bamFiles))
+	if (length(final.len)) { ext <- DataFrame(fraglen, final.len) }
 
 	for (type in 1:3) {
 		if (type==1) {
@@ -39,7 +36,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, d
 		my.reg <- all.regs[chosen]
 	
 		for (f in 1:length(bamFiles)) {
-			collected <- extractReads(bamFiles[f], my.reg, param=repar, ext=ext[f])
+            collected <- extractReads(bamFiles[f], my.reg, param=repar, ext=DataFrame(y$ext[f], metadata(y)$final))
 			strand(collected) <- "*"
 			if (!identical(assay(x)[chosen,f], length(collected))) { 
 				stop("mismatch in the number of counts from extractReads")

@@ -144,13 +144,6 @@ list()
 > checkList(list())
 character(0)
 > 
-> makeExtVector(integer(0))
-integer(0)
-attr(,"final.ext")
-[1] NA
-attr(,"class")
-[1] "extVector"
-> 
 > normOffsets(out) # 1 is correct, as calcNormFactors() just diverts to that.
 [1] 1
 > normOffsets(out, type="loess")
@@ -205,4 +198,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
-  8.930   0.185   9.111 
+  8.966   0.177   9.142 
