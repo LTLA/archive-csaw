@@ -17,6 +17,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
     loose.names.1 <- loose.names.2 <- list()
 
 	for (i in seq_along(extracted.chrs)) {
+        print( names(extracted.chrs)[i])
         out <- .Call(cxx_extract_pair_data, bam.file, bam.index, names(extracted.chrs)[i], param$minq, param$dedup, TRUE)
         if (is.character(out)) { stop(out) }
         diagnostics <- diagnostics + out[[3]]
