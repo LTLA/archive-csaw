@@ -1,22 +1,22 @@
 \name{SEmethods}
 \alias{normalize}
-\alias{normalize,SummarizedExperiment-method}
-\alias{normOffsets,SummarizedExperiment-method}
-\alias{asDGEList,SummarizedExperiment-method}
+\alias{normalize,SummarizedExperiment0-method}
+\alias{normOffsets,SummarizedExperiment0-method}
+\alias{asDGEList,SummarizedExperiment0-method}
 \alias{asDGEList}
 
-\title{Statistical wrappers for SummarizedExperiment objects}
+\title{Statistical wrappers for SummarizedExperiment0 objects}
 
-\description{Convenience wrappers for statistical routines operating on SummarizedExperiment objects.}
+\description{Convenience wrappers for statistical routines operating on SummarizedExperiment0 objects.}
 
 \usage{
-\S4method{normOffsets}{SummarizedExperiment}(object, lib.sizes, assay=1, ...)
-\S4method{normalize}{SummarizedExperiment}(object, lib.sizes, type="scaling", assay=1, ...) 
-\S4method{asDGEList}{SummarizedExperiment}(object, lib.sizes, norm.factors, ...)
+\S4method{normOffsets}{SummarizedExperiment0}(object, lib.sizes, assay=1, ...)
+\S4method{normalize}{SummarizedExperiment0}(object, lib.sizes, type="scaling", assay=1, ...) 
+\S4method{asDGEList}{SummarizedExperiment0}(object, lib.sizes, norm.factors, ...)
 }
 
 \arguments{
-  \item{object}{a SummarizedExperiment object or its derived classes, like that produced by \code{\link{windowCounts}}}
+  \item{object}{a SummarizedExperiment0 object or its derived classes, like that produced by \code{\link{windowCounts}}}
   \item{lib.sizes}{an (optional) integer vector of library sizes}
   \item{assay}{a numeric scalar indicating which assay in \code{object} contains the count matrix}
   \item{type}{a character scaling indicating the type of normalization, see \code{\link{normOffsets}}}
@@ -25,7 +25,7 @@
 }
 
 \details{
-For \code{normalize} and \code{normOffset}, counts are extracted from the matrix corresponding to the first assay in the SummarizedExperiment object 
+For \code{normalize} and \code{normOffset}, counts are extracted from the matrix corresponding to the first assay in the SummarizedExperiment0 object 
     (different assays can be specified with the \code{assay} argument).
 For \code{asDGEList}, counts are extracted from the assay named \code{"counts"}, with the first assay used if no such assay exists with that name.
 If not specified in \code{lib.sizes}, library sizes are taken from the \code{totals} field in the column data of \code{object}.

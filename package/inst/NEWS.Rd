@@ -10,7 +10,7 @@ Restored normalize() as a S4 method returning a RangedSummarizedExperiment objec
 Modified asDGEList() to use any available normalization data in the input object.
 
 \item 
-Generalized S4 methods to apply on SummarizedExperiment objects.
+Generalized S4 methods to apply on SummarizedExperiment0 objects.
 }}
 
 \section{Version 1.4.0}{\itemize{

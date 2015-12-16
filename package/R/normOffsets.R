@@ -41,7 +41,7 @@ setMethod("normOffsets", "matrix", function(object, lib.sizes=NULL, type=c("scal
 	}
 })
 
-setMethod("normOffsets", "SummarizedExperiment", function(object, lib.sizes, assay=1, ...) {
+setMethod("normOffsets", "SummarizedExperiment0", function(object, lib.sizes, assay=1, ...) {
 	if (missing(lib.sizes)) { 
 		if (is.null(object$totals)) { warning("library sizes not found in 'totals', setting to NULL") }
 		lib.sizes <- object$totals 
@@ -49,7 +49,7 @@ setMethod("normOffsets", "SummarizedExperiment", function(object, lib.sizes, ass
 	normOffsets(assay(object, assay), lib.sizes=lib.sizes, ...)
 })
 
-setMethod("normalize", "SummarizedExperiment", function(object, lib.sizes, type="scaling", assay=1, ...) {
+setMethod("normalize", "SummarizedExperiment0", function(object, lib.sizes, type="scaling", assay=1, ...) {
 	out <- normOffsets(object, lib.sizes=lib.sizes, type=type, assay=assay, ...)
 	if (type=="scaling") {
 		object$norm.factors <- out
