@@ -10,32 +10,58 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
-    bam.file <- path.expand(bam.file)
-    bam.index <- paste0(bam.file, ".bai")
-    diagnostics <- integer(5)
-    norm.list <- list()
-    loose.names.1 <- loose.names.2 <- list()
+
+	totals <- countBam(bam.file)$records # Simplest way, as filtering is implicit in .extractSE loading.
+	singles <- mapped <- others <- one.unmapped <- 0L
+	stopifnot(length(bam.file)==1L)
+	norm.list <- loose.names.1 <- loose.names.2 <- list()
 
 	for (i in seq_along(extracted.chrs)) {
-        print( names(extracted.chrs)[i])
-        out <- .Call(cxx_extract_pair_data, bam.file, bam.index, names(extracted.chrs)[i], param$minq, param$dedup, TRUE)
-        if (is.character(out)) { stop(out) }
-        diagnostics <- diagnostics + out[[3]]
-        loose.names.1[[i]] <- out[[4]][[1]]
-        loose.names.2[[i]] <- out[[4]][[2]]       
-        norm.list[[i]] <- out[[2]][[1]] - out[[1]][[1]] + out[[2]][[2]]   
-    }
+		chr <- names(extracted.chrs)[i]
+		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
+		reads <- .extractSE(bam.file, extras=c("qname", "flag", "isize"), where=where, param=param) 
+
+		# Getting rid of unpaired reads.
+		mapped <- mapped + length(reads$flag)
+		is.single <- bitwAnd(reads$flag, 0x1)==0L
+		singles <- singles + sum(is.single)
+ 		only.one <- bitwAnd(reads$flag, 0x8)!=0L
+		one.unmapped <- one.unmapped + sum(!is.single & only.one)
+		for (x in names(reads)) { reads[[x]] <- reads[[x]][!is.single & !only.one] }
+
+		# Identifying valid reads.
+		okay <- .yieldInterestingBits(reads, extracted.chrs[i], diag=TRUE)
+		norm.list[[i]] <- okay$size
+		left.names <- reads$qname[!okay$is.ok]
+		left.flags <- reads$flag[!okay$is.ok]
+
+		# Setting up some more filters (note, inter-chromosomality is checked more rigorously later).
+		on.same.chr <- reads$isize[!okay$is.ok]!=0L
+		is.first <- bitwAnd(left.flags, 0x40)!=0L
+		is.second <- bitwAnd(left.flags, 0x80)!=0L
+
+		# Identifying improperly orientated pairs and reads with unmapped counterparts.
+		leftovers.first <- left.names[on.same.chr & is.first]
+		leftovers.second <- left.names[on.same.chr & is.second]
+		has.pair <- sum(leftovers.first %in% leftovers.second)
+		others <- others + has.pair
+		one.unmapped <- one.unmapped + length(leftovers.first) + length(leftovers.second) - 2L*has.pair 
+
+		# Collecting the rest to match inter-chromosomals.
+		loose.names.1[[i]] <- left.names[!on.same.chr & is.first]
+		loose.names.2[[i]] <- left.names[!on.same.chr & is.second]
+	}
 
 	# Checking whether a read is positively matched to a mapped counterpart on another chromosome.
 	# If not, then it's just a read in an unmapped pair.
 	loose.names.1 <- unlist(loose.names.1)
 	loose.names.2 <- unlist(loose.names.2)
 	inter.chr <- sum(loose.names.1 %in% loose.names.2)
-	extra.unmapped <- length(loose.names.2) + length(loose.names.1) - inter.chr*2L
+	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
    	# Returning sizes and some diagnostic data.
-	return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=diagnostics[1], mapped.reads=diagnostics[2],
-		single=diagnostics[3], mate.unmapped=diagnostics[4]+extra.unmapped, unoriented=diagnostics[5], inter.chr=inter.chr)))
+	return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=totals, mapped.reads=mapped,
+		single=singles, mate.unmapped=one.unmapped, unoriented=others, inter.chr=inter.chr)))
 }
 
 ##################################

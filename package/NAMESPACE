@@ -20,7 +20,7 @@ export(csawUsersGuide,
 import(GenomicRanges, SummarizedExperiment, Rsamtools,
 	S4Vectors, IRanges, GenomeInfoDb,
 	edgeR, 
-	methods, Rhtslib)
+	methods)
 
 importFrom("GenomicAlignments", cigarWidthAlongReferenceSpace)
 importFrom("GenomicFeatures", exonsBy)
