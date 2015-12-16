@@ -163,14 +163,25 @@
 # 
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 13 February 2015
+# last modified 16 December 2015
 {
-	final.ext <- attributes(ext)$final.ext # Do this, before attributes are lost.
-	if (is.null(final.ext)) { final.ext <- NA }
-	final.ext <- as.integer(final.ext)
-	if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
-		stop("final extension length must be a positive integer or NA") 
-	}
+    if (!is.vector(ext)) {
+        if (length(ext)!=2L) {
+            stop("'ext' must be a list of length 2")
+        } else {
+            final.ext <- unique(as.integer(ext[[2]]))
+        	if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
+                stop("final extension length must be a positive integer or NA") 
+            }
+        }
+        ext <- ext[[1]]
+    } else {
+        if (length(unique(ext))==1L) { 
+            final.ext <- NA_integer_
+        } else {
+            final.ext <- as.integer(mean(ext))
+        }
+    }
 	
 	if (length(ext)==1L) { 
 		ext <- rep(ext, nbam)
