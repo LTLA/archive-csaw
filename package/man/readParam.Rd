@@ -45,10 +45,13 @@ This is useful for removing reads in repeat regions.
 \section{Parameter settings for paired-end data}{
 For \code{pe="both"}, reads are extracted with the previously described filters, i.e., \code{discard}, \code{minq}, \code{dedup}.
 Extracted reads are then grouped into proper pairs.
-Proper pairs are those where the two reads are close together and in an inward-facing orientation. 
+Proper pairs are those where the two reads are close together (on the same chromosome, obviously) and in an inward-facing orientation. 
 The fragment interval is defined as that bounded by the 5' ends of the two reads in a proper pair.
-Fragment sizes above \code{max.frag} are removed; use \code{\link{getPESizes}} to pick an appropriate value. 
-Obviously, pairs of reads on different chromosomes will not be used.
+
+Fragment sizes above \code{max.frag} are removed.
+Users should run \code{\link{getPESizes}} to pick an appropriate value for their data sets, though thresholds of around 500-1000 bp are usually fine.
+If any soft clipping is present at the 5' ends of the aligned reads, filtering will be done using the full fragment size (i.e., including the length of the soft-clipped sequence).
+All other applications will ignore the soft-clipped sequence.
 
 Paired-end data can also be treated as single-end data by only using one read from each pair with \code{pe="first"} or \code{"second"}.  
 This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.

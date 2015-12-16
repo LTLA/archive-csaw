@@ -38,6 +38,10 @@ Each valid read pair corresponds to a DNA fragment where both ends are sequenced
 The size of the fragment can be determined by calculating the distance between the 5' ends of the mapped reads. 
 The distribution of sizes is useful for assessing the quality of the library preparation, along with all of the recorded diagnostics. 
 Note that any \code{max.frag} specification in \code{param} will be ignored; sizes for all valid pairs will be returned.
+
+For alignments with soft clipping, the size of the full fragment is returned, i.e., including any soft-clipped regions on the 5' end.
+This provides a more accurate estimate of the fragment size used in sequencing.
+Any 3' soft clipping is ignored, as this may correspond to technical artifacts, e.g., sequencing into adapter sequences.
 }
 
 % Note; length(out$sizes)*2 == out$diagnostics[2] - sum(out$diagnostics[3:4]) - sum(out$diagnostics[5:6])*2. Because, read pairs with one mapped = 1 read in total.
