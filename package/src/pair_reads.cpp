@@ -98,12 +98,6 @@ public:
     hts_itr_t* iter;
 };
 
-bool is_mapped(bam1_t* read, bool use_qual, int minqual, bool rmdup) {
-    if (use_qual && (read -> core).qual < minqual) { return false; }
-    if (rmdup && ((read -> core).flag & BAM_FDUP)==0) { return false; }
-    return true;
-}
-
 void decompose_cigar(bam1_t* read, int& alen, int& offset) {
     const int n_cigar=(read->core).n_cigar;
     if (n_cigar==0) { 
@@ -256,7 +250,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         throw std::runtime_error("mapping quality should be an integer scalar");
     }    
     const int minqual=asInteger(mapq);
-    const bool use_qual=(minqual==NA_INTEGER);
+    const bool use_qual=(minqual!=NA_INTEGER);
 
     if (!isLogical(dedup) || LENGTH(dedup)!=1) {
         throw std::runtime_error("duplicate removal should be a logical scalar"); 
@@ -299,7 +293,9 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         // (just getting some stats here).
         curpos = (bf.read -> core).pos;
         decompose_cigar(bf.read, curlen, curoff);
-        am_mapped=is_mapped(bf.read, use_qual, minqual, rmdup);
+        am_mapped=true;
+        if ((use_qual && (bf.read -> core).qual < minqual) 
+                || (rmdup && ((bf.read -> core).flag & BAM_FDUP)!=0)) { am_mapped=false; }
 
         // Or If it's a singleton.
         if (((bf.read -> core).flag & BAM_FPAIRED)==0) {

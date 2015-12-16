@@ -8,7 +8,7 @@
 #
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 2 July 2015
+# last modified 15 December 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
 	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
@@ -52,7 +52,7 @@
 # 
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 15 December 2015
+# last modified 16 December 2015
 {
     cur.chr <- as.character(seqnames(where)) 
     bam.file <- path.expand(bam.file)
