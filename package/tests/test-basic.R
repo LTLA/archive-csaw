@@ -38,7 +38,7 @@ out <- windowCounts(pe.file, param=readParam(pe="both"), width=100, filter=1L)
 assay(out)
 out$totals
 rowRanges(out)
-out <- windowCounts(pe.file, param=readParam(pe="both", rescue.ext=100), width=100, filter=1L)
+out <- windowCounts(pe.file, param=readParam(pe="both", max.frag=100), width=100, filter=1L)
 assay(out)
 out$totals
 rowRanges(out)

@@ -1,0 +1,52 @@
+==14977== Memcheck, a memory error detector
+==14977== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==14977== Using Valgrind-3.10.1 and LibVEX; rerun with -h for copyright info
+==14977== Command: /Users/lun01/Software/R/devel/bin/exec/R --no-save
+==14977== 
+
+R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> csaw::getPESizes("pet.bam")
+[1] "chrA"
+[1] "chrB"
+$sizes
+numeric(0)
+
+$diagnostics
+  total.reads  mapped.reads        single mate.unmapped    unoriented 
+           23             0             3             0             0 
+    inter.chr 
+            1 
+
+> 
+==14977== 
+==14977== HEAP SUMMARY:
+==14977==     in use at exit: 240,490,040 bytes in 125,885 blocks
+==14977==   total heap usage: 427,418 allocs, 301,533 frees, 631,093,854 bytes allocated
+==14977== 
+==14977== LEAK SUMMARY:
+==14977==    definitely lost: 0 bytes in 0 blocks
+==14977==    indirectly lost: 0 bytes in 0 blocks
+==14977==      possibly lost: 0 bytes in 0 blocks
+==14977==    still reachable: 240,490,040 bytes in 125,885 blocks
+==14977==         suppressed: 0 bytes in 0 blocks
+==14977== Rerun with --leak-check=full to see details of leaked memory
+==14977== 
+==14977== For counts of detected and suppressed errors, rerun with: -v
+==14977== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

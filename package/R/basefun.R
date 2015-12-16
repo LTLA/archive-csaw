@@ -31,6 +31,9 @@
 }
 
 .discardReads <- function(chr, pos, alen, discard) {
+    if (!length(pos)) { 
+        return(logical(0)) 
+    }
     relevant <- seqnames(discard)==chr
     if (any(relevant)) { 
 		keep <- !overlapsAny(IRanges(pos, pos+alen-1L), ranges(discard)[relevant], type="within")
