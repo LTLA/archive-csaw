@@ -18,7 +18,6 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
         cur.chr <- names(extracted.chrs)[i]
         output <- .extractPE(bam.file, GRanges(cur.chr, IRanges(1L, extracted.chrs[i])), param=param, diagnostics=TRUE)
         totals <- totals + output$total
-        singles <- singles + output$single
 
         # Filtering out based on discard.
         relevant <- seqnames(param$discard)==cur.chr
@@ -28,27 +27,38 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
         dfkeep <- .discardReads(cur.chr, output$forward[[1]], output$forward[[2]], discard)
         drkeep <- .discardReads(cur.chr, output$reverse[[1]], output$reverse[[2]], discard)
         dkeep <- dfkeep & drkeep 
-        mapped <- mapped + sum(dkeep)
+        mapped <- mapped + sum(dkeep)*2L
         one.unmapped <- one.unmapped + sum(dfkeep!=drkeep)
         all.sizes <- .getFragmentSizes(output$forward, output$reverse)
         norm.list[[i]] <- all.sizes$full[dkeep]
 
-        # For unoriented read pairs; either go to 'mapped' (and the 'unoriented'), 'one.unmapped', or implicitly unmapped.
+        # For unoriented read pairs; either go to 'mapped' (and then 'unoriented'), 'one.unmapped', or implicitly unmapped.
         ufkeep <- .discardReads(cur.chr, output$ufirst[[1]], output$forward[[2]], discard)
         uskeep <- .discardReads(cur.chr, output$usecond[[1]], output$reverse[[2]], discard)
         ukeep <- ufkeep & uskeep 
-        mapped <- mapped + sum(ukeep)
-        unoriented <- unoriented + sum(ukeep)
+        umapped <- sum(ukeep)
+        mapped <- mapped + umapped*2L
+        unoriented <- unoriented + umapped
         one.unmapped <- one.unmapped + sum(ufkeep!=uskeep)
+        
+        # For singles; either go to 'mapped' (and then 'singles') or implicitly unmapped.
+        skeep <- .discardReads(cur.chr, output$single[[1]], output$single[[2]], discard)
+        smapped <- sum(skeep)
+        mapped <- mapped + smapped
+        singles <- singles + smapped
 
         # For lone mappers; either go to 'one.unmapped' or implicitly unmapped.
         omkeep <- .discardReads(cur.chr, output$one.mapped[[1]], output$one.mapped[[2]], discard)
-        one.unmapped <- one.unmapped + sum(omkeep)
+        omapped <- sum(omkeep)
+        mapped <- mapped + omapped
+        one.unmapped <- one.unmapped + omapped
 
-        # For inter-chromosomals; either store names, or don't.
-        ikeep1 <- .discardReads(cur.chr, output$ifirst[[1]], output$ifirst[[2]], discard)    
+        # For inter-chromosomals; either mapped (and then store names), or implicitly unmapped.
+        ikeep1 <- .discardReads(cur.chr, output$ifirst[[1]], output$ifirst[[2]], discard)
+        mapped <- mapped + sum(ikeep1)
         loose.names.1[[i]] <- output$ifirst[[3]][ikeep1]
         ikeep2 <- .discardReads(cur.chr, output$isecond[[1]], output$isecond[[2]], discard)    
+        mapped <- mapped + sum(ikeep2)
         loose.names.2[[i]] <- output$isecond[[3]][ikeep2]
     }
 

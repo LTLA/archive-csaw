@@ -125,7 +125,8 @@ void decompose_cigar(bam1_t* read, int& alen, int& offset) {
 
 class OutputContainer {
 public:
-    OutputContainer(bool d) : diagnostics(d), totals(0), singles(0) {}
+    OutputContainer(bool d) : diagnostics(d), totals(0) {}
+
     void add_genuine(int pos1, int len1, int off1, int pos2, int len2, int off2, bool isreverse1, bool isfirst1) {
         mate_reverse = (len2 < 0);
         if (mate_reverse) { len2*=-1; }
@@ -192,6 +193,14 @@ public:
         return;
     }
 
+    void add_single(int pos, int len) {
+        if (!diagnostics) { return; }
+        ++pos;
+        single_pos.push_back(pos);
+        single_len.push_back(len);
+        return;
+    }
+
     void add_interchr(int pos, int len, const char* name, bool isfirst) {
         if (!diagnostics) { return; }
         ++pos;
@@ -223,13 +232,14 @@ public:
     }
 
     const bool diagnostics;
-    int singles, totals;
+    int totals;
     bool mate_reverse;
     int forward_pos, forward_len, forward_off, reverse_pos, reverse_len, reverse_off;
     std::deque<int> forward_pos_out, forward_len_out, forward_off_out, 
         reverse_pos_out, reverse_len_out, reverse_off_out;
     std::deque<int> ufirst_pos, ufirst_len, usecond_pos, usecond_len;
     std::deque<int> onemap_pos, onemap_len;
+    std::deque<int> single_pos, single_len;
     std::deque<std::string> interchr_names_1, interchr_names_2;
     std::deque<int> ifirst_pos, ifirst_len, isecond_pos, isecond_len;
 };
@@ -280,22 +290,22 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
         /* Reasons to not add a read: */
        
-        // If it's a singleton.
-        if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
-            ++oc.singles;
-            continue;
-        }
-        
-        // Or, if we can see that it is obviously unmapped.
+        // If we can see that it is obviously unmapped.
         if (((bf.read -> core).flag & BAM_FUNMAP)!=0) { 
             // We don't filter by additional mapping criteria, as we need to search 'holder' to pop out the partner and to store diagnostics.
             continue;
         } 
         
-        // Just getting some stats here.        
+        // (just getting some stats here).
         curpos = (bf.read -> core).pos;
         decompose_cigar(bf.read, curlen, curoff);
         am_mapped=is_mapped(bf.read, use_qual, minqual, rmdup);
+
+        // Or If it's a singleton.
+        if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
+            if (am_mapped) { oc.add_single(curpos, curlen); }
+            continue;
+        }
 
         // Or, if we can see that its partner is obviously unmapped.
         if (((bf.read -> core).flag & BAM_FMUNMAP)!=0) {
@@ -392,7 +402,11 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     
         if (getnames) {
             SET_VECTOR_ELT(output, 2, ScalarInteger(oc.totals));
-            SET_VECTOR_ELT(output, 3, ScalarInteger(oc.singles));
+            
+            SET_VECTOR_ELT(output, 3, allocVector(VECSXP, 2));
+            SEXP singles=VECTOR_ELT(output, 3);
+            oc.store_output(singles, 0, oc.single_pos);
+            oc.store_output(singles, 1, oc.single_len);
 
             SET_VECTOR_ELT(output, 4, allocVector(VECSXP, 2));
             SEXP first=VECTOR_ELT(output, 4);
