@@ -112,8 +112,8 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				str2 <- as.logical(strand(seconds[[lib]])=="+")
 
 				valid <- chr1==chr2 & str1!=str2 & ifelse(str1, pos1 <= pos2, pos2 <= pos1)
-		   		pos1[!str1] <- pmin(pos1[!str1]+rlen, chromosomes[chr1][!str1]+1L)
-				pos2[!str2] <- pmin(pos2[!str2]+rlen, chromosomes[chr2][!str2]+1L)
+		   		pos1[!str1] <- pos1[!str1]+rlen
+				pos2[!str2] <- pos2[!str2]+rlen
    				sizes<-abs(pos1-pos2)
 
 				# Checking which ones are lost.
@@ -131,10 +131,12 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 
 				# Checking singles.
 				if (nsingles) {
+                    schr <- as.character(seqnames(singles[[lib]]))
 					skeep <- (!dedup | !singles[[lib]]$dup) & singles[[lib]]$mapq >= minq
 					if (!is.null(discard)) { skeep <- skeep & !overlapsAny(singles[[lib]], discard, type="within") } 
-					if (!is.null(restrict)) { skeep <- skeep & as.character(seqnames(singles[[lib]])) %in% restrict }
-				} else { 
+					if (!is.null(restrict)) { skeep <- skeep & schr %in% restrict }
+				} else {
+                    schr <- character(0) 
 					skeep <- NULL 
 				}
 	
@@ -144,11 +146,18 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 		        	stuff<-getPESizes(fnames[lib], readParam(pe="both", minq=minq, dedup=dedup, restrict=restrict, discard=discard))
 					if (stuff$diagnostics[["single"]]!=sum(skeep)) { 
 						stop("mismatch in number of singles")
-					} else if (stuff$diagnostics[["total.reads"]]!=npairs*2L+nsingles) {
-						stop("mismatch in total number of reads")
 					} else if (stuff$diagnostics[["mapped.reads"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
 						stop("mismatch in number of mapped reads")
 					}
+					if (is.null(restrict)) { 
+                        if (stuff$diagnostics[["total.reads"]]!=npairs*2L+nsingles) {
+                            stop("mismatch in total number of reads")
+                        }
+                    } else {
+                        if (stuff$diagnostics[["total.reads"]]!=sum(chr1%in%restrict) + sum(chr2%in% restrict) + sum(schr%in% restrict)) {
+                            stop("mismatch in total number of reads upon restriction")
+                        }
+                    }
 			        if (sum(paired & chr1!=chr2)!=stuff$diagnostics[["inter.chr"]]) { stop("mismatch in interchromosomal PEs") }
 			        if (sum(paired & chr1==chr2 & !valid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
 			        if (sum(keep1!=keep2)!=stuff$diagnostics[["mate.unmapped"]]) { stop("mismatch in unmapped numbers") }
@@ -205,69 +214,7 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 					}
 				}
 			}
-
-			# Comparing to what happens after dumping them and reloading them in fast mode.
-			if (rpam$pe=="both") { 
-				fast.param <- reform(rpam, pe="fast")
-				dumped <- list()
-				for (lib in 1:length(fnames)) { 
-					refix <- file.path(dir, paste0("dump_", sub('\\.bam$','', basename(fnames[lib]))))
-					dumped[[lib]] <- dumpPE(fnames[lib], refix, param=fast.param, overwrite=TRUE)
-				}
-				fast.out <- windowCounts(unlist(dumped), spacing=spacing, ext=ext, shift=left, 
-					width=right+left+1, filter=0, param=fast.param)
-				if (!identical(fast.out$totals, x$totals)) { stop("mismatches in totals upon fast PE extraction") }
-				if (!identical(assay(fast.out), assay(x))) { stop("mismatches in counts upon fast PE extraction") }
-
-				# Checking behaviour with `with.reads=TRUE`, to avoid having to check other functions with PE data.
-				where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
-				extracted.reads <- csaw:::.getPairedEnd(fnames[1], where=where, param=rpam, with.reads=TRUE)
-				fast.extracted <- csaw:::.getPairedEnd(dumped[[1]], where=where, param=fast.param, with.reads=TRUE)
-
-				for (ref in list(extracted.reads, fast.extracted)) { 
-					paired <- 1:length(ref$left$pos)
-					endpoint <- ref$pos[paired] + ref$size[paired]
-					if (!identical(ref$pos[paired], ref$left$pos) || 
-							any(endpoint <= ref$right$pos) || 
-							any(endpoint > ref$right$pos + ref$right$qwidth) || 
-							any(ref$left$pos > ref$right$pos)) { 
-						stop("inconsistent read intervals reported for pairs") 
-					}	
-				}
-
-				# Comparing fast and slow extraction of a dumped file.
-				for (type in c("left", "right")) { 
-					curslow <- extracted.reads[[type]]
-					curfast <- fast.extracted[[type]]
-					stopifnot(is.null(curslow)==is.null(curfast))
-					if (is.null(curslow)) { next }
-
-					os <- order(curslow$pos, curslow$qwidth, curslow$strand)
-					of <- order(curfast$pos, curfast$qwidth, curfast$strand)
-					if (!identical(curslow$pos[os], curfast$pos[of]) ||
-							!identical(curslow$qwidth[os], curfast$qwidth[of]) ||
-							!identical(curslow$strand[os], curfast$strand[of])) {
-						stop("mismatches in extracted reads between fast and slow modes") 
-					}
-				}
-				stopifnot(length(extracted.reads$pos)==length(fast.extracted$pos))
-				stopifnot(length(extracted.reads$size)==length(fast.extracted$size))
-				
-				unlink(unlist(dumped))
-			}
 		}
-	}
-
-	# Checking what happens if you load fast.pe=TRUE on the raw files.
-	where <- GRanges(names(chromosomes)[1], IRanges(1, chromosomes[1]))
-	stopifnot(!csaw:::.isDumpedBam(fnames[1]))
-	extracted.reads <- csaw:::.getPairedEnd(fnames[1], where=where, 
-		param=readParam(pe="fast"), with.reads=TRUE)
-	if (!identical(extracted.reads$pos, extracted.reads$left$pos) || 
-			!identical(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos)) {
-		print(cbind(extracted.reads$size, extracted.reads$right$pos + extracted.reads$right$qwidth - extracted.reads$left$pos))
-		print(extracted.reads)
-		stop("lengths and widths of rapidly extracted reads don't match up")
 	}
 
 	return(rowRanges(x))
