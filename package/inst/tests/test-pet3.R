@@ -88,18 +88,15 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 		}
 
     	# Looping through a number of possible extraction scenarios.
-		for (mode in 1:3) {
+		for (mode in 1:2) {
 			if (mode==1L) {
-				rescue.ext <- NA
 				pe <- "both"
 			} else if (mode==2L) {
-				rescue.ext <- ext
-			} else if (mode==3L) {
 				pe <- "first"
 			}
 
 			# Loading windowCounts.
-			rpam <- readParam(pe=pe, rescue.ext=rescue.ext, max.frag=max.frag, 
+			rpam <- readParam(pe=pe, max.frag=max.frag, 
 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
 				width=right+left+1, filter=0, param=rpam)
@@ -175,16 +172,6 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				valid <- valid & sizes <= max.frag
 				if (pe=="both") {
 					pairedness <- GRanges(chr1, IRanges(leftpos, leftpos+sizes-1))[valid & paired]
-					if (!is.na(rescue.ext)) {
-						# We pick the first if the second is inactive, if paired but interchromosomal, or if paired and intrachromosomal
-						# and otherwise invalid and has higher mapping quality.
-						better <- firsts[[lib]]$mapq > seconds[[lib]]$mapq
-						fcopy <- resize(firsts[[lib]][keep1 & (!keep2 | chr1!=chr2 | (!valid & better))], width=ext)
-						fcopy$mapq <- fcopy$dup <- NULL
-						scopy <- resize(seconds[[lib]][keep2 & (!keep1 | chr1!=chr2 | (!valid & !better))], width=ext)
-						scopy$mapq <- scopy$dup <- NULL
-						pairedness <- c(pairedness, fcopy, scopy)
-					}
 				} else {
 					pairedness <- resize(firsts[[lib]][keep1], width=ext)
 				}
