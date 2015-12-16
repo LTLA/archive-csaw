@@ -1,4 +1,4 @@
-.extractSE <- function(bam, where, param, extras="strand", discard=NULL, ...) 
+.extractSE <- function(bam, where, param, extras="strand", ...) 
 # Extracts single-end read data from a BAM file with removal of unmapped,
 # duplicate and poorly mapped/non-unique reads. We also discard reads in the
 # specified discard regions. In such cases, the offending reads must be wholly
@@ -11,7 +11,7 @@
 # last modified 2 July 2015
 {
 	all.fields <- c("pos", "qwidth", extras)
-	if (length(discard)) { all.fields <- c(all.fields, "cigar") }	
+	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
 	all.fields <- unique(all.fields)
 
 	if (length(param$forward)==0L) { stop("read strand extraction must be specified") }
@@ -21,7 +21,7 @@
 		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), ...)))[[1]]
   	
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
-	if (length(discard)) {
+	if (length(param$discard)) {
 	    awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
         keep <- .discardReads(as.character(seqnames(where)), reads$pos, awidth, param$discard)
 		if (!"cigar" %in% extras) { reads$cigar <- NULL }

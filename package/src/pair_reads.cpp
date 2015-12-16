@@ -329,7 +329,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
                 last_identipos=curpos;
             }
             itip=identical_pos.lower_bound(current.second);
-            if (itip!=identical_pos.end() && !(identical_pos.key_comp()(current.second, itip->first))) {
+            if (itip!=identical_pos.end() && !(identical_pos.key_comp()(current.second, *itip))) {
                 mate_is_in=true;
                 identical_pos.erase(itip);
             } else {
