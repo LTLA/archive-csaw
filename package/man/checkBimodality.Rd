@@ -62,11 +62,10 @@ checkBimodality(bamFiles, incoming, width=c(100, 200))
 checkBimodality(bamFiles, incoming, param=readParam(minq=20, dedup=TRUE))
 checkBimodality(bamFiles, incoming, prior.count=5)
 
-# Works on PE data; scores are computed from paired/rescued reads.
+# Works on PE data; scores are computed from paired reads.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 checkBimodality(bamFile, incoming[1:3], param=readParam(pe="both"))
-checkBimodality(bamFile, incoming[1:3], param=readParam(pe="both", 
-    rescue.ext=50, max.frag=100))
+checkBimodality(bamFile, incoming[1:3], param=readParam(pe="both", max.frag=100))
 }
 
 \keyword{diagnostics}

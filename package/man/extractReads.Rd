@@ -58,15 +58,11 @@ bamFile <- system.file("exdata", "pet.bam", package="csaw")
 extractReads(bamFile, GRanges("chrB", IRanges(100, 500)), 
     param=readParam(pe="both"))
 extractReads(bamFile, GRanges("chrB", IRanges(100, 500)), 
-    param=readParam(pe="both", rescue.ext=100))
-extractReads(bamFile, GRanges("chrB", IRanges(100, 500)), 
     param=readParam(pe="first"))
 
 # Extracting as reads.
 extractReads(bamFile, GRanges("chrB", IRanges(100, 500)), 
     param=readParam(pe="both"), as.reads=TRUE)
-extractReads(bamFile, GRanges("chrB", IRanges(100, 500)), 
-    param=readParam(pe="both", rescue.ext=100), as.reads=TRUE)
 
 # Dealing with the extension length.
 bamFile <- system.file("exdata", "rep1.bam", package="csaw")

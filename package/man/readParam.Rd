@@ -17,8 +17,6 @@ Slots are defined as:
 \describe{
 	\item{\code{pe}:}{a character string indicating whether paired-end data is present; set to \code{"none"}, \code{"both"}, \code{"first"} or \code{"second"}}
 	\item{\code{max.frag}:}{an integer scalar, specifying the maximum fragment length corresponding to a read pair}
-	\item{\code{rescue.ext}:}{an integer scalar indicating the extension length for rescued reads from invalid pairs}
-	\item{\code{fast.pe}:}{a logical scalar specifying whether fast fragment extraction should be performed for paired-end data}
 	\item{\code{dedup}:}{a logical scalar indicating whether marked duplicate reads should be ignored}
 	\item{\code{minq}:}{an integer scalar, specifying the minimum mapping quality score for an aligned read}
 	\item{\code{forward}:}{a logical scalar indicating whether only forward reads should be extracted}
@@ -50,27 +48,14 @@ Extracted reads are then grouped into proper pairs.
 Proper pairs are those where the two reads are close together and in an inward-facing orientation. 
 The fragment interval is defined as that bounded by the 5' ends of the two reads in a proper pair.
 Fragment sizes above \code{max.frag} are removed; use \code{\link{getPESizes}} to pick an appropriate value. 
+Obviously, pairs of reads on different chromosomes will not be used.
 
-By default, only reads in proper pairs are used to construct a fragment interval.
-If \code{rescue.ext!=NA}, the function will also attempt to recover reads from improper pairs.
-For each improper pair, the read with the higher MAPQ score will be directionally extended with \code{rescue.ext}.
-Users should set \code{rescue.ext} as the median fragment length from \code{\link{getPESizes}}.
-The extended read will then be used as the fragment interval.
-Similarly, any reads without a mapped mate will be extended. 
-For reasons of convenience, both reads will be rescued and extended for interchromosomal read pairs.
-This is acceptable as these reads will never be counted twice into the same region.
-
-Each run through the position-sorted BAM file tends to be time-consuming, as read names must be extracted and matched.
-This can be avoided by setting \code{fast.pe=TRUE}.
-In this case, only cursory checks are done with regards to proper pairing.
-Each fragment is defined from a forward-stranded read with a reverse-stranded mate and a positive insert size no larger than \code{max.frag}.
-Values of \code{minq} and \code{discard} are ignored, as the specifics of the mate alignment are not accessed in this fast mode.
-
-Finally, paired-end data can also be treated as single-end data by only using one read from each pair with \code{pe="first"} or \code{"second"}.  
+Paired-end data can also be treated as single-end data by only using one read from each pair with \code{pe="first"} or \code{"second"}.  
 This is useful for poor-quality data where the paired-end procedure has obviously failed, e.g., with many interchromosomal read pairs or pairs with large fragment lengths.
 Treating the data as single-end may allow the analysis to be salvaged.
 
 In all cases, users should ensure that each BAM file containing paired-end data is properly synchronized prior to count loading.
+This can be done using standard tools like FixMateInformation from the Picard suite (http://broadinstitute.github.io/picard).
 }
 
 \section{Parameter settings for single-end data}{
@@ -80,18 +65,11 @@ If \code{forward=NA}, reads are extracted from all strands.
 Otherwise, reads are only extracted from the forward or reverse strands for \code{TRUE} or \code{FALSE}, respectively.
 This may be useful for applications requiring strand-specific counting.
 A special case is \code{forward=NULL} - see \code{\link{strandedCounts}} for more details.
-
-Note that directional extension is often used in analyses of single-end data.
-However, it must be stressed that the \code{rescue.ext} parameter here does \emph{not} determine the length of the extension.
-Instead, the average fragment length must be specified in each of the relevant downstream functions.
-This is because directional extension of single-end data pertains to analysis, not read extraction.
-
-% Doing so for paired-end data is just to recover the paired-end fragment, for similarity with proper pairs.
 }
 
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pe="none", max.frag=500, rescue.ext=NA, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pe="none", max.frag=500, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}
@@ -141,9 +119,7 @@ blah$dedup
 # Use 'reform' if only some arguments need to be changed.
 blah
 reform(blah, dedup=TRUE)
-reform(blah, rescue.ext=200)
 reform(blah, pe="both", max.frag=212.0)
-reform(blah, pe="both", fast.pe=TRUE)
 }
 
 \keyword{counting}

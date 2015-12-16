@@ -68,10 +68,6 @@ plot(0:n, x, xlab="delay (bp)", ylab="acf")
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
 x <- correlateReads(bamFile, param=readParam(pe="both"))
 head(x)
-
-x <- correlateReads(bamFile, param=readParam(pe="both", 
-    rescue.ext=50, max.frag=100))
-head(x)
 }
 
 \seealso{
