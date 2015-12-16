@@ -56,7 +56,7 @@ getWidths(data)
 data <- windowCounts(bamFiles, ext=c(50, 100), filter=1)
 getWidths(data)
 
-data <- windowCounts(bamFiles, ext=makeExtVector(c(50, 100)), filter=1)
+data <- windowCounts(bamFiles, ext=DataFrame(c(50, 100), NA), filter=1)
 getWidths(data)
 
 # Avoid error by defining 'rlen'.

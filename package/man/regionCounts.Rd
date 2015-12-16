@@ -33,7 +33,7 @@ Note that the strandedness of \code{regions} will not be considered when computi
 The strandedness of the output \code{rowRanges} will depend on the strand(s) from which reads were counted.
 This is determined by the \code{forward} slot in the \code{param} object.
 
-See \code{\link{windowCounts}} and \code{\link{makeExtVector}} for more details on read extension.
+See \code{\link{windowCounts}} for more details on read extension.
 }
 
 \author{Aaron Lun}
@@ -41,8 +41,7 @@ See \code{\link{windowCounts}} and \code{\link{makeExtVector}} for more details 
 \seealso{
 \code{\link{countOverlaps}},
 \code{\link{windowCounts}},
-\code{\link{readParam}},
-\code{\link{makeExtVector}}
+\code{\link{readParam}}
 }
 
 \examples{
