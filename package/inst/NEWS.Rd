@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.5.3}{\itemize{
+\section{Version 1.5.6}{\itemize{
 \item 
 Restored normalize() as a S4 method returning a RangedSummarizedExperiment object.
 
@@ -11,6 +11,18 @@ Modified asDGEList() to use any available normalization data in the input object
 
 \item 
 Generalized S4 methods to apply on SummarizedExperiment objects.
+
+\item
+Removed the rescue.ext option for PE handling, to maintain consistent totals calculations.
+
+\item
+Removed the fast.pe option for PE data handling, in favour of improved default processing.
+
+\item
+Removed dumpPE() function, which is not required without the fast.pe option.
+
+\item
+Removed makeExtVector() function in favour of list/DataFrame specification.
 }}
 
 \section{Version 1.4.0}{\itemize{
