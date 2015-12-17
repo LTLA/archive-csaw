@@ -19,10 +19,13 @@ Removed the rescue.ext option for PE handling, to maintain consistent totals cal
 Removed the fast.pe option for PE data handling, in favour of improved default processing.
 
 \item
-Removed dumpPE() function, which is not required without the fast.pe option.
+Removed dumpPE(), which is not required without the fast.pe option.
 
 \item
-Removed makeExtVector() function in favour of list/DataFrame specification.
+Removed makeExtVector() in favour of list/DataFrame specification.
+
+\item
+windowCounts() and regionCounts() now compute and store the mean PE size and read length.
 }}
 
 \section{Version 1.4.0}{\itemize{
