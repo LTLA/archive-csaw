@@ -25,8 +25,6 @@ Type 'q()' to quit R.
 > source("simsam.R")
 > dir<-"pe-test"
 > dir.create(dir)
-Warning message:
-In dir.create(dir) : 'pe-test' already exists
 > options(width=120)
 > 
 > checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, left=0, right=0, filter=-1, ext=100) {
@@ -712,4 +710,4 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 52.079   0.440  52.579 
+ 51.650   0.317  52.027 

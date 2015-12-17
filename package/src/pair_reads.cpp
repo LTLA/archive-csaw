@@ -276,11 +276,11 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     OutputContainer oc(getnames);
         
     typedef std::map<std::pair<int, std::string>, std::pair<int, int> > Holder;
-    Holder first_holder, second_holder;
+    std::deque<Holder> all_holders(4); // four holders, one for each strand/first combination; cut down searches.
     std::pair<int, std::string> current;
     Holder::iterator ith;
     int curpos, curlen, curoff;
-    bool am_mapped, is_first;
+    bool am_mapped, is_first, is_reverse;
 
     bool mate_is_in;
     std::set<std::string> identical_pos;
@@ -353,7 +353,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
         if (mate_is_in) {
             current.first = (bf.read -> core).mpos;
-            Holder& holder=( is_first ? second_holder : first_holder );
+            Holder& holder=all_holders[int(!is_first) + 2*int(bam_is_mrev(bf.read))];
             ith=holder.find(current);
 
             if (ith != holder.end()) { 
@@ -374,20 +374,20 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
             }
         } else if (am_mapped) {
             current.first = curpos;
-            Holder& holder=( is_first ? first_holder : second_holder );
-            holder[current] = std::make_pair(curlen * (bam_is_rev(bf.read) ? -1 : 1), curoff);
+            is_reverse = bam_is_rev(bf.read);
+            Holder& holder=all_holders[int(is_first) + 2*int(is_reverse)];
+            holder[current] = std::make_pair(curlen * (is_reverse ? -1 : 1), curoff);
         }
     }
 
     // Leftovers treated as one_unmapped; marked as paired, but the mate is not in file.
-    for (ith=first_holder.begin(); ith!=first_holder.end(); ++ith) { 
-        oc.add_onemapped((ith->first).first, (ith->second).first);
-    }
-    for (ith=second_holder.begin(); ith!=second_holder.end(); ++ith) { 
-        oc.add_onemapped((ith->first).first, (ith->second).first);
-    }  
-    first_holder.clear();
-    second_holder.clear();
+    for (size_t h=0; h<all_holders.size(); ++h) { 
+        Holder& holder=all_holders[h];
+        for (ith=holder.begin(); ith!=holder.end(); ++ith) { 
+            oc.add_onemapped((ith->first).first, (ith->second).first);
+        }
+        holder.clear();
+    }    
 
     // Storing all output.
     SEXP output=PROTECT(allocVector(VECSXP, getnames ? 9 : 2));
