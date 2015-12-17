@@ -78,13 +78,12 @@ The value of \code{final.ext} can be specified by passing a list (or equivalentl
 The library-specific fragment lengths are taken from the first element of the list, while the final fragment length is defined from the second element. 
 To this end, the second element should be either a scalar or a vector containing a single duplicated value.
 If \code{final.ext} is set to \code{NA}, no rescaling is performed from the library-specific fragment lengths.
-In addition, if \code{ext} is a vector with different values between libraries, \code{final.ext} is automatically set to the mean of all values in \code{ext}.
 }
 
 \section{Comments on ext for paired-end data}{
 Directional extension is not performed for paired-end data, so the values in \code{ext} are not used directly.
 Hwoever, rescaling can still be performed to standardize fragment lengths across libraries, by resizing each fragment from its midpoint.
-This still uses \code{final.ext} in the attributes of the \code{ext} parameter.
+This will use the second element of \code{ext} as \code{final.ext}, if \code{ext} is specified as a list of length 2.
 
 On a similar note, some downstream functions will use the extension length in the output \code{colData} as the average fragment length.
 Thus, to maintain compatibility, users are recommended to set \code{ext} to a vector holding the median fragment length in each library.

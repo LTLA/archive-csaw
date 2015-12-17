@@ -176,11 +176,7 @@
         }
         ext <- ext[[1]]
     } else {
-        if (length(unique(ext))==1L) { 
-            final.ext <- NA_integer_
-        } else {
-            final.ext <- as.integer(mean(ext))
-        }
+        final.ext <- NA_integer_
     }
 	
 	if (length(ext)==1L) { 

@@ -6,7 +6,8 @@ source("simsam.R")
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=5, discard=GRanges(), restrict=NULL, forward=NA, final.len=NA) {
 	ext <- rep(fraglen, length.out=length(bamFiles))
-	if (length(final.len)) { ext <- DataFrame(fraglen, final.len) }
+    if (!length(final.len)) { final.len <- mean(ext) }
+	if (!is.na(final.len)) { ext <- DataFrame(fraglen, final.len) } 
 
 	for (type in 1:3) {
 		if (type==1) {

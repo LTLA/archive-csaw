@@ -61,7 +61,7 @@ comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, 
 			dedup <- FALSE
 			minq <- 100
 		}
-		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
+		x<-windowCounts(bamFiles, ext=submit, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward))
 
 		# Checking with countOverlaps.

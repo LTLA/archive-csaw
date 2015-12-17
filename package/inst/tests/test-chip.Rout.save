@@ -80,7 +80,7 @@ Type 'q()' to quit R.
 + 			dedup <- FALSE
 + 			minq <- 100
 + 		}
-+ 		x<-windowCounts(bamFiles, ext=fraglen, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
++ 		x<-windowCounts(bamFiles, ext=submit, width=right+left+1, shift=left, spacing=spacing, filter=filter, 
 + 			param=readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup, forward=forward))
 + 
 + 		# Checking with countOverlaps.
@@ -1215,4 +1215,4 @@ GRanges object with 363 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 58.121   0.304  58.529 
+ 60.228   0.494  60.882 
