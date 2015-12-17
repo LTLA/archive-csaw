@@ -4,6 +4,7 @@
 
 #include "csaw.h"
 #include "sam.h"
+#include "hts.h"
 #include "bgzf.h"
 
 extern "C" {
@@ -63,6 +64,10 @@ public:
 
 class BamIterator {
 public:
+    BamIterator(const Bamfile& bf) : iter(NULL) {
+        iter=bam_itr_queryi(bf.index, HTS_IDX_NOCOOR, 0, 0);
+        return;
+    }
     BamIterator(const Bamfile& bf, SEXP Chr, SEXP Start, SEXP End) : iter(NULL) {
         if (!isString(Chr) || LENGTH(Chr)!=1) { 
             throw std::runtime_error("chromosome name should be a string"); 
@@ -284,11 +289,11 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
         /* Reasons to not add a read: */
        
-        // If we can see that it is obviously unmapped.
-        if (((bf.read -> core).flag & BAM_FUNMAP)!=0) { 
-            // We don't filter by additional mapping criteria, as we need to search 'holder' to pop out the partner and to store diagnostics.
-            continue;
-        } 
+//        // If we can see that it is obviously unmapped (IMPOSSIBLE for a sorted file).
+//        if (((bf.read -> core).flag & BAM_FUNMAP)!=0) { 
+//            // We don't filter by additional mapping criteria, as we need to search 'holder' to pop out the partner and to store diagnostics.
+//            continue;
+//        } 
         
         // (just getting some stats here).
         curpos = (bf.read -> core).pos;
@@ -297,7 +302,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         if ((use_qual && (bf.read -> core).qual < minqual) 
                 || (rmdup && ((bf.read -> core).flag & BAM_FDUP)!=0)) { am_mapped=false; }
 
-        // Or If it's a singleton.
+        // If it's a singleton.
         if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
             if (am_mapped) { oc.add_single(curpos, curlen); }
             continue;
@@ -438,6 +443,18 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
     UNPROTECT(1);
     return output;
+} catch (std::exception &e) {
+    return mkString(e.what());
+}
+
+// Getting unmapped reads.
+
+SEXP get_leftovers (SEXP bam, SEXP index) try { 
+    Bamfile bf(bam, index);
+    BamIterator biter(bf);
+    int output=0;
+    while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++output; }
+    return(ScalarInteger(output));
 } catch (std::exception &e) {
     return mkString(e.what());
 }

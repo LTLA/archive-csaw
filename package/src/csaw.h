@@ -69,6 +69,8 @@ SEXP check_bimodality(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 SEXP extract_pair_data(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
+SEXP get_leftovers(SEXP, SEXP);
+
 }
 
 #endif

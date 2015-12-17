@@ -65,6 +65,12 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 	inter.chr <- sum(loose.names.1 %in% loose.names.2)
 	one.unmapped <- one.unmapped + length(loose.names.2) + length(loose.names.1) - inter.chr*2L
 
+    bam.file <- path.expand(bam.file)
+    bam.index <- paste0(bam.file, ".bai")
+    out <- .Call(cxx_get_leftovers, bam.file, bam.index)
+    if (is.character(out)) { stop(out) }
+    totals <- totals + out
+
    	# Returning sizes and some diagnostic data.
 	return(list(sizes=unlist(norm.list), diagnostics=c(total.reads=totals, mapped.reads=mapped, 
 		single=singles, mate.unmapped=one.unmapped, unoriented=unoriented, inter.chr=inter.chr)))
