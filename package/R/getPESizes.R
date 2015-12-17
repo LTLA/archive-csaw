@@ -67,7 +67,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 
     bam.file <- path.expand(bam.file)
     bam.index <- paste0(bam.file, ".bai")
-    out <- .Call(cxx_get_leftovers, bam.file, bam.index)
+    out <- .Call(cxx_get_leftovers, bam.file, bam.index, names(extracted.chrs))
     if (is.character(out)) { stop(out) }
     totals <- totals + out
 

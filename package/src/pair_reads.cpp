@@ -97,6 +97,9 @@ public:
         }
         iter=bam_itr_queryi(bf.index, cid, start, end);
     }
+    BamIterator(const Bamfile& bf, int cid, int start, int end) : iter(NULL) {
+        iter=bam_itr_queryi(bf.index, cid, start, end);
+    }
     ~BamIterator() { 
         bam_itr_destroy(iter); 
     }
@@ -449,12 +452,30 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
 // Getting unmapped reads.
 
-SEXP get_leftovers (SEXP bam, SEXP index) try { 
+SEXP get_leftovers (SEXP bam, SEXP index, SEXP remaining) try { 
     Bamfile bf(bam, index);
+
+    if (!isString(remaining)) { throw std::runtime_error("names of processed chromosomes should be strings"); }
+    const int nchr=LENGTH(remaining);
+    std::set<std::string> already_there;
+    for (int i=0; i<nchr; ++i) {
+        already_there.insert(std::string(CHAR(STRING_ELT(remaining, i))));        
+    }
+
+    // Getting the reads mapped to chromosomes we didn't look at due to 'restrict'.
+    int leftovers=0;
+    std::set<std::string>::iterator iat;
+    for (int cid=0; cid<bf.header->n_targets; ++cid) {
+        iat=already_there.find(std::string(bf.header->target_name[cid]));
+        if (iat!=already_there.end()) { continue; }
+        BamIterator biter(bf, cid, 0, bf.header->target_len[cid]);
+        while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++leftovers; }
+    } 
+    
+    // Also getting the unmapped guys. 
     BamIterator biter(bf);
-    int output=0;
-    while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++output; }
-    return(ScalarInteger(output));
+    while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++leftovers; }
+    return(ScalarInteger(leftovers));
 } catch (std::exception &e) {
     return mkString(e.what());
 }

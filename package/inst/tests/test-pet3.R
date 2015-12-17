@@ -149,14 +149,8 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 					} else if (stuff$diagnostics[["mapped.reads"]]!=sum(keep1)+sum(keep2)+sum(skeep)) {
 						stop("mismatch in number of mapped reads")
 					}
-					if (is.null(restrict)) { 
-                        if (stuff$diagnostics[["total.reads"]]!=npairs*2L+nsingles) {
-                            stop("mismatch in total number of reads")
-                        }
-                    } else {
-                        if (stuff$diagnostics[["total.reads"]]!=sum(chr1%in%restrict) + sum(chr2%in% restrict) + sum(schr%in% restrict)) {
-                            stop("mismatch in total number of reads upon restriction")
-                        }
+                    if (stuff$diagnostics[["total.reads"]]!=npairs*2L+nsingles) {
+                        stop("mismatch in total number of reads")
                     }
 			        if (sum(paired & chr1!=chr2)!=stuff$diagnostics[["inter.chr"]]) { stop("mismatch in interchromosomal PEs") }
 			        if (sum(paired & chr1==chr2 & !valid)!=stuff$diagnostics[["unoriented"]]) { stop("mismatch in invalid numbers") }
