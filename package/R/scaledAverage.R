@@ -19,7 +19,7 @@ getWidths <- function(data)
 #
 # written by Aaron Lun
 # created 5 November 2014
-# last modified 14 May 2015
+# last modified 17 December 2015
 {
 	flen <- metadata(data)$final.ext
 
@@ -27,7 +27,7 @@ getWidths <- function(data)
 		flen <- data$ext
 		is.missing <- is.na(flen)
 		if (any(is.missing)) { 
-			if (is.null(data$rlen)) { 
+			if (is.null(data$rlen) || any(is.na(data$rlen[is.missing]))) { 
 				stop("need to specify read lengths in 'data$rlen'")
 			}
 			flen[is.missing] <- data$rlen[is.missing]

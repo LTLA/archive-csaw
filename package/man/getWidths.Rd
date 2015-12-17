@@ -27,12 +27,12 @@ Thus, a 1 bp window has an effective width that includes the average length of e
 
 The fragment length is taken from \code{metadata(data)$final.ext}, if it is not \code{NA}.
 Otherwise, it is taken from \code{data$ext}.
-For paired-end data, the average fragment length should be the median of the values obtained with \code{\link{getPESizes}}.
 If the fragment lengths are different between libraries, the average is used to computed the effective width of the window.
+For paired-end data, \code{data$ext} should be an average of the inferred fragment sizes, e.g., obtained with \code{\link{getPESizes}}.
 
-If \code{final.ext} is \code{NA} and any of \code{ext} are \code{NA}, the function will throw an error.
-Users should set the read length in \code{data$rlen} to avoid this, as \code{NA} values of \code{ext} correspond to the use of unextended reads.
-This information must be manually supplied as it is not automatically stored when constructing \code{data}.
+If \code{final.ext} is \code{NA} and any of \code{ext} are \code{NA}, the function will try to extract the read lengths in \code{data$rlen}.
+This is because \code{NA} values of \code{ext} correspond to the use of unextended reads in \code{\link{windowCounts}} and \code{\link{regionCounts}}.
+The likely read lengths are automatically computed in each function but can also be set manually.
 }
 
 \value{
@@ -59,15 +59,17 @@ getWidths(data)
 data <- windowCounts(bamFiles, ext=DataFrame(c(50, 100), NA), filter=1)
 getWidths(data)
 
-# Avoid error by defining 'rlen'.
+# Using the automatically computed 'rlen'.
 data <- windowCounts(bamFiles, ext=c(NA, 100), filter=1)
-try(getWidths(data))
-data$rlen <- 200
+getWidths(data)
+data$rlen <- 200 # Manually defining it, if required.
 getWidths(data)
 
-# Paired-end data takes the fragment length from 'ext'.
+# Paired-end data also takes the fragment length from 'ext'.
 bamFile <- system.file("exdata", "pet.bam", package="csaw")
-data <- windowCounts(bamFile, param=readParam(pe="both"), ext=200, filter=1)
+data <- windowCounts(bamFile, param=readParam(pe="both"), filter=1)
+getWidths(data)
+data$ext <- 200 # Again, manual definition is accepted.
 getWidths(data)
 }
 

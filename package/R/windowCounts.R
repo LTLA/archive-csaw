@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 22 July 2015
+# last modified 17 December 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -51,6 +51,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	all.out <- list(matrix(0L, ncol=nbam, nrow=0))
 	all.regions <- list(GRanges())
 	ix <- 1
+    all.pe <- all.rlen <- rep(list(list()), nbam)
 
 	for (i in seq_along(extracted.chrs)) {
 		chr <- names(extracted.chrs)[i]
@@ -72,6 +73,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
+                all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$qwidth)
 			} else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				if (bin) { 
@@ -83,6 +85,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 					frag.start <- checked$start
 					frag.end <- checked$end
 				}
+                all.pe[[bf]] <- .runningWM(all.pe[[bf]], out$size)
 			}
 
 			# Extending reads to account for window sizes > 1 bp. The start of each read
@@ -117,11 +120,9 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	seqlengths(all.regions) <- extracted.chrs
 	strand(all.regions) <- .decideStrand(paramlist)
 
-	dim(paramlist) <- c(nbam, 1)
-	colnames(paramlist) <- "param"
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowRanges=all.regions, 
-		colData=DataFrame(bam.files=bam.files, totals=totals, ext=ext.data$ext, paramlist),
+		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, paramlist),
 		metadata=list(spacing=spacing, width=width, shift=shift, 
 			final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }

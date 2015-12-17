@@ -84,7 +84,7 @@ assays(1): counts
 rownames: NULL
 rowData names(0):
 colnames: NULL
-colData names(4): bam.files totals ext param
+colData names(5): bam.files totals ext rlen param
 > 
 > getWidths(out)
 integer(0)
@@ -198,4 +198,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
-  8.966   0.177   9.142 
+  8.700   0.195   8.890 

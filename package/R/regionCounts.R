@@ -6,7 +6,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 22 July 2015
+# last modified 17 December 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -17,7 +17,8 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 	nx <- length(regions)
 	counts <- matrix(0L, nrow=nx, ncol=nbam)
 	indices <- split(seq_len(nx), seqnames(regions))
-
+    all.pe <- all.rlen <- rep(list(list()), nbam)
+    
 	# No sense in doing so; you can set param$forward for strand-specific counting.
 	if (any(strand(regions)!="*")) { 
 		warning("ignoring strandedness of supplied regions") 
@@ -37,12 +38,14 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
+                all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$qwidth)
 			} else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
    				frag.start <- checked$start
 				frag.end <- checked$end
-			}
+                all.pe[[bf]] <- .runningWM(all.pe[[bf]], out$size)
+            }
 		
 			# Counting the number of overlaps of any type with the known regions.
 			totals[bf] <- totals[bf] + length(frag.start)
@@ -51,11 +54,9 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		}
 	}
 
-	strand(regions) <- .decideStrand(paramlist)
-	dim(paramlist) <- c(nbam, 1)
-	colnames(paramlist) <- "param"
+    strand(regions) <- .decideStrand(paramlist)
 	return(SummarizedExperiment(assays=SimpleList(counts=counts), 
 		rowRanges=regions, 
-		colData=DataFrame(bam.files, totals=totals, ext=ext.data$ext, paramlist),
+		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, paramlist),
 		metadata=list(final.ext=ext.data$final)))
 }

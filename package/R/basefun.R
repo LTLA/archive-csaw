@@ -156,6 +156,29 @@
 	return(originals)
 }
 
+.checkFragments <- function(starts, ends, final, chrlen) 
+# Coerces the fragments to the desired 'final.ext', and ensures
+# that prior manipulations do not redefine fragment beyond chromosome 
+# boundaries (e.g., due to read extension or rescaling).
+#
+# written by Aaron Lun
+# created 13 February 2014
+# last modified 14 May 2015
+{
+	if (!is.na(final)) { 
+		remainders <- as.integer((ends - starts + 1L - final)/2)
+		if (any(remainders!=0L)) { 
+			starts <- starts + remainders
+			ends <- ends - remainders
+		} 
+	}
+	if (length(starts)) { starts <- pmin(starts, chrlen) } 
+	if (length(ends)) { ends <- pmax(1L, ends) }
+	return(list(start=starts, end=ends)) 
+}
+
+############################################################
+
 .collateExt <- function(nbam, ext)
 # Collates the extension parameters into a set of ext and remainder values.
 # The idea is to extend each read directionally to 'ext', and then extend in
@@ -169,7 +192,7 @@
         if (length(ext)!=2L) {
             stop("'ext' must be a list of length 2")
         } else {
-            final.ext <- unique(as.integer(ext[[2]]))
+            final.ext <- unique(as.integer(round(ext[[2]])))
         	if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
                 stop("final extension length must be a positive integer or NA") 
             }
@@ -184,7 +207,7 @@
 	} else if (length(ext)!=nbam) {
 		stop("length of extension vector is not consistent with number of libraries")
 	}
-	ext <- as.integer(ext)
+	ext <- as.integer(round(ext))
 	if (any(!is.na(ext) & ext <= 0L)) { stop("extension length must be NA or a positive integer") }
 
 	list(ext=ext, final=final.ext)
@@ -213,26 +236,7 @@
 	.checkFragments(frag.start, frag.end, final=final, chrlen=chrlen)
 }
 
-.checkFragments <- function(starts, ends, final, chrlen) 
-# Coerces the fragments to the desired 'final.ext', and ensures
-# that prior manipulations do not redefine fragment beyond chromosome 
-# boundaries (e.g., due to read extension or rescaling).
-#
-# written by Aaron Lun
-# created 13 February 2014
-# last modified 14 May 2015
-{
-	if (!is.na(final)) { 
-		remainders <- as.integer((ends - starts + 1L - final)/2)
-		if (any(remainders!=0L)) { 
-			starts <- starts + remainders
-			ends <- ends - remainders
-		} 
-	}
-	if (length(starts)) { starts <- pmin(starts, chrlen) } 
-	if (length(ends)) { ends <- pmax(1L, ends) }
-	return(list(start=starts, end=ends)) 
-}
+############################################################
 
 .decideStrand <- function(paramlist) 
 # Decides what strand we should assign to the output GRanges in the
@@ -251,5 +255,27 @@
 	if (is.na(getfs[1])) { return("*") }
 	else if (getfs[1]) { return("+") }
 	else { return("-") }
+}
+
+.runningWM <- function(store, x)
+# Computes the weighted mean.
+{
+    if (!length(store)) { store <- c(0, 0) }
+    store[1] <- weighted.mean(c(mean(x), store[1]), c(length(x), store[2]))
+    store[2] <- store[2] + length(x)
+    return(store)
+}
+
+.formatColData <- function(bam.files, totals, ext.data, all.pe, all.rlen, paramlist) {
+    nbam <- length(bam.files)
+    store.ext <- ext.data$ext
+    store.rlen <- rep(NA_integer_, nbam)
+    for (bf in seq_len(nbam)) {
+        if (paramlist[[bf]]$pe=="both") { store.ext[bf] <- as.integer(round(all.pe[[bf]][[1]])) }
+        else { store.rlen[bf] <- as.integer(round(all.rlen[[bf]][[1]])) }
+    }
+    dim(paramlist) <- c(nbam, 1)
+    colnames(paramlist) <- "param"
+    DataFrame(bam.files=bam.files, totals=totals, ext=store.ext, rlen=store.rlen, paramlist)
 }
 

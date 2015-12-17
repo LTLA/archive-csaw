@@ -86,7 +86,7 @@ Hwoever, rescaling can still be performed to standardize fragment lengths across
 This will use the second element of \code{ext} as \code{final.ext}, if \code{ext} is specified as a list of length 2.
 
 On a similar note, some downstream functions will use the extension length in the output \code{colData} as the average fragment length.
-Thus, to maintain compatibility, users are recommended to set \code{ext} to a vector holding the median fragment length in each library.
+Thus, to maintain compatibility, the extension length in the output \code{colData} is set to the average of the inferred fragment lengths for valid read pairs. 
 These values will not be used in \code{windowCounts}, but instead, in functions like \code{\link{getWidths}}.
 }
 
