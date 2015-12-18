@@ -261,7 +261,7 @@
 # Computes the weighted mean.
 {
     if (!length(store)) { store <- c(0, 0) }
-    store[1] <- weighted.mean(c(mean(x), store[1]), c(length(x), store[2]))
+    store[1] <- stats::weighted.mean(c(mean(x), store[1]), c(length(x), store[2]))
     store[2] <- store[2] + length(x)
     return(store)
 }
