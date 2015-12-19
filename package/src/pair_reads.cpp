@@ -1,132 +1,8 @@
-#include <string>
-#include <sstream>
-#include <map>
-
-#include "csaw.h"
-#include "sam.h"
-#include "hts.h"
-#include "bgzf.h"
+#include "bam_utils.h"
 
 extern "C" {
 
-class Bamfile {
-public:
-    Bamfile(SEXP bam, SEXP idx) {
-        if (!isString(bam) || LENGTH(bam)!=1) {
-            throw std::runtime_error("BAM file path must be a string");
-        }
-        const char* path=CHAR(STRING_ELT(bam, 0));
-        if (!isString(idx) || LENGTH(idx)!=1) {
-            throw std::runtime_error("BAM index file path must be a string"); 
-        }
-        const char* xpath=CHAR(STRING_ELT(idx, 0));
-
-        in = sam_open(path, "rb");
-        if (in == NULL) {
-            std::stringstream err;
-            err << "failed to open BAM file at '" << path << "'";
-            throw std::runtime_error(err.str());
-        }
-        try {
-            index = bam_index_load(xpath); 
-            if (index==NULL) { 
-                std::stringstream err;
-                err << "failed to open BAM index at '" << xpath << "'";
-                throw std::runtime_error(err.str());
-            }
-            try {
-                header=sam_hdr_read(in);
-            } catch (std::exception& e) {
-                hts_idx_destroy(index);
-                throw;
-            }
-        } catch (std::exception& e) {
-            sam_close(in);
-            throw;
-        }
-        bgzf_set_cache_size(in->fp.bgzf, 100*BGZF_MAX_BLOCK_SIZE);
-        read=bam_init1();
-        return;
-    }
-
-    ~Bamfile() {
-        bam_hdr_destroy(header);
-        hts_idx_destroy(index); 
-        sam_close(in);
-        bam_destroy1(read);
-    }
-
-    samFile* in;
-    bam1_t* read;
-    hts_idx_t* index;
-    bam_hdr_t * header;
-};
-
-class BamIterator {
-public:
-    BamIterator(const Bamfile& bf) : iter(NULL) {
-        iter=bam_itr_queryi(bf.index, HTS_IDX_NOCOOR, 0, 0);
-        return;
-    }
-    BamIterator(const Bamfile& bf, SEXP Chr, SEXP Start, SEXP End) : iter(NULL) {
-        if (!isString(Chr) || LENGTH(Chr)!=1) { 
-            throw std::runtime_error("chromosome name should be a string"); 
-        }
-        const char* chr=CHAR(STRING_ELT(Chr, 0));
-        if (!isInteger(Start) || LENGTH(Start)!=1) { 
-            throw std::runtime_error("region start should be an integer scalar"); 
-        }
-        int start=asInteger(Start)-1;
-        if (!isInteger(End) || LENGTH(End)!=1) { 
-            throw std::runtime_error("region end should be an integer scalar"); 
-        }
-        int end=asInteger(End);
-
-        int cid=bam_name2id(bf.header, chr);
-        if (cid==-1) {
-            std::stringstream err;
-            err << "reference sequence '" << chr << "' missing in BAM header";
-            throw std::runtime_error(err.str());
-        }
-
-        if (start < 0) { start=0; }
-        const int curlen = (bf.header->target_len)[cid];
-        if (end > curlen) { end = curlen; }
-        if (start > end) {
-            throw std::runtime_error("invalid values for region start/end coordinates");
-        }
-        iter=bam_itr_queryi(bf.index, cid, start, end);
-    }
-    BamIterator(const Bamfile& bf, int cid, int start, int end) : iter(NULL) {
-        iter=bam_itr_queryi(bf.index, cid, start, end);
-    }
-    ~BamIterator() { 
-        bam_itr_destroy(iter); 
-    }
-    hts_itr_t* iter;
-};
-
-void decompose_cigar(bam1_t* read, int& alen, int& offset) {
-    const int n_cigar=(read->core).n_cigar;
-    if (n_cigar==0) { 
-        std::stringstream err;
-        err << "zero-length CIGAR for read '" << bam_get_qname(read) << "'";
-        throw std::runtime_error(err.str());
-    }
-    uint32_t* cigar=bam_get_cigar(read);
-
-    alen=bam_cigar2rlen(n_cigar, cigar);
-    offset=0;
-    if (bam_is_rev(read)) {
-        if (bam_cigar_op(cigar[n_cigar-1])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[n_cigar-1]); }
-    } else {
-        if (bam_cigar_op(cigar[0])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[0]); }
-    }
-    return;
-}
-
-class OutputContainer {
-public:
+struct OutputContainer {
     OutputContainer(bool d) : diagnostics(d), totals(0) {}
 
     void add_genuine(int pos1, int len1, int off1, int pos2, int len2, int off2, bool isreverse1, bool isfirst1) {
@@ -271,7 +147,8 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     const bool getnames=asLogical(get_names);
 
     // Initializing odds and ends.
-    Bamfile bf(bam, index);
+    BamFile bf(bam, index);
+    BamRead br;
     BamIterator biter(bf, chr, start, end);
     OutputContainer oc(getnames);
         
@@ -287,56 +164,56 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     std::set<std::string>::iterator itip;
     int last_identipos=-1;
 
-    while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){
+    while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){
         ++oc.totals;
 
         /* Reasons to not add a read: */
        
 //        // If we can see that it is obviously unmapped (IMPOSSIBLE for a sorted file).
-//        if (((bf.read -> core).flag & BAM_FUNMAP)!=0) { 
+//        if (((br.read -> core).flag & BAM_FUNMAP)!=0) { 
 //            // We don't filter by additional mapping criteria, as we need to search 'holder' to pop out the partner and to store diagnostics.
 //            continue;
 //        } 
         
         // (just getting some stats here).
-        curpos = (bf.read -> core).pos;
-        decompose_cigar(bf.read, curlen, curoff);
+        curpos = (br.read -> core).pos;
+        decompose_cigar(br.read, curlen, curoff);
         am_mapped=true;
-        if ((use_qual && (bf.read -> core).qual < minqual) 
-                || (rmdup && ((bf.read -> core).flag & BAM_FDUP)!=0)) { am_mapped=false; }
+        if ((use_qual && (br.read -> core).qual < minqual) 
+                || (rmdup && ((br.read -> core).flag & BAM_FDUP)!=0)) { am_mapped=false; }
 
         // If it's a singleton.
-        if (((bf.read -> core).flag & BAM_FPAIRED)==0) {
+        if (((br.read -> core).flag & BAM_FPAIRED)==0) {
             if (am_mapped) { oc.add_single(curpos, curlen); }
             continue;
         }
 
         // Or, if we can see that its partner is obviously unmapped.
-        if (((bf.read -> core).flag & BAM_FMUNMAP)!=0) {
+        if (((br.read -> core).flag & BAM_FMUNMAP)!=0) {
             if (am_mapped) { oc.add_onemapped(curpos, curlen); }
             continue;
         }
 
         // Or if it's inter-chromosomal.
-        is_first=(((bf.read->core).flag & BAM_FREAD1)!=0);
-        if (is_first==(((bf.read->core).flag & BAM_FREAD2)!=0)) { 
+        is_first=(((br.read->core).flag & BAM_FREAD1)!=0);
+        if (is_first==(((br.read->core).flag & BAM_FREAD2)!=0)) { 
             std::stringstream err;
-            err << "read '" << bam_get_qname(bf.read) << "' must be either first or second in the pair";
+            err << "read '" << bam_get_qname(br.read) << "' must be either first or second in the pair";
             throw std::runtime_error(err.str()); 
         }
       
-        if ((bf.read -> core).mtid!=(bf.read -> core).tid) { 
-            if (am_mapped) { oc.add_interchr(curpos, curlen, bam_get_qname(bf.read), is_first); } 
+        if ((br.read -> core).mtid!=(br.read -> core).tid) { 
+            if (am_mapped) { oc.add_interchr(curpos, curlen, bam_get_qname(br.read), is_first); } 
             continue;
         }
 
         /* Checking the map and adding it if it doesn't exist. */
         
-        current.second.assign(bam_get_qname(bf.read));
+        current.second.assign(bam_get_qname(br.read));
         mate_is_in=false;
-        if ((bf.read -> core).mpos < curpos) {
+        if ((br.read -> core).mpos < curpos) {
             mate_is_in=true;
-        } else if ((bf.read -> core).mpos == curpos) {
+        } else if ((br.read -> core).mpos == curpos) {
             // Identical mpos to curpos needs careful handling to figure out whether we've already seen it.
             if (curpos!=last_identipos) { 
                 identical_pos.clear();
@@ -352,8 +229,8 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         }
 
         if (mate_is_in) {
-            current.first = (bf.read -> core).mpos;
-            Holder& holder=all_holders[int(!is_first) + 2*int(bam_is_mrev(bf.read))];
+            current.first = (br.read -> core).mpos;
+            Holder& holder=all_holders[int(!is_first) + 2*int(bam_is_mrev(br.read))];
             ith=holder.find(current);
 
             if (ith != holder.end()) { 
@@ -366,7 +243,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 
                 oc.add_genuine(curpos, curlen, curoff, 
                         (ith->first).first, (ith->second).first, (ith->second).second, 
-                        bool(bam_is_rev(bf.read)), is_first);
+                        bool(bam_is_rev(br.read)), is_first);
                 holder.erase(ith);
             } else if (am_mapped) {
                 // Only possible if the mate didn't get added because 'am_mapped' was false.
@@ -374,7 +251,7 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
             }
         } else if (am_mapped) {
             current.first = curpos;
-            is_reverse = bam_is_rev(bf.read);
+            is_reverse = bam_is_rev(br.read);
             Holder& holder=all_holders[int(is_first) + 2*int(is_reverse)];
             holder[current] = std::make_pair(curlen * (is_reverse ? -1 : 1), curoff);
         }
@@ -453,7 +330,8 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 // Getting unmapped reads.
 
 SEXP get_leftovers (SEXP bam, SEXP index, SEXP remaining) try { 
-    Bamfile bf(bam, index);
+    BamFile bf(bam, index);
+    BamRead br;
 
     if (!isString(remaining)) { throw std::runtime_error("names of processed chromosomes should be strings"); }
     const int nchr=LENGTH(remaining);
@@ -469,12 +347,12 @@ SEXP get_leftovers (SEXP bam, SEXP index, SEXP remaining) try {
         iat=already_there.find(std::string(bf.header->target_name[cid]));
         if (iat!=already_there.end()) { continue; }
         BamIterator biter(bf, cid, 0, bf.header->target_len[cid]);
-        while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++leftovers; }
+        while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){ ++leftovers; }
     } 
     
     // Also getting the unmapped guys. 
     BamIterator biter(bf);
-    while (bam_itr_next(bf.in, biter.iter, bf.read) >= 0){ ++leftovers; }
+    while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){ ++leftovers; }
     return(ScalarInteger(leftovers));
 } catch (std::exception &e) {
     return mkString(e.what());

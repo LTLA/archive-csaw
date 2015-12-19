@@ -6,6 +6,9 @@
 #include <deque>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <sstream>
+#include <map>
 
 template <class T>
 struct sort_row_index {
