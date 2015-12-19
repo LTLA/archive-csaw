@@ -1,4 +1,4 @@
-.extractSE <- function(bam, where, param, extras="strand", ...) 
+.extractSE <- function(bam.file, where, param) 
 # Extracts single-end read data from a BAM file with removal of unmapped,
 # duplicate and poorly mapped/non-unique reads. We also discard reads in the
 # specified discard regions. In such cases, the offending reads must be wholly
@@ -8,26 +8,36 @@
 #
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 15 December 2015
+# last modified 19 December 2015
 {
-	all.fields <- c("pos", "qwidth", extras)
-	if (length(param$discard)) { all.fields <- c(all.fields, "cigar") }	
-	all.fields <- unique(all.fields)
+    cur.chr <- as.character(seqnames(where)) 
+    bam.file <- path.expand(bam.file)
+    bam.index <- paste0(bam.file, ".bai")
 
 	if (length(param$forward)==0L) { stop("read strand extraction must be specified") }
-	if (length(where)!=1L) { stop("extraction not supported for multiple ranges at once") }
-	reads <- scanBam(bam, param=ScanBamParam(what=all.fields, which=where, mapqFilter=param$minq,
-		flag=scanBamFlag(isUnmappedQuery=FALSE, isDuplicate=ifelse(param$dedup, FALSE, NA), 
-		isMinusStrand=ifelse(is.na(param$forward), NA, !param$forward), ...)))[[1]]
-  	
+    if (param$pe=="first") {
+        use.first <- TRUE
+    } else if (param$pe=="second") { 
+        use.first <- FALSE
+    } else {
+        use.first <- NA
+    }
+
+    out <- .Call(cxx_extract_single_data, bam.file, bam.index, cur.chr,
+            start(where), end(where), param$minq, param$dedup, 
+            param$forward, use.first)
+    if (is.character(out)) { stop(out) }
+    names(out) <- c("forward", "reverse")
+
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
-	if (length(param$discard)) {
-	    awidth <- cigarWidthAlongReferenceSpace(reads$cigar)
-        keep <- .discardReads(as.character(seqnames(where)), reads$pos, awidth, param$discard)
-		if (!"cigar" %in% extras) { reads$cigar <- NULL }
-		for (x in names(reads)) { reads[[x]] <- reads[[x]][keep] }
-	}
-	return(reads)
+    for (i in names(out)) { 
+        current <- out[[i]]
+        keep <- .discardReads(cur.chr, current[[1]], current[[2]], param$discard)
+        current <- lapply(current, "[", keep)
+        names(current) <- c("pos", "qwidth", "clip5")
+        out[[i]] <- current
+    }
+    return(out)
 }
 
 .discardReads <- function(chr, pos, alen, discard) {
@@ -87,27 +97,11 @@
 	return(output)
 }
 
-.extractBrokenPE <- function(bam.file, where, param)
-# A function to extract PE data, but as single-end data (i.e. only using one
-# of the reads). Useful when paired-end data has gone completely off the rails.
-{
-	use.first <- param$pe=="first"
-	.extractSE(bam.file, where=where, param=param,  
-		isPaired=TRUE, isFirstMateRead=use.first, isSecondMateRead=!use.first)
-}
+# Aliases, for convenience.
 
-.getSingleEnd <- function(bam, where, param) {
-	if (param$pe=="none") { 
-		reads <- .extractSE(bam, where=where, param=param)
-    } else {
-		reads <- .extractBrokenPE(bam, where=where, param=param)
-	}
-	return(reads)
-}	
+.getSingleEnd <- .extractSE
 
-.getPairedEnd <- function(bam, where, param, with.reads=FALSE) {
-	.extractPE(bam, where=where, param=param, with.reads=with.reads)
-}
+.getPairedEnd <- .extractPE
 
 ###########################################################
 
@@ -213,27 +207,29 @@
 	list(ext=ext, final=final.ext)
 }
 
-.extendSE <- function(reads, ext, final, chrlen)
+.extendSE <- function(reads, ext, final, chrlen, retain.strand=FALSE)
 # This decides how long to extend reads. The addition of the remainder kicks
 # out (or truncates) the fragments to reach the desired 'final.ext'. If 'ext'
 # is NA, the read length is used instead.
 #
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 14 May 2015
+# last modified 19 December 2015
 {
 	if (is.na(ext)) {   
-		frag.start <- reads$pos
-		frag.end <- frag.start + reads$qwidth - 1L	
+		frag.start <- c(reads$forward$pos, reads$reverse$pos)
+		frag.end <- frag.start + c(reads$forward$qwidth, reads$reverse$qwidth) - 1L	
 	} else {
-		is.reverse <- reads$strand!="+"
-		frag.start <- reads$pos
-		if (any(is.reverse)) { 
-			frag.start[is.reverse] <- reads$pos[is.reverse] + reads$qwidth[is.reverse] - ext
-		}
-		frag.end <- frag.start + ext - 1L
+		f.start <- reads$forward$pos
+        f.end <- f.start + ext - 1L - reads$forward$clip5 # Cut 5' soft clips out, avoid overextension.
+        r.end <- reads$reverse$pos + reads$reverse$qwidth - 1L
+        r.start <- r.end - ext + reads$reverse$clip5 + 1L
+        frag.start <- c(f.start, r.start)
+        frag.end <- c(f.end, r.end)
 	}
-	.checkFragments(frag.start, frag.end, final=final, chrlen=chrlen)
+	out <- .checkFragments(frag.start, frag.end, final=final, chrlen=chrlen)
+    if (retain.strand) { out$strand <- Rle(c("+", "-"), c(length(reads$forward[[1]]), length(reads$reverse[[1]]))) }
+    return(out)
 }
 
 ############################################################

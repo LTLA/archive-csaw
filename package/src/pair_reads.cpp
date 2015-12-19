@@ -1,7 +1,5 @@
 #include "bam_utils.h"
 
-extern "C" {
-
 struct OutputContainer {
     OutputContainer(bool d) : diagnostics(d), totals(0) {}
 
@@ -340,5 +338,3 @@ SEXP get_leftovers (SEXP bam, SEXP index, SEXP processed) try {
     return mkString(e.what());
 }
 
-
-}

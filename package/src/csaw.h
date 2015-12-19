@@ -74,6 +74,10 @@ SEXP extract_pair_data(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 SEXP get_leftovers(SEXP, SEXP, SEXP);
 
+/* single_reads.cpp */
+
+SEXP extract_single_data(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+
 }
 
 #endif

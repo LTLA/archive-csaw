@@ -38,7 +38,8 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
-                all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$qwidth)
+                all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$forward$qwidth)
+                all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$reverse$qwidth)
 			} else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
 				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
