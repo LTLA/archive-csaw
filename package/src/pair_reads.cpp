@@ -134,7 +134,6 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         throw std::runtime_error("mapping quality should be an integer scalar");
     }    
     const int minqual=asInteger(mapq);
-    const bool use_qual=(minqual!=NA_INTEGER);
 
     if (!isLogical(dedup) || LENGTH(dedup)!=1) {
         throw std::runtime_error("duplicate removal should be a logical scalar"); 
@@ -177,10 +176,8 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
         
         // (just getting some stats here).
         curpos = (br.read -> core).pos;
-        decompose_cigar(br.read, curlen, curoff);
-        am_mapped=true;
-        if ((use_qual && (br.read -> core).qual < minqual) 
-                || (rmdup && ((br.read -> core).flag & BAM_FDUP)!=0)) { am_mapped=false; }
+        br.decompose_cigar(curlen, curoff);
+        am_mapped=br.is_well_mapped(minqual, rmdup);
 
         // If it's a singleton.
         if (((br.read -> core).flag & BAM_FPAIRED)==0) {
@@ -327,17 +324,17 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     return mkString(e.what());
 }
 
-// Getting unmapped reads.
+/* Getting reads on other unprocessed chromosomes, unmapped reads. */
 
-SEXP get_leftovers (SEXP bam, SEXP index, SEXP remaining) try { 
+SEXP get_leftovers (SEXP bam, SEXP index, SEXP processed) try { 
     BamFile bf(bam, index);
     BamRead br;
 
-    if (!isString(remaining)) { throw std::runtime_error("names of processed chromosomes should be strings"); }
-    const int nchr=LENGTH(remaining);
+    if (!isString(processed)) { throw std::runtime_error("names of processed chromosomes should be strings"); }
+    const int nchr=LENGTH(processed);
     std::set<std::string> already_there;
     for (int i=0; i<nchr; ++i) {
-        already_there.insert(std::string(CHAR(STRING_ELT(remaining, i))));        
+        already_there.insert(std::string(CHAR(STRING_ELT(processed, i))));        
     }
 
     // Getting the reads mapped to chromosomes we didn't look at due to 'restrict'.

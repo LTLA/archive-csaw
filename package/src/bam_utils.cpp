@@ -49,6 +49,31 @@ BamRead::BamRead() {
     return;
 }
 
+bool BamRead::is_well_mapped(const int& minqual, const bool& rmdup) const {
+    if (minqual!=NA_INTEGER && (read -> core).qual < minqual) { return false; } 
+    if (rmdup && ((read -> core).flag & BAM_FDUP)!=0) { return false; }
+    return true;
+}
+
+void BamRead::decompose_cigar(int& alen, int& offset) const {
+    const int n_cigar=(read->core).n_cigar;
+    if (n_cigar==0) { 
+        std::stringstream err;
+        err << "zero-length CIGAR for mapped read '" << bam_get_qname(read) << "'";
+        throw std::runtime_error(err.str());
+    }
+    uint32_t* cigar=bam_get_cigar(read);
+    
+    alen=bam_cigar2rlen(n_cigar, cigar);
+    offset=0;
+    if (bam_is_rev(read)) {
+        if (bam_cigar_op(cigar[n_cigar-1])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[n_cigar-1]); }
+    } else {
+        if (bam_cigar_op(cigar[0])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[0]); }
+    }
+    return;
+}
+
 BamRead::~BamRead() { 
     bam_destroy1(read);
     return;
@@ -95,24 +120,5 @@ BamIterator::BamIterator(const BamFile& bf, int cid, int start, int end) : iter(
 
 BamIterator::~BamIterator() { 
     bam_itr_destroy(iter); 
-}
-
-void decompose_cigar(bam1_t* read, int& alen, int& offset) {
-    const int n_cigar=(read->core).n_cigar;
-    if (n_cigar==0) { 
-        std::stringstream err;
-        err << "zero-length CIGAR for read '" << bam_get_qname(read) << "'";
-        throw std::runtime_error(err.str());
-    }
-    uint32_t* cigar=bam_get_cigar(read);
-    
-    alen=bam_cigar2rlen(n_cigar, cigar);
-    offset=0;
-    if (bam_is_rev(read)) {
-        if (bam_cigar_op(cigar[n_cigar-1])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[n_cigar-1]); }
-    } else {
-        if (bam_cigar_op(cigar[0])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[0]); }
-    }
-    return;
 }
 

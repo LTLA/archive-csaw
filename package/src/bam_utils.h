@@ -16,6 +16,8 @@ struct BamFile {
     
 struct BamRead {
     BamRead();
+    bool is_well_mapped(const int&, const bool&) const;
+    void decompose_cigar(int&, int&) const;
     ~BamRead();
     bam1_t* read;
 };
@@ -28,6 +30,5 @@ struct BamIterator {
     hts_itr_t* iter;
 };
 
-void decompose_cigar(bam1_t*, int&, int&);
 
 #endif
