@@ -32,6 +32,7 @@ SEXP extract_single_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end,
     } else {
         const int usefirst=asLogical(use_first);
         if (usefirst!=NA_LOGICAL) {
+            set_flags+=BAM_FPAIRED;
             if (usefirst) {
                 set_flags+=BAM_FREAD1;
                 unset_flags+=BAM_FREAD2;

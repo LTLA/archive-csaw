@@ -93,7 +93,9 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				pe <- "both"
 			} else if (mode==2L) {
 				pe <- "first"
-			}
+			} else if (mode==3L) {
+                pe <- "second"
+            }
 
 			# Loading windowCounts.
 			rpam <- readParam(pe=pe, max.frag=max.frag, 

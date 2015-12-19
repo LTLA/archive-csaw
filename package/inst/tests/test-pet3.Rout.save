@@ -112,7 +112,9 @@ Type 'q()' to quit R.
 + 				pe <- "both"
 + 			} else if (mode==2L) {
 + 				pe <- "first"
-+ 			}
++ 			} else if (mode==3L) {
++                 pe <- "second"
++             }
 + 
 + 			# Loading windowCounts.
 + 			rpam <- readParam(pe=pe, max.frag=max.frag, 
@@ -710,4 +712,4 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 51.650   0.317  52.027 
+ 48.224   1.291  50.613 
