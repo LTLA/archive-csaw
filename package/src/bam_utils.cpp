@@ -122,3 +122,18 @@ BamIterator::~BamIterator() {
     bam_itr_destroy(iter); 
 }
 
+void store_int_output(SEXP& dest, int index, const std::deque<int>& host) {
+    SET_VECTOR_ELT(dest, index, allocVector(INTSXP, host.size()));
+    std::copy(host.begin(), host.end(), INTEGER(VECTOR_ELT(dest, index)));
+    return;
+}
+
+void store_names(SEXP& dest, int index, const std::deque<std::string>& names) {
+    SET_VECTOR_ELT(dest, index, allocVector(STRSXP, names.size()));
+    SEXP current=VECTOR_ELT(dest, index);
+    for (size_t i=0; i<names.size(); ++i) {
+        SET_STRING_ELT(current, i, mkChar(names[i].c_str()));
+    }
+    return;
+}
+

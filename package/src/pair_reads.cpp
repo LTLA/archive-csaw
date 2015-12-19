@@ -94,21 +94,6 @@ struct OutputContainer {
         return;
     }
 
-    void store_output(SEXP& dest, int index, const std::deque<int>& host) {
-        SET_VECTOR_ELT(dest, index, allocVector(INTSXP, host.size()));
-        std::copy(host.begin(), host.end(), INTEGER(VECTOR_ELT(dest, index)));
-        return;
-    }
-
-    void store_names(SEXP dest, int index, std::deque<std::string>& names) {
-        SET_VECTOR_ELT(dest, index, allocVector(STRSXP, names.size()));
-        SEXP current=VECTOR_ELT(dest, index);
-        for (size_t i=0; i<names.size(); ++i) {
-            SET_STRING_ELT(current, i, mkChar(names[i].c_str()));
-        }
-        return;
-    }
-
     const bool diagnostics;
     int totals;
     bool mate_reverse;
@@ -268,50 +253,50 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     try {
         SET_VECTOR_ELT(output, 0, allocVector(VECSXP, 3));
         SEXP left=VECTOR_ELT(output, 0);
-        oc.store_output(left, 0, oc.forward_pos_out);
-        oc.store_output(left, 1, oc.forward_len_out);
-        oc.store_output(left, 2, oc.forward_off_out);
+        store_int_output(left, 0, oc.forward_pos_out);
+        store_int_output(left, 1, oc.forward_len_out);
+        store_int_output(left, 2, oc.forward_off_out);
         
         SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 3));
         SEXP right=VECTOR_ELT(output, 1);
-        oc.store_output(right, 0, oc.reverse_pos_out);
-        oc.store_output(right, 1, oc.reverse_len_out);
-        oc.store_output(right, 2, oc.reverse_off_out);
+        store_int_output(right, 0, oc.reverse_pos_out);
+        store_int_output(right, 1, oc.reverse_len_out);
+        store_int_output(right, 2, oc.reverse_off_out);
     
         if (getnames) {
             SET_VECTOR_ELT(output, 2, ScalarInteger(oc.totals));
             
             SET_VECTOR_ELT(output, 3, allocVector(VECSXP, 2));
             SEXP singles=VECTOR_ELT(output, 3);
-            oc.store_output(singles, 0, oc.single_pos);
-            oc.store_output(singles, 1, oc.single_len);
+            store_int_output(singles, 0, oc.single_pos);
+            store_int_output(singles, 1, oc.single_len);
 
             SET_VECTOR_ELT(output, 4, allocVector(VECSXP, 2));
             SEXP first=VECTOR_ELT(output, 4);
-            oc.store_output(first, 0, oc.ufirst_pos);
-            oc.store_output(first, 1, oc.ufirst_len);
+            store_int_output(first, 0, oc.ufirst_pos);
+            store_int_output(first, 1, oc.ufirst_len);
             
             SET_VECTOR_ELT(output, 5, allocVector(VECSXP, 2));
             SEXP second=VECTOR_ELT(output, 5);
-            oc.store_output(second, 0, oc.usecond_pos);
-            oc.store_output(second, 1, oc.usecond_len);
+            store_int_output(second, 0, oc.usecond_pos);
+            store_int_output(second, 1, oc.usecond_len);
 
             SET_VECTOR_ELT(output, 6, allocVector(VECSXP, 2));
             SEXP onemap=VECTOR_ELT(output, 6);
-            oc.store_output(onemap, 0, oc.onemap_pos);
-            oc.store_output(onemap, 1, oc.onemap_len);
+            store_int_output(onemap, 0, oc.onemap_pos);
+            store_int_output(onemap, 1, oc.onemap_len);
 
             SET_VECTOR_ELT(output, 7, allocVector(VECSXP, 3));
             SEXP interchr1=VECTOR_ELT(output, 7);
-            oc.store_output(interchr1, 0, oc.ifirst_pos);
-            oc.store_output(interchr1, 1, oc.ifirst_len);
-            oc.store_names(interchr1, 2, oc.interchr_names_1);
+            store_int_output(interchr1, 0, oc.ifirst_pos);
+            store_int_output(interchr1, 1, oc.ifirst_len);
+            store_names(interchr1, 2, oc.interchr_names_1);
 
             SET_VECTOR_ELT(output, 8, allocVector(VECSXP, 3));
             SEXP interchr2=VECTOR_ELT(output, 8);
-            oc.store_output(interchr2, 0, oc.isecond_pos);
-            oc.store_output(interchr2, 1, oc.isecond_len);
-            oc.store_names(interchr2, 2, oc.interchr_names_2);
+            store_int_output(interchr2, 0, oc.isecond_pos);
+            store_int_output(interchr2, 1, oc.isecond_len);
+            store_names(interchr2, 2, oc.interchr_names_2);
         }
     } catch (std::exception &e) {
         UNPROTECT(1);

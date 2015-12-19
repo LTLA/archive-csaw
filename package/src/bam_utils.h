@@ -30,5 +30,8 @@ struct BamIterator {
     hts_itr_t* iter;
 };
 
+void store_int_output(SEXP&, int, const std::deque<int>&);
+
+void store_names(SEXP&, int, const std::deque<std::string>&);
 
 #endif
