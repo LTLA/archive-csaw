@@ -13,11 +13,17 @@ struct BamFile {
     hts_idx_t* index;
     bam_hdr_t * header;
 };
+
+struct AlignData {
+    AlignData();
+    int len;
+    bool is_reverse;
+};
     
 struct BamRead {
     BamRead();
     bool is_well_mapped(const int&, const bool&) const;
-    void decompose_cigar(int&, int&) const;
+    void extract_data(AlignData&) const;
     ~BamRead();
     bam1_t* read;
 };

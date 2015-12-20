@@ -8,7 +8,7 @@
 #
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 19 December 2015
+# last modified 20 December 2015
 {
     cur.chr <- as.character(seqnames(where)) 
     bam.file <- path.expand(bam.file)
@@ -24,17 +24,17 @@
     }
 
     out <- .Call(cxx_extract_single_data, bam.file, bam.index, cur.chr,
-            start(where), end(where), param$minq, param$dedup, 
-            param$forward, use.first)
+            start(where), end(where), param$minq, param$dedup, param$forward, use.first)
     if (is.character(out)) { stop(out) }
+    
     names(out) <- c("forward", "reverse")
+    names(out$forward) <- names(out$reverse) <- c("pos", "qwidth")
 
 	# Filtering by discard regions. Using alignment width so long reads can escape repeats.
     for (i in names(out)) { 
         current <- out[[i]]
         keep <- .discardReads(cur.chr, current[[1]], current[[2]], param$discard)
         current <- lapply(current, "[", keep)
-        names(current) <- c("pos", "qwidth", "clip5")
         out[[i]] <- current
     }
     return(out)
@@ -85,15 +85,15 @@
 
     # Filtering by maximum fragment size.
     all.sizes <- .getFragmentSizes(left, right)
-    fkeep <- all.sizes$full <= param$max.frag 
+    fkeep <- all.sizes <= param$max.frag 
 
     # Reporting output.
     keep <- dkeep & fkeep
-    output <- list(pos=left[[1]][keep], size=all.sizes$clipped[keep])
+    output <- list(pos=left[[1]][keep], size=all.sizes[keep])
     if (with.reads) {
-		output$left <- list(pos=left[[1]][keep], qwidth=left[[2]][keep], strand=rep("+", sum(keep)))
-		output$right <- list(pos=right[[1]][keep], qwidth=right[[2]][keep], strand=rep("-", sum(keep)))
-	}
+		output$forward <- lapply(left, "[", keep)
+		output$reverse <- lapply(right, "[", keep)
+    }
 	return(output)
 }
 
@@ -221,9 +221,9 @@
 		frag.end <- frag.start + c(reads$forward$qwidth, reads$reverse$qwidth) - 1L	
 	} else {
 		f.start <- reads$forward$pos
-        f.end <- f.start + ext - 1L - reads$forward$clip5 # Cut 5' soft clips out, avoid overextension.
+        f.end <- f.start + ext - 1L 
         r.end <- reads$reverse$pos + reads$reverse$qwidth - 1L
-        r.start <- r.end - ext + reads$reverse$clip5 + 1L
+        r.start <- r.end - ext + 1L
         frag.start <- c(f.start, r.start)
         frag.end <- c(f.end, r.end)
 	}

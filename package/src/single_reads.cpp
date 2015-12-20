@@ -47,9 +47,9 @@ SEXP extract_single_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end,
     BamFile bf(bam, index);
     BamRead br;
     BamIterator biter(bf, chr, start, end);
-    std::deque<int> forward_pos, forward_len, forward_off,
-        reverse_pos, reverse_len, reverse_off;
-    int curpos, curlen, curoff;
+    std::deque<int> forward_pos, forward_len, reverse_pos, reverse_len;
+    int curpos;
+    AlignData algn_data;
 
     while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){    
 //        // If we can see that it is obviously unmapped (IMPOSSIBLE for a sorted file).
@@ -61,34 +61,30 @@ SEXP extract_single_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end,
         if (((br.read->core).flag & set_flags)!=set_flags) { continue; }
         if (((br.read->core).flag & unset_flags)!=0) { continue; }
         curpos = (br.read -> core).pos + 1;
-        br.decompose_cigar(curlen, curoff);
+        br.extract_data(algn_data);
         
-        if (bam_is_rev(br.read)) { 
+        if (algn_data.is_reverse) { 
             reverse_pos.push_back(curpos);
-            reverse_len.push_back(curlen);
-            reverse_off.push_back(curoff);
+            reverse_len.push_back(algn_data.len);
         } else {
             forward_pos.push_back(curpos);
-            forward_len.push_back(curlen);
-            forward_off.push_back(curoff);
+            forward_len.push_back(algn_data.len);
         }        
     }
 
     // Storing all output.
     SEXP output=PROTECT(allocVector(VECSXP, 2));
     try {
-        SET_VECTOR_ELT(output, 0, allocVector(VECSXP, 3));
+        SET_VECTOR_ELT(output, 0, allocVector(VECSXP, 2));
         SEXP left=VECTOR_ELT(output, 0);
         store_int_output(left, 0, forward_pos);
         store_int_output(left, 1, forward_len);
-        store_int_output(left, 2, forward_off);
         
-        SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 3));
+        SET_VECTOR_ELT(output, 1, allocVector(VECSXP, 2));
         SEXP right=VECTOR_ELT(output, 1);
         store_int_output(right, 0, reverse_pos);
         store_int_output(right, 1, reverse_len);
-        store_int_output(right, 2, reverse_off);
-    
+  
     } catch (std::exception &e) {
         UNPROTECT(1);
         throw;

@@ -55,22 +55,9 @@ bool BamRead::is_well_mapped(const int& minqual, const bool& rmdup) const {
     return true;
 }
 
-void BamRead::decompose_cigar(int& alen, int& offset) const {
-    const int n_cigar=(read->core).n_cigar;
-    if (n_cigar==0) { 
-        std::stringstream err;
-        err << "zero-length CIGAR for mapped read '" << bam_get_qname(read) << "'";
-        throw std::runtime_error(err.str());
-    }
-    uint32_t* cigar=bam_get_cigar(read);
-    
-    alen=bam_cigar2rlen(n_cigar, cigar);
-    offset=0;
-    if (bam_is_rev(read)) {
-        if (bam_cigar_op(cigar[n_cigar-1])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[n_cigar-1]); }
-    } else {
-        if (bam_cigar_op(cigar[0])==BAM_CSOFT_CLIP) { offset = bam_cigar_oplen(cigar[0]); }
-    }
+void BamRead::extract_data(AlignData& data) const {
+    data.len=bam_cigar2rlen((read->core).n_cigar, bam_get_cigar(read));
+    data.is_reverse=bam_is_rev(read);
     return;
 }
 
@@ -78,6 +65,8 @@ BamRead::~BamRead() {
     bam_destroy1(read);
     return;
 }
+
+AlignData::AlignData() : len(0), is_reverse(true) { }
 
 BamIterator::BamIterator(const BamFile& bf) : iter(NULL) {
     iter=bam_itr_queryi(bf.index, HTS_IDX_NOCOOR, 0, 0);
