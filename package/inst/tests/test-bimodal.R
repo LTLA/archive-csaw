@@ -42,13 +42,13 @@ comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL,
 	
 				start.F <- start(forward.reads)
 				end.F <- end(forward.reads)
-				left.forward <- left.forward + coverage(IRanges(start.F, end.F+width[b]-1), width=end(full.chr))
-				right.forward <- right.forward + coverage(IRanges(start.F-width[b]+1, end.F), width=end(full.chr))
+				left.forward <- left.forward + coverage(IRanges(start.F, start.F+width[b]-1), width=end(full.chr))
+				right.forward <- right.forward + coverage(IRanges(end.F-width[b]+1, end.F), width=end(full.chr))
 
 				end.R <- end(reverse.reads)
 				start.R <- start(reverse.reads)
-				left.reverse <- left.reverse + coverage(IRanges(start.R, end.R+width[b]-1), width=end(full.chr))
-				right.reverse <- right.reverse + coverage(IRanges(start.R-width[b]+1, end.R), width=end(full.chr))
+				left.reverse <- left.reverse + coverage(IRanges(start.R, start.R+width[b]-1), width=end(full.chr))
+				right.reverse <- right.reverse + coverage(IRanges(end.R-width[b]+1, end.R), width=end(full.chr))
 			}
 
 			for (r in by.chr[[chr]]) { 

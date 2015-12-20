@@ -1,7 +1,7 @@
 
-R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
 Copyright (C) 2015 The R Foundation for Statistical Computing
-Platform: x86_64-unknown-linux-gnu (64-bit)
+Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -61,13 +61,13 @@ Type 'q()' to quit R.
 + 	
 + 				start.F <- start(forward.reads)
 + 				end.F <- end(forward.reads)
-+ 				left.forward <- left.forward + coverage(IRanges(start.F, end.F+width[b]-1), width=end(full.chr))
-+ 				right.forward <- right.forward + coverage(IRanges(start.F-width[b]+1, end.F), width=end(full.chr))
++ 				left.forward <- left.forward + coverage(IRanges(start.F, start.F+width[b]-1), width=end(full.chr))
++ 				right.forward <- right.forward + coverage(IRanges(end.F-width[b]+1, end.F), width=end(full.chr))
 + 
 + 				end.R <- end(reverse.reads)
 + 				start.R <- start(reverse.reads)
-+ 				left.reverse <- left.reverse + coverage(IRanges(start.R, end.R+width[b]-1), width=end(full.chr))
-+ 				right.reverse <- right.reverse + coverage(IRanges(start.R-width[b]+1, end.R), width=end(full.chr))
++ 				left.reverse <- left.reverse + coverage(IRanges(start.R, start.R+width[b]-1), width=end(full.chr))
++ 				right.reverse <- right.reverse + coverage(IRanges(end.R-width[b]+1, end.R), width=end(full.chr))
 + 			}
 + 
 + 			for (r in by.chr[[chr]]) { 
@@ -106,15 +106,15 @@ Type 'q()' to quit R.
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > my.ranges <- generateWindows(chromos, 10, 10)
 > comp(bamFiles, my.ranges)
-[1] 0.7777778 0.8333333 0.6250000 0.5714286 1.0000000 1.2000000
+[1] 0.8750000 0.6666667 0.6250000 0.6666667 1.2500000 1.2000000
 > comp(bamFiles, my.ranges, width=200)
-[1] 0.6842105 0.7857143 0.6666667 0.6363636 1.0000000 0.7777778
+[1] 0.7647059 0.8461538 0.6666667 0.7000000 1.1111111 0.8750000
 > comp(bamFiles, my.ranges, width=c(100, 200))
-[1] 0.7692308 0.8333333 0.7500000 0.6666667 1.1250000 0.8750000
+[1] 0.8333333 0.8333333 0.8571429 0.7500000 1.1666667 1.0000000
 > comp(bamFiles, my.ranges, prior.count=5)
-[1] 0.8333333 0.8888889 0.7272727 0.7000000 1.0000000 1.1250000
+[1] 0.9090909 0.7777778 0.7272727 0.7777778 1.1428571 1.1250000
 > comp(bamFiles, my.ranges, discard=makeDiscard(10, 200, chromos))
-[1] 0.7777778 0.8333333 0.6250000 0.5714286 1.0000000 1.0000000
+[1] 0.8750000 0.6666667 0.6250000 0.6666667 1.0000000 1.0000000
 > comp(bamFiles, my.ranges, restrict=c("chrC", "chrB"))
 [1] NA NA NA NA NA NA
 > 
@@ -123,9 +123,9 @@ Type 'q()' to quit R.
 > comp(bamFiles, my.ranges)
 [1] 1.5 1.6 2.0 1.5 1.6 1.6
 > comp(bamFiles, my.ranges, width=200)
-[1] 1.5714286 1.3333333 1.3333333 0.9230769 1.3750000 1.3750000
+[1] 1.571429 1.333333 1.333333 1.000000 1.400000 1.400000
 > comp(bamFiles, my.ranges, width=c(100, 200))
-[1] 1.428571 1.125000 1.142857 1.111111 1.400000 1.400000
+[1] 1.428571 1.000000 1.333333 1.125000 1.222222 1.222222
 > comp(bamFiles, my.ranges, prior.count=5)
 [1] 1.285714 1.375000 1.571429 1.333333 1.375000 1.375000
 > comp(bamFiles, my.ranges, discard=makeDiscard(10, 200, chromos))
@@ -136,15 +136,15 @@ Type 'q()' to quit R.
 > bamFiles<-c(regen(1000, chromos, file.path(dir, "A")), regen(1000, chromos, file.path(dir, "B")))
 > my.ranges <- generateWindows(chromos, 20, round(runif(20, 100, 1000)))
 > comp(bamFiles, my.ranges)
-[1] 2.500000 1.142857 2.250000 2.250000 1.600000 1.600000
+[1] 2.500000 1.333333 2.250000 2.250000 1.666667 1.666667
 > comp(bamFiles, my.ranges, width=200)
-[1] 1.7500000 0.9285714 1.5000000 1.5000000 1.3333333 1.3333333
+[1] 1.7500000 0.8571429 1.5000000 1.5000000 1.3333333 1.3333333
 > comp(bamFiles, my.ranges, width=c(100, 200))
-[1] 2.000000 1.000000 1.500000 1.500000 1.428571 1.428571
+[1] 2.000000 0.900000 1.666667 1.666667 1.666667 1.666667
 > comp(bamFiles, my.ranges, prior.count=5)
-[1] 1.600000 1.100000 1.714286 1.714286 1.333333 1.333333
+[1] 1.600000 1.222222 1.714286 1.714286 1.375000 1.375000
 > comp(bamFiles, my.ranges, discard=makeDiscard(10, 200, chromos))
-[1] 2.50 1.00 2.25 2.25 1.50 1.50
+[1] 2.50 1.00 2.25 2.25 1.60 1.60
 > comp(bamFiles, my.ranges, restrict=c("chrC", "chrB"))
 [1] NA NA NA NA NA NA
 > 
@@ -158,4 +158,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 56.144   0.173  56.584 
+ 38.263   0.171  38.662 

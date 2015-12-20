@@ -17,43 +17,45 @@ SEXP check_bimodality (SEXP all, SEXP regstart, SEXP regend, SEXP priorcount, SE
 	// Setting structures for the data.
     if (!isNewList(all)) { throw std::runtime_error("data on fragments must be contained within a list"); }
     const int nlibs=LENGTH(all);
-	std::deque<const int*> left_ptrs(nlibs), right_ptrs(nlibs), strand_ptrs(nlibs);
+	std::deque<const int*> left1_ptrs(nlibs), right1_ptrs(nlibs), left2_ptrs(nlibs), right2_ptrs(nlibs), strand_ptrs(nlibs);
 	std::deque<int> nums(nlibs), indices(nlibs), widths(nlibs);
 	std::priority_queue<signpost, std::deque<signpost>, std::greater<signpost> > next;
 	
 	for (int i=0; i<nlibs; ++i) {
 		SEXP current=VECTOR_ELT(all, i);
-		if (!isNewList(current) || LENGTH(current)!=4) { 
-			throw std::runtime_error("fragment data must be supplied as a list with start, strand and width"); }
+		if (!isNewList(current) || LENGTH(current)!=5) { 
+			throw std::runtime_error("fragment data must be supplied as a list of length 5"); }
 		
-		for (int j=0; j<3; ++j) {
+		for (int j=0; j<5; ++j) {
 			SEXP current_col=VECTOR_ELT(current, j);
 			if (!isInteger(current_col)) { throw std::runtime_error("fragment data must be in integer format"); }
 			const int* ptr=INTEGER(current_col);
 			switch (j) {
 				case 0: 
-					left_ptrs[i]=ptr; 
+					left1_ptrs[i]=ptr; 
 					nums[i]=LENGTH(current_col);
-					break;
+                    break;
 				case 1:
-					right_ptrs[i]=ptr;
-					if (LENGTH(current_col)!=nums[i]) { throw std::runtime_error("length of vectors must be equal"); }
-					break;
-				case 2:
+					right1_ptrs[i]=ptr;
+                    break;
+				case 2: 
+					left2_ptrs[i]=ptr; 
+                    break;
+				case 3:
+					right2_ptrs[i]=ptr;
+                    break;
+				case 4:
 					strand_ptrs[i]=ptr;
-					if (LENGTH(current_col)!=nums[i]) { throw std::runtime_error("length of vectors must be equal"); }
-					break;
-				default: 
-					break;
+                    break;
 			}
+            if (LENGTH(current_col)!=nums[i]) { throw std::runtime_error("length of vectors must be equal"); }
 		}
 		
-		SEXP curwidth=VECTOR_ELT(current, 3);
-		if (!isInteger(curwidth) || LENGTH(curwidth)!=1) { throw std::runtime_error("width must be an integer vector"); }
-		widths[i]=asInteger(curwidth);
-
 		// Populating the priority queue.
-		if (nums[i]) { next.push(signpost(left_ptrs[i][0]-widths[i]+1, START, i, 0)); }
+		if (nums[i]) { 
+            next.push(signpost(left1_ptrs[i][0], START, i, 0)); 
+            next.push(signpost(left2_ptrs[i][0], MIDSTART, i, 0)); 
+        }
 	}
 
 	// Setting up structures for the regions.
@@ -127,20 +129,16 @@ try {
 					case START:
 						if (isforward) { ++right_forward; }
 						else { ++right_reverse; }
-						next.push(signpost(left_ptrs[current_library][current_index],
-									MIDSTART, current_library, current_index));
+						next.push(signpost(right1_ptrs[current_library][current_index] + 1, MIDEND, current_library, current_index));
 						break;
 					case MIDSTART:
 						if (isforward) { ++left_forward; } 
 						else { ++left_reverse; }
-						next.push(signpost(right_ptrs[current_library][current_index]+1,
-									MIDEND, current_library, current_index));
+						next.push(signpost(right2_ptrs[current_library][current_index] + 1, END, current_library, current_index));
 						break;
 					case MIDEND:
 						if (isforward) { --right_forward; }
 						else { --right_reverse; }
-						next.push(signpost(right_ptrs[current_library][current_index] + widths[current_library], 
-									END, current_library, current_index));
 						break;
 					case END:
 						if (isforward) { --left_forward; }
@@ -155,11 +153,11 @@ try {
 					int& next_index=indices[current_library];
 					while ((++next_index) < nums[current_library]) { 
 						if (current_regs.empty() && next_regstart >=0 &&
-								next_regstart >= right_ptrs[current_library][next_index] + widths[current_library]) {
+								next_regstart >= right2_ptrs[current_library][next_index] + 1) {
  							continue; 
 						}
-						next.push(signpost(left_ptrs[current_library][next_index] - widths[current_library]+1, 
-									START, current_library, next_index));
+						next.push(signpost(left1_ptrs[current_library][next_index], START, current_library, next_index));
+						next.push(signpost(left2_ptrs[current_library][next_index], MIDSTART, current_library, next_index));
 						break;
 					}
 				}
