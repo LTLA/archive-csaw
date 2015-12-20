@@ -56,18 +56,14 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
             if (!as.reads) { return(of.interest[keep]) }
             
             # Reporting the individual reads, if requested (but only for the *fragments* that overlap the region).
-            left <- suppressWarnings(GRanges(cur.chr, 
-                                             IRanges(pmax(1L, frag.data$left$pos),
-                                                 pmin(max.len, frag.data$left$pos+frag.data$left$qwidth-1L)),
-                                            seqinfo=sqi, strand=frag.data$left$strand))
-            right <- suppressWarnings(GRanges(cur.chr, 
-                                              IRanges(pmax(1L, frag.data$right$pos), 
-                                                      pmin(max.len, frag.data$right$pos+frag.data$right$qwidth-1L)),
-                                              seqinfo=sqi, strand=frag.data$right$strand))
-            left <- left[keep]
-            right <- right[keep]
-            left$pair <- right$pair <- seq_along(left)
-            reads <- suppressWarnings(c(left, right))
+            forward <- suppressWarnings(GRanges(cur.chr, IRanges(pmax(1L, frag.data$forward$pos),
+                        pmin(max.len, frag.data$forward$pos+frag.data$forward$qwidth-1L)), seqinfo=sqi, strand="+"))
+            reverse <- suppressWarnings(GRanges(cur.chr, IRanges(pmax(1L, frag.data$reverse$pos), 
+                        pmin(max.len, frag.data$reverse$pos+frag.data$reverse$qwidth-1L)), seqinfo=sqi, strand="-"))
+            forward <- forward[keep]
+            reverse <- reverse[keep]
+            forward$pair <- reverse$pair <- seq_along(forward)
+            reads <- suppressWarnings(c(forward, reverse))
             return(reads)
         }
     }
