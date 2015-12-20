@@ -28,15 +28,15 @@ Type 'q()' to quit R.
 > 
 > # Checking data quality prior to counting.
 > head(correlateReads(both.files))
-[1] -0.0122330007 -0.0004633209  0.0212968091 -0.0339328978 -0.0111739532
-[6] -0.0082981606
+[1] -0.0137654663  0.0005571408  0.0175021237 -0.0308470292 -0.0087488234
+[6] -0.0120687468
 > head(correlateReads(both.files, cross=FALSE))
-[1]  1.000000000 -0.003372143  0.022101578 -0.049465927 -0.001196595
-[6] -0.002130977
+[1]  1.0000000000 -0.0008601215  0.0170688852 -0.0475443596  0.0028128511
+[6] -0.0030687197
 > 
 > getPESizes(pe.file)
 $sizes
-[1]  70  90  20 150  10  30  10
+[1]  70  90  20 150  10  30   2
 
 $diagnostics
   total.reads  mapped.reads        single mate.unmapped    unoriented 
@@ -462,17 +462,17 @@ GRanges object with 43 ranges and 0 metadata columns:
 GRanges object with 143 ranges and 0 metadata columns:
         seqnames     ranges strand
            <Rle>  <IRanges>  <Rle>
-    [1]     chrA [ 93, 102]      -
-    [2]     chrA [ 94, 103]      +
-    [3]     chrA [106, 115]      +
-    [4]     chrA [106, 115]      -
-    [5]     chrA [107, 116]      -
+    [1]     chrA [ 94, 103]      +
+    [2]     chrA [106, 115]      +
+    [3]     chrA [120, 129]      +
+    [4]     chrA [120, 129]      +
+    [5]     chrA [129, 138]      +
     ...      ...        ...    ...
-  [139]     chrA [490, 499]      -
-  [140]     chrA [491, 500]      -
-  [141]     chrA [499, 508]      -
-  [142]     chrA [500, 509]      +
-  [143]     chrA [500, 509]      +
+  [139]     chrA [467, 476]      -
+  [140]     chrA [482, 491]      -
+  [141]     chrA [490, 499]      -
+  [142]     chrA [491, 500]      -
+  [143]     chrA [499, 508]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
 > extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)))
@@ -480,16 +480,16 @@ GRanges object with 27 ranges and 0 metadata columns:
        seqnames    ranges strand
           <Rle> <IRanges>  <Rle>
    [1]     chrA  [43, 52]      +
-   [2]     chrA  [44, 53]      -
-   [3]     chrA  [51, 60]      +
-   [4]     chrA  [52, 61]      -
-   [5]     chrA  [57, 66]      +
+   [2]     chrA  [51, 60]      +
+   [3]     chrA  [57, 66]      +
+   [4]     chrA  [62, 71]      +
+   [5]     chrA  [63, 72]      +
    ...      ...       ...    ...
-  [23]     chrA [88,  97]      -
-  [24]     chrA [89,  98]      -
-  [25]     chrA [90,  99]      +
-  [26]     chrA [93, 102]      -
-  [27]     chrA [94, 103]      +
+  [23]     chrA [79,  88]      -
+  [24]     chrA [83,  92]      -
+  [25]     chrA [88,  97]      -
+  [26]     chrA [89,  98]      -
+  [27]     chrA [93, 102]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
 > extractReads(both.files[1], GRanges("chrA", IRanges(50, 100)), param=readParam(dedup=TRUE))
@@ -498,14 +498,14 @@ GRanges object with 19 ranges and 0 metadata columns:
           <Rle> <IRanges>  <Rle>
    [1]     chrA  [51, 60]      +
    [2]     chrA  [57, 66]      +
-   [3]     chrA  [57, 66]      -
-   [4]     chrA  [59, 68]      -
-   [5]     chrA  [62, 71]      +
+   [3]     chrA  [62, 71]      +
+   [4]     chrA  [63, 72]      +
+   [5]     chrA  [76, 85]      +
    ...      ...       ...    ...
-  [15]     chrA [88,  97]      +
-  [16]     chrA [88,  97]      -
-  [17]     chrA [89,  98]      -
-  [18]     chrA [90,  99]      +
+  [15]     chrA [79,  88]      -
+  [16]     chrA [79,  88]      -
+  [17]     chrA [88,  97]      -
+  [18]     chrA [89,  98]      -
   [19]     chrA [93, 102]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
@@ -521,9 +521,9 @@ GRanges object with 2 ranges and 0 metadata columns:
 GRanges object with 4 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
-  [1]     chrB [70,  79]      -
-  [2]     chrB [75,  84]      +
-  [3]     chrB [90,  99]      +
+  [1]     chrB [75,  84]      +
+  [2]     chrB [90,  99]      +
+  [3]     chrB [70,  79]      -
   [4]     chrB [99, 100]      -
   -------
   seqinfo: 1 sequence from an unspecified genome
@@ -531,4 +531,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 10.969   0.149  11.116 
+  9.489   0.131   9.630 
