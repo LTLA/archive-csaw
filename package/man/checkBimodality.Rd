@@ -13,7 +13,7 @@ checkBimodality(bam.files, regions, width=100, param=readParam(),
 \arguments{
 \item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 \item{regions}{a \code{GRanges} object specifying the regions over which bimodality is to be calculated}
-\item{width}{an integer vector indicating the span with which to compute bimodality}
+\item{width}{an integer scalar or vector indicating the span with which to compute bimodality}
 \item{param}{a \code{readParam} object containing read extraction parameters}
 \item{prior.count}{a numeric scalar specifying the prior count to compute bimodality scores}
 \item{invert}{a logical scalar indicating whether bimodality score should be inverted}
@@ -33,9 +33,10 @@ The idea is to assist with the identification of transcription factor binding si
 The function will be less useful for broad targets like histone marks.
 
 If multiple \code{bam.files} are specified, they are effectively pooled so that counting uses all reads in all files.
-The value of \code{width} should be set to the average fragment length, as this is allows optimal counting of reads.
-Specifically, all reads in the subpeaks on either strand will be counted when \code{x} is set to the center of the peak.
-A separate value can be specified for each library, to account for differences in fragmentation.
+A separate value of \code{width} can be specified for each library, to account for differences in fragmentation 
+    -- see the \code{ext} argument for \code{\link{windowCounts}} for more details.
+In practice, this is usually unnecessary. 
+Setting \code{width} to the average fragment length yields satisfactory results in most cases.
 
 If \code{invert} is set, the bimodality score will be flipped around, i.e., it will be maximized when reverse-strand coverage dominates on the left, and forward-strand coverage dominates on the right.
 This is designed for use in CAGE analyses where this inverted bimodality is symptomatic of enhancer RNAs.
