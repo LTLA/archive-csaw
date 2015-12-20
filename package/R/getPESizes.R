@@ -6,7 +6,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 # 
 # written by Aaron Lun
 # a long long time ago
-# last modified 16 December 2015
+# last modified 20 December 2015
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
@@ -29,7 +29,7 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
         mapped <- mapped + sum(dfkeep) + sum(drkeep)
         one.unmapped <- one.unmapped + sum(dfkeep!=drkeep)
         all.sizes <- .getFragmentSizes(output$forward, output$reverse)
-        norm.list[[i]] <- all.sizes$full[dfkeep & drkeep]
+        norm.list[[i]] <- all.sizes[dfkeep & drkeep]
 
         # For unoriented read pairs; either go to 'mapped' (and then 'unoriented'), 'one.unmapped', or implicitly unmapped.
         ufkeep <- .discardReads(cur.chr, output$ufirst[[1]], output$ufirst[[2]], discard)
@@ -77,7 +77,5 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 }
 
 .getFragmentSizes <- function(left, right) {
-    clipped.sizes <- right[[1]] - left[[1]] + right[[2]]
-    full.sizes <- clipped.sizes + left[[3]] + right[[3]]
-    list(clipped=clipped.sizes, full=full.sizes)
+    right[[1]] - left[[1]] + right[[2]]
 }

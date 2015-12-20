@@ -30,19 +30,17 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		for (b in seq_len(nbam)) { 
 			curpar <- paramlist[[b]]
 
-            # Including the 5' clipped regions, in order to estimate the full fragment size.
 			if (curpar$pe=="both") {
-				out <- .getPairedEnd(bam.files[b], where=where, param=curpar, with.reads=TRUE)
-                forward.pos <- out$left$pos - out$left$clip5
-                reverse.pos <- out$right$pos + out$right$qwidth + out$right$clip5
-			} else {
+				reads <- .getPairedEnd(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+  			} else {
 				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
-                forward.pos <- reads$forward$pos - reads$forward$clip5
-                reverse.pos <- reads$reverse$pos + reads$reverse$qwidth + reads$reverse$clip5 
 			}
 
-            forward.pos <- pmax(forward.pos, 1L)
-            reverse.pos <- pmin(reverse.pos, extracted.chrs[i]) 
+            forward.pos <- reads$forward$pos
+            forward.pos[forward.pos < 1L] <- 1L
+            reverse.pos <- reads$reverse$pos + reads$reverse$qwidth
+            reverse.pos[reverse.pos > extracted.chrs[i]] <- extracted.chrs[i] 
+
 			num.reads <- num.reads+length(forward.pos)+length(reverse.pos)
 			forward.reads <- forward.reads+length(forward.pos)
 			if (cross) {
