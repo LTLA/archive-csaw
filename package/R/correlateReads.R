@@ -19,9 +19,10 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 	total.read.num <- 0L
 
 	for (i in seq_along(extracted.chrs)) {
-		if (extracted.chrs[i]<2L) { next } # No way to compute variance if there's only one base.
 		chr <- names(extracted.chrs)[i]
 		where <- GRanges(chr, IRanges(1L, extracted.chrs[i]))
+        total.len <- extracted.chrs[i] + 1L # Length of the conceptual vector to compute the correlations.
+        if (total.len < 2L) { next } # No way to compute variance if the vector's too small.
 
 		# Reading in the reads for the current chromosome for all the BAM files.
 		all.f <- all.r <- list()
@@ -35,11 +36,11 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
   			} else {
 				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
 			}
-
+            
             forward.pos <- reads$forward$pos
             forward.pos[forward.pos < 1L] <- 1L
             reverse.pos <- reads$reverse$pos + reads$reverse$qwidth
-            reverse.pos[reverse.pos > extracted.chrs[i]] <- extracted.chrs[i] 
+            reverse.pos[reverse.pos > total.len] <- total.len
 
 			num.reads <- num.reads+length(forward.pos)+length(reverse.pos)
 			forward.reads <- forward.reads+length(forward.pos)
@@ -55,7 +56,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		# reads on both strands to get cross-correlations. If we're doing cross-correlations, then
 		# we compare between strands; if we're doing autocorrelations, we compare within all reads.		
 		if (num.reads==0L) { next; }
-		if (cross && (forward.reads==0L || forward.reads==num.reads)) { next }
+		if (cross && (forward.reads==0L || forward.reads==num.reads)) { next } # correlations undefined, so they don't contribute to total.read.num.
 		all.f <- rle(sort(do.call(c, all.f)))
 		if (cross) {
 			all.r <- rle(sort(do.call(c, all.r)))
@@ -64,7 +65,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		}
 
 		# We call the C++ function to compute correlations. 
-		ccfs <- .Call(cxx_correlate_reads, all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, extracted.chrs[i])
+		ccfs <- .Call(cxx_correlate_reads, all.f$values, all.f$lengths, all.r$values, all.r$lengths, max.dist, total.len)
 		if (is.character(ccfs)) { stop(ccfs) }
 
 		# Returning some output. Note that the coefficient is weighted according to the number

@@ -17,16 +17,16 @@
  */
 
 int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_ptr, const int* cnt_ptr,
-		const int total_len, const int chr_len, const bool reverse) {
+		const int n_rle, const int total_len, const bool reverse) {
 	mu.resize(n+1);
 	sd.resize(n+1);
-	if (n>chr_len-2) { n=chr_len-2; } // To ensure that 2 bases are available, so variance is estimable at max delay. 
+	if (n>total_len-2) { n=total_len-2; } // To ensure that 2 bases are available, so variance is estimable at max delay. 
 
 	// Changing parameters according to forward/reverse reads.
-	int step=1, start=0, end=total_len, threshold=chr_len-n;
+	int step=1, start=0, end=n_rle, threshold=total_len-n;
 	if (reverse) { 
 		step=-1;
-		start=total_len-1;
+		start=n_rle-1;
 		end=-1;
 		threshold=n+1;
 	}
@@ -43,7 +43,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 	// Computing the mean over the 'core' positions.
 	double& curmean=mu[n];
 	for (int index=start; index!=temp_end; index+=step) { curmean += cnt_ptr[index]; }
-	curmean/=chr_len-n;
+	curmean/=total_len-n;
 
 	// Computing the variance for the 'core' positions. Using a jump table to speed things up with lots of zero's and one's (e.g. dedupped data).
 	int first_pos_sd=-1;
@@ -63,7 +63,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 		}
 		
 		// Adding the squared product for all the positions with zeroes.
-		const int num_zero_pos=chr_len-n-(temp_end-start)*step;
+		const int num_zero_pos=total_len-n-(temp_end-start)*step;
 		curvar+=curmean*curmean*num_zero_pos; 
 
 		// Checking whether it would theoretically have a zero variance, i.e., need at least two different integers in cnt_ptr (including implicit zeros). 
@@ -98,7 +98,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 
 		// Welford's algorithm [Technometrics, 4(3):419-420].
 		delta=current_count-mu[i+1];
-		mu[i]=mu[i+1]+delta/(chr_len-i);
+		mu[i]=mu[i+1]+delta/(total_len-i);
 		sd[i]=sd[i+1]+delta*(current_count-mu[i]);
 		
 		/* Checking if the variance is zero, and if so, whether the current base position gets a non-zero variance.
@@ -122,7 +122,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
 
 	// Obtaining the standard deviation.
 	for (int i=0; i<=n; ++i) {
-		sd[i]/=chr_len-i-1;
+		sd[i]/=total_len-i-1;
 		sd[i]=sqrt(sd[i]);
 	}
 	
@@ -141,7 +141,7 @@ int fill (int n, std::deque<double>& mu, std::deque<double>& sd, const int* pos_
  * but you can't have everything, I suppose.
  */
 
-SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist, SEXP chrlen) try {
+SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist, SEXP total_len) try {
     // Prepping up the R input data.
     if (!isInteger(pos1)) { throw std::runtime_error("forward positions must be an integer vector"); }
     if (!isInteger(num1)) { throw std::runtime_error("forward counts must be an integer vector"); }
@@ -159,13 +159,13 @@ SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist,
     if (!isInteger(max_dist) || LENGTH(max_dist)!=1) { throw std::runtime_error("maximum distance should be an integer scalar"); }	
     const int mdist=asInteger(max_dist);
 	if (mdist <= 0) { throw std::runtime_error("maximum distance should be a positive integer"); }
-	if (!isInteger(chrlen) || LENGTH(chrlen)!=1) { throw std::runtime_error("length of chromosome must be an integer scalar");} 
-	const int clen=asInteger(chrlen);
+	if (!isInteger(total_len) || LENGTH(total_len)!=1) { throw std::runtime_error("length of chromosome+1 must be an integer scalar");} 
+	const int tlen=asInteger(total_len);
 
 	// Computing the mean and variance.
 	std::deque<double> fmean, rmean, fsd, rsd;
-	const int ffirst=fill(mdist, fmean, fsd, fpptr, fcptr, fLen, clen, false);
-	const int rfirst=fill(mdist, rmean, rsd, rpptr, rcptr, rLen, clen, true);
+	const int ffirst=fill(mdist, fmean, fsd, fpptr, fcptr, fLen, tlen, false);
+	const int rfirst=fill(mdist, rmean, rsd, rpptr, rcptr, rLen, tlen, true);
 
     // Setting up to go through the forwards.
     SEXP sumOut=PROTECT(allocVector(REALSXP, mdist+1));
@@ -229,15 +229,15 @@ SEXP correlate_reads (SEXP pos1, SEXP num1, SEXP pos2, SEXP num2, SEXP max_dist,
  		 * Subtraction of the final term could be numerically unstable. This can't really be helped if speed is to be maintained.
 		 * In practice, it'll probably be okay because rmean and fmean should be fairly small (a lot more base positions than reads).
  		 */
-		for (int i=0; i<=mdist && i<=clen-2; ++i) {
+		for (int i=0; i<=mdist && i<=tlen-1; ++i) { // Max 'diff' is tlen-1, for short chromosomes.
 			// Providing some protection for delay distances where the s.d. is zero.
 			if (i>ffirst || i>rfirst) {
 				sumptr[i]=0;
 			} else {
-				sumptr[i]-=rmean[i]*fmean[i]*(clen-i-nonempty[i]); // A bit of numerical instability with this step.
+				sumptr[i]-=rmean[i]*fmean[i]*(tlen-i-nonempty[i]); // A bit of numerical instability with this step.
 				sumptr[i]+=rmean[i]*sumfdiff[i]+fmean[i]*sumrdiff[i];
 				sumptr[i]/=rsd[i]*fsd[i];
-				sumptr[i]/=clen-i-1; 
+				sumptr[i]/=tlen-i-1; 
 			}
 		}
   	} catch (std::exception& e) {

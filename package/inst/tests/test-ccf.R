@@ -11,7 +11,7 @@ suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 
 manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) { 
 	chromos<-scanBamHeader(bamx)[[1]][[1]]
-	out<-0
+	out<-integer(n+1)
 	total<-0
 	for (chr in names(chromos)) {
 		clen<-chromos[[chr]]
@@ -25,12 +25,12 @@ manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) {
 			reads$qwidth<-c(reads$qwidth, new.reads$qwidth[keep])
 			reads$pos<-c(reads$pos, new.reads$pos[keep])
 		}
-		f<-r<-rep(0, clen)
+		f<-r<-rep(0, clen+1L)
 
 		fx<-table(reads$pos[reads$str])
 		f[as.integer(names(fx))]<-as.integer(fx)
 
-		rx<-table(pmin(clen, reads$pos[!reads$str]+reads$qwidth[!reads$str]))
+		rx<-table(pmin(clen+1L, reads$pos[!reads$str]+reads$qwidth[!reads$str]))
 		r[as.integer(names(rx))]<-as.integer(rx)
 
 		# Autocorrelations, if not cross-correaltions, so we just fuse them together.
@@ -38,6 +38,9 @@ manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) {
 			f<-f+r
 			r<-f
 		}
+       
+        # Ignoring chromosomes without forward or reverse reads, if we want 'cross'.
+        if (cross && (all(f==0) || all(r==0))) { next }
 
 		nreads<-length(reads$pos)
 		out<-out+nreads*sapply(0:n, FUN=function(i){ 
@@ -49,12 +52,14 @@ manualcor<-function(bamx, n, cross, minq=0, dedup=FALSE) {
 		})
 		total<-total+nreads
 	}
-	out/total
+
+    # Avoid problems when total=0.
+	out/pmax(1, total)
 }
 
 comp<-function(bamFiles, n, cross=TRUE) {
 	precision<-1e-8
-    for (type in 1:3) {
+    for (type in 3) {
         if (type==1) {
             dedup <- FALSE
             minq <- 100
@@ -219,3 +224,4 @@ unlink(fdir, recursive=TRUE);
 
 ###################################################################################################
 # End.
+
