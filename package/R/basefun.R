@@ -93,6 +93,7 @@
     if (with.reads) {
 		output$forward <- lapply(left, "[", keep)
 		output$reverse <- lapply(right, "[", keep)
+        names(output$forward) <- names(output$reverse) <- c("pos", "qwidth")
     }
 	return(output)
 }
