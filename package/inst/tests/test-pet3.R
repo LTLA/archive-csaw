@@ -258,7 +258,7 @@ checkcount(5000, 20, c(chrA=1000, chrB=2000), spacing=25, ext=200)
 # Checking out behaviour with non-trivial CIGAR strings.
 
 suppressPackageStartupMessages(require(GenomicAlignments))
-getFragSizes <- function(positions, cigars, include.clip=TRUE) {
+getFragSizes <- function(positions, cigars) {
     left.cig <- cigars[1]
     right.cig <- cigars[2]
     left.pos <- positions[1]
@@ -270,15 +270,7 @@ getFragSizes <- function(positions, cigars, include.clip=TRUE) {
 
     left.cig <- cigarToRleList(left.cig)[[1]]
     new.left.pos <- left.pos
-    if (include.clip) { 
-        new.left.pos <- new.left.pos - ifelse(runValue(left.cig)[1]=="S", runLength(left.cig)[1], 0L)
-    }
     new.right.pos <- right.pos + cigarWidthAlongReferenceSpace(right.cig)
-    right.cig <- rev(cigarToRleList(right.cig)[[1]])
-    if (include.clip) { 
-        new.right.pos <- new.right.pos +  ifelse(runValue(right.cig)[1]=="S", runLength(right.cig)[1], 0L)
-    }
-
     return(new.right.pos - new.left.pos)
 }
 
@@ -301,9 +293,6 @@ for (positions in list(
         out <- simsam(file.path(dir, "test"), chr, positions, c(TRUE, FALSE), chromosomes, is.first=c(TRUE, FALSE),
                       names=c("x.1", "x.1"), is.paired=TRUE, mate.chr=rev(chr), mate.pos=rev(positions), mate.str=c(FALSE, TRUE), cigar=cigars)
         stopifnot(identical(getPESizes(out)$sizes, getFragSizes(positions, cigars)))
-        out2 <- csaw:::.getPairedEnd(out, GRanges("chrA", IRanges(1, chromosomes[1])), param=readParam(pe="both"))
-        stopifnot(identical(out2$pos, positions[1]))
-        stopifnot(identical(out2$size, getFragSizes(positions, cigars, include.clip=FALSE)))
         cat(sprintf("%i (%s), %i (%s), %i", positions[1], cigars[1], positions[2], cigars[2], getPESizes(out)$sizes), "\n")
     }
 }
