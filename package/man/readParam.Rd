@@ -67,6 +67,12 @@ If \code{forward} is \code{NA}, reads are extracted from all strands.
 Otherwise, reads are only extracted from the forward or reverse strands for \code{TRUE} or \code{FALSE}, respectively.
 This may be useful for applications requiring strand-specific counting.
 A special case is \code{forward=NULL} - see \code{\link{strandedCounts}} for more details.
+
+Any soft clipping in alignments are ignored during extraction (this is also true for paired-end data).
+Soft clips are presumed to be sequencing artifacts, e.g., when the adaptor or barcodes are not properly removed from the read sequence.
+They are not relevant to computing genomic coverage.
+Thus, in this package, any references to the length or 5'/3' ends of the read will actually refer to that of the \emph{alignment}.
+This is often more appropriate, e.g., the 5' end of the alignment represents the end of the fragment after clipping of the artifacts.
 }
 
 \section{Constructor}{

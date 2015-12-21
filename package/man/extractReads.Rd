@@ -22,27 +22,22 @@ This function extracts the reads from a BAM file overlapping a given genomic int
 The interpretation of the values in \code{param} is the same as that throughout the package.
 The aim is to supply the raw data for visualization, in a manner that maintains consistency with the rest of the analysis.
 
-Note that this does not account for any read extension that might have been performed during read counting.
-In such cases, users are advised to expand \code{region} by the extension length on each side.
-Counted reads can then be extracted by identifying their extended counterparts that overlap with the original \code{region}.
+If \code{pe!="both"} in \code{param}, stranded intervals corresponding to the reads will be reported.
+If \code{ext} is not \code{NA}, directional read extension will also be performed -- see \code{\link{windowCounts}} for more details.
+If \code{pe="both"}, intervals are unstranded and correspond to fragments from proper pairs.
+
+If \code{as.reads=TRUE} and \code{pe="both"}, the reads in each proper pair are returned directly as a GRangesList of length 2.
+The two internal GRanges are of the same length and contain the forward and reverse reads for each proper pair in parallel.
+In other words, the nth elements of the first and second GRanges represent the nth proper pair.
 
 Any strandedness of \code{region} is ignored.
 If strand-specific extraction is desired, this can be done by setting \code{param$forward} via \code{\link{reform}}.
 Alternatively, the returned \code{GRanges} can be filtered to retain only the desired strand.
-
-If \code{ext} is not \code{NA}, directional read extension will be performed for single-end data.
-All extended reads overlapping \code{region} will then be extracted, and the intervals of the extended will be reported..
-See \code{\link{windowCounts}} for more details.
-
-By default, unstranded fragments are returned for paired-end data.
-If \code{as.reads=TRUE}, the constituent reads are returned, with pairing indicated by \code{pair} in the metadata.
-Rescued reads are marked as those with \code{pair} of zero; see \code{\link{readParam}} for details on rescuing.
 }
 
 \value{
-A \code{GRanges} object is returned.
-If \code{pe="both"} in \code{param}, intervals are unstranded and correspond to fragments.
-Otherwise, strand-specific intervals that represent reads are returned.
+If \code{pe!="both"} or \code{as.reads=FALSE}, a GRanges object is returned containing the read (for single-end data) or fragment intervals (for paired-end data).
+If \code{pe="both"} and \code{as.reads=TRUE}, a GRangesList is returned containing the paired reads -- see Details. 
 }
 
 \author{Aaron Lun}
