@@ -17,8 +17,16 @@ findMaxima(GRanges(), range=10, metric=numeric(0))
 
 bamFile <- system.file("exdata", "rep1.bam", package="csaw")
 profileSites(bamFile, GRanges(), range=20) # NA is correct, as average is undefined
+profileSites(bamFile, GRanges("chrA", IRanges(1, 1000)), range=20, param=readParam(minq=1000)) # zeroes here.
+profileSites(bamFile, GRanges("chrA", IRanges(1, 1000)), range=20, param=readParam(minq=1000, pe="both")) 
 
 checkBimodality(bamFile, GRanges())
+checkBimodality(bamFile, GRanges("chrA", IRanges(1, 1000)), param=readParam(minq=1000)) # Prior counts come into play.
+checkBimodality(bamFile, GRanges("chrA", IRanges(1, 1000)), param=readParam(minq=1000, pe="both"))
+
+extractReads(bamFile, GRanges("chrA", IRanges(1, 1000)), param=readParam(minq=1000))
+extractReads(bamFile, GRanges("chrA", IRanges(1, 1000)), param=readParam(minq=1000, pe="both"))
+extractReads(bamFile, GRanges("chrA", IRanges(1, 1000)), param=readParam(minq=1000, pe="both"), as.reads=TRUE)
 
 clusterFDR(integer(0), 0.05) # NA is correct, as FDR is undefined.
 
