@@ -26,6 +26,15 @@ Removed makeExtVector() in favour of list/DataFrame specification.
 
 \item
 windowCounts() and regionCounts() now compute and store the mean PE size and read length.
+
+\item
+Minor fix in correlateReads() for end-of-chromosome behaviour.
+
+\item
+Modified checkBimodality() so that the width argument behaves like ext in windowCounts().
+
+\item
+extractReads() with as.reads=TRUE for PE data now returns a GRangesList.
 }}
 
 \section{Version 1.4.0}{\itemize{
