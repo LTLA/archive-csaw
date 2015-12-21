@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.5.6}{\itemize{
+\section{Version 1.5.7}{\itemize{
 \item 
 Restored normalize() as a S4 method returning a RangedSummarizedExperiment object.
 
@@ -35,6 +35,9 @@ Modified checkBimodality() so that the width argument behaves like ext in window
 
 \item
 extractReads() with as.reads=TRUE for PE data now returns a GRangesList.
+
+\item
+All read extraction methods are now CIGAR-aware and will ignore soft-clipped sequence.
 }}
 
 \section{Version 1.4.0}{\itemize{
