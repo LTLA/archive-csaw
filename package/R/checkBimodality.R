@@ -6,7 +6,7 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 #
 # written by Aaron Lun
 # created 1 May 2015
-# last modified 20 December 2015
+# last modified 21 December 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -38,11 +38,10 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
    			}
 
             # Computing what would happen if we extended one way and the other.
-            dummy <- list(pos=integer(0), qwidth=integer(0))
-            Fstandard <- .extendSE(list(forward=reads$forward, reverse=dummy), ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
-            Fflipped <- .extendSE(list(reverse=reads$forward, forward=dummy), ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
-            Rstandard <- .extendSE(list(reverse=reads$reverse, forward=dummy), ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
-            Rflipped <- .extendSE(list(forward=reads$reverse, reverse=dummy), ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
+            Fstandard <- .extendSEdir(reads$forward, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen, forward=TRUE)
+            Fflipped <- .extendSEdir(reads$forward, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen, forward=FALSE)
+            Rstandard <- .extendSEdir(reads$reverse, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen, forward=FALSE)
+            Rflipped <- .extendSEdir(reads$reverse, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen, forward=TRUE)
             
             # Standard extension for originally forward reads goes to (2), flipped extension go to (1) as they'll be at an earlier position.
             # Opposite is true for reverse reads; standard extension goes to (1), and flipped extension goes to (2).
@@ -52,13 +51,14 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
             end1 <- earlier$end
             start2 <- later$start
             end2 <- later$end
+            original.strand <- rep(c(1L, 0L), c(length(reads$forward$pos), length(reads$reverse$pos)))
 
             # Sorting, as required.
 		    o <- order(start1)
             if (any(start1 > start2)) { 
                 stop("extension of flipped alignment should not be before the original alignment")
             }
-			collected[[bf]] <- list(start1[o], end1[o], start2[o], end2[o], as.integer(o <= length(reads$forward$pos)))
+			collected[[bf]] <- list(start1[o], end1[o], start2[o], end2[o], original.strand[o])
 		}
 
 		# Checking region order.

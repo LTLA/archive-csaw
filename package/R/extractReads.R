@@ -5,7 +5,7 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 #
 # written by Aaron Lun
 # created 1 September 2014
-# last modified 19 December 2015
+# last modified 21 December 2015
 {
     if (length(region)!=1L) { stop("exactly one range is required for read extraction") }
 	if (as.logical(strand(region)!="*")) { warning("strandedness of region will be ignored, use param$forward instead") }
@@ -34,38 +34,33 @@ extractReads <- function(bam.file, region, ext=NA, param=readParam(), as.reads=F
 
 	if (param$pe!="both") {
 		read.data <- .getSingleEnd(bam.file, where=actual.region, param=param)
-		cur.reads <- .extendSE(read.data, ext=ext.data$ext[1], final=ext.data$final, chrlen=max.len, retain.strand=TRUE)
+        forward.reads <- .extendSEdir(read.data$forward, ext=ext.data$ext[1], final=ext.data$final, chrlen=max.len, forward=TRUE)
+        reverse.reads <- .extendSEdir(read.data$reverse, ext=ext.data$ext[1], final=ext.data$final, chrlen=max.len, forward=FALSE)
 
-        if (length(cur.reads$start)) { 
-            of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.reads$start), pmin(max.len, cur.reads$end)), strand=cur.reads$strand, seqinfo=sqi)
+        f.chr <- Rle(cur.chr, length(forward.reads$start))
+        f.reads <- GRanges(f.chr, IRanges(forward.reads$start, forward.reads$end), strand=Rle("+", length(f.chr)), seqinfo=sqi)
+        r.chr <- Rle(cur.chr, length(reverse.reads$start))
+        r.reads <- GRanges(r.chr, IRanges(reverse.reads$start, reverse.reads$end), strand=Rle("-", length(r.chr)), seqinfo=sqi)
             
-            if (max.ext) { # Filtering to retain those extended reads that actually overlap.	
-                keep <- overlapsAny(of.interest, region)
-                of.interest <- of.interest[keep]
-            }
-            return(of.interest)
-        }
+        fkeep <- overlapsAny(f.reads, region)
+        f.reads <- f.reads[fkeep]
+        rkeep <- overlapsAny(r.reads, region)
+        r.reads <- r.reads[rkeep]
+        return(c(f.reads, r.reads))
 	} else {
 		frag.data <- .getPairedEnd(bam.file, where=actual.region, param=param, with.reads=as.reads)
-		cur.frags <- .checkFragments(frag.data$pos, frag.data$pos + frag.data$size - 1L, final=ext.data$final, chrlen=max.len)
+		cur.frags <- .coerceFragments(frag.data$pos, frag.data$pos + frag.data$size - 1L, final=ext.data$final, chrlen=max.len)
 
-        if (length(cur.frags$start)) { 
-            # Filtering to retain those fragments that actually overlap.
-            of.interest <- GRanges(cur.chr, IRanges(pmax(1L, cur.frags$start), pmin(max.len, cur.frags$end)), seqinfo=sqi)
-            keep <- overlapsAny(of.interest, region)
-            if (!as.reads) { return(of.interest[keep]) }
-            
-            # Reporting the individual reads, if requested (but only for the *fragments* that overlap the region).
-            forward <- suppressWarnings(GRanges(cur.chr, IRanges(pmax(1L, frag.data$forward$pos),
-                        pmin(max.len, frag.data$forward$pos+frag.data$forward$qwidth-1L)), seqinfo=sqi, strand="+"))
-            reverse <- suppressWarnings(GRanges(cur.chr, IRanges(pmax(1L, frag.data$reverse$pos), 
-                        pmin(max.len, frag.data$reverse$pos+frag.data$reverse$qwidth-1L)), seqinfo=sqi, strand="-"))
-            forward <- forward[keep]
-            reverse <- reverse[keep]
-            forward$pair <- reverse$pair <- seq_along(forward)
-            reads <- suppressWarnings(c(forward, reverse))
-            return(reads)
-        }
+        # Filtering to retain those fragments that actually overlap.
+        add.chr <- Rle(cur.chr, length(cur.frags$start))
+        of.interest <- GRanges(add.chr, IRanges(cur.frags$start, cur.frags$end), seqinfo=sqi)
+        keep <- overlapsAny(of.interest, region)
+        if (!as.reads) { return(of.interest[keep]) }
+        
+        # Reporting the individual reads, if requested (but only for the *fragments* that overlap the region).
+        forward <- GRanges(add.chr, IRanges(frag.data$forward$pos, frag.data$forward$pos+frag.data$forward$qwidth-1L), seqinfo=sqi, strand=Rle("+", length(add.chr)))
+        reverse <- GRanges(add.chr, IRanges(frag.data$reverse$pos, frag.data$reverse$pos+frag.data$reverse$qwidth-1L), seqinfo=sqi, strand=Rle("-", length(add.chr)))
+        return(GRangesList(forward=forward[keep], reverse=reverse[keep]))
     }
    
     # Returning an empty set, otherwise.

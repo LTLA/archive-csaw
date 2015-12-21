@@ -7,7 +7,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 #
 # written by Aaron Lun
 # created 2 July 2014
-# last modified 22 July 2015
+# last modified 21 December 2015
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
@@ -85,7 +85,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 				end.pos <- extended$end
 			} else {
 				out <- .getPairedEnd(bam.files[b], where=where, param=curpar)
-				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+				checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
 				start.pos <- checked$start
 				end.pos <- checked$end
 			}

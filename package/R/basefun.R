@@ -151,14 +151,20 @@
 	return(originals)
 }
 
-.checkFragments <- function(starts, ends, final, chrlen) 
+.boundIntervals <- function(x, chrlen) {
+    x[x<1L] <- 1L
+    x[x>chrlen] <- chrlen
+    return(x)
+}
+
+.coerceFragments <- function(starts, ends, final, chrlen) 
 # Coerces the fragments to the desired 'final.ext', and ensures
 # that prior manipulations do not redefine fragment beyond chromosome 
 # boundaries (e.g., due to read extension or rescaling).
 #
 # written by Aaron Lun
 # created 13 February 2014
-# last modified 14 May 2015
+# last modified 21 December 2015
 {
 	if (!is.na(final)) { 
 		remainders <- as.integer((ends - starts + 1L - final)/2)
@@ -167,8 +173,8 @@
 			ends <- ends - remainders
 		} 
 	}
-	if (length(starts)) { starts <- pmin(starts, chrlen) } 
-	if (length(ends)) { ends <- pmax(1L, ends) }
+    starts <- .boundIntervals(starts, chrlen)
+    ends <- .boundIntervals(ends, chrlen)
 	return(list(start=starts, end=ends)) 
 }
 
@@ -208,29 +214,35 @@
 	list(ext=ext, final=final.ext)
 }
 
-.extendSE <- function(reads, ext, final, chrlen, retain.strand=FALSE)
+.extendSEdir <- function(reads, ext, final, chrlen, forward=TRUE) {
+    if (is.na(ext)) { 
+        start <- reads$pos
+        end <- reads$pos + reads$qwidth -1L
+    } else {
+        if (forward) {
+            start <- reads$pos
+            end <- reads$pos + ext - 1L
+        } else {
+            end <- reads$pos + reads$qwidth - 1L
+            start <- end - ext + 1L
+        }
+    }
+	out <- .coerceFragments(start, end, final=final, chrlen=chrlen)
+    return(out)
+}
+
+.extendSE <- function(reads, ext, final, chrlen)
 # This decides how long to extend reads. The addition of the remainder kicks
 # out (or truncates) the fragments to reach the desired 'final.ext'. If 'ext'
 # is NA, the read length is used instead.
 #
 # written by Aaron Lun
 # created 12 December 2014
-# last modified 19 December 2015
+# last modified 21 December 2015
 {
-	if (is.na(ext)) {   
-		frag.start <- c(reads$forward$pos, reads$reverse$pos)
-		frag.end <- frag.start + c(reads$forward$qwidth, reads$reverse$qwidth) - 1L	
-	} else {
-		f.start <- reads$forward$pos
-        f.end <- f.start + ext - 1L 
-        r.end <- reads$reverse$pos + reads$reverse$qwidth - 1L
-        r.start <- r.end - ext + 1L
-        frag.start <- c(f.start, r.start)
-        frag.end <- c(f.end, r.end)
-	}
-	out <- .checkFragments(frag.start, frag.end, final=final, chrlen=chrlen)
-    if (retain.strand) { out$strand <- Rle(c("+", "-"), c(length(reads$forward[[1]]), length(reads$reverse[[1]]))) }
-    return(out)
+    fout <- .extendSEdir(reads$forward, ext, final, chrlen, forward=TRUE)
+    rout <- .extendSEdir(reads$reverse, ext, final, chrlen, forward=FALSE)
+    mapply(c, fout, rout, SIMPLIFY=FALSE)
 }
 
 ############################################################

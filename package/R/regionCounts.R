@@ -6,7 +6,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 17 December 2015
+# last modified 21 December 2015
 {
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -42,7 +42,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
                 all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$reverse$qwidth)
 			} else {
 				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
-				checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+				checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
    				frag.start <- checked$start
 				frag.end <- checked$end
                 all.pe[[bf]] <- .runningWM(all.pe[[bf]], out$size)

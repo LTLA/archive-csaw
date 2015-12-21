@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 17 December 2015
+# last modified 21 December 2015
 {   
 	nbam <- length(bam.files)
 	paramlist <- .makeParamList(nbam, param)
@@ -82,7 +82,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 					mid <- as.integer(out$pos + out$size/2)
 					frag.end <- frag.start <- mid
 				} else {
-					checked <- .checkFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
+					checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
 					frag.start <- checked$start
 					frag.end <- checked$end
 				}
