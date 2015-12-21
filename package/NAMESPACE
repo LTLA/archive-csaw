@@ -21,7 +21,6 @@ import(GenomicRanges, SummarizedExperiment, Rsamtools,
 	edgeR, 
 	methods, Rhtslib)
 
-importFrom("GenomicAlignments", cigarWidthAlongReferenceSpace)
 importFrom("GenomicFeatures", exonsBy)
 importFrom("AnnotationDbi", select)
 importFrom("limma", loessFit)
