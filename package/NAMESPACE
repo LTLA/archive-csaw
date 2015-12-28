@@ -25,6 +25,7 @@ importFrom("GenomicFeatures", exonsBy)
 importFrom("AnnotationDbi", select)
 importFrom("limma", loessFit)
 importFrom("BiocGenerics", normalize)
+importFrom("stats", p.adjust, weighted.mean)
 
 #  Exporting classes and methods
 exportClasses(
