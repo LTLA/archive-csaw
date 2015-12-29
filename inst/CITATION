@@ -1,6 +1,15 @@
 citEntry(
-	entry = "article",
-   	author= "Aaron T L Lun and Gordon K Smyth",
+    entry = "article",
+    author ="Aaron T L Lun and Gordon K Smyth",
+    title="csaw: a {B}ioconductor package for differential binding analysis of {C}h{I}{P}-seq data using sliding windows",
+    journal="Nucleic Acids Res.",
+    year="2015",
+    textVersion = "Lun ATL and Smyth GK (2015). csaw: a Bioconductor package for differential binding analysis of ChIP-seq data using sliding windows. Nucleic Acids Res."
+)
+
+citEntry(
+    entry = "article",
+    author= "Aaron T L Lun and Gordon K Smyth",
    	title ="{D}e novo detection of differentially bound regions for {C}h{I}{P}-seq data using peaks and windows: controlling error rates correctly",
    	journal="Nucleic Acids Res.",
    	year="2014",
@@ -11,12 +20,11 @@ citEntry(
 )
 
 citEntry(
-    entry = "article",
-    author ="Aaron T L Lun and Gordon K Smyth",
-    title="csaw: a {B}ioconductor package for differential binding analysis of {C}h{I}{P}-seq data using sliding windows",
-    journal="Nucleic Acids Res.",
+    entry="article",
+    author= "Aaron T L Lun and Gordon K Smyth",
+    title="{F}rom reads to regions: a {B}ioconductor workflow to detect differential binding in {C}h{I}{P}-seq data",
+    journal="F1000Research",
+    volume="4",
     year="2015",
-    textVersion = "Lun ATL and Smyth GK (2015). csaw: a Bioconductor package for differential binding analysis of ChIP-seq data using sliding windows. Nucleic Acids Res."
+    textVersion="Lun ATL and Smyth GK (2015). From reads to regions: a Bioconductor workflow to detect differential binding in ChIP-seq data. F1000Research 4"
 )
-
-
