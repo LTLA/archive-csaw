@@ -1,13 +1,13 @@
 \name{clusterFDR}
 \alias{clusterFDR}
+\alias{controlClusterFDR}
 
 \title{Compute the cluster-level FDR}
 \description{Compute the FDR across clusters based on the test-level FDR threshold}
 
 \usage{
 clusterFDR(ids, threshold)
-controlClusterFDR(target, adjp, FUN, ..., maxiter=10)
-
+controlClusterFDR(target, adjp, FUN, ..., maxiter=5, contract=4)
 }
 
 \arguments{
@@ -18,6 +18,7 @@ controlClusterFDR(target, adjp, FUN, ..., maxiter=10)
 \item{FUN}{a clustering function that takes a logical vector indicating which windows are significant, and returns an integer vector of cluster IDs}
 \item{...}{additional arguments to be passed to \code{FUN}}
 \item{maxiter}{an integer scalar indicating the maximum number of iterations for the grid search}
+\item{contract}{a numeric scalar specifying the fold decrease in the grid range at every iteration}
 } 
 
 \details{

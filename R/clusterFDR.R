@@ -14,7 +14,7 @@ clusterFDR <- function(ids, threshold)
 	return(num.fp.cluster/length(cluster.sizes))
 }
 
-controlClusterFDR <- function(target, adjp, FUN, ..., maxiter=10)
+controlClusterFDR <- function(target, adjp, FUN, ..., maxiter=5, contract=4)
 # Identifies the window-level FDR threshold that is required to 
 # control the cluster-level threshold at 'target', given the 
 # window-level adjusted p-values and the clustering function FUN.
@@ -34,13 +34,14 @@ controlClusterFDR <- function(target, adjp, FUN, ..., maxiter=10)
 
         for (tx in seq_along(thresholds)) { 
             threshold <- thresholds[tx]
-            fdrs[tx] <- clusterFDR(FUN(adjp <= threshold, ...), threshold)
+            is.sig <- adjp <= threshold
+            if (any(is.sig)) { fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold) }
         }
 
         # Grid contracts at a moderate pace, to provide better resolution.
         chosen <- which.min((fdrs - target)^2)
         lt <- grid[chosen]
-        grid.range <- grid.range/2
+        grid.range <- grid.range/contract
     }
 
     return(list(threshold=exp(lt)/(exp(lt)+1), cluster.FDR=fdrs[chosen]))
