@@ -47,7 +47,7 @@ Users should note that the discontinuous nature of the cluster-level FDR means t
 \value{
 For \code{clusterFDR}, a numeric scalar is returned as the cluster-level FDR.
 
-For \code{controlClusterFDR}, a list is returned containing two numeric scalars -- \code{threshold}, the window-level FDR threshold to control the cluster-level FDR near \code{target}; and \code{cluster.fdr}, the estimate of the cluster-level FDR corresponding to \code{threshold}.
+For \code{controlClusterFDR}, a list is returned containing two numeric scalars -- \code{threshold}, the window-level FDR threshold to control the cluster-level FDR near \code{target}; and \code{cluster.FDR}, the estimate of the cluster-level FDR corresponding to \code{threshold}.
 }
 
 \author{
