@@ -7,7 +7,7 @@
 
 \usage{
 clusterFDR(ids, threshold)
-controlClusterFDR(target, adjp, FUN, ..., maxiter=5, contract=4)
+controlClusterFDR(target, adjp, FUN, ..., grid.param=NULL)
 }
 
 \arguments{
@@ -17,8 +17,7 @@ controlClusterFDR(target, adjp, FUN, ..., maxiter=5, contract=4)
 \item{adjp}{a numeric vector of window-level adjusted p-values}
 \item{FUN}{a clustering function that takes a logical vector indicating which windows are significant, and returns an integer vector of cluster IDs}
 \item{...}{additional arguments to be passed to \code{FUN}}
-\item{maxiter}{an integer scalar indicating the maximum number of iterations for the grid search}
-\item{contract}{a numeric scalar specifying the fold decrease in the grid range at every iteration}
+\item{grid.param}{a named list of grid search parameters, see Details}
 } 
 
 \details{
@@ -40,8 +39,19 @@ Clustering on significant windows should only be performed where the precise coo
 
 The \code{controlClusterFDR} will identify the window-level FDR threshold required to control the cluster-level FDR at \code{target}.
 This is necessary as the latter is not a simple function of the former.
+In fact, the discontinuous nature of the cluster-level FDR means that the returned value may not be below \code{target}.
+Rather, the closest estimate is returned, e.g., for a \code{target} of 0.05, a value of 0.051 is preferred to a value of 0.02, even though only the latter is less than the target.
+
 A grid search is used to identify clusters of significant windows at each window-level threshold, and the corresponding cluster-level FDR is computed with \code{clusterFDR}.
-Users should note that the discontinuous nature of the cluster-level FDR means that the returned value may not be below \code{target}.
+At each iteration, the grid point with the closest cluster-level FDR to \code{target} is chosen and the grid is recentered around that point.
+The size of the grid is also scaled down to provide greater resolution.
+Users can tune the settings of the grid search by specifying elements in \code{grid.param} as:
+\describe{
+\item{\code{length}:}{an integer scalar specifying the length of the grid, defaults to 21}
+\item{\code{range}:}{a numeric scalar indicating the range of the grid in logit units, defaults to 20}
+\item{\code{maxiter}:}{an integer scalar indicating the number of iterations of the grid search}
+\item{\code{scale}:}{a numeric scalar specifying how the range of the grid should be downscaled at each iteration}
+}
 }
 
 \value{
