@@ -18,13 +18,3 @@ citEntry(
    	pages="e95",
 	textVersion = "Lun ATL and Smyth GK (2014). De novo detection of differentially bound regions for ChIP-seq data using peaks and windows: controlling error rates correctly. Nucleic Acids Res. 42, e95"
 )
-
-citEntry(
-    entry="article",
-    author= "Aaron T L Lun and Gordon K Smyth",
-    title="{F}rom reads to regions: a {B}ioconductor workflow to detect differential binding in {C}h{I}{P}-seq data",
-    journal="F1000Research",
-    volume="4",
-    year="2015",
-    textVersion="Lun ATL and Smyth GK (2015). From reads to regions: a Bioconductor workflow to detect differential binding in ChIP-seq data. F1000Research 4"
-)
