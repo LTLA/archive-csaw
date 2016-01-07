@@ -1,16 +1,4 @@
 citEntry(
-	entry = "article",
-   	author= "Aaron T L Lun and Gordon K Smyth",
-   	title ="{D}e novo detection of differentially bound regions for {C}h{I}{P}-seq data using peaks and windows: controlling error rates correctly",
-   	journal="Nucleic Acids Res.",
-   	year="2014",
-   	volume="42",
-   	number="11",
-   	pages="e95",
-	textVersion = "Lun ATL and Smyth GK (2014). De novo detection of differentially bound regions for ChIP-seq data using peaks and windows: controlling error rates correctly. Nucleic Acids Res. 42, e95"
-)
-
-citEntry(
     entry = "article",
     author ="Aaron T L Lun and Gordon K Smyth",
     title="csaw: a {B}ioconductor package for differential binding analysis of {C}h{I}{P}-seq data using sliding windows",
@@ -19,4 +7,14 @@ citEntry(
     textVersion = "Lun ATL and Smyth GK (2015). csaw: a Bioconductor package for differential binding analysis of ChIP-seq data using sliding windows. Nucleic Acids Res."
 )
 
-
+citEntry(
+    entry = "article",
+    author= "Aaron T L Lun and Gordon K Smyth",
+   	title ="{D}e novo detection of differentially bound regions for {C}h{I}{P}-seq data using peaks and windows: controlling error rates correctly",
+   	journal="Nucleic Acids Res.",
+   	year="2014",
+   	volume="42",
+   	number="11",
+   	pages="e95",
+	textVersion = "Lun ATL and Smyth GK (2014). De novo detection of differentially bound regions for ChIP-seq data using peaks and windows: controlling error rates correctly. Nucleic Acids Res. 42, e95"
+)
