@@ -6,7 +6,8 @@
 \description{Clusters significant windows into clusters while controlling the cluster-level FDR.}
 
 \usage{
-clusterWindows(regions, tab, target=0.05, pval.col=NULL, tol, sign=NULL, ...) 
+clusterWindows(regions, tab, target=0.05, pval.col=NULL, 
+    tol, sign=NULL, ..., grid.param=NULL) 
 }
 
 \arguments{
@@ -15,6 +16,7 @@ clusterWindows(regions, tab, target=0.05, pval.col=NULL, tol, sign=NULL, ...)
     \item{target}{a numeric scalar indicating the desired cluster-level FDR}
     \item{pval.col}{an argument specifying the column of \code{tab} with the p-values, see \code{\link{combineTests}} for details}
 	\item{tol, sign, ...}{arguments to be passed to \code{\link{mergeWindows}}}
+    \item{grid.param}{arguments to be passed to \code{\link{controlClusterFDR}}}
 }
 
 \value{
@@ -32,8 +34,9 @@ Reporting each marked stretch in its entirety would be cumbersome, so this metho
 }
 
 \examples{
+set.seed(10)
 x <- round(runif(100, 100, 1000))
-gr <- GRanges("chrA", IRanges(x, x+40))
+gr <- GRanges("chrA", IRanges(x, x+5))
 tab <- data.frame(PValue=rbeta(length(x), 1, 50))
 
 clusterWindows(gr, tab, tol=10)
