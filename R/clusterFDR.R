@@ -1,4 +1,4 @@
-clusterFDR <- function(ids, threshold)
+clusterFDR <- function(ids, threshold, weight=NULL)
 # This computes an informal estimate of the cluster-level FDR,
 # given the cluster IDs for all significant windows. The idea
 # is to allow clustering of significant windows to explicitly
@@ -6,21 +6,30 @@ clusterFDR <- function(ids, threshold)
 #
 # written by Aaron Lun
 # created 13 April 2015
+# last modified 8 January 2016
 {
-	ids <- sort(ids)
+    ids <- as.integer(ids)
+    o <- order(ids)
+	ids <- ids[o]
+
+    if (is.null(weight)) { weight <- rep(1, length(ids)) }
+    weight <- as.double(weight)
+    weight <- weight[o]
+
 	num.fp <- length(ids) * threshold
-	cluster.sizes <- rle(ids)$lengths
+	cluster.sizes <- .Call(cxx_get_cluster_weight, ids, weight) 
 	num.fp.cluster <- sum(cumsum(sort(cluster.sizes)) <= num.fp) 
 	return(num.fp.cluster/length(cluster.sizes))
 }
 
-controlClusterFDR <- function(target, adjp, FUN, ..., grid.param=NULL)
+controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NULL)
 # Identifies the window-level FDR threshold that is required to 
 # control the cluster-level threshold at 'target', given the 
 # window-level adjusted p-values and the clustering function FUN.
 #
 # written by Aaron Lun
 # created 5 January 2016
+# last modified 8 January 2016
 {
     lt <- log(target/(1-target))
     grid.range <- grid.param$range
@@ -32,6 +41,7 @@ controlClusterFDR <- function(target, adjp, FUN, ..., grid.param=NULL)
     if (is.null(maxiter)) { maxiter <- 5 }
     scale <- grid.param$scale
     if (is.null(scale)) { scale <- 4 }
+    if (is.null(weight)) { weight <- rep(1, length(adjp)) } 
 
     # Using an iterative grid search, as this tends to be most
     # robust for a discrete and discontinuous function.
@@ -43,7 +53,7 @@ controlClusterFDR <- function(target, adjp, FUN, ..., grid.param=NULL)
         for (tx in seq_along(thresholds)) { 
             threshold <- thresholds[tx]
             is.sig <- adjp <= threshold
-            if (any(is.sig)) { fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold) }
+            if (any(is.sig)) { fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold, weight=weight) }
         }
 
         # Picking the largest minimum point that is closest to a non-minimum point.

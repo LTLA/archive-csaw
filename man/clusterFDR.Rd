@@ -6,8 +6,8 @@
 \description{Compute the FDR across clusters based on the test-level FDR threshold}
 
 \usage{
-clusterFDR(ids, threshold)
-controlClusterFDR(target, adjp, FUN, ..., grid.param=NULL)
+clusterFDR(ids, threshold, weight=NULL)
+controlClusterFDR(target, adjp, FUN, ..., weight=NULL, grid.param=NULL)
 }
 
 \arguments{
@@ -17,10 +17,11 @@ controlClusterFDR(target, adjp, FUN, ..., grid.param=NULL)
 \item{adjp}{a numeric vector of window-level adjusted p-values}
 \item{FUN}{a clustering function that takes a logical vector indicating which windows are significant, and returns an integer vector of cluster IDs}
 \item{...}{additional arguments to be passed to \code{FUN}}
+\item{weight}{a numeric vector of frequency weights, for internal use}
 \item{grid.param}{a named list of grid search parameters, see Details}
 } 
 
-\details{
+\section{Definition of the cluster-level FDR}{
 The \code{clusterFDR} function computes an informal estimate of the cluster-level FDR, where each cluster is formed by aggregating only significant tests.
 In the context of ChIP-seq, each significant test refers to a DB window that is detected at a FDR below \code{threshold}.
 The idea is to obtain an error rate while reporting the precise coordinates of a DB subinterval in a complex region.
@@ -28,16 +29,18 @@ The idea is to obtain an error rate while reporting the precise coordinates of a
 The cluster-level FDR is defined as the proportion of reported clusters that have no true positives.
 Simply using \code{threshold} is not appropriate, as the cluster- and window-level FDRs are not equivalent. 
 This function also differs from the standard pipeline that is based on \code{\link{combineTests}}.
-Specifically, region definition in the standard pipeline must be independent of DB.
-Precise coordinates of the DB subinterval cannot be reported.
+Specifically, region definition in the standard pipeline must be independent of DB so that precise coordinates of the DB subinterval cannot be reported.
+This is overcome by clustering directly on DB windows and applying post-hoc control of the cluster-level FDR.
 
-Users should note that the calculation of the cluster-level FDR here is not statistically rigorous.
+Note that the calculation of the cluster-level FDR here is not statistically rigorous.
 In particular, the observed number of false positive tests is estimated based on \code{threshold} and the total number of significant tests.
 This is not guaranteed to be an upper bound, especially when the observed window-level FDR is variable.
 Thus, users should use the standard \code{\link{combineTests}}-based pipeline wherever possible.
 Clustering on significant windows should only be performed where the precise coordinates of the DB subinterval are important for interpretation.
+}
 
-The \code{controlClusterFDR} will identify the window-level FDR threshold required to control the cluster-level FDR at \code{target}.
+\section{Searching for the best threshold}{
+\code{controlClusterFDR} will identify the window-level FDR threshold required to control the cluster-level FDR at \code{target}.
 This is necessary as the latter is not a simple function of the former.
 In fact, the discontinuous nature of the cluster-level FDR means that the returned value may not be below \code{target}.
 Rather, the closest estimate is returned, e.g., for a \code{target} of 0.05, a value of 0.051 is preferred to a value of 0.02, even though only the latter is less than the target.
@@ -54,6 +57,13 @@ Users can tune the settings of the grid search by specifying elements in \code{g
 }
 }
 
+\section{Note about weights}{ 
+In both functions, the \code{weight} argument is assumed to contain frequency weights of significant tests/windows.
+For example, a weight of 2 for a test would be equivalent to repeating that test (i.e., repeating the same window so it shows up twice in your analysis).
+These weights should be the same as those used during weighted FDR control to compute adjusted p-values.
+In general, users should not set this argument unless you know what you're doing.
+}
+
 \value{
 For \code{clusterFDR}, a numeric scalar is returned as the cluster-level FDR.
 
@@ -66,7 +76,8 @@ Aaron Lun
 
 \seealso{
 \code{\link{mergeWindows}},
-\code{\link{combineTests}}
+\code{\link{combineTests}},
+\code{\link{clusterWindows}}
 }
 
 \examples{

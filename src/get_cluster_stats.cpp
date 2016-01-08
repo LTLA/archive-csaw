@@ -118,3 +118,47 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 } catch (std::exception& e) {
 	return mkString(e.what());
 }
+
+/* Computes the total cluster weight in a reasonably fast manner. */
+
+SEXP get_cluster_weight(SEXP ids, SEXP weight) try {
+	if (!isInteger(ids)) { throw std::runtime_error("vector of cluster ids should be integer"); }
+	if (!isNumeric(weight)) { throw std::runtime_error("vector of weights should be double precision"); }
+	const double *wptr=REAL(weight);
+	const int* iptr=INTEGER(ids);
+    const int n=LENGTH(ids);
+	if (n!=LENGTH(weight)) { throw std::runtime_error("vector lengths are not equal"); }
+
+    int total=0;
+	if (n > 0) {
+		total=1;
+		for (int i=1; i<n; ++i) {
+			if (iptr[i] < iptr[i-1]) { throw std::runtime_error("vector of cluster ids should be sorted"); }
+			else if (iptr[i]!=iptr[i-1]) { ++total; }
+		}
+	}
+
+    SEXP output=PROTECT(allocVector(REALSXP, total));
+	try {
+        if (total) { 
+            double* optr=REAL(output);
+            (*optr)=wptr[0];
+            for (int i=1; i<n; ++i) {
+                if (iptr[i]!=iptr[i-1]) { 
+                    ++optr; 
+                    (*optr)=0;
+                }
+                (*optr)+=wptr[i];
+            }
+        }
+    } catch (std::exception& e) {
+        UNPROTECT(1);
+        throw;
+    }
+
+    UNPROTECT(1);
+    return output;
+} catch (std::exception& e) {
+	return mkString(e.what());
+}
+

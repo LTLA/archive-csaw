@@ -44,6 +44,8 @@ SEXP best_in_cluster(SEXP, SEXP, SEXP);
 
 SEXP get_cluster_stats(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
+SEXP get_cluster_weight(SEXP, SEXP);
+
 /* merge_windows.cpp */
 
 SEXP merge_windows(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
