@@ -19,7 +19,7 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL, ignore.strand=TRUE)
 
 \value{
 	A list containing \code{id}, an integer vector containing the cluster ID for each window; and \code{region},
-	  a \code{GRanges} object containing the start/stop coordinates for each cluster of windows.
+	  a GRanges object containing the start/stop coordinates for each cluster of windows.
 }
 
 \details{
