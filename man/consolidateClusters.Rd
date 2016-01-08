@@ -33,7 +33,9 @@ This is done by setting \code{equiweight=TRUE}, where the weight of each window 
 These weights are used as frequency weights for window-level FDR control (to identify DB windows prior to clustering).
 Otherwise, the final results would be dominated by large number of small windows.
 
-% Fully nested windows of opposite sign will break it, so don't try it.
+To cluster by the sign of the log-fold changes, users should concatenate the vector of signs after computing them from the relevant column in each entry of \code{result.list}.
+This will avoid putting windows with opposite signs together into the same cluster.
+However, note that nested windows with opposite signs may give unintuitive results - see \code{\link{mergeWindows}} for details.
 }
 
 \seealso{
@@ -66,6 +68,10 @@ cons$FDR
 # Without weights.
 cons <- consolidateClusters(list(low, med, high), result.list, tol=20, equiweight=FALSE)
 cons$FDR
+
+# Using the signs.
+cons <- consolidateClusters(list(low, med, high), result.list, tol=20, 
+            sign=unlist(sapply(result.list, function(x) { x$logFC > 0})))
 }
 
 \keyword{clustering}
