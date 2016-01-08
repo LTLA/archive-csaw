@@ -18,8 +18,13 @@ clusterFDR <- function(ids, threshold, weight=NULL)
 
 	num.fp <- sum(weight) * threshold
 	cluster.sizes <- .Call(cxx_get_cluster_weight, ids, weight) 
-	num.fp.cluster <- sum(cumsum(sort(cluster.sizes)) <= num.fp) 
-	return(num.fp.cluster/length(cluster.sizes))
+	num.fp.cluster <- sum(cumsum(sort(cluster.sizes)) <= num.fp)
+
+    if (length(cluster.sizes)) { 
+    	return(num.fp.cluster/length(cluster.sizes))
+    } else {
+        return(0)
+    }
 }
 
 controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NULL)
@@ -53,7 +58,7 @@ controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NU
         for (tx in seq_along(thresholds)) { 
             threshold <- thresholds[tx]
             is.sig <- adjp <= threshold
-            if (any(is.sig)) { fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold, weight=weight) }
+            fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold, weight=weight[is.sig])
         }
 
         # Picking the largest minimum point that is closest to a non-minimum point.
