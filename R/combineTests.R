@@ -7,7 +7,7 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 # 
 # written by Aaron Lun
 # created 30 July 2013
-# last modified 25 March 2015
+# last modified 8 January 2016
 {
 	if (!is.integer(ids)) { ids <- as.integer(ids+0.5) }
 	if (is.null(weight)) { weight <- rep(1, length(ids)) }
@@ -33,18 +33,7 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	}
 
 	# Saying which column is the p-value field.
-	if (length(pval.col)==0L) { 
-		is.pval <- which(colnames(tab)=="PValue")-1L
-		if (length(is.pval)!=1L) { stop("result table should have one PValue field") }
-	} else if (length(pval.col)!=1L) {
-		stop("only one p-value field is possible")
-	} else {
-		if (is.character(pval.col)) {
-			pval.col <- match(pval.col, colnames(tab)) 
-			if (any(is.na(pval.col))) { stop("failed to match p-value column names") }
-		}
-		is.pval <- as.integer(pval.col) - 1L
-	}
+    is.pval <- .getPValCol(pval.col, tab) - 1L
  
 	# Running the clustering procedure.
 	out <- .Call(cxx_get_cluster_stats, fc.col, is.pval, tab, ids, weight, 0.5)

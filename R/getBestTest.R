@@ -7,7 +7,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 #
 # written by Aaron Lun
 # created 17 April 2014
-# last modified 25 March 2015
+# last modified 8 January 2016
 {
 	if (!is.integer(ids)) { ids <- as.integer(ids + 0.5) }
 	stopifnot(length(ids)==nrow(tab))
@@ -15,20 +15,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 	ids <- ids[id.order]
 	tab <- tab[id.order,]
 
-	# Checking what's what.
-	if (length(pval.col)==0L) { 
-		pval.col <- which(colnames(tab)=="PValue")
-		if (length(pval.col)==0L) { stop("result table should have one PValue field") }
-	} else if (length(pval.col)>1L) { 
-		stop("multiple p-value columns are not supported")
-	} else { 
-		if (is.character(pval.col)) {
-			pval.col <- match(pval.col, colnames(tab)) 
-			if (any(is.na(pval.col))) { stop("failed to match p-value column names") }
-		}
-		pval.col <- as.integer(pval.col) 
-	}
-
+    pval.col <- .getPValCol(pval.col, tab)
 	if (by.pval) { 
 		# Identifying the minimum P-value, and Bonferroni-correcting it.
 		if (is.null(weight)) { weight <- rep(1, length(ids)) } 
@@ -81,3 +68,18 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 # effective number of independent tests 'n'. You can then apply that to the Bonferroni 
 # correction for a cluster of that size.
 
+.getPValCol <- function(pval.col, tab) {
+	if (length(pval.col)==0L) { 
+		pval.col <- which(colnames(tab)=="PValue")
+		if (length(pval.col)==0L) { stop("result table should have only one PValue field") }
+	} else if (length(pval.col)>1L) { 
+		stop("multiple p-value columns are not supported")
+	} else { 
+		if (is.character(pval.col)) {
+			pval.col <- match(pval.col, colnames(tab)) 
+			if (any(is.na(pval.col))) { stop("failed to match p-value column names") }
+		}
+		pval.col <- as.integer(pval.col) 
+	}
+    return(pval.col)
+}
