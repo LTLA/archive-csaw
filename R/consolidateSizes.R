@@ -13,14 +13,8 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	if (nset!=length(result.list)) { stop("data list must have same length as result list") }
 
 	for (x in set.it.vec) {
-        current <- data.list[[x]]
-        if (is(current, "RangedSummarizedExperiment")) { 
-            data.list[[x]] <- current <- rowRanges(current) 
-        } else if (!is(current, "GenomicRanges")) {
-            stop("elements of data list must be RSE or GRanges objects")
-        }
-
-		currows <- length(current)
+        data.list[[x]] <- .toGRanges(data.list[[x]])
+		currows <- length(data.list[[x]])
 		ntab <- nrow(result.list[[x]])
 		if (currows!=ntab) { stop("corresponding entries of data and result lists must have same number of entries") }
 	}

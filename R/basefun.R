@@ -288,3 +288,15 @@
     DataFrame(bam.files=bam.files, totals=totals, ext=store.ext, rlen=store.rlen, paramlist)
 }
 
+############################################################
+
+.toGRanges <- function(x) 
+# Converts the input to a GRanges, if it wasn't before.
+{
+    if (is(x, "RangedSummarizedExperiment")) { 
+        x <- rowRanges(x)
+    } else if (!is(x, "GenomicRanges")) {
+        stop("'x' must be a RangedSummarizedExperiment or GRanges object")
+    }
+    return(x)
+}
