@@ -10,7 +10,7 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL, ignore.strand=TRUE)
 }
 
 \arguments{
-	\item{regions}{a \code{GRanges} object}
+	\item{regions}{a GRanges or RangedSummarizedExperiment object containing window coordinates}
 	\item{tol}{a numeric scalar specifying the maximum distance between adjacent windows}
 	\item{sign}{a logical vector specifying whether each window has a positive log-FC}
 	\item{max.width}{a numeric scalar specifying the maximum size of merged intervals}
@@ -23,7 +23,7 @@ mergeWindows(regions, tol, sign=NULL, max.width=NULL, ignore.strand=TRUE)
 }
 
 \details{
-Windows are merged if the gap between the end of one window and the start of the next is no greater than \code{tol}. 
+Windows in \code{regions} are merged if the gap between the end of one window and the start of the next is no greater than \code{tol}. 
 Adjacent windows can then be chained together to build a cluster of windows across the linear genome. 
 A value of zero for \code{tol} means that the windows must be contiguous whereas negative values specify minimum overlaps.
 

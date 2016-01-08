@@ -6,8 +6,9 @@ mergeWindows <- function(regions, tol, sign=NULL, max.width=NULL, ignore.strand=
 # 
 # written by Aaron Lun
 # created 30 July 2013
-# last modified 10 February 2015
+# last modified 8 January 2016
 {
+    regions <- .toGRanges(regions)
 	strs <- strand(regions)
 	if (!ignore.strand && length(runValue(strs))!=1) {
 		# Strand-specific clustering.
