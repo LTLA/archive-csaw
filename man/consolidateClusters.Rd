@@ -60,10 +60,7 @@ cons$id
 cons$FDR
 
 # Without weights.
-cons <- consolidateClusters(list(low, med, high), result.list,
-            tol=10, equiweight=FALSE)
-cons$region
-cons$id
+cons <- consolidateClusters(list(low, med, high), result.list, tol=20, equiweight=FALSE)
 cons$FDR
 }
 
