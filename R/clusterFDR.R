@@ -46,9 +46,12 @@ controlClusterFDR <- function(target, adjp, FUN, ..., grid.param=NULL)
             if (any(is.sig)) { fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold) }
         }
 
-        # Grid contracts at a moderate pace, to provide better resolution.
-        chosen <- which.min((fdrs - target)^2)
+        # Picking the largest minimum point that is closest to a non-minimum point.
+        # Avoids searching values that are too small when there are many ties.        
+        chosen <- grid.length - which.min(rev(abs(fdrs-target))) + 1L
         lt <- grid[chosen]
+
+        # Grid contracts at a moderate pace, to provide better resolution.
         grid.range <- grid.range/scale
     }
 
