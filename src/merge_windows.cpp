@@ -44,25 +44,14 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
 		}
 		int* optr=INTEGER(VECTOR_ELT(output, 0));
 		int start_index=0, last_end=*eptr;
-		bool diffchr, diffsign;
+		bool diffchr, diffsign, nested=false, warned=false;
+        int last_sign=*lptr;
 		int i, ngroups;
 		*optr=ngroups=1;
 
 		for (i=1; i<n; ++i) {
 			diffchr=(cptr[i]!=cptr[i-1]);
- 		   	diffsign=(lptr[i]!=lptr[i-1]);
-
-			if (diffchr 											// Obviously, changing if we're on a different chromosome.
-				|| sptr[i]-last_end-1 > tol							// Space between windows, start anew if this is greater than the tolerance.
-				|| diffsign 										// Checking if the sign is consistent.
-		   	) {
- 			    if (limit_size) { ngroups=split_cluster(sptr, eptr, last_end, start_index, i, maxs, optr); } // Splitting the cluster, if desired.
-				++ngroups;
-				optr[i]=ngroups; 
-				start_index=i;
-			} else {
-				optr[i]=optr[i-1];
-			}
+            diffsign=(lptr[i]!=last_sign);
 
 			/* Fully nested regions don't have a properly defined interpretation when it comes
  			 * to splitting things by sign. We only support consideration of nested regions where
@@ -80,9 +69,32 @@ SEXP merge_windows(SEXP chrs, SEXP start, SEXP end, SEXP sign, SEXP tolerance, S
  			 * such cases. This ensures that the following windows get a change to compute
  			 * distances to the parent end (which should be closer).
  			 */
- 		    if (!diffchr && eptr[i] < last_end) {
- 			   	if (diffsign) { throw std::runtime_error("fully nested windows of opposite sign are not supported"); } 
-			} else { last_end=eptr[i]; }
+            nested=(!diffchr && eptr[i] < last_end);
+ 		    if (nested) { 
+ 			   	if (diffsign && !warned) { 
+                    warning("fully nested windows of opposite sign are present and ignored"); 
+                    warned=true;
+                    diffsign=false;
+                }
+			} 
+
+			if (diffchr 											// Obviously, changing if we're on a different chromosome.
+				|| sptr[i]-last_end-1 > tol							// Space between windows, start anew if this is greater than the tolerance.
+				|| diffsign 										// Checking if the sign is consistent.
+		   	) {
+ 			    if (limit_size) { ngroups=split_cluster(sptr, eptr, last_end, start_index, i, maxs, optr); } // Splitting the cluster, if desired.
+				++ngroups;
+				optr[i]=ngroups; 
+				start_index=i;
+			} else {
+				optr[i]=optr[i-1];
+			}
+
+            // Using the parent window as the endpoint if it's nested, but otherwise bumping up the last stats.
+            if (!nested) { 
+                last_end=eptr[i]; 
+                last_sign=lptr[i];
+            }
 		}
 
 		// Cleaning up the last cluster, if necessary.

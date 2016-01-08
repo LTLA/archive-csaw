@@ -112,7 +112,14 @@ x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))
 
 gr <- GRanges("chrA", IRanges(c(1, 3, 50), c(200, 100, 80))) 
 x <- mergeWindows(gr, tol=10, sign=c(TRUE, TRUE, TRUE)) # should be okay
-try(x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE))) # should fail.
+x <- mergeWindows(gr, tol=10, sign=c(TRUE, FALSE, TRUE)) # should chuck a warning
+stopifnot(x$region==range(gr)) # nested one should be merged in.
+
+gr2 <- GRanges("chrA", IRanges(c(1, 3, 50, 90), c(200, 100, 80, 1000))) 
+x <- mergeWindows(gr2, tol=10, sign=c(TRUE, FALSE, TRUE, FALSE)) 
+stopifnot(length(x$region)==2L) # final region should not be merged.
+stopifnot(x$region[2]==gr2[4])
+
 gr2 <- GRanges(c("chrA", "chrB", "chrA"), IRanges(c(1, 3, 50), c(200, 100, 80))) 
 x <- mergeWindows(gr2, tol=10, sign=c(TRUE, FALSE, TRUE)) # should be okay again
 

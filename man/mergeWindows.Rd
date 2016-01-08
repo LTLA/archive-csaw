@@ -45,7 +45,8 @@ considered part of the same region.
 
 Arbitrary regions can also be used in this function.
 However, caution is required if any fully nested regions are present.
-Clustering with \code{sign!=NULL} will throw an error as splitting by sign becomes undefined.
+Clustering with \code{sign!=NULL} will lead to a warning as splitting by sign becomes undefined.
+This is because any genomic region involving the parent window must contain the nested window, such that the cluster will always contain opposite log-fold changes.
 Splitting with \code{max.width!=NULL} will not fail, but cluster sizes may not be reduced if very large regions are present.
 
 % For example, if you have a large region and lots of little nested regions within,
