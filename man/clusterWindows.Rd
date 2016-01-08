@@ -7,7 +7,7 @@
 
 \usage{
 clusterWindows(regions, tab, target=0.05, pval.col=NULL, 
-    tol, sign=NULL, ..., grid.param=NULL) 
+    tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
 }
 
 \arguments{
@@ -16,7 +16,7 @@ clusterWindows(regions, tab, target=0.05, pval.col=NULL,
     \item{target}{a numeric scalar indicating the desired cluster-level FDR}
     \item{pval.col}{an argument specifying the column of \code{tab} with the p-values, see \code{\link{combineTests}} for details}
 	\item{tol, sign, ...}{arguments to be passed to \code{\link{mergeWindows}}}
-    \item{grid.param}{arguments to be passed to \code{\link{controlClusterFDR}}}
+    \item{weight, grid.param}{arguments to be passed to \code{\link{controlClusterFDR}}}
 }
 
 \value{
@@ -27,8 +27,12 @@ An additional element \code{FDR} is also included, representing the estimate of 
 
 \details{
 Windows are identified as DB based on the adjusted p-values in \code{tab}.
-Only these DB windows are then used directly for clustering via \code{\link{mergeWindows}}, in order to identify DB regions.
-This is not blind to the DB status so post-hoc control of the cluster-level FDR is applied by using \code{\link{controlClusterFDR}}.
+Only these DB windows are then used directly for clustering via \code{\link{mergeWindows}}.
+This identifies DB regions consisting solely of DB windows (of the same direction, if \code{sign} is also set).
+If \code{tol} is not specified, it is set to 100 bp by default and a warning is raised.
+
+DB-based clustering is obviously not blind to the DB status, so standard methods for FDR control are not valid.
+Instead, post-hoc control of the cluster-level FDR is applied by using \code{\link{controlClusterFDR}}.
 The aim is to provide some interpretable results when DB-blind clustering is not appropriate, e.g., for diffuse marks involving long stretches of the genome.
 Reporting each marked stretch in its entirety would be cumbersome, so this method allows the DB subintervals to be identified directly.
 }

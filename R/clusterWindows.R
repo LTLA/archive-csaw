@@ -1,4 +1,4 @@
-clusterWindows <- function(regions, tab, target=0.05, pval.col=NULL, tol, sign=NULL, ..., grid.param=NULL) 
+clusterWindows <- function(regions, tab, target=0.05, pval.col=NULL, tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
 # This does a search for the clusters based on DB windows. 
 # It aims to achieve a cluster-level FDR of 'target'.
 #
@@ -7,17 +7,39 @@ clusterWindows <- function(regions, tab, target=0.05, pval.col=NULL, tol, sign=N
 {
     regions <- .toGRanges(regions)
     if (nrow(tab)!=length(regions)) { stop("number of regions is not consistent with entries in 'tab'") }
-    pval.col <- .getPValCol(pval.col, tab)
-    adjp <- p.adjust(tab[,pval.col], method="BH")
+    if (missing(tol)) {
+        tol <- 100
+        warning("'tol' for 'mergeWindows' set to a default of 100 bp")
+    }
 
+    # Computing a frequency-weighted adjusted p-value.
+    pval.col <- .getPValCol(pval.col, tab)
+    if (is.null(weight)) { weight <- rep(1, length(pvals)) }
+    adjp <- .weightedFDR(tab[,pval.col], weight)
+
+    # Controlling the cluster-level FDR
     FUN <- function(sig) { mergeWindows(regions[sig], tol=tol, sign=sign[sig], ...) }
-    out <- controlClusterFDR(target=target, adjp=adjp, FUN=function(sig) { FUN(sig)$id }, grid.param=grid.param)
+    out <- controlClusterFDR(target=target, adjp=adjp, FUN=function(sig) { FUN(sig)$id }, 
+                             weight=weight, grid.param=grid.param)
     sig <- adjp <= out$threshold
     clusters <- FUN(sig)
 
+    # Cleaning up
     full.ids <- rep(NA_integer_, nrow(tab))
     full.ids[sig] <- clusters$id
     clusters$id <- full.ids
     clusters$FDR <- out$FDR 
     return(clusters)
 }
+
+.weightedFDR <- function(p, w) {
+    if (length(p)!=length(w)) { stop("weight and p-value vector are not of same length") }
+    o <- order(p)
+    p <- p[o]
+    w <- w[o]
+    adjp <- numeric(length(o))
+    adjp[o] <- rev(cummin(rev(sum(w)*p/cumsum(w))))
+    pmin(adjp, 1)
+}
+
+
