@@ -52,6 +52,6 @@ controlClusterFDR <- function(target, adjp, FUN, ..., grid.param=NULL)
         grid.range <- grid.range/scale
     }
 
-    return(list(threshold=exp(lt)/(exp(lt)+1), cluster.FDR=fdrs[chosen]))
+    return(list(threshold=exp(lt)/(exp(lt)+1), FDR=fdrs[chosen]))
 }
 
