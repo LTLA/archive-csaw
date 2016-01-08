@@ -52,7 +52,7 @@ Users can tune the settings of the grid search by specifying elements in \code{g
 \describe{
 \item{\code{length}:}{an integer scalar specifying the length of the grid, defaults to 21}
 \item{\code{range}:}{a numeric scalar indicating the range of the grid in logit units, defaults to 20}
-\item{\code{maxiter}:}{an integer scalar indicating the number of iterations of the grid search}
+\item{\code{iter}:}{an integer scalar indicating the number of iterations of the grid search}
 \item{\code{scale}:}{a numeric scalar specifying how the range of the grid should be downscaled at each iteration}
 }
 }
@@ -82,6 +82,7 @@ Aaron Lun
 
 \examples{
 # Setting up the windows and p-values.
+set.seed(100)
 windows <- GRanges("chrA", IRanges(1:1000, 1:1000))
 test.p <- runif(1000)
 test.p[c(1:10, 100:110, 220:240)] <- 0 # 3 significant subintervals.

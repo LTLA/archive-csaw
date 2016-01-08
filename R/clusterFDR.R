@@ -36,21 +36,29 @@ controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NU
 # created 5 January 2016
 # last modified 8 January 2016
 {
-    lt <- log(target/(1-target))
+    if (is.list(grid.param)) { 
+        ref.args <- c("length", "iter", "range", "scale")
+        m <- pmatch(names(grid.param), ref.args)
+        if (any(is.na(m))) { stop("invalid arguments specified in 'grid.param'") }
+        names(grid.param) <- ref.args[m]
+    }
+
     grid.range <- grid.param$range
     if (is.null(grid.range)) { grid.range <- 20 }
     grid.range <- grid.range/2
     grid.length <- grid.param$length
     if (is.null(grid.length)) { grid.length <- 21 }
-    maxiter <- grid.param$maxiter
-    if (is.null(maxiter)) { maxiter <- 5 }
+    iter <- grid.param$iter
+    if (is.null(iter)) { iter <- 5 }
     scale <- grid.param$scale
     if (is.null(scale)) { scale <- 4 }
+    
+    lt <- log(target/(1-target))
     if (is.null(weight)) { weight <- rep(1, length(adjp)) } 
 
     # Using an iterative grid search, as this tends to be most
     # robust for a discrete and discontinuous function.
-    for (it in seq_len(maxiter)) { 
+    for (it in seq_len(iter)) { 
         grid <- seq(lt-grid.range, lt+grid.range, length=grid.length)
         thresholds <- exp(grid)/(exp(grid)+1)
         fdrs <- integer(length(grid))
