@@ -16,7 +16,7 @@ clusterFDR <- function(ids, threshold, weight=NULL)
     weight <- as.double(weight)
     weight <- weight[o]
 
-	num.fp <- length(ids) * threshold
+	num.fp <- sum(weight) * threshold
 	cluster.sizes <- .Call(cxx_get_cluster_weight, ids, weight) 
 	num.fp.cluster <- sum(cumsum(sort(cluster.sizes)) <= num.fp) 
 	return(num.fp.cluster/length(cluster.sizes))
