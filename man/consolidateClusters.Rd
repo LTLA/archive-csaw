@@ -16,7 +16,10 @@ consolidateClusters(data.list, result.list, equiweight=TRUE, ...)
 }
 
 \value{
-A named list is returned containing \code{id}, a list of integer vectors indicating the cluster ID for each window in \code{data.list}; \code{region}, a GRanges object containing the coordinates for each cluster; and \code{FDR}, a numeric scalar containing the cluster-level FDR estimate.
+A named list is returned containing:
+\item{id}{a list of integer vectors indicating the cluster ID for each window in \code{data.list}}
+\item{region}{a GRanges object containing the coordinates for each cluster}
+\item{FDR}{a numeric scalar containing the cluster-level FDR estimate}
 }
 
 \details{
@@ -34,7 +37,8 @@ Otherwise, the final results would be dominated by large number of small windows
 }
 
 \seealso{
-\code{\link{clusterWindows}}
+\code{\link{clusterWindows}},
+\code{\link{consolidateSizes}}
 }
 
 \author{
