@@ -12,9 +12,15 @@ clusterFDR <- function(ids, threshold, weight=NULL)
     o <- order(ids)
 	ids <- ids[o]
 
-    if (is.null(weight)) { weight <- rep(1, length(ids)) }
-    weight <- as.double(weight)
-    weight <- weight[o]
+    if (is.null(weight)) { 
+        weight <- rep(1, length(ids)) 
+    } else {
+        if (length(weight)!=length(ids)) { 
+            stop("lengths of 'weight' and 'ids' must be the same")
+        }
+        weight <- as.double(weight)
+        weight <- weight[o]
+    }
 
 	num.fp <- sum(weight) * threshold
 	cluster.sizes <- .Call(cxx_get_cluster_weight, ids, weight) 

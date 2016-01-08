@@ -45,6 +45,9 @@ mergeWindows <- function(regions, tol, sign=NULL, max.width=NULL, ignore.strand=
 	if (is.null(sign)) { 
 		sign <- logical(length(regions)) 
 	} else {
+        if (length(sign)!=length(regions)) {
+            stop("lengths of 'sign' and 'ids' must be the same")
+        }
 		sign <- sign[o]
 	}
 	tol <- as.integer(tol)
