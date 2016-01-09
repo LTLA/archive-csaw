@@ -22,7 +22,9 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	# Merging windows, or finding overlaps.
 	if (is.null(region)) { 
 		all.ranges <- do.call(c, data.list)
-        if (is.null(merge.args$tol)) { 
+        
+        expanded.args <- as.list(match.call(mergeWindows, do.call(call, c("mergeWindows", merge.args))))
+        if (is.null(expanded.args$tol)) { 
             merge.args$tol <- 100
             warning("'tol' for 'mergeWindows' set to a default of 100 bp")
         }
