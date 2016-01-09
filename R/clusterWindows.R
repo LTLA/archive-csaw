@@ -1,4 +1,4 @@
-clusterWindows <- function(regions, tab, target=0.05, pval.col=NULL, tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
+clusterWindows <- function(regions, tab, target, pval.col=NULL, tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
 # This does a search for the clusters based on DB windows. 
 # It aims to achieve a cluster-level FDR of 'target'.
 #
@@ -10,6 +10,10 @@ clusterWindows <- function(regions, tab, target=0.05, pval.col=NULL, tol, sign=N
     if (missing(tol)) {
         tol <- 100
         warning("'tol' for 'mergeWindows' set to a default of 100 bp")
+    }
+    if (missing(target)) { 
+        target <- 0.05
+        warning("unspecified 'target' for the cluster-level FDR set to 0.05")
     }
 
     # Computing a frequency-weighted adjusted p-value.

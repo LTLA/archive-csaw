@@ -6,7 +6,7 @@
 \description{Clusters significant windows into clusters while controlling the cluster-level FDR.}
 
 \usage{
-clusterWindows(regions, tab, target=0.05, pval.col=NULL, 
+clusterWindows(regions, tab, target, pval.col=NULL, 
     tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
 }
 
@@ -33,6 +33,7 @@ If \code{tol} is not specified, it is set to 100 bp by default and a warning is 
 
 DB-based clustering is obviously not blind to the DB status, so standard methods for FDR control are not valid.
 Instead, post-hoc control of the cluster-level FDR is applied by using \code{\link{controlClusterFDR}}.
+This aims to control the cluster-level FDR at \code{target} (which is set to 0.05 if not specified).
 The aim is to provide some interpretable results when DB-blind clustering is not appropriate, e.g., for diffuse marks involving long stretches of the genome.
 Reporting each marked stretch in its entirety would be cumbersome, so this method allows the DB subintervals to be identified directly.
 }
@@ -43,8 +44,8 @@ x <- round(runif(100, 100, 1000))
 gr <- GRanges("chrA", IRanges(x, x+5))
 tab <- data.frame(PValue=rbeta(length(x), 1, 50))
 
-clusterWindows(gr, tab, tol=10)
-clusterWindows(gr, tab, tol=10, sign=rbinom(100, 1, 0.5)==0L)
+clusterWindows(gr, tab, target=0.05, tol=10)
+clusterWindows(gr, tab, target=0.05, tol=10, sign=rbinom(100, 1, 0.5)==0L)
 }
 
 \seealso{
