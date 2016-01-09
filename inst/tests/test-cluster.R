@@ -67,11 +67,11 @@ test.p <- runif(1000)
 test.p[rep(1:2, 100) + rep(0:99, each=2) * 10] <- 0 
 
 true.pos <- windows[test.p==0]
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, true.pos=true.pos)
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=10, true.pos=true.pos)
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, target=0.05, true.pos=true.pos)
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=10, target=0.05, true.pos=true.pos)
 
-checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, true.pos=true.pos) # Multiple entries
-checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), equiweight=FALSE, tol=0, true.pos=true.pos)
+checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, target=0.05, true.pos=true.pos) # Multiple entries
+checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), equiweight=FALSE, tol=0, target=0.05, true.pos=true.pos)
 
 # Smaller number of regions
 set.seed(50)
@@ -79,15 +79,15 @@ test.p <- runif(1000)
 test.p[rep(1:2, 50) + rep(0:49, each=2) * 10] <- 0  
 
 true.pos <- windows[test.p==0]
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, true.pos=true.pos)
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, true.pos=true.pos)
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, target=0.05, true.pos=true.pos)
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.05, true.pos=true.pos)
 checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.1, true.pos=true.pos)
-checkResults(list(windows), list(data.frame(whee=test.p)), tol=2, pval.col="whee", true.pos=true.pos)
+checkResults(list(windows), list(data.frame(whee=test.p)), tol=2, pval.col="whee", target=0.05, true.pos=true.pos)
 
 signs <- rbinom(100, 1, 0.5)!=0L
-checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, sign=c(signs, signs[1:10]), true.pos=true.pos)
+checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, sign=c(signs, signs[1:10]), target=0.05, true.pos=true.pos)
 
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(scale=5, iter=10), true.pos=true.pos) # Fiddling with grid search parameters.
-checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(len=11, it=10), true.pos=true.pos)
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(scale=5, iter=10), target=0.05, true.pos=true.pos) # Fiddling with grid search parameters.
+checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(len=11, it=10), target=0.05, true.pos=true.pos)
 
 ###################################################
