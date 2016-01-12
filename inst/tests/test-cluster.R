@@ -84,8 +84,9 @@ checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.05,
 checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.1, true.pos=true.pos)
 checkResults(list(windows), list(data.frame(whee=test.p)), tol=2, pval.col="whee", target=0.05, true.pos=true.pos)
 
-signs <- rbinom(100, 1, 0.5)!=0L
-checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, sign=c(signs, signs[1:10]), target=0.05, true.pos=true.pos)
+signs <- c(-1, 1)[rbinom(100, 1, 0.5)+1]
+checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p, logFC=signs), data.frame(PValue=test.p[1:10], logFC=signs[1:10])), 
+             tol=0, fc.col="logFC", target=0.05, true.pos=true.pos)
 
 checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(scale=5, iter=10), target=0.05, true.pos=true.pos) # Fiddling with grid search parameters.
 checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(len=11, it=10), target=0.05, true.pos=true.pos)

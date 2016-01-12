@@ -1,4 +1,4 @@
-clusterWindows <- function(regions, tab, target, pval.col=NULL, tol, sign=NULL, ..., weight=NULL, grid.param=NULL) 
+clusterWindows <- function(regions, tab, target, pval.col=NULL, fc.col=NA, tol, ..., weight=NULL, grid.param=NULL) 
 # This does a search for the clusters based on DB windows. 
 # It aims to achieve a cluster-level FDR of 'target'.
 #
@@ -20,6 +20,13 @@ clusterWindows <- function(regions, tab, target, pval.col=NULL, tol, sign=NULL, 
     pval.col <- .getPValCol(pval.col, tab)
     if (is.null(weight)) { weight <- rep(1, nrow(tab)) }
     adjp <- .weightedFDR(tab[,pval.col], weight)
+
+    # Getting the sign.
+    if (is.na(fc.col)) { 
+        sign <- NULL
+    } else {
+        sign <- tab[,fc.col] > 0
+    }
 
     # Controlling the cluster-level FDR
     FUN <- function(sig) { mergeWindows(regions[sig], tol=tol, sign=sign[sig], ...) }
