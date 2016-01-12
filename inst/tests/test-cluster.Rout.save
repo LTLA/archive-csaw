@@ -20,10 +20,6 @@ Type 'q()' to quit R.
 > # This tests the post-hoc clustering methods.
 > 
 > suppressPackageStartupMessages(require(csaw))
-Warning messages:
-1: multiple methods tables found for ‘relistToClass’ 
-2: multiple methods tables found for ‘relistToClass’ 
-3: multiple methods tables found for ‘relistToClass’ 
 > compCFDR <- function(ids, threshold, weights) {
 +     if (is.null(weights)) { 
 +         obs.sizes <- table(ids) 
@@ -82,12 +78,19 @@ numeric(0)
 > # Note that there's no guaratee that the results and the reported FDR are the same, as this depends
 > # on the random p-values, so we don't check for equality.
 > 
-> checkResults <- function(data.list, result.list, ..., true.pos) {
-+     out <- consolidateClusters(data.list, result.list, ...)
+> checkResults <- function(data.list, result.list, pval.col=NULL, ..., true.pos) {
++     out <- consolidateClusters(data.list, result.list, pval.col=pval.col, ...)
 + 
 +     # Checking that the clustering is fine.
-+     ref <- splitAsList(do.call(c, data.list), unlist(out$id))
++     all.ids <- unlist(out$id)
++     ref <- splitAsList(do.call(c, data.list), all.ids)
 +     stopifnot(all(unlist(range(ref))==out$region))
++ 
++     # Checking that the right windows were chosen.
++     if (is.null(pval.col)) { pval.col <- "PValue" }
++     all.ps <- unlist(sapply(result.list, FUN=function(x) { x[,pval.col] }))
++     was.sig <- !is.na(all.ids)
++     if (any(was.sig) && any(!was.sig)) { stopifnot(max(all.ps[was.sig]) < min(all.ps[!was.sig])) }
 + 
 +     # Reporting the observed and estimated FDRs.
 +     np <- out$region[!overlapsAny(out$region, true.pos),]
@@ -133,10 +136,11 @@ numeric(0)
     Observed  Estimated
 1 0.03846154 0.05769231
 > 
-> signs <- rbinom(100, 1, 0.5)!=0L
-> checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p), data.frame(PValue=test.p[1:10])), tol=0, sign=c(signs, signs[1:10]), target=0.05, true.pos=true.pos)
-    Observed  Estimated
-1 0.01818182 0.05454545
+> signs <- ifelse(rbinom(1000, 1, 0.5)!=0L, 1, -1)
+> checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p, logFC=signs), data.frame(PValue=test.p[1:10], logFC=signs[1:10])), 
++              tol=0, fc.col="logFC", target=0.05, true.pos=true.pos)
+  Observed  Estimated
+1        0 0.04545455
 > 
 > checkResults(list(windows), list(data.frame(PValue=test.p)), tol=0, grid.param=list(scale=5, iter=10), target=0.05, true.pos=true.pos) # Fiddling with grid search parameters.
     Observed  Estimated
@@ -149,4 +153,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
- 20.773   0.139  21.047 
+ 17.100   0.130  17.229 
