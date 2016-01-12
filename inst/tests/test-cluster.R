@@ -53,8 +53,14 @@ checkResults <- function(data.list, result.list, ..., true.pos) {
     out <- consolidateClusters(data.list, result.list, ...)
 
     # Checking that the clustering is fine.
-    ref <- splitAsList(do.call(c, data.list), unlist(out$id))
+    all.ids <- unlist(out$id)
+    ref <- splitAsList(do.call(c, data.list), all.ids)
     stopifnot(all(unlist(range(ref))==out$region))
+
+    # Checking that the right windows were chosen.
+    all.ps <- sapply(result.list, FUN=function(x) { x$PValue })
+    was.sig <- !is.na(all.ids)
+    stopifnot(max(all.ps[was.sig]) > min(all.ps[!was.sig]))
 
     # Reporting the observed and estimated FDRs.
     np <- out$region[!overlapsAny(out$region, true.pos),]
