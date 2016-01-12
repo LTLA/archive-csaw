@@ -30,9 +30,9 @@ An additional element \code{FDR} is also included, representing the estimate of 
 \details{
 Windows are identified as DB based on the adjusted p-values in \code{tab}.
 Only these DB windows are then used directly for clustering via \code{\link{mergeWindows}}.
-This identifies DB regions consisting solely of DB windows (of the same direction, if \code{sign} is also set).
+This identifies DB regions consisting solely of DB windows.
 If \code{tol} is not specified, it is set to 100 bp by default and a warning is raised.
-If \code{fc.col} is not \code{NA}, clusters are formed according to the sign of the log-fold change in \code{\link{mergeWindows}}.
+If \code{fc.col} is used to specify the column of log-fold changes, clusters are formed according to the sign of the log-fold change in \code{\link{mergeWindows}}.
 
 DB-based clustering is obviously not blind to the DB status, so standard methods for FDR control are not valid.
 Instead, post-hoc control of the cluster-level FDR is applied by using \code{\link{controlClusterFDR}}.
