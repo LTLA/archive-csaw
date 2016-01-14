@@ -37,14 +37,22 @@ comp <- function(total.n, n.clusters, weights=NULL) {
 	if (!identical(rownames(out), as.character(sort(unique(merged.ids))))) { stop("row names are not matched") }
 
 	# Checking if we get the same results after reversing the ids (ensures internal re-ordering is active).
-	re.o <- total.n:1
-	if (is.null(weights)) { 
-		out2<-combineTests(merged.ids[re.o], tab[re.o,])
-	} else {
-		out2<-combineTests(merged.ids[re.o], tab[re.o,], weight=weights[re.o])
-	}
-	if (!almostidentical(out$logFC, out2$logFC) || !almostidentical(out$logCPM, out2$logCPM)
-		|| !almostidentical(out$PValue, out2$PValue)) { stop("values not preserved after shuffling") }
+    re.o <- total.n:1
+    out2<-combineTests(merged.ids[re.o], tab[re.o,], weight=weights[re.o])
+    if (!almostidentical(out$logFC, out2$logFC) || !almostidentical(out$logCPM, out2$logCPM)
+        || !almostidentical(out$PValue, out2$PValue) || !identical(rownames(out), rownames(out2))) { 
+        stop("values not preserved after shuffling") 
+    }
+
+    # Checking what happens if the first id becomes NA.
+    na.ids <- merged.ids
+    na.ids[1] <- NA_integer_
+    out.na <- combineTests(na.ids, tab, weight=weights)
+    out.ref <- combineTests(na.ids[-1], tab[-1,], weight=weights[-1])
+    if (!almostidentical(out.na$logFC, out.ref$logFC) || !almostidentical(out.na$logCPM, out.ref$logCPM)
+        || !almostidentical(out.na$PValue, out.ref$PValue) || !identical(rownames(out), rownames(out2))) {
+        stop("values not preserved after adding an NA") 
+    }
 
 	# Adding some tests if there's multiple log-FC's in 'tab'.
 	is.fc<-which(colnames(tab)=="logFC")
