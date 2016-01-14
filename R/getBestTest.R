@@ -7,22 +7,16 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 #
 # written by Aaron Lun
 # created 17 April 2014
-# last modified 8 January 2016
+# last modified 14 January 2016
 {
-	if (!is.integer(ids)) { ids <- as.integer(ids + 0.5) }
-	stopifnot(length(ids)==nrow(tab))
-	id.order <- order(ids)
-	ids <- ids[id.order]
-	tab <- tab[id.order,]
+    input <- .check_test_inputs(ids, tab, weight)
+    ids <- input$ids
+    tab <- input$tab
+    weight <- input$weight
 
     pval.col <- .getPValCol(pval.col, tab)
 	if (by.pval) { 
 		# Identifying the minimum P-value, and Bonferroni-correcting it.
-		if (is.null(weight)) { weight <- rep(1, length(ids)) } 
-		else if (!is.double(weight)) { weight <- as.double(weight) }
-		stopifnot(length(ids)==length(weight))
-
-		weight <- weight[id.order]
 		out <- .Call(cxx_best_in_cluster, tab[,pval.col], ids, weight)
 		if (is.character(out)) { stop(out) }
 		pval <- out[[1]]
@@ -41,7 +35,6 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 			}
 			cpm.col <- as.integer(cpm.col)
 		}
-		weight <- rep(1, length(ids))
 
 		# Identifying the window with the maximum logCPM.
 		out <- .Call(cxx_best_in_cluster, -tab[,cpm.col], ids, weight)
@@ -52,7 +45,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 	
 	subtab <- tab[best,]
 	subtab[,pval.col] <- pval
-	result <- data.frame(best=id.order[best], subtab, FDR=p.adjust(pval, method="BH"))
+	result <- data.frame(best=input$original[best], subtab, FDR=p.adjust(pval, method="BH"))
 	if (length(ids)) { rownames(result) <- ids[c(TRUE, diff(ids)!=0L)] }
 
 	return(result)
