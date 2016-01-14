@@ -15,6 +15,7 @@ upweightSummit(ids, summits)
 
 \value{
 A numeric vector of weights, where the highest-abundance window in each cluster is assigned a greater weight.
+Any windows with \code{NA} values for \code{ids} or \code{summits} will have a weight of zero.
 }
 
 \details{

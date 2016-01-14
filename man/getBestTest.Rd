@@ -26,7 +26,7 @@ Cluster IDs are stored as the row names.
 }
 
 \details{
-Clusters are identified as those tests with the same value of \code{ids}.
+Clusters are identified as those tests with the same value of \code{ids} (any \code{NA} values are ignored).
 If \code{by.pval=TRUE}, this function identifies the test with the lowest p-value as that with the strongest evidence against the null in each cluster.
 The p-value of the chosen test is adjusted using the Bonferroni correction, based on the total number of tests in the parent cluster. 
 This is necessary to obtain strong control of the family-wise error rate such that the best test can be taken from each cluster for further consideration.
