@@ -7,7 +7,7 @@
 
 \usage{
 clusterWindows(regions, tab, target, pval.col=NULL, 
-    tol, fc.col=NA, ..., weight=NULL, grid.param=NULL) 
+    fc.col=NA, tol, ..., weight=NULL, grid.param=NULL) 
 }
 
 \arguments{

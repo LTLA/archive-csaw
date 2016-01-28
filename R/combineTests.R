@@ -7,18 +7,12 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 # 
 # written by Aaron Lun
 # created 30 July 2013
-# last modified 8 January 2016
+# last modified 14 January 2016
 {
-	if (!is.integer(ids)) { ids <- as.integer(ids+0.5) }
-	if (is.null(weight)) { weight <- rep(1, length(ids)) }
-	else if (!is.double(weight)) { weight <- as.double(weight) }
-	stopifnot(length(ids)==nrow(tab))
-	stopifnot(length(ids)==length(weight))
-
-	id.order <- order(ids)
-	ids <- ids[id.order]
-	tab <- tab[id.order,]
-	weight <- weight[id.order]
+    input <- .check_test_inputs(ids, tab, weight)
+    ids <- input$ids
+    tab <- input$tab
+    weight <- input$weight
 
 	# Saying which columns have the log-fold change field.
 	if (length(fc.col)==0L) { 
@@ -47,3 +41,31 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	return(combined)
 }
 
+.check_test_inputs <- function(ids, tab, weight) {
+	if (!is.integer(ids)) { ids <- as.integer(ids) }
+	if (is.null(weight)) { 
+        weight <- rep(1, length(ids)) 
+    } else if (!is.double(weight)) { 
+        weight <- as.double(weight) 
+    }
+	stopifnot(length(ids)==nrow(tab))
+	stopifnot(length(ids)==length(weight))
+
+    okay.ids <- !is.na(ids)
+    if (!all(okay.ids)) { 
+        ids <- ids[okay.ids]
+        weight <- weight[okay.ids]
+        tab <- tab[okay.ids,]
+    }
+	id.order <- order(ids)
+	ids <- ids[id.order]
+	tab <- tab[id.order,]
+	weight <- weight[id.order]
+
+    if (!all(okay.ids)) { 
+        originals <- which(okay.ids)[id.order]
+    } else {
+        originals <- id.order
+    }
+    return(list(ids=ids, tab=tab, weight=weight, original=originals))
+}

@@ -49,8 +49,8 @@ csaw:::.weightedFDR(numeric(0), numeric(0))
 # Note that there's no guaratee that the results and the reported FDR are the same, as this depends
 # on the random p-values, so we don't check for equality.
 
-checkResults <- function(data.list, result.list, ..., true.pos) {
-    out <- consolidateClusters(data.list, result.list, ...)
+checkResults <- function(data.list, result.list, pval.col=NULL, ..., true.pos) {
+    out <- consolidateClusters(data.list, result.list, pval.col=pval.col, ...)
 
     # Checking that the clustering is fine.
     all.ids <- unlist(out$id)
@@ -58,9 +58,10 @@ checkResults <- function(data.list, result.list, ..., true.pos) {
     stopifnot(all(unlist(range(ref))==out$region))
 
     # Checking that the right windows were chosen.
-    all.ps <- sapply(result.list, FUN=function(x) { x$PValue })
+    if (is.null(pval.col)) { pval.col <- "PValue" }
+    all.ps <- unlist(sapply(result.list, FUN=function(x) { x[,pval.col] }))
     was.sig <- !is.na(all.ids)
-    stopifnot(max(all.ps[was.sig]) > min(all.ps[!was.sig]))
+    if (any(was.sig) && any(!was.sig)) { stopifnot(max(all.ps[was.sig]) < min(all.ps[!was.sig])) }
 
     # Reporting the observed and estimated FDRs.
     np <- out$region[!overlapsAny(out$region, true.pos),]
@@ -90,7 +91,9 @@ checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.05,
 checkResults(list(windows), list(data.frame(PValue=test.p)), tol=5, target=0.1, true.pos=true.pos)
 checkResults(list(windows), list(data.frame(whee=test.p)), tol=2, pval.col="whee", target=0.05, true.pos=true.pos)
 
-signs <- c(-1, 1)[rbinom(100, 1, 0.5)+1]
+signs <- ifelse(rbinom(1000, 1, 0.5)!=0L, 1, -1)
+checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p, logFC=signs), data.frame(PValue=test.p[1:10], logFC=signs[1:10])), 
+             tol=0, target=0.05, true.pos=true.pos)
 checkResults(list(windows, windows[1:10]), list(data.frame(PValue=test.p, logFC=signs), data.frame(PValue=test.p[1:10], logFC=signs[1:10])), 
              tol=0, fc.col="logFC", target=0.05, true.pos=true.pos)
 

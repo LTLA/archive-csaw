@@ -2,7 +2,7 @@
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
-	n <- 10000
+	n <- 10000L
     ids<-round(runif(n, 1, nids))
 	tab <- data.frame(logFC=rnorm(n), logCPM=rnorm(n), PValue=rbeta(n, alpha, beta))
 	best<-getBestTest(ids, tab)
@@ -23,6 +23,26 @@ comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
 			!identical(best$best, xref[,2]) ) {
 		stop("best p-value doesn't match reference after weighting") 
 	}
+
+    # After shuffling things around.
+    re.o <- n:1
+    out2 <- getBestTest(ids[re.o], tab[re.o,], weight=w[re.o])
+    if (any(abs(best$PValue - out2$PValue) > 1e-6 * (best$PValue)) 
+        || !identical(n - best$best + 1L, out2$best) # because the ordering of 'tab' changes.
+        || !identical(rownames(best), rownames(out2))) { 
+        stop("values not preserved after shuffling") 
+    }
+
+    # Checking what happens if the first id becomes NA.
+    na.ids <- ids 
+    na.ids[1] <- NA_integer_
+    out.na <- getBestTest(na.ids, tab, weight=w)
+    out.ref <- getBestTest(na.ids[-1], tab[-1,], weight=w[-1])
+    if (any(abs(out.na$PValue - out.ref$PValue) > 1e-6 * (out.na$PValue)) 
+        || !identical(out.na$best, out.ref$best + 1L)  # because of the missing first row.
+        || !identical(rownames(out.na), rownames(out.ref))) {
+        stop("values not preserved after adding an NA") 
+    }
 
 	# Now, searching for the max log-CPM.
 	almostbest <- getBestTest(ids, tab, by.pval=FALSE)

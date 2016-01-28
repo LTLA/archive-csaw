@@ -47,6 +47,7 @@ Note that the threshold of 0.5 is arbitrary and has no impact on the significanc
 
 A simple clustering approach for windows is provided in \code{\link{mergeWindows}}. 
 However, anything can be used so long as it does not compromise type I error control, e.g., promoters, gene bodies, independently called peaks. 
+Any tests with \code{NA} values for \code{ids} will be ignored.
 } 
 
 \examples{ 

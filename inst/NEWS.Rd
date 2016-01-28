@@ -39,6 +39,9 @@ extractReads() with as.reads=TRUE for PE data now returns a GRangesList.
 \item
 Added the controlClusterFDR(), clusterWindows() and consolidateClusters() functions to automate control of the cluster-level FDR.
 
+\item 
+Added protection against NA values in the cluster IDs for combineTests(), getBestTest(), upweightSummits().
+
 \item
 All read extraction methods are now CIGAR-aware and will ignore soft-clipped sequence.
 }}
