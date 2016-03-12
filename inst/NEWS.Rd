@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.5.9}{\itemize{
+\section{Version 1.5.10}{\itemize{
 \item 
 Restored normalize() as a S4 method returning a RangedSummarizedExperiment object.
 
