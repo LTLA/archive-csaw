@@ -7,10 +7,11 @@ upweightSummit <- function(ids, summits)
 # created 26 February 2015
 # last modified 14 January 2016
 {
-    not.okay <- is.na(ids) | is.na(summits)
-    if (any(not.okay)) { 
-        final <- numeric(length(not.okay))
-        final[!not.okay] <- Recall(ids[!not.okay], summits[!not.okay])
+    not.okay.ids <- is.na(ids) 
+    not.okay.sum <- is.na(summits)
+    if (any(not.okay.ids) || any(not.okay.sum)) { 
+        final <- numeric(length(ids))
+        final[!not.okay.ids] <- Recall(ids[!not.okay.ids], summits[!not.okay.sum])
         return(final)
     }
 
