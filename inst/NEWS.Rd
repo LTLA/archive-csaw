@@ -43,7 +43,7 @@ Added the controlClusterFDR(), clusterWindows() and consolidateClusters() functi
 Added protection against NA values in the cluster IDs for combineTests(), getBestTest(), upweightSummits().
 
 \item
-All read extraction methods are now CIGAR-aware and will ignore soft-clipped sequence.
+All read extraction methods are now CIGAR-aware and will ignore soft-clipped parts of the alignment. 
 }}
 
 \section{Version 1.4.0}{\itemize{
