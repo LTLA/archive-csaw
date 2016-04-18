@@ -15,7 +15,7 @@ controlClusterFDR(target, adjp, FUN, ..., weight=NULL, grid.param=NULL)
 \item{threshold}{a numeric scalar, specifying the FDR threshold used to define the significant tests}
 \item{target}{a numeric scalar specifying the desired cluster-level FDR threshold}
 \item{adjp}{a numeric vector of window-level adjusted p-values}
-\item{FUN}{a clustering function that takes a logical vector indicating which windows are significant, and returns an integer vector of cluster IDs}
+\item{FUN}{a clustering function that takes a logical vector indicating which windows are significant, and returns an integer vector of cluster IDs (see below)}
 \item{...}{additional arguments to be passed to \code{FUN}}
 \item{weight}{a numeric vector of frequency weights, for internal use}
 \item{grid.param}{a named list of grid search parameters, see Details}
@@ -55,6 +55,10 @@ Users can tune the settings of the grid search by specifying elements in \code{g
 \item{\code{iter}:}{an integer scalar indicating the number of iterations of the grid search}
 \item{\code{scale}:}{a numeric scalar specifying how the range of the grid should be downscaled at each iteration}
 }
+
+The \code{FUN} argument should be a function that accepts a logical vector specifying significance, and returns an integer vector of cluster IDs.
+If, for example, it accepts an input vector \code{ix}, then the output should contain cluster IDs corresponding to the entries of \code{which(ix)}.
+This is because cluster IDs are only defined for significant tests, given that only those tests are used for clustering.
 }
 
 \section{Note about weights}{ 
