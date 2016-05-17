@@ -58,6 +58,8 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 
 		} else {
 			# Need to account for composition bias between ChIP and control libraries.
+            # Thought about using 'normalize()' to get normalization factors for each library, but then we start getting into the normalize/filter circularity.
+            # Simplest to just stick to normalizing the averages of ChIP and control against each other.
 			if (!is.null(norm.fac)) {
 				if (!is.numeric(norm.fac)) { 
 					if (!is.list(norm.fac) || length(norm.fac)!=2L) { 
