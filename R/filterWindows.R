@@ -70,7 +70,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 						stop("norm.fac SE objects should have same totals as 'data' and 'background'")
 					}
 					adjusted <- filterWindows(norm.fac[[1]], norm.fac[[2]], type="control", prior.count=0, norm.fac=1)
-					norm.fac <- 2^-median(adjusted$filter) 
+					norm.fac <- 2^-median(adjusted$filter, na.rm=TRUE) # protect against NA's from all-zero bins. 
 				} else if (length(norm.fac)!=1L) { 
 					stop("numeric norm.fac should be a scalar")
 				}
