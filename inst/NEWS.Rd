@@ -2,6 +2,11 @@
 \title{csaw News}
 \encoding{UTF-8}
 
+\section{Version 1.7.2}{\itemize{
+\item Added protection against NA values in filterWindows().
+}
+}
+
 \section{Version 1.6.0}{\itemize{
 \item 
 Restored normalize() as a S4 method returning a RangedSummarizedExperiment object.
