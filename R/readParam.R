@@ -24,7 +24,7 @@ setValidity("readParam", function(object) {
 	if (length(object@forward)>1L || !is.logical(object@forward)) { 
 		return("forward strand specification must be a logical scalar or NULL")
 	} else if ((length(object@forward)==0L || !is.na(object@forward)) && object@pe == "both") {
-		stop("strand-specific extraction makes no sense for paired-end data")
+		stop("strand-specific extraction is not supported for paired-end data")
 	}
 
 	return(TRUE)

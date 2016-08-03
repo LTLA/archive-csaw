@@ -6,11 +6,13 @@
 # last modified 7 February 2015
 
 reformList <- function(paramlist, ...) {
+    .Deprecated(msg="supplying a list of readParam objects is deprecated")
 	lapply(paramlist, FUN=reform, ...)
 }
 
 checkList <- function(paramlist) {
 	if (length(paramlist)>1L) { 
+        .Deprecated(msg="supplying a list of readParam objects is deprecated")
 		different <- list(character(0))
 		sn <- slotNames(paramlist[[1]])
 		for (i in 2:length(paramlist)) { 

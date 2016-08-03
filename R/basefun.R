@@ -114,6 +114,7 @@
 # last modified 22 July 2015
 {
 	if (!is.list(param)) { 
+        .Deprecated(msg="supplying a list of readParam objects is deprecated")
 		paramlist <- lapply(seq_len(nbam), FUN=function(x) { param })
 	} else if (nbam!=length(param)) {
 		stop("number of readParam objects is not equal to the number of BAM files")
