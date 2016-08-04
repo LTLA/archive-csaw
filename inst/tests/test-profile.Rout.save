@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R version 3.3.0 Patched (2016-05-03 r70580) -- "Supposedly Educational"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -45,7 +45,7 @@ Type 'q()' to quit R.
 + 	} else {
 + 		metric <- rep(1, nwin)
 + 	}
-+     if (!is.na(final.mode)){ ext <- DataFrame(ext, final.mode) }
++     if (!is.na(final.mode)){ ext <- list(ext, final.mode) }
 + 	
 + 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
 + 	else { xparam2 <- xparam }
@@ -203,4 +203,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 20.099   0.126  20.237 
+ 16.018   0.226  16.250 

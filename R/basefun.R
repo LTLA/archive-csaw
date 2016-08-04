@@ -161,32 +161,31 @@
 # Collates the extension parameters into a set of ext and remainder values.
 # The idea is to extend each read directionally to 'ext', and then extend in
 # both directions by 'remainder' to reach the desired fragment length.
-# 
-# written by Aaron Lun
-# created 12 December 2014
-# last modified 16 December 2015
 {
-    if (!is.vector(ext)) {
+    if (is.list(ext)) {
         if (length(ext)!=2L) {
             stop("'ext' must be a list of length 2")
-        } else {
-            final.ext <- unique(as.integer(round(ext[[2]])))
-        	if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
-                stop("final extension length must be a positive integer or NA") 
-            }
-        }
+        } 
+        final.ext <- ext[[2]]
         ext <- ext[[1]]
     } else {
+        if (length(ext)!=1L) {
+            stop("'ext' must be an integer scalar")
+        }
+		ext <- rep(ext, length.out=nbam)
         final.ext <- NA_integer_
     }
-	
-	if (length(ext)==1L) { 
-		ext <- rep(ext, nbam)
-	} else if (length(ext)!=nbam) {
-		stop("length of extension vector is not consistent with number of libraries")
-	}
+
 	ext <- as.integer(round(ext))
+    if (length(ext)!=nbam) {
+        stop("length of extension vector is not consistent with number of libraries")
+    } 
 	if (any(!is.na(ext) & ext <= 0L)) { stop("extension length must be NA or a positive integer") }
+
+    final.ext <- as.integer(round(final.ext))
+    if (length(final.ext)!=1L || (!is.na(final.ext) && final.ext <= 0L)) { 
+        stop("final extension length must be a positive integer or NA") 
+    }
 
 	list(ext=ext, final=final.ext)
 }

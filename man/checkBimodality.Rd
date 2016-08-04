@@ -13,7 +13,7 @@ checkBimodality(bam.files, regions, width=100, param=readParam(),
 \arguments{
 \item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 \item{regions}{a \code{GRanges} object specifying the regions over which bimodality is to be calculated}
-\item{width}{an integer scalar or vector indicating the span with which to compute bimodality}
+\item{width}{an integer scalar or list indicating the span with which to compute bimodality}
 \item{param}{a \code{readParam} object containing read extraction parameters}
 \item{prior.count}{a numeric scalar specifying the prior count to compute bimodality scores}
 \item{invert}{a logical scalar indicating whether bimodality score should be inverted}
@@ -59,7 +59,7 @@ incoming <- GRanges(c('chrA', 'chrA', 'chrB', 'chrC'),
     IRanges(c(1, 500, 100, 1000), c(100, 580, 500, 1500)))
 
 checkBimodality(bamFiles, incoming)
-checkBimodality(bamFiles, incoming, width=c(100, 200))
+checkBimodality(bamFiles, incoming, width=200)
 checkBimodality(bamFiles, incoming, param=readParam(minq=20, dedup=TRUE))
 checkBimodality(bamFiles, incoming, prior.count=5)
 

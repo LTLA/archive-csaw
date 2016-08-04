@@ -41,12 +41,13 @@ compare2Ranges <- function(left, right) {
 
 comp <- function(bamFiles, fraglen=200, right=0, left=0, spacing=20, filter=-1, discard=GRanges(), restrict=NULL, forward=NA) {
 	if (length(fraglen)==1L) { 
-		submit <- fraglen <- rep(fraglen, length.out=length(bamFiles))
+		submit <- fraglen
+        fraglen <- rep(fraglen, length.out=length(bamFiles))
 		remainder <- integer(length(bamFiles))
 	} else {
 		final.out <- as.integer(mean(fraglen))
 		remainder <- as.integer((final.out - fraglen)/2)
-		submit <- DataFrame(fraglen, final.out)
+		submit <- list(fraglen, final.out)
 	}
 	chrlens <- csaw:::.activeChrs(bamFiles, NULL)
 	

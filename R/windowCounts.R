@@ -63,8 +63,10 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 
 		# Accounting for the possible gain of a centrepoint from the back when
 		# shift/left is non-zero, i.e., does the shift bring the next centre point
-		# (floor((outlen-1)/spacing)*spacing+1+spacing) under outlen?  [note that 
-		# floor - original for (outlen-1) is equal to the negative remainder].
+		# (floor((outlen-1)/spacing)*spacing+1+spacing) under outlen? In other words:
+        #     floor((outlen-1)/spacing)*spacing+1+spacing - left <= outlen
+        #     floor((outlen-1)/spacing)*spacing - (outlen - 1) + spacing <= left
+        # [note that floor - original for (outlen-1) is equal to the negative remainder].
 		at.end <- spacing - (outlen - 1L) %% spacing <= left
 		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
 		outcome <- matrix(0L, total.pts, nbam) 
@@ -126,7 +128,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowRanges=all.regions, 
 		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, param),
-		metadata=list(spacing=spacing, width=width, shift=shift, 
+		metadata=list(spacing=spacing, width=width, shift=shift, bin=bin, 
             param=param, final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }
 

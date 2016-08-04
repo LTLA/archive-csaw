@@ -26,7 +26,7 @@ comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=
 	} else {
 		metric <- rep(1, nwin)
 	}
-    if (!is.na(final.mode)){ ext <- DataFrame(ext, final.mode) }
+    if (!is.na(final.mode)){ ext <- list(ext, final.mode) }
 	
 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
 	else { xparam2 <- xparam }

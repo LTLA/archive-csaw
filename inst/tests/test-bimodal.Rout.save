@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R version 3.3.0 Patched (2016-05-03 r70580) -- "Supposedly Educational"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -23,7 +23,12 @@ Type 'q()' to quit R.
 > source("simsam.R")
 > 
 > comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL, prior.count=2) { 
-+ 	width <- rep(width, length.out=length(bamFiles))
++     if (length(width) > 1) { 
++         submit <- list(width, NA_integer_)
++     } else {
++         submit <- width
++         width <- rep(width, length.out=length(bamFiles))
++     }
 + 	by.chr <- split(1:length(regions), seqnames(regions))
 + 	chr.sizes <- Rsamtools::scanBamHeader(bamFiles[1])[[1]][[1]]
 + 	chr.in.use <- names(by.chr)
@@ -43,7 +48,7 @@ Type 'q()' to quit R.
 +         
 + 		# We compare windowCounts and regionCounts directly.
 +         repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup)
-+ 		observed <- checkBimodality(bamFiles, regions, param=repar, width=width, prior.count=prior.count)
++ 		observed <- checkBimodality(bamFiles, regions, param=repar, width=submit, prior.count=prior.count)
 + 		output <- rep(NA, length(regions))
 + 
 + 		for (chr in chr.in.use) { 
@@ -158,4 +163,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 38.263   0.171  38.662 
+ 38.756   0.259  39.053 

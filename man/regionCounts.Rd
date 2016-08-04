@@ -12,7 +12,7 @@ regionCounts(bam.files, regions, ext=100, param=readParam())
 \arguments{
 	\item{bam.files}{a character vector containing paths to sorted and indexed BAM files}
 	\item{regions}{a \code{GRanges} object containing the regions over which reads are to be counted}
-	\item{ext}{an integer scalar or vector, describing the average length of the sequenced fragment in each library}
+	\item{ext}{an integer scalar or list describing the average length of the sequenced fragment in each library, see \code{?\link{windowCounts}}}
 	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
 }
 

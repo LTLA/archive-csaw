@@ -44,9 +44,6 @@ asDGEList(out)
 consolidateSizes(list(out), list(empty)) # No point testing behaviour on empty lists.
 consolidateSizes(list(out), list(empty), region=GRanges())
 
-reformList(list())
-checkList(list())
-
 normOffsets(out) # 1 is correct, as calcNormFactors() just diverts to that.
 normOffsets(out, type="loess")
 

@@ -4,7 +4,12 @@ suppressWarnings(suppressPackageStartupMessages(library(csaw)))
 source("simsam.R")
 
 comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL, prior.count=2) { 
-	width <- rep(width, length.out=length(bamFiles))
+    if (length(width) > 1) { 
+        submit <- list(width, NA_integer_)
+    } else {
+        submit <- width
+        width <- rep(width, length.out=length(bamFiles))
+    }
 	by.chr <- split(1:length(regions), seqnames(regions))
 	chr.sizes <- Rsamtools::scanBamHeader(bamFiles[1])[[1]][[1]]
 	chr.in.use <- names(by.chr)
@@ -24,7 +29,7 @@ comp <- function(bamFiles, regions, width=100, discard=GRanges(), restrict=NULL,
         
 		# We compare windowCounts and regionCounts directly.
         repar <- readParam(discard=discard, restrict=restrict, minq=minq, dedup=dedup)
-		observed <- checkBimodality(bamFiles, regions, param=repar, width=width, prior.count=prior.count)
+		observed <- checkBimodality(bamFiles, regions, param=repar, width=submit, prior.count=prior.count)
 		output <- rep(NA, length(regions))
 
 		for (chr in chr.in.use) { 

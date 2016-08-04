@@ -1,5 +1,5 @@
 
-R Under development (unstable) (2016-02-24 r70217) -- "Unsuffered Consequences"
+R version 3.3.0 Patched (2016-05-03 r70580) -- "Supposedly Educational"
 Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
@@ -123,12 +123,12 @@ character(0)
 > out
 class: RangedSummarizedExperiment 
 dim: 0 1 
-metadata(1): final.ext
+metadata(2): final.ext param
 assays(1): counts
 rownames: NULL
 rowData names(0):
 colnames: NULL
-colData names(5): bam.files totals ext rlen param
+colData names(4): bam.files totals ext rlen
 > 
 > getWidths(out)
 integer(0)
@@ -185,11 +185,6 @@ $table
 <0 rows> (or 0-length row.names)
 
 > 
-> reformList(list())
-list()
-> checkList(list())
-character(0)
-> 
 > normOffsets(out) # 1 is correct, as calcNormFactors() just diverts to that.
 [1] 1
 > normOffsets(out, type="loess")
@@ -244,4 +239,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
-  9.138   0.169   9.378 
+  9.486   0.201   9.684 

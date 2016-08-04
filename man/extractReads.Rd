@@ -12,7 +12,7 @@ extractReads(bam.file, region, ext=NA, param=readParam(), as.reads=FALSE)
 \arguments{
 	\item{bam.file}{a character string containing the path to a sorted and indexed BAM file}
 	\item{region}{a \code{GRanges} object of length 1 describing the region of interest}
-	\item{ext}{an integer scalar specifying the fragment length for directional read extension}
+	\item{ext}{an integer scalar or list specifying the fragment length for directional read extension}
 	\item{param}{a \code{readParam} object specifying how reads should be extracted}
 	\item{as.reads}{a logical scalar indicating whether reads should be returned instead of fragments for paired-end data}
 }	
