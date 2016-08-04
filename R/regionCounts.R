@@ -9,8 +9,11 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 # last modified 21 December 2015
 {
 	nbam <- length(bam.files)
-	paramlist <- .makeParamList(nbam, param)
-	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
+    if (is.list(param)) { 
+        .Deprecated(msg="supplying a list of readParam objects is deprecated, using first element only")
+        param <- param[[1]]
+    }
+	extracted.chrs <- .activeChrs(bam.files, param$restrict)
 	ext.data <- .collateExt(nbam, ext) 
 
 	totals <- integer(nbam)
@@ -32,16 +35,15 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 
 		# Pulling out reads as previously described.
 		for (bf in seq_len(nbam)) {
-			curpar <- paramlist[[bf]]
-			if (curpar$pe!="both") {
-				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
+			if (param$pe!="both") {
+				reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
                 all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$forward$qwidth)
                 all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$reverse$qwidth)
 			} else {
-				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
+				out <- .getPairedEnd(bam.files[bf], where=where, param=param)
 				checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
    				frag.start <- checked$start
 				frag.end <- checked$end
@@ -55,9 +57,9 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		}
 	}
 
-    strand(regions) <- .decideStrand(paramlist)
+    strand(regions) <- .decideStrand(param)
 	return(SummarizedExperiment(assays=SimpleList(counts=counts), 
 		rowRanges=regions, 
-		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, paramlist),
-		metadata=list(final.ext=ext.data$final)))
+		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, param),
+		metadata=list(final.ext=ext.data$final, param=param)))
 }

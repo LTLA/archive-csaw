@@ -106,30 +106,6 @@
 
 ###########################################################
 
-.makeParamList <- function(nbam, param) 
-# Converts a readParam object into a list, if it isn't so already.
-# 
-# written by Aaron Lun
-# created 12 December 2014
-# last modified 22 July 2015
-{
-	if (!is.list(param)) { 
-        .Deprecated(msg="supplying a list of readParam objects is deprecated")
-		paramlist <- lapply(seq_len(nbam), FUN=function(x) { param })
-	} else if (nbam!=length(param)) {
-		stop("number of readParam objects is not equal to the number of BAM files")
-	} else {
-		paramlist <- param
-		all.restrict <- paramlist[[1]]$restrict
-		for (x in paramlist) {
-			if (!identical(x$restrict, all.restrict)) { 
-				stop("non-identical restrict settings between readParam objects")
-			}		
-		}
-	}
-	return(paramlist)
-}	
-
 .activeChrs <- function(bam.files, restrict) 
 # Processes the incoming data; checks that bam headers are all correct,
 # truncates the list according to 'restrict'.
@@ -248,23 +224,20 @@
 
 ############################################################
 
-.decideStrand <- function(paramlist) 
+.decideStrand <- function(param) 
 # Decides what strand we should assign to the output GRanges in the
 # SummarizedExperiment object, after counting.
-#
-# written by Aaron Lun
-# created 10 February 2015
 {
-	getfs <- sapply(paramlist, FUN=function(x) { x$forward })
-	if (length(unique(getfs))!=1) {
-		warning("unstranded regions used for counts from multiple strands")
-		return("*")
-	} else if (length(getfs[[1]])==0L) { # Need '[[', if NULL.
+	getfs <- param$forward
+    if (length(getfs)==0L) { 
 		stop("unspecified strandedness")
-	}
-	if (is.na(getfs[1])) { return("*") }
-	else if (getfs[1]) { return("+") }
-	else { return("-") }
+	} else if (is.na(getfs)) { 
+        return("*") 
+    } else if (getfs) { 
+        return("+") 
+    } else { 
+        return("-") 
+    }
 }
 
 .runningWM <- function(store, x)
@@ -276,17 +249,15 @@
     return(store)
 }
 
-.formatColData <- function(bam.files, totals, ext.data, all.pe, all.rlen, paramlist) {
+.formatColData <- function(bam.files, totals, ext.data, all.pe, all.rlen, param) {
     nbam <- length(bam.files)
     store.ext <- ext.data$ext
     store.rlen <- rep(NA_integer_, nbam)
     for (bf in seq_len(nbam)) {
-        if (paramlist[[bf]]$pe=="both") { store.ext[bf] <- as.integer(round(all.pe[[bf]][[1]])) }
+        if (param$pe=="both") { store.ext[bf] <- as.integer(round(all.pe[[bf]][[1]])) }
         else { store.rlen[bf] <- as.integer(round(all.rlen[[bf]][[1]])) }
     }
-    dim(paramlist) <- c(nbam, 1)
-    colnames(paramlist) <- "param"
-    DataFrame(bam.files=bam.files, totals=totals, ext=store.ext, rlen=store.rlen, paramlist)
+    DataFrame(bam.files=bam.files, totals=totals, ext=store.ext, rlen=store.rlen)
 }
 
 ############################################################

@@ -16,7 +16,7 @@ profileSites(bam.files, regions, range=5000, ext=100, average=TRUE,
 	\item{ext}{an integer scalar specifying the average fragment length for single-end data}
 	\item{average}{a logical scalar specifying whether the profiles should be averaged across regions}
 	\item{weight}{a numeric vector indicating the relative weight to be assigned to the profile for each region}
-	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
+	\item{param}{a \code{readParam} object containing read extraction parameters}
 	\item{strand}{a string indicating how stranded \code{regions} should be handled}
 }
 

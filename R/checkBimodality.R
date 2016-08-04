@@ -9,8 +9,11 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 # last modified 21 December 2015
 {
 	nbam <- length(bam.files)
-	paramlist <- .makeParamList(nbam, param)
-	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
+    if (is.list(param)) {  
+        .Deprecated(msg="supplying a list of readParam objects is deprecated, using first element only")
+        param <- param[[1]]
+    }
+	extracted.chrs <- .activeChrs(bam.files, param$restrict)
 	ext.data <- .collateExt(nbam, width) 
 	invert <- as.logical(invert)
 
@@ -29,12 +32,10 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 		# Pulling out reads as previously described.
 		collected <- list()
 		for (bf in seq_len(nbam)) {
-			curpar <- paramlist[[bf]]
-    
-       		if (curpar$pe=="both") {
-				reads <- .getPairedEnd(bam.files[bf], where=where, param=curpar, with.reads=TRUE)
+       		if (param$pe=="both") {
+				reads <- .getPairedEnd(bam.files[bf], where=where, param=param, with.reads=TRUE)
 			} else {
-				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
+				reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
    			}
 
             # Computing what would happen if we extended one way and the other.

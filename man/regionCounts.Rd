@@ -20,7 +20,8 @@ regionCounts(bam.files, regions, ext=100, param=readParam())
 A \code{RangedSummarizedExperiment} object is returned containing one integer matrix.
 Each entry of the matrix contains the count for each library (column) at each region (row).
 The coordinates of each region are stored as the \code{rowRanges}.
-The total number of reads, read extension length and \code{param} used in each library are in the \code{colData}.
+The total number of reads, read length and extension length used in each library are stored in the \code{colData}.
+Other parameters (e.g., \code{param}) are stored in the \code{metadata}.
 }
 
 \details{
@@ -30,8 +31,9 @@ This allows users to coordinate region-based counts with those from \code{\link{
 Checking that the output \code{totals} are the same between the two calls is strongly recommended.
 
 Note that the strandedness of \code{regions} will not be considered when computing overlaps.
+In other words, both forward and reverse reads will be counted into each region, regardless of the strandedness of that region.
+This can be altered by setting the \code{forward} slot in the \code{param} object to only count reads from one strand or the other.
 The strandedness of the output \code{rowRanges} will depend on the strand(s) from which reads were counted.
-This is determined by the \code{forward} slot in the \code{param} object.
 
 See \code{\link{windowCounts}} for more details on read extension.
 }

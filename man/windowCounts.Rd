@@ -18,15 +18,15 @@ windowCounts(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	\item{shift}{an integer scalar specifying how much the start of each window should be shifted to the left}
 	\item{filter}{an integer scalar for the minimum count sum across libraries for each window}
 	\item{bin}{a logical scalar indicating whether binning should be performed}
-	\item{param}{a \code{readParam} object containing read extraction parameters, or a list of such objects (one for each BAM file)}
+	\item{param}{a \code{readParam} object containing read extraction parameters}
 }
 
 \value{
 A \code{RangedSummarizedExperiment} object is returned containing one integer matrix. 
 Each entry of the matrix contains the count for each library (column) at each window (row).
 The coordinates of each window are stored as the \code{rowRanges}.
-The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read extension length and \code{param} used in each library.
-Other window counting parameters (e.g., \code{spacing}, \code{width}) are stored in the \code{metadata}.
+The total number of reads in each library are stored as \code{totals} in the \code{colData}, along with the read and extension lengths for each library.
+Other window counting parameters (e.g., \code{spacing}, \code{width}, \code{param}) are stored in the \code{metadata}.
 }
 
 \section{Defining the sliding windows}{
@@ -37,7 +37,7 @@ This results in greater detection power at the cost of resolution.
 
 By default, the first window on a chromosome starts at base position 1.
 This can be shifted to the left by specifying an appropriate value for \code{shift}.
-New windows are found by sliding the current window to the right by the specified \code{spacing}.
+New windows are defined by sliding the current window to the right by the specified \code{spacing}.
 Increasing \code{spacing} will reduce the frequency at which counts are extracted from the genome. 
 This results in some loss of resolution but it may be necessary when machine memory is limited. 
 
@@ -48,17 +48,14 @@ Only the 5' end of each read or the midpoint of each fragment (for paired-end da
 
 \section{Read extraction and counting}{ 
 Read extraction from the BAM files is governed by the \code{param} argument.
-Specifying a single \code{readParam} object will use the same extraction parameters for all files.
-Different parameters can also be used for each file by specifying a list of \code{readParam} objects.
-However, users should take care with library-specific parameters, lest spurious differences be introduced between libraries.
+This specifies whether reads are to be read in single- or paired-end mode, whther to apply a threshold to the mapping quality, and so on -- see \code{?\link{readParam}} for details.
+The strandedness of the output \code{rowRanges} is set based on the strand(s) from which the reads are extracted and counted.
+This is determined by the value of the \code{forward} slot in the input \code{param} object.
 
 Fragments are inferred from reads by directional extension (single-end; see below) or by identifying proper pairs (paired-end; see \code{\link{readParam}} for more details).
 The number of fragments overlapping the window for each library is then counted for each window position. 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
- 
-The strandedness of the output \code{rowRanges} is set based on the strand(s) from which the reads are extracted and counted.
-This is determined by the value of the \code{forward} slot in the input \code{param} object.
 }
 
 \section{Elaborating on directional extension}{

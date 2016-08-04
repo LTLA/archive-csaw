@@ -10,8 +10,11 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 # last modified 22 July 2015
 {
 	nbam <- length(bam.files)
-	paramlist <- .makeParamList(nbam, param)
-	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
+    if (is.list(param)) { 
+        .Deprecated(msg="supplying a list of readParam objects is deprecated, using first element only")
+        param <- param[[1]]
+    }
+	extracted.chrs <- .activeChrs(bam.files, param$restrict)
 
 	max.dist <- as.integer(max.dist)
 	if (max.dist <=0) { stop("maximum distance must be positive") }
@@ -29,12 +32,10 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 		num.reads <- 0L
 		forward.reads <- 0L
 		for (b in seq_len(nbam)) { 
-			curpar <- paramlist[[b]]
-
-			if (curpar$pe=="both") {
-				reads <- .getPairedEnd(bam.files[b], where=where, param=curpar, with.reads=TRUE)
+			if (param$pe=="both") {
+				reads <- .getPairedEnd(bam.files[b], where=where, param=param, with.reads=TRUE)
   			} else {
-				reads <- .getSingleEnd(bam.files[b], where=where, param=curpar)
+				reads <- .getSingleEnd(bam.files[b], where=where, param=param)
 			}
             
             forward.pos <- reads$forward$pos

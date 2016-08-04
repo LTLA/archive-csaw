@@ -1,5 +1,5 @@
-windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
-	filter=10, bin=FALSE, param=readParam())
+windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, 
+    shift=0, filter=10, bin=FALSE, param=readParam())
 # Gets counts from BAM files at each position of the sliding window. Applies
 # a gentle filter to remove the bulk of window positions with low counts.
 # Returns a RangedSummarizedExperiment object with counts and genomic
@@ -10,8 +10,11 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 # last modified 21 December 2015
 {   
 	nbam <- length(bam.files)
-	paramlist <- .makeParamList(nbam, param)
-	extracted.chrs <- .activeChrs(bam.files, paramlist[[1]]$restrict)
+    if (is.list(param)) { 
+        .Deprecated(msg="supplying a list of readParam objects is deprecated, using first element only")
+        param <- param[[1]]
+    }
+	extracted.chrs <- .activeChrs(bam.files, param$restrict)
 
 	# Processing input parameters.
 	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
@@ -67,16 +70,15 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 		outcome <- matrix(0L, total.pts, nbam) 
 
 		for (bf in seq_len(nbam)) {
-			curpar <- paramlist[[bf]]
-			if (curpar$pe!="both") {
-   				reads <- .getSingleEnd(bam.files[bf], where=where, param=curpar)
+			if (param$pe!="both") {
+   				reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
 				extended <- .extendSE(reads, ext=ext.data$ext[bf], final=ext.data$final, chrlen=outlen)
 				frag.start <- extended$start
 				frag.end <- extended$end
                 all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$forward$qwidth)
                 all.rlen[[bf]] <- .runningWM(all.rlen[[bf]], reads$reverse$qwidth)
 			} else {
-				out <- .getPairedEnd(bam.files[bf], where=where, param=curpar)
+				out <- .getPairedEnd(bam.files[bf], where=where, param=param)
 				if (bin) { 
 					# Only want to record each pair once in a bin, so forcing it to only use the midpoint.
 					mid <- as.integer(out$pos + out$size/2)
@@ -119,12 +121,12 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100, shift=0,
 	all.regions <- suppressWarnings(do.call(c, all.regions))
 	seqlevels(all.regions) <- names(extracted.chrs)
 	seqlengths(all.regions) <- extracted.chrs
-	strand(all.regions) <- .decideStrand(paramlist)
+	strand(all.regions) <- .decideStrand(param)
 
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowRanges=all.regions, 
-		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, paramlist),
+		colData=.formatColData(bam.files, totals, ext.data, all.pe, all.rlen, param),
 		metadata=list(spacing=spacing, width=width, shift=shift, 
-			final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
+            param=param, final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }
 
