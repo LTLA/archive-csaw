@@ -18,6 +18,7 @@ export(csawUsersGuide,
 #  Importing required packages
 import(GenomicRanges, SummarizedExperiment, Rsamtools,
 	S4Vectors, IRanges, GenomeInfoDb,
+    BiocParallel,
 	edgeR, 
 	methods, Rhtslib)
 

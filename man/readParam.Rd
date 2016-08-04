@@ -22,6 +22,7 @@ Slots are defined as:
 	\item{\code{forward}:}{a logical scalar indicating whether only forward reads should be extracted}
 	\item{\code{restrict}:}{a character vector containing the names of allowable chromosomes from which reads will be extracted}
 	\item{\code{discard}:}{a \code{GRanges} object containing intervals in which any alignments will be discarded}
+    \item{\code{BPPARAM}:}{a \code{BiocParallelParam} object specifying if and how parallelization is performed}
 }
 }
 
@@ -75,9 +76,17 @@ Thus, in this package, any references to the length or 5'/3' ends of the read wi
 This is often more appropriate, e.g., the 5' end of the alignment represents the end of the fragment after clipping of the artifacts.
 }
 
+\section{Parallelization options}{
+Parallelized read loading can be turned on in several functions by setting \code{BPPARAM} appropriately.
+This will usually extract reads from multiple files simultaneously to speed up processing.
+Users are referred to \code{?\link{BiocParallelParam}} for more details on how to set \code{BPPARAM}.
+By default, a \code{SerialParam} object is used, i.e., no parallelization is performed.
+This avoids slow performance on systems that do not support concurrent disk reads.
+}
+
 \section{Constructor}{
 \describe{
-	\item{}{\code{readParam(pe="none", max.frag=500, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges())}:
+	\item{}{\code{readParam(pe="none", max.frag=500, dedup=FALSE, minq=NA, forward=NA, restrict=NULL, discard=GRanges(), BPPARAM=SerialParam())}:
 		Creates a readParam object. 
 		Each argument is placed in the corresponding slot, with coercion into the appropriate type.
 	}
@@ -114,7 +123,8 @@ Aaron Lun
 \code{\link{windowCounts}},
 \code{\link{regionCounts}},
 \code{\link{correlateReads}},
-\code{\link{getPESizes}}
+\code{\link{getPESizes}},
+\code{\link{BiocParallelParam}}
 }
 
 \examples{

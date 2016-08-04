@@ -6,6 +6,12 @@
 \item Added protection against NA values in filterWindows().
 
 \item Deprecated the use of parameter lists in any param= arguments.
+
+\item Tightened up allowable values of ext= arguments in various functions.
+
+\item Added the BPPARAM slot in the readParam class to store BiocParallelParam objects.
+
+\item Added support for parallelization in windowCounts(), regionCounts().
 }
 }
 

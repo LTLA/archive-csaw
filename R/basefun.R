@@ -248,14 +248,20 @@
     return(store)
 }
 
-.formatColData <- function(bam.files, totals, ext.data, all.pe, all.rlen, param) {
+.formatColData <- function(bam.files, totals, ext.data, all.extras, param) {
     nbam <- length(bam.files)
     store.ext <- ext.data$ext
     store.rlen <- rep(NA_integer_, nbam)
+
+    store.extras <- numeric(nbam)
     for (bf in seq_len(nbam)) {
-        if (param$pe=="both") { store.ext[bf] <- as.integer(round(all.pe[[bf]][[1]])) }
-        else { store.rlen[bf] <- as.integer(round(all.rlen[[bf]][[1]])) }
+        current.extras <- do.call(rbind, all.extras[[bf]])
+        store.extras[bf] <- weighted.mean(current.extras[,1], current.extras[,2])
     }
+    store.extras <- as.integer(round(store.extras))
+    if (param$pe=="both") { store.ext <- store.extras }
+    else { store.rlen <- store.extras }
+
     DataFrame(bam.files=bam.files, totals=totals, ext=store.ext, rlen=store.rlen)
 }
 
