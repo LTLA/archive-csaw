@@ -7,7 +7,7 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 #
 # written by Aaron Lun
 # created 2 July 2012
-# last modified 22 July 2015
+# last modified 5 August 2016
 {
 	nbam <- length(bam.files)
     if (is.list(param)) { 
@@ -28,30 +28,18 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
         if (total.len < 2L) { next } # No way to compute variance if the vector's too small.
 
 		# Reading in the reads for the current chromosome for all the BAM files.
-		all.f <- all.r <- list()
-		num.reads <- 0L
-		forward.reads <- 0L
-		for (b in seq_len(nbam)) { 
-			if (param$pe=="both") {
-				reads <- .getPairedEnd(bam.files[b], where=where, param=param, with.reads=TRUE)
-  			} else {
-				reads <- .getSingleEnd(bam.files[b], where=where, param=param)
-			}
-            
-            forward.pos <- reads$forward$pos
-            forward.pos[forward.pos < 1L] <- 1L
-            reverse.pos <- reads$reverse$pos + reads$reverse$qwidth
-            reverse.pos[reverse.pos > total.len] <- total.len
+        bp.out <- bplapply(seq_len(nbam), FUN=.correlate_reads,
+                           bam.files=bam.files, where=where, param=param, 
+                           total.len=total.len,
+                           BPPARAM=param$BPPARAM)
 
-			num.reads <- num.reads+length(forward.pos)+length(reverse.pos)
-			forward.reads <- forward.reads+length(forward.pos)
-			if (cross) {
-				all.f[[b]] <- forward.pos
-				all.r[[b]] <- reverse.pos
-			} else { 
-                all.f[[b]] <- c(forward.pos, reverse.pos)
-            }
-		}
+        all.f <- lapply(bp.out, "[[", "forward")
+        all.r <- lapply(bp.out, "[[", "reverse")
+        if (!cross) {
+            all.f <- mapply("c", all.f, all.r, SIMPLIFY=FALSE)
+        }
+        forward.reads <- sum(sapply(bp.out, "[[", "nforward"))
+        num.reads <- forward.reads + sum(sapply(bp.out, "[[", "nreverse"))
 
 		# Assembling RLEs (with some protection from empties). We need reads for any correlation and 
 		# reads on both strands to get cross-correlations. If we're doing cross-correlations, then
@@ -80,4 +68,21 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 	return(total.cor)
 }
 
+.correlate_reads <- function(bf, bam.files, where, param, total.len) {
+    if (param$pe=="both") {
+        reads <- .getPairedEnd(bam.files[bf], where=where, param=param, with.reads=TRUE)
+    } else {
+        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
+    }
+    
+    forward.pos <- reads$forward$pos
+    forward.pos[forward.pos < 1L] <- 1L
+    reverse.pos <- reads$reverse$pos + reads$reverse$qwidth
+    reverse.pos[reverse.pos > total.len] <- total.len
+
+    num.reads <- length(forward.pos)+length(reverse.pos)
+    forward.reads <- length(forward.pos)
+    return(list(forward=forward.pos, reverse=reverse.pos, 
+                nforward=length(forward.pos), nreverse=length(reverse.pos)))
+}
 

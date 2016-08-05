@@ -7,7 +7,7 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 #
 # written by Aaron Lun
 # created 2 July 2014
-# last modified 21 December 2015
+# last modified 5 August 2016
 {
 	weight <- as.double(weight)
 	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
@@ -75,25 +75,13 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		where <- GRanges(chr, IRanges(1L, outlen))
 
 		# Reading in the reads for the current chromosome for all the BAM files.
-		starts <- ends <- list()
-		for (b in seq_len(nbam)) {
-			if (param$pe!="both") {
-				reads <- .getSingleEnd(bam.files[b], where=where, param=param)
-				extended <- .extendSE(reads, ext=ext.data$ext[b], final=ext.data$final, chrlen=outlen)
-				start.pos <- extended$start
-				end.pos <- extended$end
-			} else {
-				out <- .getPairedEnd(bam.files[b], where=where, param=param)
-				checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=ext.data$final, chrlen=outlen)
-				start.pos <- checked$start
-				end.pos <- checked$end
-			}
+        bp.out <- bplapply(seq_len(nbam), FUN=.profile_sites,
+                           bam.files=bam.files, where=where, param=param,
+                           init.ext=ext.data$ext, final.ext=ext.data$final, outlen=outlen,
+                           BPPARAM=param$BPPARAM)
 
-			if (!length(start.pos)) { next }
-			ix <- length(starts) + 1L
-			starts[[ix]] <- pmax(start.pos, 1L) # Avoid considering off ends of chromosomes.
- 			ends[[ix]] <- pmin(end.pos, outlen)
-		}
+		starts <- lapply(bp.out, "[[", "starts")
+        ends <- lapply(bp.out, "[[", "ends")
 			
 		# Pulling out the regions.
 		all.starts <- start(regions)[chosen]
@@ -125,6 +113,24 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		colnames(total.profile) <- (-range):range
 	}
 	return(total.profile)
+}
+
+.profile_sites <- function(bf, bam.files, where, param,
+                           init.ext, final.ext, outlen) {
+    if (param$pe!="both") {
+        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
+        extended <- .extendSE(reads, ext=init.ext[bf], final=final.ext, chrlen=outlen)
+        start.pos <- extended$start
+        end.pos <- extended$end
+    } else {
+        out <- .getPairedEnd(bam.files[bf], where=where, param=param)
+        checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=final.ext, chrlen=outlen)
+        start.pos <- checked$start
+        end.pos <- checked$end
+    }
+   
+    list(starts=pmax(start.pos, 1L), # Avoid considering off ends of chromosomes.
+         ends=pmin(end.pos, outlen))
 }
 
 wwhm <- function(profile, regions, ext=100, proportion=0.5, rlen=NULL)
