@@ -81,7 +81,7 @@ Parallelized read loading can be turned on in several functions by setting \code
 This will usually extract reads from multiple files simultaneously to speed up processing.
 Users are referred to \code{?\link{BiocParallelParam}} for more details on how to set \code{BPPARAM}.
 By default, a \code{SerialParam} object is used, i.e., no parallelization is performed.
-This avoids slow performance on systems that do not support concurrent disk reads.
+This avoids slow performance on systems that do not provide fast concurrent read access.
 }
 
 \section{Constructor}{

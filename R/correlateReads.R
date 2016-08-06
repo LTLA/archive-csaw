@@ -28,10 +28,10 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
         if (total.len < 2L) { next } # No way to compute variance if the vector's too small.
 
 		# Reading in the reads for the current chromosome for all the BAM files.
-        bp.out <- bplapply(seq_len(nbam), FUN=.correlate_reads,
-                           bam.files=bam.files, where=where, param=param, 
-                           total.len=total.len,
-                           BPPARAM=param$BPPARAM)
+        bp.out <- bpmapply(FUN=.correlate_reads, bam.file=bam.files, 
+                           MoreArgs=list(where=where, param=param, 
+                                         total.len=total.len),
+                           BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
 
         all.f <- lapply(bp.out, "[[", "forward")
         all.r <- lapply(bp.out, "[[", "reverse")
@@ -68,11 +68,11 @@ correlateReads <- function(bam.files, max.dist=1000, cross=TRUE, param=readParam
 	return(total.cor)
 }
 
-.correlate_reads <- function(bf, bam.files, where, param, total.len) {
+.correlate_reads <- function(bam.file, where, param, total.len) {
     if (param$pe=="both") {
-        reads <- .getPairedEnd(bam.files[bf], where=where, param=param, with.reads=TRUE)
+        reads <- .getPairedEnd(bam.file, where=where, param=param, with.reads=TRUE)
     } else {
-        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
+        reads <- .getSingleEnd(bam.file, where=where, param=param)
     }
     
     forward.pos <- reads$forward$pos

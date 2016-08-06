@@ -30,10 +30,10 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 		where <- GRanges(chr, IRanges(1, outlen))
 
 		# Pulling out read data.
-		collected <- bplapply(seq_len(nbam), FUN=.check_bimodality, 
-                              bam.files=bam.files, where=where, param=param,
-                              init.ext=ext.data$ext, final.ext=ext.data$final, outlen=outlen,
-                              BPPARAM=param$BPPARAM)
+		collected <- bpmapply(FUN=.check_bimodality, bam.file=bam.files, init.ext=ext.data$ext, 
+                              MoreArgs=list(where=where, param=param,
+                                            final.ext=ext.data$final, outlen=outlen),
+                              BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
 
 		# Checking region order.
 		rstarts <- start(regions)[chosen]
@@ -49,19 +49,19 @@ checkBimodality <- function(bam.files, regions, width=100, param=readParam(),
 	return(out.scores)	
 }
 
-.check_bimodality <- function(bf, bam.files, where, param,
+.check_bimodality <- function(bam.file, where, param,
                               init.ext, final.ext, outlen) {
     if (param$pe=="both") {
-        reads <- .getPairedEnd(bam.files[bf], where=where, param=param, with.reads=TRUE)
+        reads <- .getPairedEnd(bam.file, where=where, param=param, with.reads=TRUE)
     } else {
-        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
+        reads <- .getSingleEnd(bam.file, where=where, param=param)
     }
 
     # Computing what would happen if we extended one way and the other.
-    Fstandard <- .extendSEdir(reads$forward, ext=init.ext[bf], final=final.ext, chrlen=outlen, forward=TRUE)
-    Fflipped <- .extendSEdir(reads$forward, ext=init.ext[bf], final=final.ext, chrlen=outlen, forward=FALSE)
-    Rstandard <- .extendSEdir(reads$reverse, ext=init.ext[bf], final=final.ext, chrlen=outlen, forward=FALSE)
-    Rflipped <- .extendSEdir(reads$reverse, ext=init.ext[bf], final=final.ext, chrlen=outlen, forward=TRUE)
+    Fstandard <- .extendSEdir(reads$forward, ext=init.ext, final=final.ext, chrlen=outlen, forward=TRUE)
+    Fflipped <- .extendSEdir(reads$forward, ext=init.ext, final=final.ext, chrlen=outlen, forward=FALSE)
+    Rstandard <- .extendSEdir(reads$reverse, ext=init.ext, final=final.ext, chrlen=outlen, forward=FALSE)
+    Rflipped <- .extendSEdir(reads$reverse, ext=init.ext, final=final.ext, chrlen=outlen, forward=TRUE)
     
     # Standard extension for originally forward reads goes to (2), flipped extension go to (1) as they'll be at an earlier position.
     # Opposite is true for reverse reads; standard extension goes to (1), and flipped extension goes to (2).

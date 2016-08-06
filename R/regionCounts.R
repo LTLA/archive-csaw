@@ -34,11 +34,11 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		where <- GRanges(chr, IRanges(1, outlen))
 
 		# Pulling out reads as previously described.
-        bp.out <- bplapply(seq_len(nbam), FUN=.region_counts,
-                           bam.files=bam.files, where=where, param=param,
-                           init.ext=ext.data$ext, final.ext=ext.data$final, outlen=outlen, 
-                           regions=regions, chosen=chosen,
-                           BPPARAM=param$BPPARAM)
+        bp.out <- bpmapply(FUN=.region_counts, bam.file=bam.files, init.ext=ext.data$ext, 
+                           MoreArgs=list(where=where, param=param, 
+                                         final.ext=ext.data$final, outlen=outlen, 
+                                         regions=regions, chosen=chosen),
+                           BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
 
         for (bf in seq_along(bp.out)) {
             counts[chosen, bf] <- bp.out[[bf]]$counts
@@ -54,19 +54,19 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 		metadata=list(final.ext=ext.data$final, param=param)))
 }
 
-.region_counts <- function(bf, bam.files, where, param, 
+.region_counts <- function(bam.file, where, param, 
                            init.ext, final.ext, outlen, 
                            regions, chosen) {
     if (param$pe!="both") {
-        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
-        extended <- .extendSE(reads, ext=init.ext[bf], final=final.ext, chrlen=outlen)
+        reads <- .getSingleEnd(bam.file, where=where, param=param)
+        extended <- .extendSE(reads, ext=init.ext, final=final.ext, chrlen=outlen)
         frag.start <- extended$start
         frag.end <- extended$end
 
         extra <- cbind(c(mean(reads$forward$qwidth), mean(reads$reverse$qwidth)),
                        c(length(reads$forward$qwidth), length(reads$reverse$qwidth)))
     } else {
-        out <- .getPairedEnd(bam.files[bf], where=where, param=param)
+        out <- .getPairedEnd(bam.file, where=where, param=param)
         extra <- c(mean(out$size), length(out$size))
 
         checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=final.ext, chrlen=outlen)

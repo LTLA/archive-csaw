@@ -11,7 +11,7 @@
 
 \item Added the BPPARAM slot in the readParam class to store BiocParallelParam objects.
 
-\item Added support for parallelization in windowCounts(), regionCounts().
+\item Added support for parallelization in windowCounts(), regionCounts() and others.
 }
 }
 

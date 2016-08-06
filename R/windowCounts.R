@@ -71,11 +71,11 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
 		
         # Parallelized loading.
-        bp.out <- bplapply(seq_len(nbam), FUN=.window_counts,
-                           bam.files=bam.files, where=where, param=param,
-                           init.ext=ext.data$ext, final.ext=ext.data$final, outlen=outlen, bin=bin, 
-                           left=left, right=right, total.pts=total.pts, spacing=spacing, at.start=at.start, 
-                           BPPARAM=param$BPPARAM)
+        bp.out <- bpmapply(FUN=.window_counts, bam.file=bam.files, init.ext=ext.data$ext, 
+                           MoreArgs=list(where=where, param=param, 
+                                         final.ext=ext.data$final, outlen=outlen, bin=bin, 
+                                         left=left, right=right, total.pts=total.pts, spacing=spacing, at.start=at.start),
+                           BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
         
         outcome <- matrix(0L, total.pts, nbam)
         for (bf in seq_along(bp.out)) {
@@ -113,19 +113,19 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
             param=param, final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }
 
-.window_counts <- function(bf, bam.files, where, param, 
+.window_counts <- function(bam.file, where, param, 
                            init.ext, final.ext, outlen, bin, 
                            left, right, total.pts, spacing, at.start) {
     if (param$pe!="both") {
-        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
-        extended <- .extendSE(reads, ext=init.ext[bf], final=final.ext, chrlen=outlen)
+        reads <- .getSingleEnd(bam.file, where=where, param=param)
+        extended <- .extendSE(reads, ext=init.ext, final=final.ext, chrlen=outlen)
         frag.start <- extended$start
         frag.end <- extended$end
 
         extra <- cbind(c(mean(reads$forward$qwidth), mean(reads$reverse$qwidth)),
                        c(length(reads$forward$qwidth), length(reads$reverse$qwidth)))
     } else {
-        out <- .getPairedEnd(bam.files[bf], where=where, param=param)
+        out <- .getPairedEnd(bam.file, where=where, param=param)
         if (bin) { 
             # Only want to record each pair once in a bin, so forcing it to only use the midpoint.
             mid <- as.integer(out$pos + out$size/2)

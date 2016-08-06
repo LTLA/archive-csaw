@@ -75,10 +75,10 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		where <- GRanges(chr, IRanges(1L, outlen))
 
 		# Reading in the reads for the current chromosome for all the BAM files.
-        bp.out <- bplapply(seq_len(nbam), FUN=.profile_sites,
-                           bam.files=bam.files, where=where, param=param,
-                           init.ext=ext.data$ext, final.ext=ext.data$final, outlen=outlen,
-                           BPPARAM=param$BPPARAM)
+        bp.out <- bpmapply(FUN=.profile_sites, bam.file=bam.files, init.ext=ext.data$ext, 
+                           MoreArgs=list(where=where, param=param,
+                                         final.ext=ext.data$final, outlen=outlen),
+                           BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
 
 		starts <- lapply(bp.out, "[[", "starts")
         ends <- lapply(bp.out, "[[", "ends")
@@ -115,15 +115,15 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 	return(total.profile)
 }
 
-.profile_sites <- function(bf, bam.files, where, param,
+.profile_sites <- function(bam.file, where, param,
                            init.ext, final.ext, outlen) {
     if (param$pe!="both") {
-        reads <- .getSingleEnd(bam.files[bf], where=where, param=param)
-        extended <- .extendSE(reads, ext=init.ext[bf], final=final.ext, chrlen=outlen)
+        reads <- .getSingleEnd(bam.file, where=where, param=param)
+        extended <- .extendSE(reads, ext=init.ext, final=final.ext, chrlen=outlen)
         start.pos <- extended$start
         end.pos <- extended$end
     } else {
-        out <- .getPairedEnd(bam.files[bf], where=where, param=param)
+        out <- .getPairedEnd(bam.file, where=where, param=param)
         checked <- .coerceFragments(out$pos, out$pos+out$size-1L, final=final.ext, chrlen=outlen)
         start.pos <- checked$start
         end.pos <- checked$end
