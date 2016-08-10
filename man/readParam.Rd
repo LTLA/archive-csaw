@@ -77,11 +77,11 @@ This is often more appropriate, e.g., the 5' end of the alignment represents the
 }
 
 \section{Parallelization options}{
-Parallelized read loading can be turned on in several functions by setting \code{BPPARAM} appropriately.
+Parallelization can be turned on in several functions by setting \code{BPPARAM} appropriately.
 This will usually extract reads from multiple files simultaneously to speed up processing.
 Users are referred to \code{?\link{BiocParallelParam}} for more details on how to set \code{BPPARAM}.
 By default, a \code{SerialParam} object is used, i.e., no parallelization is performed.
-This avoids slow performance on systems that do not provide fast concurrent read access.
+This is because it provides little benefit for small files or on systems with I/O bottlenecks. 
 }
 
 \section{Constructor}{
