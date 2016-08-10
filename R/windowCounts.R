@@ -7,7 +7,7 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 21 December 2015
+# last modified 8 August 2016
 {   
 	nbam <- length(bam.files)
     if (is.list(param)) { 

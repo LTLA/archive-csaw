@@ -6,7 +6,7 @@ regionCounts <- function(bam.files, regions, ext=100, param=readParam())
 #
 # written by Aaron Lun
 # created 14 May 2014
-# last modified 21 December 2015
+# last modified 8 August 2016
 {
 	nbam <- length(bam.files)
     if (is.list(param)) { 

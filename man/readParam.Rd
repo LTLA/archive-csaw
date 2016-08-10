@@ -82,6 +82,10 @@ This will usually extract reads from multiple files simultaneously to speed up p
 Users are referred to \code{?\link{BiocParallelParam}} for more details on how to set \code{BPPARAM}.
 By default, a \code{SerialParam} object is used, i.e., no parallelization is performed.
 This is because it provides little benefit for small files or on systems with I/O bottlenecks. 
+
+% Strictly speaking, small files being files with few reads per chromosome. 
+% If you had a file with relatively few reads but all on one chromosome, that might provide a benefit.
+% This is because the cost of forking would be offset by the gains of parallel loading/processing per chromosome.
 }
 
 \section{Constructor}{
