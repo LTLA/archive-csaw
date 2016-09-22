@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.7.3}{\itemize{
+\section{Version 1.7.4}{\itemize{
 \item Added protection against NA values in filterWindows().
 
 \item Deprecated the use of parameter lists in any param= arguments.
@@ -12,6 +12,8 @@
 \item Added the BPPARAM slot in the readParam class to store BiocParallelParam objects.
 
 \item Added support for parallelization in windowCounts(), regionCounts() and others.
+
+\item Updated documentation, user's guide.
 }
 }
 
