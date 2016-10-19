@@ -1,5 +1,5 @@
 
-R Under development (unstable) (2016-02-24 r70217) -- "Unsuffered Consequences"
+R version 3.3.1 Patched (2016-08-05 r71041) -- "Bug in Your Hair"
 Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
@@ -79,7 +79,7 @@ Type 'q()' to quit R.
 > down <- 1000
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24184 ranges and 3 metadata columns:
+GRanges object with 24272 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
   100009600     chr9 [ 21074497,  21078496]      - |         Zglp1         0
@@ -101,11 +101,11 @@ GRanges object with 24184 ranges and 3 metadata columns:
   100009664         4
      100012         5
         ...       ...
-      99889     24180
-      99890     24181
-      99899     24182
-      99929     24183
-      99982     24184
+      99889     24268
+      99890     24269
+      99899     24270
+      99929     24271
+      99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
 > 
@@ -113,7 +113,7 @@ GRanges object with 24184 ranges and 3 metadata columns:
 > down <- 500
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24184 ranges and 3 metadata columns:
+GRanges object with 24272 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
   100009600     chr9 [ 21074997,  21077496]      - |         Zglp1         0
@@ -135,11 +135,11 @@ GRanges object with 24184 ranges and 3 metadata columns:
   100009664         4
      100012         5
         ...       ...
-      99889     24180
-      99890     24181
-      99899     24182
-      99929     24183
-      99982     24184
+      99889     24268
+      99890     24269
+      99899     24270
+      99929     24271
+      99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
 > 
@@ -147,7 +147,7 @@ GRanges object with 24184 ranges and 3 metadata columns:
 > down <- 0
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24184 ranges and 3 metadata columns:
+GRanges object with 24272 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
   100009600     chr9 [ 21075497,  21080496]      - |         Zglp1         0
@@ -169,11 +169,11 @@ GRanges object with 24184 ranges and 3 metadata columns:
   100009664         4
      100012         5
         ...       ...
-      99889     24180
-      99890     24181
-      99899     24182
-      99929     24183
-      99982     24184
+      99889     24268
+      99890     24269
+      99899     24270
+      99929     24271
+      99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
 > 
@@ -307,26 +307,26 @@ GRanges object with 24184 ranges and 3 metadata columns:
 > all.win <- generateWindows(chromos*1.8, 1e2, 1000)
 > comp(all.win, up=3000, down=1000)
   O   L   R 
-843 374 408 
+846 374 409 
 > 
 > all.win <- generateWindows(chromos*1.8, 1e2, 2000)
 > comp(all.win, up=3000, down=1000, dist=2000)
   O   L   R 
-831 225 232 
+832 225 231 
 > 
 > all.win <- generateWindows(chromos*1.8, 1e2, 2000)
 > comp(all.win, up=5000, down=500, dist=10000)
   O   L   R 
-896 531 574 
+896 531 575 
 > 
 > # Checking behaviour upon strandedness.
 > strand(all.win) <- sample(c("+", "-"), length(all.win), replace=TRUE) 
 > comp(all.win, up=5000, down=500, dist=10000, ignore.strand=FALSE)
   O   L   R 
-485 291 306 
+485 291 307 
 > comp(all.win, up=2000, down=1000, dist=5000, ignore.strand=FALSE)
   O   L   R 
-464 204 216 
+465 204 216 
 > strand(all.win) <- "*"
 > 
 > ########################################################################################
@@ -411,4 +411,4 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 49.303   0.491  59.363 
+ 49.472   0.528  60.338 
