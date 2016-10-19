@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.7.4}{\itemize{
+\section{Version 1.8.0}{\itemize{
 \item Added protection against NA values in filterWindows().
 
 \item Deprecated the use of parameter lists in any param= arguments.
