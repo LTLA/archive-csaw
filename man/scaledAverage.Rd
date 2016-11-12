@@ -5,14 +5,14 @@
 \description{Compute the scaled average abundance for each feature.}
 
 \usage{
-scaledAverage(y, scale=1, prior.count=NULL, ...)
+scaledAverage(y, scale=1, prior.count=NULL, dispersion=NULL)
 }
 
 \arguments{
 \item{y}{a \code{DGEList} object}
-\item{scale}{a numeric vector indicating the magnitude with which each abundance is to be downscaled}
+\item{scale}{a numeric scalar vector indicating the magnitude with which each abundance is to be downscaled}
 \item{prior.count}{a numeric scalar specifying the prior count to add}
-\item{...}{other arguments, to be passed to \code{\link{aveLogCPM}}}
+\item{dispersion}{a numeric scalar or vector specifying the dispersion for GLM fitting.}
 }
 
 \details{
@@ -21,10 +21,15 @@ For example, if \code{scale=2}, the average count is halved, i.e., the returned 
 The aim is to set \code{scale} based on the relative width of regions, to allow abundances to be compared between regions of different size.
 Widths can be obtained using the \code{\link{getWidths}} function.
 
-Some subtlety is necessary regarding the treatment of the \code{prior.count}.
-Specifically, the prior used in \code{\link{aveLogCPM}} is automatically increased when \code{scale} is larger.
-This ensures that the effective prior is the same after the abundance is scaled down.
-Otherwise, the use of the same prior would incorrectly result in a smaller abundance for larger regions.
+This function mimics the behaviour of \code{\link{aveLogCPM}} but handles the \code{prior.count} with some subtlety.
+Specifically, it scales up the prior count by \code{scale} before adding it to the counts.
+This ensures that the \dQuote{effective} prior is the same after the abundance is scaled down.
+Otherwise, the use of the same prior would incorrectly result in a smaller abundance for larger regions, regardless of the read density.
+
+An additional difference from \code{\link{aveLogCPM}} is that the prior count is \emph{not} scaled up before being added to the library sizes/offsets.
+(See \code{\link{addPriorCount}} for more details.)
+This ensures that the modified offsets do not depend on \code{scale}, which allows abundances to be compared between regions of differing size.
+Otherwise, larger regions with greater \code{scale} would always have (slightly) larger modified offsets and lower abundances than appropriate.
 
 Note that the adjustment for width assumes that reads are uniformly distributed throughout each region.
 This is reasonable for most background regions, but may not be for enriched regions.
@@ -47,7 +52,8 @@ A numeric vector of scaled abundances, with one entry for each row of \code{y}.
 
 \seealso{
 \code{\link{getWidths}},
-\code{\link{aveLogCPM}}
+\code{\link{aveLogCPM}},
+\code{\link{addPriorCount}}
 }
 
 \author{

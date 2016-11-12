@@ -1,7 +1,7 @@
 
-R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
-Copyright (C) 2015 The R Foundation for Statistical Computing
-Platform: x86_64-unknown-linux-gnu (64-bit)
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -22,12 +22,49 @@ Type 'q()' to quit R.
 > # manipulations of width and prior count.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
+> suppressWarnings(suppressPackageStartupMessages(require(edgeR)))
 > 
-> comp <- function(..., tol=1e-3) {
+> comp <- function(..., tol=1e-8) {
 + 	out <- filterWindows(...)
 + 	stopifnot(all(abs(out$filter) < tol))
 + 	out
 + }
+> 
+> ####################################################################################################
+> # Checking that scaledAverage mimics aveLogCPM with prior.count=1.
+> 
+> set.seed(100)
+> y <- DGEList(matrix(rnbinom(1000, mu=100, size=10), ncol=10, nrow=100))
+> ref <- aveLogCPM(y)
+> out <- scaledAverage(y, scale=1)
+> stopifnot(length(ref)==length(out))
+> stopifnot(all(abs(ref-out) < 1e-10))
+> head(out)
+[1] 13.35220 13.34333 13.19284 13.26035 13.30340 13.41407
+> 
+> y$samples$norm.factors <- runif(10, 0.5, 1.5)
+> ref <- aveLogCPM(y)
+> out <- scaledAverage(y, scale=1)
+> stopifnot(length(ref)==length(out))
+> stopifnot(all(abs(ref-out) < 1e-10))
+> head(out)
+[1] 13.55677 13.53781 13.34389 13.39381 13.44819 13.58879
+> 
+> y$offset <- matrix(rnorm(1000), ncol=10, nrow=100) # Neither function should care about the offset.
+> ref <- aveLogCPM(y)
+> out <- scaledAverage(y, scale=1)
+> stopifnot(length(ref)==length(out))
+> stopifnot(all(abs(ref-out) < 1e-10))
+> head(out)
+[1] 13.55677 13.53781 13.34389 13.39381 13.44819 13.58879
+> 
+> y$common.dispersion <- 0.1
+> ref <- aveLogCPM(y)
+> out <- scaledAverage(y, scale=1)
+> stopifnot(length(ref)==length(out))
+> stopifnot(all(abs(ref-out) < 1e-10))
+> head(out)
+[1] 13.56958 13.54748 13.35018 13.39956 13.45476 13.59593
 > 
 > ####################################################################################################
 > # Matching up global filtering.
@@ -55,17 +92,17 @@ $filter
 > binned <- SummarizedExperiment(assays=SimpleList(counts=matrix(100, nrow=10, 1)),
 + 	rowRanges=GRanges("chrA", IRanges(0:9*1000+1, 1:10*1000), seqinfo=Seqinfo("chrA", 10000)), 
 + 	colData=DataFrame(totals=1e6, ext=1), metadata=list(final.ext=NA, spacing=1000))
-> comp(windowed, binned, type="global") # Not quite zero, due to aveLogCPM's adjustment of the library size by prior.count.
+> comp(windowed, binned, type="global") 
 $abundances
 [1] 3.584957
 
 $back.abundances
- [1] 3.584905 3.584905 3.584905 3.584905 3.584905 3.584905 3.584905 3.584905
- [9] 3.584905 3.584905
+ [1] 3.584957 3.584957 3.584957 3.584957 3.584957 3.584957 3.584957 3.584957
+ [9] 3.584957 3.584957
 
 $filter
-         50% 
-5.193588e-05 
+          50% 
+-2.664535e-15 
 
 > 
 > # Testing what happens when the median is below the number of recorded bins.
@@ -109,7 +146,7 @@ $filter
 > 
 > seqinfo(rowRanges(zeroed)) <- Seqinfo("chrA", 100)
 > metadata(zeroed)$spacing <- 10
-> comp(zeroed, type="global")
+> comp(zeroed, type="global") # Should be zero, as both median and count are based on zero's.
 $abundances
 [1] 0.9999942
 
@@ -163,10 +200,10 @@ $abundances
 [1] 3.584957
 
 $back.abundances
-[1] 3.584905
+[1] 3.584957
 
 $filter
-[1] 5.193588e-05
+[1] -2.664535e-15
 
 > 
 > binned <- SummarizedExperiment(assays=SimpleList(counts=matrix(110, 1, 1)),
@@ -177,10 +214,10 @@ $abundances
 [1] 3.584957
 
 $back.abundances
-[1] 3.584905
+[1] 3.584957
 
 $filter
-[1] 5.193588e-05
+[1] -2.664535e-15
 
 > 
 > binned <- SummarizedExperiment(assays=SimpleList(counts=matrix(100, 1, 1)),
@@ -191,10 +228,10 @@ $abundances
 [1] 3.584957
 
 $back.abundances
-[1] 3.584911
+[1] 3.584957
 
 $filter
-[1] 4.616532e-05
+[1] 0
 
 > 
 > ####################################################################################################
@@ -299,4 +336,4 @@ $filter
 > 
 > proc.time()
    user  system elapsed 
-  5.444   0.135   5.566 
+  6.324   0.108   6.449 

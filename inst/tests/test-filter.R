@@ -3,12 +3,45 @@
 # manipulations of width and prior count.
 
 suppressWarnings(suppressPackageStartupMessages(require(csaw)))
+suppressWarnings(suppressPackageStartupMessages(require(edgeR)))
 
-comp <- function(..., tol=1e-3) {
+comp <- function(..., tol=1e-8) {
 	out <- filterWindows(...)
 	stopifnot(all(abs(out$filter) < tol))
 	out
 }
+
+####################################################################################################
+# Checking that scaledAverage mimics aveLogCPM with prior.count=1.
+
+set.seed(100)
+y <- DGEList(matrix(rnbinom(1000, mu=100, size=10), ncol=10, nrow=100))
+ref <- aveLogCPM(y)
+out <- scaledAverage(y, scale=1)
+stopifnot(length(ref)==length(out))
+stopifnot(all(abs(ref-out) < 1e-10))
+head(out)
+
+y$samples$norm.factors <- runif(10, 0.5, 1.5)
+ref <- aveLogCPM(y)
+out <- scaledAverage(y, scale=1)
+stopifnot(length(ref)==length(out))
+stopifnot(all(abs(ref-out) < 1e-10))
+head(out)
+
+y$offset <- matrix(rnorm(1000), ncol=10, nrow=100) # Neither function should care about the offset.
+ref <- aveLogCPM(y)
+out <- scaledAverage(y, scale=1)
+stopifnot(length(ref)==length(out))
+stopifnot(all(abs(ref-out) < 1e-10))
+head(out)
+
+y$common.dispersion <- 0.1
+ref <- aveLogCPM(y)
+out <- scaledAverage(y, scale=1)
+stopifnot(length(ref)==length(out))
+stopifnot(all(abs(ref-out) < 1e-10))
+head(out)
 
 ####################################################################################################
 # Matching up global filtering.
@@ -25,7 +58,7 @@ comp(windowed, binned, type="global")
 binned <- SummarizedExperiment(assays=SimpleList(counts=matrix(100, nrow=10, 1)),
 	rowRanges=GRanges("chrA", IRanges(0:9*1000+1, 1:10*1000), seqinfo=Seqinfo("chrA", 10000)), 
 	colData=DataFrame(totals=1e6, ext=1), metadata=list(final.ext=NA, spacing=1000))
-comp(windowed, binned, type="global") # Not quite zero, due to aveLogCPM's adjustment of the library size by prior.count.
+comp(windowed, binned, type="global") 
 
 # Testing what happens when the median is below the number of recorded bins.
 
@@ -47,7 +80,7 @@ comp(windowed, binned, type="global")
 
 seqinfo(rowRanges(zeroed)) <- Seqinfo("chrA", 100)
 metadata(zeroed)$spacing <- 10
-comp(zeroed, type="global")
+comp(zeroed, type="global") # Should be zero, as both median and count are based on zero's.
 
 win2 <- windowed
 seqinfo(rowRanges(win2)) <- Seqinfo("chrA", 100)
