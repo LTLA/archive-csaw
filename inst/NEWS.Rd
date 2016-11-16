@@ -2,6 +2,11 @@
 \title{csaw News}
 \encoding{UTF-8}
 
+\section{Version 1.9.1}{\itemize{
+\item
+Minor fix to scaledAverage() to avoid slightly inaccurate results.
+}}
+
 \section{Version 1.8.0}{\itemize{
 \item Added protection against NA values in filterWindows().
 
@@ -14,8 +19,7 @@
 \item Added support for parallelization in windowCounts(), regionCounts() and others.
 
 \item Updated documentation, user's guide.
-}
-}
+}}
 
 \section{Version 1.6.0}{\itemize{
 \item 
