@@ -5,6 +5,9 @@
 \section{Version 1.9.1}{\itemize{
 \item
 Minor fix to scaledAverage() to avoid slightly inaccurate results.
+
+\item
+Switched to new scaleOffset() function for adding offsets in asDGEList().
 }}
 
 \section{Version 1.8.0}{\itemize{

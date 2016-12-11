@@ -6,7 +6,7 @@ setMethod("asDGEList", "SummarizedExperiment", function(object, lib.sizes, norm.
 #
 # written by Aaron Lun
 # created 2 September 2014
-# last modified 22 November 2015
+# last modified 11 December 2016
 {
 	all.args <- list(...)
 	if (missing(lib.sizes)) { 
@@ -30,6 +30,10 @@ setMethod("asDGEList", "SummarizedExperiment", function(object, lib.sizes, norm.
     }
 
 	y <- do.call(DGEList, all.args)
-	y$offset <- assays(object)$offset # just NULL, if it's not there.
+
+    offset <- assays(object)$offset 
+    if (!is.null(offset)) {
+        y <- scaleOffset(y, offset)
+    }
 	return(y)
 })
