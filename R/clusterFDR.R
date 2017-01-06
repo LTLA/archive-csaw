@@ -69,8 +69,8 @@ controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NU
         thresholds <- exp(grid)/(exp(grid)+1)
 
         # Doesn't make sense to have window-level FDR > cluster-level FDR. 
-        # We'll be conservative and only search grid points that are lower.
-        keep <- thresholds <= target
+        # We'll be conservative and only search grid points that are lower (+- some imprecision)
+        keep <- thresholds <= target * 1.000001 
         grid <- grid[keep]
         thresholds <- thresholds[keep]
 

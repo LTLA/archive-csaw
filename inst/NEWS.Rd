@@ -2,7 +2,10 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.1}{\itemize{
+\section{Version 1.9.3}{\itemize{
+\item 
+Ensured that window-level FDR threshold chosen by controlClusterFDR() not above the cluster-level FDR.
+
 \item
 Minor fix to scaledAverage() to avoid slightly inaccurate results.
 
