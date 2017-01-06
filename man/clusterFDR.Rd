@@ -29,23 +29,21 @@ The idea is to obtain an error rate while reporting the precise coordinates of a
 The cluster-level FDR is defined as the proportion of reported clusters that have no true positives.
 Simply using \code{threshold} is not appropriate, as the cluster- and window-level FDRs are not equivalent. 
 This function also differs from the standard pipeline that is based on \code{\link{combineTests}}.
-Specifically, region definition in the standard pipeline must be independent of DB so that precise coordinates of the DB subinterval cannot be reported.
-This is overcome by clustering directly on DB windows and applying post-hoc control of the cluster-level FDR.
+Specifically, region definition in \code{\link{combineTests}} must be independent of DB so that precise coordinates of the DB subinterval cannot be reported.
+This is overcome here, by clustering directly on DB windows and applying post-hoc control of the cluster-level FDR.
 
 Note that the calculation of the cluster-level FDR here is not statistically rigorous.
 In particular, the observed number of false positive tests is estimated based on \code{threshold} and the total number of significant tests.
-This is not guaranteed to be an upper bound, especially when the observed window-level FDR is variable.
+This is not guaranteed to be an upper bound, especially with few or correlated tests. 
 Thus, users should use the standard \code{\link{combineTests}}-based pipeline wherever possible.
 Clustering on significant windows should only be performed where the precise coordinates of the DB subinterval are important for interpretation.
 }
 
 \section{Searching for the best threshold}{
 \code{controlClusterFDR} will identify the window-level FDR threshold required to control the cluster-level FDR at \code{target}.
-This is necessary as the latter is not a simple function of the former.
-In fact, the discontinuous nature of the cluster-level FDR means that the returned value may not be below \code{target}.
-Rather, the closest estimate is returned, e.g., for a \code{target} of 0.05, a value of 0.051 is preferred to a value of 0.02, even though only the latter is less than the target.
+The former is not a simple function of the latter (neither continuous nor guaranteed to be monotonic), so a grid search is used.
+Clusters of significant windows are identified at each window-level threshold, and the corresponding cluster-level FDR is computed with \code{clusterFDR}.
 
-A grid search is used to identify clusters of significant windows at each window-level threshold, and the corresponding cluster-level FDR is computed with \code{clusterFDR}.
 At each iteration, the grid point with the closest cluster-level FDR to \code{target} is chosen and the grid is recentered around that point.
 The size of the grid is also scaled down to provide greater resolution.
 Users can tune the settings of the grid search by specifying elements in \code{grid.param} as:
@@ -59,13 +57,17 @@ Users can tune the settings of the grid search by specifying elements in \code{g
 The \code{FUN} argument should be a function that accepts a logical vector specifying significance, and returns an integer vector of cluster IDs.
 If, for example, it accepts an input vector \code{ix}, then the output should contain cluster IDs corresponding to the entries of \code{which(ix)}.
 This is because cluster IDs are only defined for significant tests, given that only those tests are used for clustering.
+
+An additional requirement is that the returned window-level FDR threshold should be less than \code{target}.
+Thus, each window should be significantly DB on its own merits before it is placed into a cluster.
+This protects against scenarios where very large thresholds yield low cluster-level FDRs, due to the formation of a few large clusters.
 }
 
 \section{Note about weights}{ 
 In both functions, the \code{weight} argument is assumed to contain frequency weights of significant tests/windows.
 For example, a weight of 2 for a test would be equivalent to repeating that test (i.e., repeating the same window so it shows up twice in your analysis).
 These weights should be the same as those used during weighted FDR control to compute adjusted p-values.
-In general, users should not set this argument unless you know what you're doing.
+In general, you should not set this argument unless you know what you're doing.
 }
 
 \value{

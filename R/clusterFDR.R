@@ -67,17 +67,23 @@ controlClusterFDR <- function(target, adjp, FUN, ..., weight=NULL, grid.param=NU
     for (it in seq_len(iter)) { 
         grid <- seq(lt-grid.range, lt+grid.range, length=grid.length)
         thresholds <- exp(grid)/(exp(grid)+1)
-        fdrs <- integer(length(grid))
 
+        # Doesn't make sense to have window-level FDR > cluster-level FDR. 
+        # We'll be conservative and only search grid points that are lower.
+        keep <- thresholds <= target
+        grid <- grid[keep]
+        thresholds <- thresholds[keep]
+
+        fdrs <- integer(length(grid))
         for (tx in seq_along(thresholds)) { 
             threshold <- thresholds[tx]
             is.sig <- adjp <= threshold
             fdrs[tx] <- clusterFDR(FUN(is.sig, ...), threshold, weight=weight[is.sig])
         }
 
-        # Picking the largest minimum point that is closest to a non-minimum point.
+        # Picking the largest threshold that yields an FDR closest to the target.
         # Avoids searching values that are too small when there are many ties.        
-        chosen <- grid.length - which.min(rev(abs(fdrs-target))) + 1L
+        chosen <- length(grid) - which.min(rev(abs(fdrs-target))) + 1L
         lt <- grid[chosen]
 
         # Grid contracts at a moderate pace, to provide better resolution.
