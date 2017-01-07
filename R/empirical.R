@@ -6,12 +6,6 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
 # written by Aaron Lun
 # created 7 January 2017
 {
-    input <- .check_test_inputs(ids, tab, weight)
-    ids <- input$ids
-    groups <- input$groups
-    tab <- input$tab
-    weight <- input$weight
-
     if (length(fc.col)==0L) { 
         fc.col <- grep("logFC", colnames(tab))
     }
@@ -49,9 +43,8 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
     empirical <- pmin(1, empirical)
     empirical <- rev(cummin(rev(empirical)))
     empirical[o] <- empirical
-
-    out <- data.frame(PValue=right.com$PValue, FDR=empirical, row.names=groups)
-    return(out)
+    right.com$FDR <- empirical
+    return(right.com)
 }
 
 

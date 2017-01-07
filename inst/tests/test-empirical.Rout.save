@@ -109,7 +109,7 @@ Type 'q()' to quit R.
 > # Checking for sane behaviour when empty.
 > 
 > empiricalFDR(integer(0), data.frame(PValue=numeric(0), logCPM=numeric(0), logFC=numeric(0)), weight=numeric(0))
-[1] PValue FDR   
+[1] nWindows   logFC.up   logFC.down PValue     FDR       
 <0 rows> (or 0-length row.names)
 > 
 > ###################################################################################################
@@ -119,4 +119,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
-  7.240   0.132   7.381 
+  7.800   0.164   8.057 
