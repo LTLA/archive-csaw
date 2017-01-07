@@ -1,6 +1,7 @@
 \name{overlapStats}
 \alias{combineOverlaps}
 \alias{getBestOverlaps}
+\alias{empiricalOverlaps}
 \alias{summitOverlaps}
 
 \title{Compute overlap statistics}
@@ -8,7 +9,11 @@
 
 \usage{
 combineOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
+
 getBestOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
+
+empiricalOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
+
 summitOverlaps(olap, region.best, o.summit=NULL, i.summit=NULL)
 }
 
@@ -24,14 +29,14 @@ summitOverlaps(olap, region.best, o.summit=NULL, i.summit=NULL)
 }
 
 \details{
-These functions provide convenient wrappers around \code{\link{combineTests}}, \code{\link{getBestTest}} and \code{\link{upweightSummit}}.
+These functions provide convenient wrappers around \code{\link{combineTests}}, \code{\link{getBestTest}}, \code{\link{empiricalFDR}} and \code{\link{upweightSummit}}.
 They accept \code{Hits} objects produced by running \code{\link{findOverlaps}} between windows and some pre-specified regions.
 Each set of windows overlapping a region is defined as a cluster to compute the various statistics.
 
 A wrapper is necessary as a window may overlap multiple regions.
-If so, the multiple instances of that window are defined as distinct ``overlapped'' windows, where each overlapped window is assigned to a different region.
+If so, the multiple instances of that window are defined as distinct \dQuote{overlapped} windows, where each overlapped window is assigned to a different region.
 Each overlapped window is represented by a row of \code{olap}.
-In contrast, the ``individual'' window just refers to the window itself, regardless of what it overlaps.
+In contrast, the \dQuote{individual} window just refers to the window itself, regardless of what it overlaps.
 This is represented by each row of the \code{RangedSummarizedExperiment} object and the \code{tab} derived from it.
 
 The distinction between these two definitions is required to describe the weight arguments.
@@ -47,7 +52,7 @@ The \code{o.summit} argument does the same for overlapped windows, though this h
 }
 
 \value{
-For \code{combineOverlaps} and \code{getBestOverlaps}, a dataframe is returned from their respective wrapped functions.
+For \code{combineOverlaps}, \code{getBestOverlaps} and \code{empiricalOverlaps}, a dataframe is returned from their respective wrapped functions.
 Each row of the dataframe corresponds to a region, where regions without overlapped windows are assigned \code{NA} values.
 
 For \code{summitOverlaps}, a numeric vector of weights is produced.
@@ -57,6 +62,7 @@ This can be used as \code{o.weight} in the other two functions.
 \seealso{
 \code{\link{combineTests}},
 \code{\link{getBestTest}},
+\code{\link{empiricalFDR}},
 \code{\link{upweightSummit}}
 }
 
@@ -77,14 +83,18 @@ mock <- data.frame(logFC=rnorm(N), PValue=runif(N), logCPM=rnorm(N))
 olap <- findOverlaps(of.interest, rowRanges(data))
 combineOverlaps(olap, mock)
 getBestOverlaps(olap, mock)
+empiricalOverlaps(olap, mock)
 
 # See what happens when you don't get many overlaps.
 getBestOverlaps(olap[1,], mock)
 combineOverlaps(olap[2,], mock)
+empiricalOverlaps(olap[1,], mock)
 
 # Weighting example, with window-specific weights.
 window.weights <- runif(N) 
 comb <- combineOverlaps(olap, mock, i.weight=window.weights)
+comb <- getBestOverlaps(olap, mock, i.weight=window.weights)
+comb <- empiricalOverlaps(olap, mock, i.weight=window.weights)
 
 # Weighting example, with relation-specific weights.
 best.by.ave <- getBestOverlaps(olap, mock, by.pval=FALSE)

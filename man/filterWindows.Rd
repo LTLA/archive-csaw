@@ -81,7 +81,7 @@ This is used as a normalization factor to correct the filter statistics for each
 
 The idea is that most bins represent background regions, such that a systematic difference in abundance between ChIP and control should represent the composition bias.
 Alternatively, a normalization factor can be specified manually in \code{norm.fac}.
-This should represent the scaling factor for the library sizes of the control samples relative to the ChIP samples, i.e., the ``average'' fold increase in coverage of the control over ChIP for the background regions.
+This should represent the scaling factor for the library sizes of the control samples relative to the ChIP samples, i.e., the \dQuote{average} fold increase in coverage of the control over ChIP for the background regions.
 However, if the value is left as \code{NULL}, a warning will be issued.
 }
 

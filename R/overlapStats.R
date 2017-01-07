@@ -1,4 +1,4 @@
-.overlapStats <- function(olap, tab, o.weight=NULL, i.weight=NULL, type=c("combine", "best"), ...) {
+.overlapStats <- function(olap, tab, o.weight=NULL, i.weight=NULL, type=c("combine", "best", "empirical"), ...) {
 	region.dex <- queryHits(olap)
 	win.dex <- subjectHits(olap)
 
@@ -12,10 +12,14 @@
 	type <- match.arg(type)
 	if (type=="combine") { 
 		output <- combineTests(region.dex, tab[win.dex,], weight=o.weight, ...)
-	} else { 
+	} else if (type=="best") { 
 		output <- getBestTest(region.dex, tab[win.dex,], weight=o.weight, ...)
 		output$best <- win.dex[output$best]
-	}
+	} else if (type=="empirical") {
+        output <- empiricalFDR(region.dex, tab[win.dex,], weight=o.weight, ...)
+    } else {
+        stop("invalid type")
+    }
 
 	# Filling in empties with NA's.
 	nregions <- queryLength(olap)
@@ -47,13 +51,23 @@ combineOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 
 getBestOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...) 
 # Wrapper around getBestTest for Hits from findOverlaps,
-# when windows are overlapped with reigons.
+# when windows are overlapped with regions.
 #
 # written by Aaron Lun
 # created 25 March 2015
 # last modified 26 March 2015
 {
 	.overlapStats(olap, tab, o.weight=o.weight, i.weight=i.weight, type="best", ...)
+}
+
+empiricalOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...) 
+# Wrapper around empiricalFDR for Hits from findOverlaps,
+# when windows are overlapped with regions
+#
+# written by Aaron Lun
+# created 7 December 2017
+{
+    .overlapStats(olap, tab, o.weight=o.weight, i.weight=i.weight, type="empirical", ...)
 }
 
 summitOverlaps <- function(olap, region.best, o.summit=NULL, i.summit=NULL)
@@ -94,3 +108,6 @@ summitOverlaps <- function(olap, region.best, o.summit=NULL, i.summit=NULL)
 
 	upweightSummit(region.dex, summits)
 }
+
+
+
