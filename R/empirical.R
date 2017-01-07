@@ -4,10 +4,11 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
 # estimate of the number of false positives.
 #
 # written by Aaron Lun
-# created 7 December 2017
+# created 7 January 2017
 {
     input <- .check_test_inputs(ids, tab, weight)
     ids <- input$ids
+    groups <- input$groups
     tab <- input$tab
     weight <- input$weight
 
@@ -49,8 +50,7 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
     empirical <- rev(cummin(rev(empirical)))
     empirical[o] <- empirical
 
-    out <- data.frame(PValue=right.com$PValue, FDR=empirical)
-    if (length(ids)) { rownames(out) <- ids[c(TRUE, diff(ids)!=0L)] } 
+    out <- data.frame(PValue=right.com$PValue, FDR=empirical, row.names=groups)
     return(out)
 }
 

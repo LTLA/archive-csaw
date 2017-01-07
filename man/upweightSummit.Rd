@@ -9,7 +9,7 @@ upweightSummit(ids, summits)
 }
 
 \arguments{
-\item{ids}{an integer vector of cluster IDs}
+\item{ids}{an integer vector or factor of cluster IDs}
 \item{summits}{a logical vector indicating whether each window is a summit, or an integer vector containing the indices of summit windows}
 }
 

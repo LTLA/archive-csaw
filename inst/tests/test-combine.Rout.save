@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-22 r69809) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -62,6 +62,11 @@ Type 'q()' to quit R.
 +         || !almostidentical(out$PValue, out2$PValue) || !identical(rownames(out), rownames(out2))) { 
 +         stop("values not preserved after shuffling") 
 +     }
++ 
++     # Checking we get the same results with a character vector (though ordering might be different).
++     out3 <- combineTests(as.character(merged.ids), tab, weight=weights)
++     out3 <- out3[rownames(out),]
++     if (!identical(out, out3)) { stop("values not preserved with character vector input") }
 + 
 +     # Checking what happens if the first id becomes NA.
 +     na.ids <- merged.ids
@@ -248,4 +253,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
-  5.671   0.114   5.800 
+  6.252   0.164   6.426 

@@ -35,6 +35,11 @@ comp <- function(total.n, n.false, n.true, weights=NULL) {
     o <- order(out$PValue, decreasing=TRUE)
     emp.fdr[o] <- cummin(emp.fdr[o])
     stopifnot(all(abs(emp.fdr - out$FDR) <= 1e-6))
+
+    # Checking that we get the same result with character input.
+    out2 <- empiricalFDR(as.character(merged.ids), tab, weight=weights)
+    out2 <- out2[rownames(out),]
+    stopifnot(identical(out, out2))
     
     # Calculating the actual FDR.
     is.sig <- out$FDR <= 0.05

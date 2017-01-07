@@ -33,6 +33,11 @@ comp <- function(alpha=1, beta=2, nids=10, max.weight=10) {
         stop("values not preserved after shuffling") 
     }
 
+    # Testing what happens with a character vector as input.
+    out3 <- getBestTest(as.character(ids), tab, weight=w)
+    out3 <- out3[rownames(best),]
+    if (!identical(best, out3)) { stop("values not preserved with character vector input") }
+
     # Checking what happens if the first id becomes NA.
     na.ids <- ids 
     na.ids[1] <- NA_integer_

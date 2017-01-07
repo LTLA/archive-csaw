@@ -65,7 +65,7 @@ empiricalOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 # when windows are overlapped with regions
 #
 # written by Aaron Lun
-# created 7 December 2017
+# created 7 January 2017
 {
     .overlapStats(olap, tab, o.weight=o.weight, i.weight=i.weight, type="empirical", ...)
 }

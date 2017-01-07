@@ -7,11 +7,12 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 # 
 # written by Aaron Lun
 # created 30 July 2013
-# last modified 14 January 2016
+# last modified 7 January 2017
 {
     input <- .check_test_inputs(ids, tab, weight)
     ids <- input$ids
     tab <- input$tab
+    groups <- input$groups
     weight <- input$weight
 
 	# Saying which columns have the log-fold change field.
@@ -32,8 +33,7 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	# Running the clustering procedure.
 	out <- .Call(cxx_get_cluster_stats, fc.col, is.pval, tab, ids, weight, 0.5)
 	if (is.character(out)) { stop(out) }
-	combined <- data.frame(out[[1]], out[[2]], out[[3]], p.adjust(out[[3]], method="BH"))
- 	if (length(ids)) { rownames(combined) <- ids[c(TRUE, diff(ids)!=0L)] } 
+	combined <- data.frame(out[[1]], out[[2]], out[[3]], p.adjust(out[[3]], method="BH"), row.names=groups)
 	colnames(combined) <- c("nWindows", 
 			paste0(rep(colnames(tab)[fc.col+1L], each=2), ".", c("up", "down")), 
 			colnames(tab)[is.pval+1L], "FDR")
@@ -42,7 +42,10 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 }
 
 .check_test_inputs <- function(ids, tab, weight) {
-	if (!is.integer(ids)) { ids <- as.integer(ids) }
+    f <- factor(ids)
+    all.names <- levels(f)
+    ids <- as.integer(f)
+    
 	if (is.null(weight)) { 
         weight <- rep(1, length(ids)) 
     } else if (!is.double(weight)) { 
@@ -67,5 +70,5 @@ combineTests <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
     } else {
         originals <- id.order
     }
-    return(list(ids=ids, tab=tab, weight=weight, original=originals))
+    return(list(ids=ids, groups=all.names, tab=tab, weight=weight, original=originals))
 }

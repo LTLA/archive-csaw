@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-22 r69809) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -51,6 +51,11 @@ Type 'q()' to quit R.
 +         || !identical(rownames(best), rownames(out2))) { 
 +         stop("values not preserved after shuffling") 
 +     }
++ 
++     # Testing what happens with a character vector as input.
++     out3 <- getBestTest(as.character(ids), tab, weight=w)
++     out3 <- out3[rownames(best),]
++     if (!identical(best, out3)) { stop("values not preserved with character vector input") }
 + 
 +     # Checking what happens if the first id becomes NA.
 +     na.ids <- ids 
@@ -250,4 +255,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
-  9.366   0.086   9.465 
+ 11.276   0.132  11.415 

@@ -44,6 +44,11 @@ comp <- function(total.n, n.clusters, weights=NULL) {
         stop("values not preserved after shuffling") 
     }
 
+    # Checking we get the same results with a character vector (though ordering might be different).
+    out3 <- combineTests(as.character(merged.ids), tab, weight=weights)
+    out3 <- out3[rownames(out),]
+    if (!identical(out, out3)) { stop("values not preserved with character vector input") }
+
     # Checking what happens if the first id becomes NA.
     na.ids <- merged.ids
     na.ids[1] <- NA_integer_

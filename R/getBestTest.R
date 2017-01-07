@@ -7,11 +7,12 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 #
 # written by Aaron Lun
 # created 17 April 2014
-# last modified 14 January 2016
+# last modified 7 January 2017
 {
     input <- .check_test_inputs(ids, tab, weight)
     ids <- input$ids
     tab <- input$tab
+    groups <- input$groups
     weight <- input$weight
 
     pval.col <- .getPValCol(pval.col, tab)
@@ -45,9 +46,7 @@ getBestTest <- function(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.
 	
 	subtab <- tab[best,]
 	subtab[,pval.col] <- pval
-	result <- data.frame(best=input$original[best], subtab, FDR=p.adjust(pval, method="BH"))
-	if (length(ids)) { rownames(result) <- ids[c(TRUE, diff(ids)!=0L)] }
-
+	result <- data.frame(best=input$original[best], subtab, FDR=p.adjust(pval, method="BH"), row.names=groups)
 	return(result)
 }
 

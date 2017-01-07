@@ -2,7 +2,13 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.3}{\itemize{
+\section{Version 1.9.4}{\itemize{
+\item
+Supported factor input for ids argument in combineTests(), getBestTest().
+
+\item
+Added the empiricalFDR(), empiricalOverlaps() functions for controlling the empirical FDR.
+
 \item 
 Ensured that window-level FDR threshold chosen by controlClusterFDR() not above the cluster-level FDR.
 

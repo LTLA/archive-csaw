@@ -10,7 +10,7 @@ getBestTest(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.col=NULL)
 }
 
 \arguments{
-	\item{ids}{an integer vector containing the cluster ID for each test}
+	\item{ids}{an integer vector or factor containing the cluster ID for each test}
 	\item{tab}{a table of results with a \code{PValue} field for each test}
 	\item{by.pval}{a logical scalar, indicating whether selection should be performed on corrected p-values}
 	\item{weight}{a numeric vector of weights for each window, defaults to 1 for each test}
