@@ -34,7 +34,7 @@
 	if (any(N <= 0L | row.dex > N)) { stop("cluster IDs are not within [1, nregions]") }
 	expand.vec[row.dex] <- seq_len(nrow(tab))
 	tab <- tab[expand.vec,]
-	rownames(tab) <- NULL
+	rownames(tab) <- as.character(seq_len(N))
 	return(tab)
 }
 
