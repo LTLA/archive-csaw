@@ -19,18 +19,19 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
         wrong.dir <- cur.fc > 0
     }
 
-    # Converting to one-sided p-values.
+    # Converting to one-sided p-values and combining.
     pval.col <- .getPValCol(pval.col, tab)
     new.p <- tab[,pval.col]/2
     new.p[wrong.dir] <- 1 - new.p[wrong.dir]
-
-    # Combining p-values in each direction.
     right.tab <- tab
     right.tab[,pval.col] <- new.p
     right.com <- combineTests(ids, right.tab, weight=weight, pval.col=pval.col, fc.col=fc.col)
-
+    
+    # Repeating in the other direction (calculating 'new.p' fresh, to avoid numeric imprcesion from repeated "1-" ops).
+    new.p <- tab[,pval.col]/2
+    new.p[!wrong.dir] <- 1 - new.p[!wrong.dir]
     wrong.tab <- tab
-    wrong.tab[,pval.col] <- 1-new.p
+    wrong.tab[,pval.col] <- new.p
     wrong.com <- combineTests(ids, wrong.tab, weight=weight, pval.col=pval.col, fc.col=fc.col)
 
     # Computing empirical FDR.
