@@ -6,6 +6,11 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
 # written by Aaron Lun
 # created 7 December 2017
 {
+    input <- .check_test_inputs(ids, tab, weight)
+    ids <- input$ids
+    tab <- input$tab
+    weight <- input$weight
+
     if (length(fc.col)==0L) { 
         fc.col <- grep("logFC", colnames(tab))
     }
@@ -33,14 +38,19 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
     wrong.tab[,pval.col] <- 1-new.p
     wrong.com <- combineTests(ids, wrong.tab, weight=weight, pval.col=pval.col, fc.col=fc.col)
 
-    # Computing empirical FDR (enforcing monotonicity).
+    # Computing empirical FDR.
     right.comp <- right.com$PValue
+    o <- order(right.comp)
+    right.comp <- right.comp[o]
     empirical <- findInterval(right.comp, sort(wrong.com$PValue))/seq_along(right.comp)
-    o <- order(right.comp, decreasing=TRUE)
-    empirical[o] <- cummin(empirical[o])
+    
+    # Enforcing monotonicity and other characteristics.
+    empirical <- pmin(1, empirical)
+    empirical <- rev(cummin(rev(empirical)))
+    empirical[o] <- empirical
 
-    out <- data.frame(PValue=right.com$PValue, FDR=pmin(1, empirical))
-    rownames(out) <- rownames(right.com)
+    out <- data.frame(PValue=right.com$PValue, FDR=empirical)
+    if (length(ids)) { rownames(out) <- ids[c(TRUE, diff(ids)!=0L)] } 
     return(out)
 }
 

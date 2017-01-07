@@ -86,6 +86,46 @@ compbest(regions, windows)
 
 ####################################################################################################
 
+compemp <- function(ranges, windows) {
+	olap <- findOverlaps(ranges, windows)
+	ns <- length(windows)
+	tab <- data.frame(logFC=rnorm(ns), PValue=rbeta(ns, 1, 3), logCPM=rnorm(ns))
+
+	# Straight-up comparison to empiricalFDR, after discarding all NA's.
+	output <- empiricalOverlaps(olap, tab)
+	refstats <- empiricalFDR(queryHits(olap), tab[subjectHits(olap),])
+	if (!identical(data.frame(output[!is.na(output$PValue),]), refstats)) { stop("mismatch in stats from near-identical calls!") }
+
+	# Testing with weights.
+	test.weight <- runif(ns)
+	output <- empiricalOverlaps(olap, tab, i.weight=test.weight)
+	refstats <- empiricalFDR(queryHits(olap), tab[subjectHits(olap),], weight=test.weight[subjectHits(olap)])
+	if (!identical(data.frame(output[!is.na(output$PValue),]), refstats)) { stop("mismatch in stats from near-identical calls!") }
+
+	# More weight testing, where o.weight is constructed from the weight for each i.weight.
+	output2 <- empiricalOverlaps(olap, tab, o.weight=test.weight[subjectHits(olap)])
+	if (!identical(output, output2)) { stop("mismatch in stats from near-identical calls!") }
+	return(head(output))
+}
+
+set.seed(34823)
+
+chromos <- c(A=1000, B=2000)
+
+regions <- generateWindows(chromos, 10, 500)
+windows <- generateWindows(chromos, 100, 50)
+compemp(regions, windows)
+
+regions <- generateWindows(chromos, 10, 500)
+windows <- generateWindows(chromos, 200, 20)
+compemp(regions, windows)
+
+regions <- generateWindows(chromos, 2, 500)
+windows <- generateWindows(chromos, 100, 50)
+compemp(regions, windows)
+
+####################################################################################################
+
 compsummit <- function(ranges, windows) { 
 	olap <- findOverlaps(ranges, windows)
 	ns <- length(windows)
