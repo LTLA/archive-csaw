@@ -6,7 +6,6 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 	if (LENGTH(pvaldex)!=1) { throw std::runtime_error("only one index should be supplied for the p-value column"); }
 	const int pdex=asInteger(pvaldex);
 	const int fcn=LENGTH(fcdex);
-	if (!fcn) { throw std::runtime_error("at least one index should be supplied for the log-FC columns"); }
 	const int* odptr=INTEGER(fcdex);
 
 	// Setting up the p-value columns.
@@ -50,11 +49,12 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 	}
 
 	// Pulling out results.
-	SEXP output=PROTECT(allocVector(VECSXP, 3));
+	SEXP output=PROTECT(allocVector(VECSXP, 4));
 	try {
 		SET_VECTOR_ELT(output, 0, allocVector(INTSXP, total));
 		SET_VECTOR_ELT(output, 1, allocMatrix(INTSXP, total, fcn*2));
 		SET_VECTOR_ELT(output, 2, allocVector(REALSXP, total));
+        SET_VECTOR_ELT(output, 3, allocVector(INTSXP, fcn==1 ? total : 0));
 		if (total==0) {
 			UNPROTECT(1);
 			return output;
@@ -62,14 +62,22 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 
 		int* otptr=INTEGER(VECTOR_ELT(output, 0));
 		int** ofptrs=(int**)R_alloc(fcn, sizeof(int*));
-		ofptrs[0]=INTEGER(VECTOR_ELT(output, 1));
-		for (int i=1; i<fcn*2; ++i) { ofptrs[i]=ofptrs[i-1]+total; }
+        if (fcn) {
+            ofptrs[0]=INTEGER(VECTOR_ELT(output, 1));
+            for (int i=1; i<fcn*2; ++i) { ofptrs[i]=ofptrs[i-1]+total; }
+        }
 		double* opptr=REAL(VECTOR_ELT(output, 2));
+        int* odptr=INTEGER(VECTOR_ELT(output, 3));
 	
-		int i=0, k, x;
+        // Various temporary values.
+		int i=0, j, k, x;
+        double subweight, more_temp, remaining;
+        int minx;
+        bool has_up, has_down;
+     
 		while (i<n) {
-			int j=i+1;
-			double subweight=wptr[i];
+			j=i+1;
+			subweight=wptr[i];
 			while (j < n && bptr[i]==bptr[j]) { 
 				subweight+=wptr[j];
 				++j; 
@@ -95,15 +103,41 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
  			 * expanding it in-place in the sorted vector of p-values).
  			 */
 			std::sort(sortvec+i, sortvec+j, pcomp);
-			double more_temp=0, remaining=wptr[sortvec[i]];
+			more_temp=0;
+            remaining=wptr[sortvec[i]];
+            minx=i;
 			double& outp=(*opptr=pptr[sortvec[i]]/remaining); 
+
 			for (x=i+1; x<j; ++x) {
  		    	const int& current=sortvec[x];	
 				remaining+=wptr[current];
 				more_temp=pptr[current]/remaining;
-				if (more_temp < outp) { outp=more_temp; }
+				if (more_temp < outp) { 
+                    outp=more_temp; 
+                    minx=x;
+                }
 			}
 			outp*=subweight;
+
+            /* If there's only one log-FC, we also determine which directions contribute to the combined p-value.
+             * This is done by looking at the direction of the tests with p-values below that used as the combined p-value.
+             * These tests must contribute because if any of them were non-significant, the combined p-value would increase.
+             * Output codes are only up (1), only down (2) or mixed, i.e., both up and down (0).
+             */
+            if (fcn==1) {
+                has_up=false;
+                has_down=false;
+                for (x=i; x<=minx; ++x) {
+                    const double& curfc=fcptrs[0][sortvec[x]];
+                    if (curfc > 0) { has_up=true; }
+                    if (curfc < 0) { has_down=true; }
+                    if (has_up & has_down) { break; }
+                }
+                int& current_dir=(odptr[0]=0);
+                if (has_up & !has_down) { current_dir=1; }
+                else if (has_down & !has_up) { current_dir=2; }
+                ++odptr;
+            }
 
 			// Setting it up for the next round.
 			++opptr;
