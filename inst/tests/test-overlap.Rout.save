@@ -54,33 +54,33 @@ Type 'q()' to quit R.
 > regions <- generateWindows(chromos, 10, 500)
 > windows <- generateWindows(chromos, 100, 50)
 > compcombine(regions, windows)
-  nWindows logFC.up logFC.down    PValue       FDR
-1      100       31         30 0.1956917 0.2609222
-2       98       31         29 0.1900497 0.2609222
-3       91       28         25 0.1756537 0.2609222
-4       89       27         24 0.1723525 0.2609222
-5       76       25         19 0.1426176 0.2609222
-6       70       23         18 0.1327668 0.2609222
+  nWindows logFC.up logFC.down    PValue       FDR direction
+1      100       31         30 0.1956917 0.2609222     mixed
+2       98       31         29 0.1900497 0.2609222     mixed
+3       91       28         25 0.1756537 0.2609222     mixed
+4       89       27         24 0.1723525 0.2609222     mixed
+5       76       25         19 0.1426176 0.2609222     mixed
+6       70       23         18 0.1327668 0.2609222     mixed
 > 
 > regions <- generateWindows(chromos, 10, 500)
 > windows <- generateWindows(chromos, 200, 20)
 > compcombine(regions, windows)
-  nWindows logFC.up logFC.down    PValue       FDR
-1      172       48         50 0.3368588 0.3368588
-2      176       46         51 0.3202986 0.3368588
-3      176       46         50 0.3276100 0.3368588
-4      167       45         48 0.3329419 0.3368588
-5      138       37         41 0.3047579 0.3368588
-6      128       32         38 0.3243426 0.3368588
+  nWindows logFC.up logFC.down    PValue       FDR direction
+1      172       48         50 0.3368588 0.3368588     mixed
+2      176       46         51 0.3202986 0.3368588     mixed
+3      176       46         50 0.3276100 0.3368588     mixed
+4      167       45         48 0.3329419 0.3368588     mixed
+5      138       37         41 0.3047579 0.3368588     mixed
+6      128       32         38 0.3243426 0.3368588     mixed
 > 
 > regions <- generateWindows(chromos, 2, 500)
 > windows <- generateWindows(chromos, 100, 50)
 > compcombine(regions, windows)
-  nWindows logFC.up logFC.down     PValue        FDR
-1       63       14         17 0.01341521 0.04024564
-2       40       10          9 0.30930445 0.30930445
-3       54        9         22 0.15477419 0.23216128
-4       NA       NA         NA         NA         NA
+  nWindows logFC.up logFC.down     PValue        FDR direction
+1       63       14         17 0.01341521 0.04024564        up
+2       40       10          9 0.30930445 0.30930445     mixed
+3       54        9         22 0.15477419 0.23216128      down
+4       NA       NA         NA         NA         NA      <NA>
 > 
 > ####################################################################################################
 > 
@@ -172,33 +172,33 @@ Type 'q()' to quit R.
 > regions <- generateWindows(chromos, 10, 500)
 > windows <- generateWindows(chromos, 100, 50)
 > compemp(regions, windows)
-  nWindows logFC.up logFC.down     PValue       FDR
-1      100       31         30 0.10325823 0.4545455
-2       98       31         29 0.10028124 0.4545455
-3       91       28         25 0.09268507 0.4545455
-4       89       27         24 0.09094312 0.4545455
-5       76       25         19 0.07588098 0.4545455
-6       70       23         18 0.07063977 0.4545455
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1      100       31         30 0.10325823 0.4545455     mixed
+2       98       31         29 0.10028124 0.4545455     mixed
+3       91       28         25 0.09268507 0.4545455     mixed
+4       89       27         24 0.09094312 0.4545455     mixed
+5       76       25         19 0.07588098 0.4545455     mixed
+6       70       23         18 0.07063977 0.4545455     mixed
 > 
 > regions <- generateWindows(chromos, 10, 500)
 > windows <- generateWindows(chromos, 200, 20)
 > compemp(regions, windows)
-  nWindows logFC.up logFC.down    PValue       FDR
-1      172       48         50 0.3387680 0.9473684
-2      176       46         51 0.3452696 0.9473684
-3      176       46         50 0.3599974 0.9473684
-4      167       45         48 0.3571079 0.9473684
-5      138       37         41 0.3539005 0.9473684
-6      128       32         38 0.3772766 0.9473684
+  nWindows logFC.up logFC.down    PValue       FDR direction
+1      172       48         50 0.3387680 0.9473684     mixed
+2      176       46         51 0.3452696 0.9473684     mixed
+3      176       46         50 0.3599974 0.9473684     mixed
+4      167       45         48 0.3571079 0.9473684     mixed
+5      138       37         41 0.3539005 0.9473684     mixed
+6      128       32         38 0.3772766 0.9473684     mixed
 > 
 > regions <- generateWindows(chromos, 2, 500)
 > windows <- generateWindows(chromos, 100, 50)
 > compemp(regions, windows)
-  nWindows logFC.up logFC.down      PValue       FDR
-1       63       14         17 0.006707607 0.0000000
-2       40       10          9 0.229065660 0.3333333
-3       54        9         22 0.302243814 0.3333333
-4       NA       NA         NA          NA        NA
+  nWindows logFC.up logFC.down      PValue       FDR direction
+1       63       14         17 0.006707607 0.0000000        up
+2       40       10          9 0.229065660 0.3333333     mixed
+3       54        9         22 0.302243814 0.3333333      down
+4       NA       NA         NA          NA        NA      <NA>
 > 
 > ####################################################################################################
 > 
@@ -256,4 +256,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
-  6.736   0.168   6.951 
+  6.580   0.132   6.733 

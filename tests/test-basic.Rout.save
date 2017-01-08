@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -399,21 +399,21 @@ GRanges object with 43 ranges and 0 metadata columns:
 
 > 
 > head(combineTests(merged$id, tabled))
-  nWindows logFC.up logFC.down     PValue       FDR
-1        1        0          0 0.46328451 0.5622769
-2        2        0          0 0.79272727 0.8116017
-3        1        1          0 0.27967201 0.5047602
-4        3        0          1 0.08956765 0.4125151
-5        2        1          0 0.28172663 0.5047602
-6        1        0          1 0.01949563 0.4125151
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1        1        0          0 0.46328451 0.5622769        up
+2        2        0          0 0.79272727 0.8116017      down
+3        1        1          0 0.27967201 0.5047602        up
+4        3        0          1 0.08956765 0.4125151      down
+5        2        1          0 0.28172663 0.5047602        up
+6        1        0          1 0.01949563 0.4125151      down
 > head(combineTests(merged$id, tabled, weight=weighting))
-  nWindows logFC.up logFC.down     PValue       FDR
-1        1        0          0 0.46328451 0.5622769
-2        2        0          0 0.79272727 0.8116017
-3        1        1          0 0.27967201 0.5228651
-4        3        0          1 0.04669873 0.4255938
-5        2        1          0 0.24536526 0.4795776
-6        1        0          1 0.01949563 0.3373185
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1        1        0          0 0.46328451 0.5622769        up
+2        2        0          0 0.79272727 0.8116017      down
+3        1        1          0 0.27967201 0.5228651        up
+4        3        0          1 0.04669873 0.4255938      down
+5        2        1          0 0.24536526 0.4795776        up
+6        1        0          1 0.01949563 0.3373185      down
 > 
 > head(getBestTest(merged$id, tabled))
   best       logFC      logCPM     PValue       FDR
@@ -531,4 +531,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
-  9.489   0.131   9.630 
+ 11.476   0.212  11.699 

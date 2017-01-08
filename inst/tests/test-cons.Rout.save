@@ -1,7 +1,7 @@
 
-R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
-Copyright (C) 2015 The R Foundation for Statistical Computing
-Platform: x86_64-unknown-linux-gnu (64-bit)
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -250,81 +250,81 @@ Error in (function (ids, tab, weight = NULL, pval.col = NULL, fc.col = NULL)  :
 > 
 > regions <- generateWindows(chromos, winsize=1000, nwin=5)
 > compcons2(c(100, 50), regions)
-  nWindows logFC.up logFC.down     PValue       FDR
-1       17        6          6 0.16134834 0.2904270
-2       16        6          3 0.07525834 0.2902822
-3       19        7          1 0.09676072 0.2902822
-4       14        3          1 0.30508676 0.3922544
-5       16        5          3 0.14405038 0.2904270
-6        4        2          2 0.30141306 0.3922544
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1       17        6          6 0.16134834 0.2904270     mixed
+2       16        6          3 0.07525834 0.2902822        up
+3       19        7          1 0.09676072 0.2902822        up
+4       14        3          1 0.30508676 0.3922544     mixed
+5       16        5          3 0.14405038 0.2904270        up
+6        4        2          2 0.30141306 0.3922544      down
 > compcons2(c(100, 50), regions, overlap.args=list(type="within"))
-  nWindows logFC.up logFC.down PValue FDR
-1       NA       NA         NA     NA  NA
-2       NA       NA         NA     NA  NA
-3       NA       NA         NA     NA  NA
-4       NA       NA         NA     NA  NA
-5       NA       NA         NA     NA  NA
-6       NA       NA         NA     NA  NA
+  nWindows logFC.up logFC.down PValue FDR direction
+1       NA       NA         NA     NA  NA      <NA>
+2       NA       NA         NA     NA  NA      <NA>
+3       NA       NA         NA     NA  NA      <NA>
+4       NA       NA         NA     NA  NA      <NA>
+5       NA       NA         NA     NA  NA      <NA>
+6       NA       NA         NA     NA  NA      <NA>
 > compcons2(c(100, 50), regions, overlap.args=list(minoverlap=10))
-  nWindows logFC.up logFC.down    PValue       FDR
-1       22        6          8 0.0280216 0.2521944
-2       26        7         11 0.5596200 0.5596200
-3       21        9          7 0.1804048 0.3728032
-4       15        8          3 0.2485354 0.3728032
-5       10        7          2 0.1367147 0.3728032
-6        5        3          0 0.4633778 0.5213000
+  nWindows logFC.up logFC.down    PValue       FDR direction
+1       22        6          8 0.0280216 0.2521944        up
+2       26        7         11 0.5596200 0.5596200     mixed
+3       21        9          7 0.1804048 0.3728032        up
+4       15        8          3 0.2485354 0.3728032     mixed
+5       10        7          2 0.1367147 0.3728032      down
+6        5        3          0 0.4633778 0.5213000        up
 > 
 > regions <- generateWindows(chromos, winsize=1000, nwin=5)
 > compcons2(c(10, 50), regions)
-  nWindows logFC.up logFC.down     PValue       FDR
-1       18        5          7 0.23056484 0.2927387
-2       20        5          8 0.06951365 0.1848741
-3       16        4          7 0.01473458 0.0663056
-4       16        6          4 0.38540261 0.3854026
-5       NA       NA         NA         NA        NA
-6        7        3          2 0.16392981 0.2458947
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1       18        5          7 0.23056484 0.2927387     mixed
+2       20        5          8 0.06951365 0.1848741        up
+3       16        4          7 0.01473458 0.0663056        up
+4       16        6          4 0.38540261 0.3854026     mixed
+5       NA       NA         NA         NA        NA      <NA>
+6        7        3          2 0.16392981 0.2458947        up
 > compcons2(c(10, 50), regions, overlap.args=list(type="within"))
-  nWindows logFC.up logFC.down PValue FDR
-1       NA       NA         NA     NA  NA
-2       NA       NA         NA     NA  NA
-3       NA       NA         NA     NA  NA
-4       NA       NA         NA     NA  NA
-5       NA       NA         NA     NA  NA
-6       NA       NA         NA     NA  NA
+  nWindows logFC.up logFC.down PValue FDR direction
+1       NA       NA         NA     NA  NA      <NA>
+2       NA       NA         NA     NA  NA      <NA>
+3       NA       NA         NA     NA  NA      <NA>
+4       NA       NA         NA     NA  NA      <NA>
+5       NA       NA         NA     NA  NA      <NA>
+6       NA       NA         NA     NA  NA      <NA>
 > compcons2(c(10, 50), regions, overlap.args=list(minoverlap=10))
-  nWindows logFC.up logFC.down     PValue       FDR
-1       17        4          8 0.38889519 0.4118974
-2       13        3          5 0.17784318 0.2602695
-3       22        9          7 0.14750937 0.2602695
-4       19        4          8 0.08068105 0.2602695
-5       NA       NA         NA         NA        NA
-6        4        0          4 0.41189738 0.4118974
+  nWindows logFC.up logFC.down     PValue       FDR direction
+1       17        4          8 0.38889519 0.4118974      down
+2       13        3          5 0.17784318 0.2602695      down
+3       22        9          7 0.14750937 0.2602695        up
+4       19        4          8 0.08068105 0.2602695     mixed
+5       NA       NA         NA         NA        NA      <NA>
+6        4        0          4 0.41189738 0.4118974      down
 > 
 > regions <- generateWindows(chromos, winsize=1000, nwin=5)
 > compcons2(c(100, 500), regions)
-  nWindows logFC.up logFC.down      PValue        FDR
-1       23        9          6 0.036741548 0.11022464
-2       22        9          5 0.018699894 0.08414953
-3       17        6          9 0.001039102 0.00935192
-4       15        3          7 0.324627475 0.41737818
-5       NA       NA         NA          NA         NA
-6        7        1          3 0.053768140 0.12097832
+  nWindows logFC.up logFC.down      PValue        FDR direction
+1       23        9          6 0.036741548 0.11022464        up
+2       22        9          5 0.018699894 0.08414953        up
+3       17        6          9 0.001039102 0.00935192        up
+4       15        3          7 0.324627475 0.41737818     mixed
+5       NA       NA         NA          NA         NA      <NA>
+6        7        1          3 0.053768140 0.12097832        up
 > compcons2(c(100, 500), regions, overlap.args=list(type="within"))
-  nWindows logFC.up logFC.down PValue FDR
-1       NA       NA         NA     NA  NA
-2       NA       NA         NA     NA  NA
-3       NA       NA         NA     NA  NA
-4       NA       NA         NA     NA  NA
-5       NA       NA         NA     NA  NA
-6       NA       NA         NA     NA  NA
+  nWindows logFC.up logFC.down PValue FDR direction
+1       NA       NA         NA     NA  NA      <NA>
+2       NA       NA         NA     NA  NA      <NA>
+3       NA       NA         NA     NA  NA      <NA>
+4       NA       NA         NA     NA  NA      <NA>
+5       NA       NA         NA     NA  NA      <NA>
+6       NA       NA         NA     NA  NA      <NA>
 > compcons2(c(100, 500), regions, overlap.args=list(minoverlap=10))
-  nWindows logFC.up logFC.down    PValue       FDR
-1       24        8          7 0.2352814 0.3025046
-2       25        7          8 0.2229659 0.3025046
-3       19        3          8 0.1999549 0.3025046
-4       12        2          3 0.2204560 0.3025046
-5       NA       NA         NA        NA        NA
-6        8        1          3 0.4693346 0.4693346
+  nWindows logFC.up logFC.down    PValue       FDR direction
+1       24        8          7 0.2352814 0.3025046     mixed
+2       25        7          8 0.2229659 0.3025046     mixed
+3       19        3          8 0.1999549 0.3025046        up
+4       12        2          3 0.2204560 0.3025046        up
+5       NA       NA         NA        NA        NA      <NA>
+6        8        1          3 0.4693346 0.4693346     mixed
 > 
 > #########################################################################################################
 > 
@@ -332,4 +332,4 @@ Error in (function (ids, tab, weight = NULL, pval.col = NULL, fc.col = NULL)  :
 > 
 > proc.time()
    user  system elapsed 
-  7.162   0.179   7.329 
+  8.768   0.096   8.877 

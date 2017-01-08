@@ -1,5 +1,5 @@
 
-R version 3.3.0 Patched (2016-05-03 r70580) -- "Supposedly Educational"
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
 Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
@@ -33,10 +33,10 @@ Type 'q()' to quit R.
 <0 rows> (or 0-length row.names)
 > 
 > combineTests(integer(0), empty)
-[1] nWindows   logFC.up   logFC.down PValue     FDR       
+[1] nWindows   logFC.up   logFC.down PValue     FDR        direction 
 <0 rows> (or 0-length row.names)
 > combineOverlaps(Hits(), empty)
-[1] nWindows   logFC.up   logFC.down PValue     FDR       
+[1] nWindows   logFC.up   logFC.down PValue     FDR        direction 
 <0 rows> (or 0-length row.names)
 > 
 > upweightSummit(integer(0), integer(0))
@@ -157,7 +157,7 @@ GRanges object with 0 ranges and 0 metadata columns:
   seqinfo: no sequences
 
 $table
-[1] nWindows   logFC.up   logFC.down PValue     FDR       
+[1] nWindows   logFC.up   logFC.down PValue     FDR        direction 
 <0 rows> (or 0-length row.names)
 
 Warning message:
@@ -181,7 +181,7 @@ GRanges object with 0 ranges and 0 metadata columns:
   seqinfo: no sequences
 
 $table
-[1] nWindows   logFC.up   logFC.down PValue     FDR       
+[1] nWindows   logFC.up   logFC.down PValue     FDR        direction 
 <0 rows> (or 0-length row.names)
 
 > 
@@ -239,4 +239,4 @@ numeric(0)
 > 
 > proc.time()
    user  system elapsed 
-  9.486   0.201   9.684 
+ 10.200   0.172  10.382 
