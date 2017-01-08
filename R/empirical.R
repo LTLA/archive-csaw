@@ -20,9 +20,7 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
         wrong.dir <- cur.fc > 0
     }
     
-    # Computing overall results.
     pval.col <- .getPValCol(pval.col, tab)
-    com <- combineTests(ids, tab, weight=weight, pval.col=pval.col, fc.col=fc.col)
     pval.colname <- colnames(tab)[pval.col]
 
     # Converting to one-sided p-values and combining.
@@ -30,7 +28,8 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
     new.p[wrong.dir] <- 1 - new.p[wrong.dir]
     right.tab <- tab
     right.tab[,pval.col] <- new.p
-    right.com <- combineTests(ids, right.tab, weight=weight, pval.col=pval.col, fc.col=integer(0))
+    right.com <- combineTests(ids, right.tab, weight=weight, pval.col=pval.col, fc.col=fc.col)
+    right.com$direction <- NULL
     
     # Repeating in the other direction (calculating 'new.p' fresh, to avoid numeric imprcesion from repeated "1-" ops).
     new.p <- tab[,pval.col]/2
@@ -41,7 +40,6 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
 
     # Computing empirical FDR.
     right.comp <- right.com[,pval.colname]
-    com[,pval.colname] <- right.comp
     o <- order(right.comp)
     right.comp <- right.comp[o]
     empirical <- findInterval(right.comp, sort(wrong.com[,pval.colname]))/seq_along(right.comp)
@@ -50,8 +48,8 @@ empiricalFDR <- function(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL, neg.
     empirical <- pmin(1, empirical)
     empirical <- rev(cummin(rev(empirical)))
     empirical[o] <- empirical
-    com$FDR <- empirical
-    return(com)
+    right.com$FDR <- empirical
+    return(right.com)
 }
 
 

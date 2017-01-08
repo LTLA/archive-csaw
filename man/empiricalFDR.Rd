@@ -49,6 +49,7 @@ This field is named \code{PValue} if \code{pval.col=NULL}, otherwise its name is
 \item A numeric field \code{FDR}, containing the empirical FDR corresponding to the p-value threshold equal to the value in \code{PValue}.
 }
 All other fields are the same as those returned by \code{\link{combineTests}}.
+The exception is the \code{direction} field, which is not returned as it is not informative for one-sided tests.
 }
 
 \author{
