@@ -18,10 +18,16 @@ combineTests(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 }
 
 \value{
-A dataframe with one row per cluster and the numeric fields \code{PValue}, the combined p-value; and \code{FDR}, the q-value corresponding to the combined p-value.
-An integer field \code{nWindows} specifies the total number of windows in each cluster.
-There are also two integer fields \code{*.up} and \code{*.down} for each log-FC column in \code{tab}, containing the number of windows with log-FCs above 0.5 or below -0.5, respectively.
-The name of each row represents the ID of the corresponding cluster.
+A dataframe with one row per cluster and various fields:
+\itemize{
+\item An integer field \code{nWindows}, specifying the total number of windows in each cluster.
+\item Two integer fields \code{*.up} and \code{*.down} for each log-FC column in \code{tab}, containing the number of windows with log-FCs above 0.5 or below -0.5, respectively.
+\item A numeric field containing the combined p-value. 
+If \code{pval.col=NULL}, this column is named \code{PValue}, otherwise its name is set to \code{colnames(tab[,pval.col])}.
+\item A numeric field \code{FDR}, containing the q-value corresponding to the combined p-value.
+\item A character field \code{direction} (if \code{fc.col} is of length 1), specifying the dominant direction of change for windows in each cluster.
+}
+Each row is named according to the ID of the corresponding cluster.
 }
 
 \details{
@@ -37,18 +43,31 @@ Note that these weights have no effect between clusters and will not be used to 
 
 By default, the relevant fields in \code{tab} are identified by matching the column names to their expected values.
 Multiple fields in \code{tab} containing the \code{logFC} substring are allowed, e.g., to accommodate ANOVA-like contrasts. 
+The p-value column is expected to be named as \code{PValue}.
 If the column names are different from what is expected, specification of the correct columns can be performed using \code{pval.col} and \code{fc.col}.
 This will overwrite any internal selection of the appropriate fields.
 
+A simple clustering approach for windows is provided in \code{\link{mergeWindows}}. 
+However, anything can be used so long as it is independent of the p-values and does not compromise type I error control, e.g., promoters, gene bodies, independently called peaks. 
+Any tests with \code{NA} values for \code{ids} will be ignored.
+} 
+
+\section{Determining the direction of DB}{
 This function will report the number of windows with log-fold changes above 0.5 and below -0.5, to give some indication of whether binding increases or decreases in the cluster.
 If a cluster contains non-negligble numbers of \code{up} and \code{down} windows, this indicates that there may be a complex DB event within that cluster.
 Similarly, complex DB may be present if the total number of windows is larger than the number of windows in either category (i.e., change is not consistent across the cluster).
 Note that the threshold of 0.5 is arbitrary and has no impact on the significance calculations.
 
-A simple clustering approach for windows is provided in \code{\link{mergeWindows}}. 
-However, anything can be used so long as it does not compromise type I error control, e.g., promoters, gene bodies, independently called peaks. 
-Any tests with \code{NA} values for \code{ids} will be ignored.
-} 
+When only one log-fold change column is specified, \code{combineTests} will determine which DB direction contributes to the combined p-value.
+This is done by considering whether the combined p-value would increase if all tests in one direction were assigned p-values of unity.
+If there is an increase, then tests changing in that direction must contribute to the calculations in Simes' method.
+In this manner, clusters are labelled based on whether they are driven by tests with positive (\code{"up"}) or negative log-fold changes (\code{"down"}) or both (\code{"mixed"}).
+
+The label for each cluster is stored as the \code{direction} field in the returned data frame.
+However, keep in mind that the label only describes the direction of change among the most significant tests in the cluster.
+Clusters with complex DB may still be labelled as changing in only one direction, 
+if the tests changing in one direction have much lower p-values than the tests changing in the other direction (even if both sets of p-values are significant).
+}
 
 \examples{ 
 ids <- round(runif(100, 1, 10))
