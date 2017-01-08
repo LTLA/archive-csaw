@@ -41,15 +41,6 @@ The downside is that the empirical FDR calculation relies on the availability of
 The BH method is more statistically rigorous and should be preferred for routine analyses.
 }
 
-% This exploits the fact that the sign is independent of significance under the equality null, so the p-value distribution of false positives in each direction should be equal.
-% However, it assumes that you have enough (effectively independent) regions to obtain a precise estimate, 
-% and no condition-specific artifacts that would reduce accuracy (potentially problematic given the noisiness of the data).
-%
-% Note that the set of p-values in the wrong direction is not completely representative of false positive regions.
-% It includes p-values from regions with one or more true positive windows, which should not be considered false positives, even if they contain false positive windows.
-% This results in some conservativeness as the number of false positives at any given threshold is overestimated.
-% There's no obvious way to avoid this, as you'd need to know which regions were true positives to prune them out of the set.
-
 \value{
 A data frame with numeric fields \code{PValue}, the one-sided p-value for each cluster in the right direction;
 and \code{FDR}, the empirical FDR corresponding to the p-value threshold equal to the value in \code{PValue}.
