@@ -38,12 +38,17 @@ This rules out p-values computed from, e.g., ANODEV where multiple contrasts are
 Control of the empirical FDR is best used for very noisy data sets where the BH method is not adequate.
 While the BH method protects against statistical false positives, the empirical FDR also protects against experimental false positives, e.g., due to non-specific binding.
 The downside is that the empirical FDR calculation relies on the availability of a good estimate of the number of false positives.
-The BH method is more statistically rigorous and should be preferred for routine analyses.
+The BH method in \code{\link{combineTests}} is more statistically rigorous and should be preferred for routine analyses.
 }
 
 \value{
-A data frame with numeric fields \code{PValue}, the one-sided p-value for each cluster in the right direction;
-and \code{FDR}, the empirical FDR corresponding to the p-value threshold equal to the value in \code{PValue}.
+A data frame containing one row per cluster, containing:
+\itemize{
+\item A numeric field containing the one-sided p-value for each cluster in the right direction.
+This field is named \code{PValue} if \code{pval.col=NULL}, otherwise its name is set to \code{colnames(tab[,pval.col]}.
+\item A numeric field \code{FDR}, containing the empirical FDR corresponding to the p-value threshold equal to the value in \code{PValue}.
+}
+All other fields are the same as those returned by \code{\link{combineTests}}.
 }
 
 \author{
