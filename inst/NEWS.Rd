@@ -3,6 +3,9 @@
 \encoding{UTF-8}
 
 \section{Version 1.9.4}{\itemize{
+\item 
+Added calculation of dominant directionality in combineTests().
+
 \item
 Supported factor input for ids argument in combineTests(), getBestTest().
 
