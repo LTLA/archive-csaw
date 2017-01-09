@@ -14,8 +14,8 @@ getBestTest(ids, tab, by.pval=TRUE, weight=NULL, pval.col=NULL, cpm.col=NULL)
 	\item{tab}{a table of results with a \code{PValue} field for each test}
 	\item{by.pval}{a logical scalar, indicating whether selection should be performed on corrected p-values}
 	\item{weight}{a numeric vector of weights for each window, defaults to 1 for each test}
-	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values, or a character string containing the name of that column}
-	\item{cpm.col}{an integer scalar specifying the column of \code{tab} containing the log-CPM values, or a character string containing the name of that column}
+	\item{pval.col}{an integer scalar or string specifying the column of \code{tab} containing the p-values}
+	\item{cpm.col}{an integer scalar or string specifying the column of \code{tab} containing the log-CPM values}
 }
 
 \value{

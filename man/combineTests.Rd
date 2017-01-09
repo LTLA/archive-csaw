@@ -13,8 +13,8 @@ combineTests(ids, tab, weight=NULL, pval.col=NULL, fc.col=NULL)
 	\item{ids}{an integer vector or factor containing the cluster ID for each test}
 	\item{tab}{a dataframe of results with \code{PValue} and at least one \code{logFC} field for each test}
 	\item{weight}{a numeric vector of weights for each window, defaults to 1 for each test}
-	\item{pval.col}{an integer scalar specifying the column of \code{tab} containing the p-values, or a character string containing the name of that column}
-	\item{fc.col}{an integer vector specifying the columns of \code{tab} containing the log-fold changes, or a character vector containing the names of those columns}
+	\item{pval.col}{an integer scalar or string specifying the column of \code{tab} containing the p-values}
+	\item{fc.col}{an integer or character vector specifying the columns of \code{tab} containing the log-fold changes}
 }
 
 \value{
