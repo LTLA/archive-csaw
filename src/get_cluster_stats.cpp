@@ -10,6 +10,7 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 
 	// Setting up the p-value columns.
 	if (!isNewList(tab)) { throw std::runtime_error("data values should be supplied as a list or dataframe"); }
+    if (pdex < 0 || pdex >= LENGTH(tab)) { throw std::runtime_error("p-value index out of range"); }
 	SEXP pval=VECTOR_ELT(tab, pdex);
 	if (!isNumeric(pval)) { throw std::runtime_error("vector of p-values should be double precision"); }
 	const double *pptr=REAL(pval);
@@ -18,7 +19,9 @@ SEXP get_cluster_stats (SEXP fcdex, SEXP pvaldex, SEXP tab, SEXP by, SEXP weight
 	// Setting up the log-FC columns.
 	double** fcptrs=(double**)R_alloc(fcn, sizeof(double*));
 	for (int i=0; i<fcn; ++i) { 
-		SEXP logfc=VECTOR_ELT(tab, odptr[i]);
+        const int& curfcdex=odptr[i];
+        if (curfcdex < 0 || curfcdex >= LENGTH(tab)) { throw std::runtime_error("log-FC index out of range"); }
+		SEXP logfc=VECTOR_ELT(tab, curfcdex);
 		if (!isNumeric(logfc)) { throw std::runtime_error("vector of logfc statistics should be double precision"); }
 		if (n!=LENGTH(logfc)) { throw std::runtime_error("vector lengths are not equal"); }
 		fcptrs[i]=REAL(logfc);
