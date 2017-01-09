@@ -1,4 +1,5 @@
-.overlapStats <- function(olap, tab, o.weight=NULL, i.weight=NULL, type=c("combine", "best", "empirical"), ...) {
+.overlapStats <- function(olap, tab, o.weight=NULL, i.weight=NULL, 
+                          type=c("combine", "best", "empirical", "mixed"), ...) {
 	region.dex <- queryHits(olap)
 	win.dex <- subjectHits(olap)
 
@@ -17,6 +18,8 @@
 		output$best <- win.dex[output$best]
 	} else if (type=="empirical") {
         output <- empiricalFDR(region.dex, tab[win.dex,], weight=o.weight, ...)
+   	} else if (type=="mixed") {
+        output <- mixedClusters(region.dex, tab[win.dex,], weight=o.weight, ...)
     } else {
         stop("invalid type")
     }
@@ -68,6 +71,16 @@ empiricalOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 # created 7 January 2017
 {
     .overlapStats(olap, tab, o.weight=o.weight, i.weight=i.weight, type="empirical", ...)
+}
+
+mixedOverlaps <- function(olap, tab, o.weight=NULL, i.weight=NULL, ...) 
+# Wrapper around mixedClusters for Hits from findOverlaps,
+# when windows are overlapped with regions
+#
+# written by Aaron Lun
+# created 7 January 2017
+{
+    .overlapStats(olap, tab, o.weight=o.weight, i.weight=i.weight, type="mixed", ...)
 }
 
 summitOverlaps <- function(olap, region.best, o.summit=NULL, i.summit=NULL)

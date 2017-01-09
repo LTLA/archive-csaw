@@ -2,6 +2,7 @@
 \alias{combineOverlaps}
 \alias{getBestOverlaps}
 \alias{empiricalOverlaps}
+\alias{mixedOverlaps}
 \alias{summitOverlaps}
 
 \title{Compute overlap statistics}
@@ -13,6 +14,8 @@ combineOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 getBestOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 
 empiricalOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
+
+mixedOverlaps(olap, tab, o.weight=NULL, i.weight=NULL, ...)
 
 summitOverlaps(olap, region.best, o.summit=NULL, i.summit=NULL)
 }
@@ -29,9 +32,9 @@ summitOverlaps(olap, region.best, o.summit=NULL, i.summit=NULL)
 }
 
 \details{
-These functions provide convenient wrappers around \code{\link{combineTests}}, \code{\link{getBestTest}}, \code{\link{empiricalFDR}} and \code{\link{upweightSummit}}.
-They accept \code{Hits} objects produced by running \code{\link{findOverlaps}} between windows and some pre-specified regions.
-Each set of windows overlapping a region is defined as a cluster to compute the various statistics.
+These functions provide convenient wrappers around \code{\link{combineTests}}, \code{\link{getBestTest}}, \code{\link{empiricalFDR}}, \code{\link{mixedClusters}} and \code{\link{upweightSummit}} for handling overlaps between windows and arbitrary pre-specified regions.
+They accept \code{Hits} objects produced by running \code{\link{findOverlaps}} between regions (as query) and windows (as subject).
+Each set of windows overlapping a region is defined as a cluster to compute various statistics.
 
 A wrapper is necessary as a window may overlap multiple regions.
 If so, the multiple instances of that window are defined as distinct \dQuote{overlapped} windows, where each overlapped window is assigned to a different region.
@@ -52,7 +55,7 @@ The \code{o.summit} argument does the same for overlapped windows, though this h
 }
 
 \value{
-For \code{combineOverlaps}, \code{getBestOverlaps} and \code{empiricalOverlaps}, a dataframe is returned from their respective wrapped functions.
+For \code{combineOverlaps}, \code{getBestOverlaps}, \code{empiricalOverlaps} and \code{mixedOverlaps}, a dataframe is returned from their respective wrapped functions.
 Each row of the dataframe corresponds to a region, where regions without overlapped windows are assigned \code{NA} values.
 
 For \code{summitOverlaps}, a numeric vector of weights is produced.
