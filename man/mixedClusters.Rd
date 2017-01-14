@@ -49,3 +49,9 @@ tab <- data.frame(logFC=rnorm(100), logCPM=rnorm(100), PValue=rbeta(100, 1, 2))
 mixed <- mixedClusters(ids, tab)
 head(mixed)
 }
+
+\references{
+Berger RL and Hsu JC (1996). 
+Bioequivalence trials, intersection-union tests and equivalence confidence sets.
+\emph{Statist. Sci.} 11, 283-319.
+}
