@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.5}{\itemize{
+\section{Version 1.9.6}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
 
@@ -23,6 +23,9 @@ Minor fix to scaledAverage() to avoid slightly inaccurate results.
 
 \item
 Switched to new scaleOffset() function for adding offsets in asDGEList().
+
+\item
+Added multi-TSS support in detailRanges().
 }}
 
 \section{Version 1.8.0}{\itemize{
