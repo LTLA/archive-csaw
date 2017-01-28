@@ -1,5 +1,5 @@
 
-R version 3.3.1 Patched (2016-08-05 r71041) -- "Bug in Your Hair"
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
 Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
@@ -45,6 +45,7 @@ Type 'q()' to quit R.
 + 	elementMetadata(test.gb) <- NULL
 + 	if (!identical(gb, test.gb)) { stop("differences in gene body identification") }
 + 
++     # Matching to the predicted promoter from the first exon.
 + 	promoters <- ref[ref$exon==0L]
 +  	first.exon <- ref[ref$exon==1L]
 + 	is.forward <- as.logical(strand(first.exon)=="+")
@@ -52,8 +53,13 @@ Type 'q()' to quit R.
 + 	suppressWarnings(start(new.prom) <- ifelse(is.forward, start(first.exon) - up, end(first.exon) - down + 1L))
 + 	suppressWarnings(end(new.prom) <- ifelse(is.forward, start(first.exon) + down - 1L, end(first.exon) + up))
 + 	new.prom <- trim(new.prom)
-+ 	new.prom$exon <- 0L
-+ 	if (!identical(new.prom, promoters)) { stop("differences in promoter identification") }
++     olap <- findOverlaps(new.prom, promoters, select="first", type="equal")
++     collated <- split(olap, names(new.prom))
++ 	if (! all( sapply(collated, FUN=function(x) any(!is.na(x)))) ) {
++         # Need to be a bit more relaxed, because some alternative transcript locations won't be annotated with start sites.
++         # So, we just check that each gene has at least one matching promoter (i.e., not all NA's).
++         stop("differences in promoter identification") 
++     }
 + 
 + 	forward.exons <- exonic[strand(exonic)=="+"]
 + 	o <- order(forward.exons$internal, forward.exons$exon)
@@ -79,32 +85,32 @@ Type 'q()' to quit R.
 > down <- 1000
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24272 ranges and 3 metadata columns:
+GRanges object with 51937 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
-  100009600     chr9 [ 21074497,  21078496]      - |         Zglp1         0
-  100009609     chr7 [ 84963010,  84967009]      - |       Vmn2r65         0
-  100009614    chr10 [ 77708446,  77712445]      + |       Gm10024         0
-  100009664    chr11 [ 45805083,  45809082]      + | F630206G17Rik         0
-     100012     chr4 [144161652, 144165651]      - |          Oog3         0
+  100009600     chr9   [21066926, 21070925]      - |         Zglp1         0
+  100009600     chr9   [21074497, 21078496]      - |         Zglp1         0
+  100009609     chr7   [84963010, 84967009]      - |       Vmn2r65         0
+  100009614    chr10   [77708446, 77712445]      + |       Gm10024         0
+  100009664    chr11   [45805083, 45809082]      + | F630206G17Rik         0
         ...      ...                    ...    ... .           ...       ...
-      99889     chr3 [ 85886519,  85890518]      - |        Arfip1         0
       99890     chr3 [110250000, 110253999]      - |         Prmt6         0
       99899     chr3 [151748960, 151752959]      - |         Ifi44         0
       99929     chr3 [ 65525447,  65529446]      + |        Tiparp         0
+      99982     chr4 [136592131, 136596130]      - |         Kdm1a         0
       99982     chr4 [136601724, 136605723]      - |         Kdm1a         0
              internal
             <integer>
   100009600         1
+  100009600         1
   100009609         2
   100009614         3
   100009664         4
-     100012         5
         ...       ...
-      99889     24268
       99890     24269
       99899     24270
       99929     24271
+      99982     24272
       99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
@@ -113,32 +119,32 @@ GRanges object with 24272 ranges and 3 metadata columns:
 > down <- 500
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24272 ranges and 3 metadata columns:
+GRanges object with 51937 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
-  100009600     chr9 [ 21074997,  21077496]      - |         Zglp1         0
-  100009609     chr7 [ 84963510,  84966009]      - |       Vmn2r65         0
-  100009614    chr10 [ 77709446,  77711945]      + |       Gm10024         0
-  100009664    chr11 [ 45806083,  45808582]      + | F630206G17Rik         0
-     100012     chr4 [144162152, 144164651]      - |          Oog3         0
+  100009600     chr9   [21067426, 21069925]      - |         Zglp1         0
+  100009600     chr9   [21074997, 21077496]      - |         Zglp1         0
+  100009609     chr7   [84963510, 84966009]      - |       Vmn2r65         0
+  100009614    chr10   [77709446, 77711945]      + |       Gm10024         0
+  100009664    chr11   [45806083, 45808582]      + | F630206G17Rik         0
         ...      ...                    ...    ... .           ...       ...
-      99889     chr3 [ 85887019,  85889518]      - |        Arfip1         0
       99890     chr3 [110250500, 110252999]      - |         Prmt6         0
       99899     chr3 [151749460, 151751959]      - |         Ifi44         0
       99929     chr3 [ 65526447,  65528946]      + |        Tiparp         0
+      99982     chr4 [136592631, 136595130]      - |         Kdm1a         0
       99982     chr4 [136602224, 136604723]      - |         Kdm1a         0
              internal
             <integer>
   100009600         1
+  100009600         1
   100009609         2
   100009614         3
   100009664         4
-     100012         5
         ...       ...
-      99889     24268
       99890     24269
       99899     24270
       99929     24271
+      99982     24272
       99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
@@ -147,32 +153,32 @@ GRanges object with 24272 ranges and 3 metadata columns:
 > down <- 0
 > ref <- detailRanges(txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, orgdb=org.Mm.eg.db, promoter=c(up, down))
 > checkranges(ref, up, down)
-GRanges object with 24272 ranges and 3 metadata columns:
+GRanges object with 51937 ranges and 3 metadata columns:
             seqnames                 ranges strand |        symbol      exon
                <Rle>              <IRanges>  <Rle> |   <character> <integer>
-  100009600     chr9 [ 21075497,  21080496]      - |         Zglp1         0
-  100009609     chr7 [ 84964010,  84969009]      - |       Vmn2r65         0
-  100009614    chr10 [ 77706446,  77711445]      + |       Gm10024         0
-  100009664    chr11 [ 45803083,  45808082]      + | F630206G17Rik         0
-     100012     chr4 [144162652, 144167651]      - |          Oog3         0
+  100009600     chr9   [21067926, 21072925]      - |         Zglp1         0
+  100009600     chr9   [21075497, 21080496]      - |         Zglp1         0
+  100009609     chr7   [84964010, 84969009]      - |       Vmn2r65         0
+  100009614    chr10   [77706446, 77711445]      + |       Gm10024         0
+  100009664    chr11   [45803083, 45808082]      + | F630206G17Rik         0
         ...      ...                    ...    ... .           ...       ...
-      99889     chr3 [ 85887519,  85892518]      - |        Arfip1         0
       99890     chr3 [110251000, 110255999]      - |         Prmt6         0
       99899     chr3 [151749960, 151754959]      - |         Ifi44         0
       99929     chr3 [ 65523447,  65528446]      + |        Tiparp         0
+      99982     chr4 [136593131, 136598130]      - |         Kdm1a         0
       99982     chr4 [136602724, 136607723]      - |         Kdm1a         0
              internal
             <integer>
   100009600         1
+  100009600         1
   100009609         2
   100009614         3
   100009664         4
-     100012         5
         ...       ...
-      99889     24268
       99890     24269
       99899     24270
       99929     24271
+      99982     24272
       99982     24272
   -------
   seqinfo: 66 sequences (1 circular) from mm10 genome
@@ -229,7 +235,8 @@ GRanges object with 24272 ranges and 3 metadata columns:
 + 			
 + 		// Constructing the full string.
 + 		for (size_t c=1; c<current.size(); ++c) { 
-+ 			if (current[c-1].first+1==current[c].first) { holding=current[c].first; } 
++             if (current[c].first==0) { ; }
++             else if (current[c-1].first+1==current[c].first) { holding=current[c].first; } 
 + 			else {
 + 				if (holding >= 0) {
 + 					out << "-" << holding;
@@ -340,7 +347,7 @@ GRanges object with 24272 ranges and 3 metadata columns:
 [11] "241035|I|-" "226922|I|-" ""           "210933|I|-" "210933|0|-"
 [16] ""           ""           ""           "19076|I|-"  "226970|I|+"
 [21] "16764|I|-"  "18143|I|+"  ""           "70676|I|+"  ""          
-[26] ""           ""           ""           ""           "81898|I|-" 
+[26] ""           ""           ""           ""           "81898|0|-" 
 > 
 > output <- detailRanges(all.win, txdb=TxDb.Mmusculus.UCSC.mm10.knownGene, 
 + 	    orgdb=org.Mm.eg.db, name.field=c("SYMBOL", "ENTREZID"))
@@ -359,7 +366,7 @@ GRanges object with 24272 ranges and 3 metadata columns:
 [23] ""                         "Gulp1;70676|I|+"         
 [25] ""                         ""                        
 [27] ""                         ""                        
-[29] ""                         "Sf3b1;81898|I|-"         
+[29] ""                         "Sf3b1;81898|0|-"         
 > 
 > suppressPackageStartupMessages(require(TxDb.Scerevisiae.UCSC.sacCer3.sgdGene))
 > suppressPackageStartupMessages(require(org.Sc.sgd.db))
@@ -367,14 +374,14 @@ GRanges object with 24272 ranges and 3 metadata columns:
 > allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field='GENENAME')
 > checknames(allr)
 > allr
-GRanges object with 20102 ranges and 3 metadata columns:
+GRanges object with 20260 ranges and 3 metadata columns:
             seqnames           ranges strand |      symbol      exon  internal
                <Rle>        <IRanges>  <Rle> | <character> <integer> <integer>
-      Q0010     chrM   [ 3952,  4338]      + |     <Q0010>         1         1
-      Q0010     chrM   [ 4254,  4415]      + |     <Q0010>         2         1
-      Q0032     chrM   [11667, 11957]      + |     <Q0032>         1         2
-      Q0055     chrM   [13818, 13986]      + |         AI2         1         3
-      Q0055     chrM   [13818, 16322]      + |         AI2         2         3
+      Q0010     chrM    [ 952,  4951]      + |     <Q0010>         0         1
+      Q0010     chrM    [1254,  5253]      + |     <Q0010>         0         1
+      Q0010     chrM    [3952,  4338]      + |     <Q0010>         1         1
+      Q0010     chrM    [4254,  4415]      + |     <Q0010>         2         1
+      Q0032     chrM    [8667, 12666]      + |     <Q0032>         0         2
         ...      ...              ...    ... .         ...       ...       ...
     YPR200C   chrXVI [939279, 939671]      - |        ARR2        -1      6530
     YPR201W   chrXVI [939922, 941136]      + |        ARR3        -1      6531
@@ -387,14 +394,14 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > allr <- detailRanges(txdb=TxDb.Scerevisiae.UCSC.sacCer3.sgdGene, orgdb=org.Sc.sgd.db, key.field='ORF', name.field=c('GENENAME', 'ORF'))
 > checknames(allr)
 > allr
-GRanges object with 20102 ranges and 3 metadata columns:
+GRanges object with 20260 ranges and 3 metadata columns:
             seqnames           ranges strand |       symbol      exon  internal
                <Rle>        <IRanges>  <Rle> |  <character> <integer> <integer>
-      Q0010     chrM   [ 3952,  4338]      + |     NA;Q0010         1         1
-      Q0010     chrM   [ 4254,  4415]      + |     NA;Q0010         2         1
-      Q0032     chrM   [11667, 11957]      + |     NA;Q0032         1         2
-      Q0055     chrM   [13818, 13986]      + |    AI2;Q0055         1         3
-      Q0055     chrM   [13818, 16322]      + |    AI2;Q0055         2         3
+      Q0010     chrM    [ 952,  4951]      + |     NA;Q0010         0         1
+      Q0010     chrM    [1254,  5253]      + |     NA;Q0010         0         1
+      Q0010     chrM    [3952,  4338]      + |     NA;Q0010         1         1
+      Q0010     chrM    [4254,  4415]      + |     NA;Q0010         2         1
+      Q0032     chrM    [8667, 12666]      + |     NA;Q0032         0         2
         ...      ...              ...    ... .          ...       ...       ...
     YPR200C   chrXVI [939279, 939671]      - | ARR2;YPR200C        -1      6530
     YPR201W   chrXVI [939922, 941136]      + | ARR3;YPR201W        -1      6531
@@ -411,4 +418,4 @@ GRanges object with 20102 ranges and 3 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 49.472   0.528  60.338 
+ 85.792   0.360  86.188 

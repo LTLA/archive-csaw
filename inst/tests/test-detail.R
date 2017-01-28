@@ -26,6 +26,7 @@ checkranges <- function(ref, up, down) {
 	elementMetadata(test.gb) <- NULL
 	if (!identical(gb, test.gb)) { stop("differences in gene body identification") }
 
+    # Matching to the predicted promoter from the first exon.
 	promoters <- ref[ref$exon==0L]
  	first.exon <- ref[ref$exon==1L]
 	is.forward <- as.logical(strand(first.exon)=="+")
@@ -33,8 +34,13 @@ checkranges <- function(ref, up, down) {
 	suppressWarnings(start(new.prom) <- ifelse(is.forward, start(first.exon) - up, end(first.exon) - down + 1L))
 	suppressWarnings(end(new.prom) <- ifelse(is.forward, start(first.exon) + down - 1L, end(first.exon) + up))
 	new.prom <- trim(new.prom)
-	new.prom$exon <- 0L
-	if (!identical(new.prom, promoters)) { stop("differences in promoter identification") }
+    olap <- findOverlaps(new.prom, promoters, select="first", type="equal")
+    collated <- split(olap, names(new.prom))
+	if (! all( sapply(collated, FUN=function(x) any(!is.na(x)))) ) {
+        # Need to be a bit more relaxed, because some alternative transcript locations won't be annotated with start sites.
+        # So, we just check that each gene has at least one matching promoter (i.e., not all NA's).
+        stop("differences in promoter identification") 
+    }
 
 	forward.exons <- exonic[strand(exonic)=="+"]
 	o <- order(forward.exons$internal, forward.exons$exon)
@@ -123,7 +129,8 @@ while (counter < nqid) {
 			
 		// Constructing the full string.
 		for (size_t c=1; c<current.size(); ++c) { 
-			if (current[c-1].first+1==current[c].first) { holding=current[c].first; } 
+            if (current[c].first==0) { ; }
+            else if (current[c-1].first+1==current[c].first) { holding=current[c].first; } 
 			else {
 				if (holding >= 0) {
 					out << "-" << holding;

@@ -27,12 +27,10 @@ If \code{incoming} is not provided, a \code{GRanges} object will be returned con
 Gene keys (e.g., Entrez IDs) are stored as row names.
 Gene symbols, exon numbers and internal groupings (for exons of genes with multiple genomic locations) are also stored as metadata.
 
-If \code{incoming} is a \code{GRanges} object, a list will be returned with
-\code{overlap}, \code{left} and \code{right} elements. Each element is a
-character vector of length equal to the number of ranges in \code{incoming}.
-Each non-empty string records the gene symbol, the overlapped exons and the
-strand. For \code{left} and \code{right}, the gap between the range and the
-annotated feature is also included.
+If \code{incoming} is a \code{GRanges} object, a list will be returned with \code{overlap}, \code{left} and \code{right} elements. 
+Each element is a character vector of length equal to the number of ranges in \code{incoming}.
+Each non-empty string records the gene symbol, the overlapped exons and the strand. 
+For \code{left} and \code{right}, the gap between the range and the annotated feature is also included.
 }
 
 \details{
@@ -56,24 +54,17 @@ The \code{STRAND} is, obviously, the strand on which the gene is coded.
 For annotated regions flanking the region within a distance of \code{dist}, the character string in the \code{left} or \code{right} output vectors will have an additional \code{[DIST]} value. 
 This represents the gap between the edge of the region and the closest exon for that gene.
 
-Exons are numbered in order of increasing start or end position for genes
-on the forward or reverse strands, respectively. Promoters are defined as
-the region of length \code{promoter} upstream of the gene TSS, itself 
-defined as the start of the first exon (for genes on the forward strand)
-or the end of the last exon (otherwise). All promoters are marked as
-exon 0 for simplicity. Exon ranges in \code{EXON} are reported from as a
-comma-separated list where stretches of consecutive exons are summarized into a
-range. If the region overlaps an intron, it is labelled with \code{I} in
-\code{EXON}. No intronic overlaps are reported if there is an exonic overlap.
+Exons are numbered in order of increasing start or end position for genes on the forward or reverse strands, respectively. 
+Exon ranges in \code{EXON} are reported from as a comma-separated list where stretches of consecutive exons are summarized into a range. 
+Promoters are defined around any annotated TSS in \code{txdb}, and are marked as exon 0.
+Genes can have multiple TSS, but an overlap to multiple promoters will only be reported once. 
+If the region overlaps an intron, it is labelled with \code{I} in \code{EXON}. 
+Intronic overlaps are not reported if there is an exonic overlap.
 
-Note that promoter and intronic annotations are only reported for the
-\code{overlap} vector to reduce redundancy in the output. For example, it makes
-little sense to report that the region is both flanking and overlapping an
-intron. Similarly, the value of \code{DIST} is more relevant when it is
-reported to the nearest exon rather than to an intron (in which case, the
-distance would be zero if the intron overlaps the region). In cases where the
-distance is reported to the first exon, it can be used to refine the choice of
-\code{promoter}.
+Note that promoter and intronic annotations are only reported for the \code{overlap} vector to reduce redundancy in the output. 
+For example, it makes little sense to report that the region is both flanking and overlapping an intron. 
+Similarly, the value of \code{DIST} is more relevant when it is reported to the nearest exon rather than to an intron.
+In cases where the distance is reported to the first exon, it can be used to refine the choice of \code{promoter}.
 }
 
 \section{Other options}{
@@ -92,8 +83,8 @@ If multiple entries are supplied in \code{name.field}, the value of \code{GENE} 
 \author{Aaron Lun}
 
 \examples{ 
-require(org.Mm.eg.db)
-require(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(org.Mm.eg.db)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 current <- readRDS(system.file("exdata", "exrange.rds", package="csaw"))
 output <- detailRanges(current, orgdb=org.Mm.eg.db,

@@ -126,13 +126,15 @@ std::string digest2string (const std::deque<int>& indices, const int* geneid, SE
 			}
 		} else {	
 			index=start;
+            // Skipping gene bodies and extra promoters.
 			if (features[indices[start]]==-1) { ++index; }
 			ss << features[indices[index]];
+            while (index+1 < end && features[indices[index+1]]==0) { ++index; }
 			bool wasokay=false;
 
 			// Running through and printing all stretches of contiguous exons.
 			while ((++index) < end) {
-				if (features[indices[index]]==features[indices[index-1]]+1) { 
+                if (features[indices[index]]==features[indices[index-1]]+1) { 
 					wasokay=true;
 				} else {
 					if (wasokay) {

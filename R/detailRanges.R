@@ -10,27 +10,37 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 #
 # written by Aaron Lun
 # created 23 November 2013
-# last modified 2 December 2015
+# last modified 28 January 2017
 {
 	# Obtain exons, and cleaning out the annotation.
 	curex <- exonsBy(txdb, by="gene")
 	curex <- unlist(curex)
-	gene.id <- names(curex)
-	gene.str <- as.logical(strand(curex)=="+")
 	curex$exon_id <- NULL
 	curex$exon_name <- NULL
+
+    # Throwing in promoters as well.
+	if (length(promoter)!=2L) {  stop("need upstream/downstream specification in promoter argument") }
+	prom.ranges <- suppressWarnings(trim(promoters(txdb, upstream=promoter[1], downstream=promoter[2], column="gene_id")))
+    expanded <- rep(seq_along(prom.ranges), lengths(prom.ranges$gene_id))
+    prom.ranges <- prom.ranges[expanded]
+	names(prom.ranges) <- prom.ranges$gene_id
+    prom.ranges$gene_id <- NULL
+
+    # Merging the two sets of intervals.
+    is.prom <- rep(c(FALSE, TRUE), c(length(curex), length(prom.ranges)))
+    curex <- c(curex, prom.ranges)
+    o <- order(names(curex), seqnames(curex), strand(curex), start(curex), end(curex))
+    curex <- curex[o]
+    is.prom <- is.prom[o]
+	gene.id <- names(curex)
+	gene.str <- as.logical(strand(curex)=="+")
 
 	# Getting name annotation.
 	summarized <- rle(gene.id)
 	anno <- suppressMessages(select(orgdb, keys=summarized$values, columns=name.field, keytype=key.field))
-	re.summarized <- rle(as.character(anno[[key.field]]))
-	if (any(re.summarized$length!=1L)) { 
-		warning("many-to-one relationship between key and name fields, using first value only") 
-		first.of.each <- c(1L, cumsum(re.summarized$length)[-length(re.summarized$length)] + 1L)
-		anno <- anno[first.of.each,]
-	}
+    anno <- anno[match(summarized$values, anno[[key.field]]),,drop=FALSE]
 
-	all.names <- list()	
+    all.names <- list()	
 	do.check <- !key.field %in% name.field # Redundant, if it's already being reported.
 	for (x in seq_along(name.field)) {
 		cur.name <- inverse.rle(list(values=anno[[name.field[x]]], lengths=summarized$length))
@@ -44,7 +54,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	gene.name <- do.call(paste, c(all.names, sep=";"))
 	
 	# Splitting IDs, to avoid problems when genes are assigned to multiple locations.
-	# exonBy should give sorted locations by chr/strand/start/end, so gap between 
+	# We've sorted by chr/strand/start/end in each transcript, so gap between 
 	# start of each exon and the end of the previous one should give the intron length (ignore nesting).
 	nexons <- length(gene.id)
 	is.diff <- c(TRUE, gene.id[-1]!=gene.id[-nexons] | diff(as.integer(seqnames(curex)))!=0L
@@ -55,29 +65,26 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	# Assembling exon counts. Note that everything is sorted within each gene 
 	# by exon start. We resort by exon end for the reverse strand to ensure
 	# that '1' is the first exon in pathological cases. 
-	output <- .Call(cxx_collate_exon_data, gene.id, gene.str, start(curex), end(curex))
+    not.prom <- which(!is.prom)
+	output <- .Call(cxx_collate_exon_data, gene.id[not.prom], gene.str[not.prom], 
+                    start(curex)[not.prom], end(curex)[not.prom])
 	if (is.character(output)) { stop(output) }
-	ex.num <- output[[1]]
+    ex.num <- integer(length(curex))
+    ex.num[not.prom] <- output[[1]]
 
-	##############################
 	# Adding the gene bodies, using the extremes for each gene (returned as above).
 	gb.collected <- output[[2]]
-	gb.ref <- gb.collected[[1]]
+	gb.ref <- not.prom[gb.collected[[1]]]
 	gb.ranges <- GRanges(seqnames(curex)[gb.ref], IRanges(gb.collected[[2]], gb.collected[[3]]),
 		strand=!gene.str[gb.ref], seqinfo=seqinfo(curex))
 	names(gb.ranges) <- names(curex)[gb.ref]
 
-	# Adding the promoter regions, based on the start/end of the gene bodies.
-	if (length(promoter)!=2L) {  stop("need upstream/downstream specification in promoter argument") }
-	prom.ranges <- suppressWarnings(trim(promoters(gb.ranges, upstream=promoter[1], downstream=promoter[2])))
-	names(prom.ranges) <- names(gb.ranges)
-
-	# Expanding everything to account for the gene body and promoters.
-	curex <- c(curex, prom.ranges, gb.ranges)
-	gene.name <- c(gene.name, gene.name[gb.ref], gene.name[gb.ref])
-	gene.id <- c(gene.id, gene.id[gb.ref], gene.id[gb.ref])
-	ex.num <- c(ex.num, integer(length(gb.ref)), rep(-1L, length(gb.ref)))
-	gene.str <- c(gene.str, gene.str[gb.ref], gene.str[gb.ref])
+	# Expanding everything include the gene body.
+	curex <- c(curex, gb.ranges)
+	gene.name <- c(gene.name, gene.name[gb.ref])
+	gene.id <- c(gene.id, gene.id[gb.ref])
+	ex.num <- c(ex.num, rep(-1L, length(gb.ref)))
+	gene.str <- c(gene.str, gene.str[gb.ref])
 	
 	# Returning the useful stuff, if no overlaps are requested.
 	if (missing(incoming)) { 
