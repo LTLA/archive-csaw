@@ -66,6 +66,42 @@ Type 'q()' to quit R.
 > head(out)
 [1] 13.56958 13.54748 13.35018 13.39956 13.45476 13.59593
 > 
+> # Checking proper behaviour of the scaling.
+> 
+> y <- DGEList(matrix(rnbinom(100, mu=100, size=10), ncol=1, nrow=100))
+> ref <- aveLogCPM(y)
+> scalar <- runif(nrow(y), 1, 5)
+> 
+> y1 <- y
+> y1$counts <- y$counts * scalar
+> out1 <- scaledAverage(y1, scale=scalar)
+> stopifnot(all(abs(ref - out1) < 1e-10))
+> head(out1)
+[1] 12.94850 12.92964 12.56436 13.95784 13.20528 12.48907
+> 
+> y2 <- y
+> y2$counts <- y$counts * 2
+> out2 <- scaledAverage(y2, scale=2)
+> stopifnot(all(abs(ref - out2) < 1e-10))
+> head(out2)
+[1] 12.94850 12.92964 12.56436 13.95784 13.20528 12.48907
+> 
+> # Checking proper behaviour with invalid inputs.
+> 
+> stopifnot(all(is.na(scaledAverage(y, scale=-1))))
+> stopifnot(all(is.infinite(scaledAverage(y, scale=0))))
+> flucscale <- rep(1, nrow(y))
+> flucscale[1] <- 0
+> flucscale[2] <- -1
+> 
+> out <- scaledAverage(y, scale=flucscale)
+> ref <- aveLogCPM(y)
+> stopifnot(is.infinite(out[1]))
+> stopifnot(is.na(out[2]))
+> stopifnot(all(abs(out-ref)[-c(1,2)] < 1e-10))
+> head(out)
+[1]     -Inf       NA 12.56436 13.95784 13.20528 12.48907
+> 
 > ####################################################################################################
 > # Matching up global filtering.
 > 
@@ -336,4 +372,4 @@ $filter
 > 
 > proc.time()
    user  system elapsed 
-  6.324   0.108   6.449 
+  6.872   0.140   7.022 

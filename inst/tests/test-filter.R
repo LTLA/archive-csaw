@@ -43,6 +43,39 @@ stopifnot(length(ref)==length(out))
 stopifnot(all(abs(ref-out) < 1e-10))
 head(out)
 
+# Checking proper behaviour of the scaling.
+
+y <- DGEList(matrix(rnbinom(100, mu=100, size=10), ncol=1, nrow=100))
+ref <- aveLogCPM(y)
+scalar <- runif(nrow(y), 1, 5)
+
+y1 <- y
+y1$counts <- y$counts * scalar
+out1 <- scaledAverage(y1, scale=scalar)
+stopifnot(all(abs(ref - out1) < 1e-10))
+head(out1)
+
+y2 <- y
+y2$counts <- y$counts * 2
+out2 <- scaledAverage(y2, scale=2)
+stopifnot(all(abs(ref - out2) < 1e-10))
+head(out2)
+
+# Checking proper behaviour with invalid inputs.
+
+stopifnot(all(is.na(scaledAverage(y, scale=-1))))
+stopifnot(all(is.infinite(scaledAverage(y, scale=0))))
+flucscale <- rep(1, nrow(y))
+flucscale[1] <- 0
+flucscale[2] <- -1
+
+out <- scaledAverage(y, scale=flucscale)
+ref <- aveLogCPM(y)
+stopifnot(is.infinite(out[1]))
+stopifnot(is.na(out[2]))
+stopifnot(all(abs(out-ref)[-c(1,2)] < 1e-10))
+head(out)
+
 ####################################################################################################
 # Matching up global filtering.
 
