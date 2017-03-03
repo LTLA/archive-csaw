@@ -6,14 +6,21 @@ scaledAverage <- function(y, scale=1, prior.count=NULL, dispersion=NULL)
 #
 # written by Aaron Lun
 # created 5 November 2014
-# last modified 12 November 2016
+# last modified 3 March 2017
 {
     if (!is(y, "DGEList")) { stop("'y' should be a DGEList") }
-	if (any(scale <= 0)) { stop("scaling factor should be positive") }
 	if (is.null(prior.count)) { prior.count <- formals(aveLogCPM.DGEList)$prior.count }
     if (is.null(dispersion)) { 
         dispersion <- y$common.dispersion 
         if (is.null(dispersion)) dispersion <- 0.05
+    }
+
+    # Checking validity of scale
+    is.zero <- scale==0
+    is.neg <- scale < 0
+    failed <- is.zero | is.neg
+	if (any(failed)) { 
+        scale[failed] <- 1
     }
 
     # Computing the prior to add, scaling it, and then adding it.
@@ -25,7 +32,17 @@ scaledAverage <- function(y, scale=1, prior.count=NULL, dispersion=NULL)
 
     # Computing the average abundances in ave-logCPM.
 	ave <- mglmOneGroup(y=ap$y, offset=ap$offset, dispersion=dispersion, weights=y$weights) 
-    ave <- (ave - log(scale) + log(1e6))/log(2) 
+    ave <- (ave - log(scale) + log(1e6))/log(2)
+
+    # Replacing values with invalid scale.
+    if (any(failed)) {
+        if (length(failed)==1) { 
+            ave[] <- ifelse(is.zero, -Inf, NA_real_)
+        } else {
+            ave[is.neg] <- NA_real_
+            ave[is.zero] <- -Inf
+        }
+    } 
     return(ave)
 }
 

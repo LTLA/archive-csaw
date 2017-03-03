@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.6}{\itemize{
+\section{Version 1.9.7}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
 
@@ -20,12 +20,17 @@ Ensured that window-level FDR threshold chosen by controlClusterFDR() not above 
 
 \item
 Minor fix to scaledAverage() to avoid slightly inaccurate results.
+Zero or negative scale factors now return -Inf and NA, respectively.
 
 \item
 Switched to new scaleOffset() function for adding offsets in asDGEList().
+Added option to specify the assay to be used.
 
 \item
 Added multi-TSS support in detailRanges().
+
+\item
+Added options to specify assay in SE objects in filterWindows().
 }}
 
 \section{Version 1.8.0}{\itemize{
