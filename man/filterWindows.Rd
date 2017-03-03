@@ -5,13 +5,16 @@
 \description{Convenience function to compute filter statistics for windows, based on proportions or using enrichment over background.}
 
 \usage{
-filterWindows(data, background, type="global", prior.count=2, norm.fac=NULL) 
+filterWindows(data, background, type="global", assay.data=1,
+    assay.back=1, prior.count=2, norm.fac=NULL) 
 }
 
 \arguments{
 \item{data}{a \code{RangedSummarizedExperiment} object containing window- or bin-level counts}
 \item{background}{another \code{RangedSummarizedExperiment} object, containing counts for background regions when \code{type!="proportion"}}
 \item{type}{a character string specifying the type of filtering to perform; can be any of \code{c("global", "local", "control", "proportion")}}
+\item{assay.data}{a string or integer scalar specifying the assay containing window/bin counts in \code{data}}
+\item{assay.back}{a string or integer scalar specifying the assay containing window/bin counts in \code{background}}
 \item{prior.count}{a numeric scalar, specifying the prior count to use in \code{\link{aveLogCPM}}}
 \item{norm.fac}{a numeric scalar representing the normalization factor between ChIP and control samples, or a list of two \code{RangedSummarizedExperiment} objects; only used when \code{type="control"}}
 }

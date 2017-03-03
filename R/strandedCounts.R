@@ -20,7 +20,7 @@ strandedCounts <- function(bam.files, param=readParam(forward=NULL), regions=NUL
 	}	
 	
 	# Combining them together.
-	combined <- SummarizedExperiment(rbind(assay(fdata), assay(rdata)),
+	combined <- SummarizedExperiment(rbind(assay(fdata, "counts"), assay(rdata, "counts")),
 		rowRanges=c(rowRanges(fdata), rowRanges(rdata)),
 		colData=colData(fdata), metadata=metadata(fdata))
 

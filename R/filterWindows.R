@@ -1,4 +1,5 @@
-filterWindows <- function(data, background, type="global", prior.count=2, norm.fac=NULL)
+filterWindows <- function(data, background, type="global", assay.data=1, assay.back=1,
+                          prior.count=2, norm.fac=NULL)
 # This is a function for proportion- or background-based filtering of a
 # RangedSummarizedExperiment object. For the former, it computes the relative
 # ranks that can be used to determine the proportion of highest-abundance
@@ -10,7 +11,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 # last modified 15 May 2015
 {
 	type <- match.arg(type, c("global", "local", "control", "proportion"))
-	abundances <- scaledAverage(asDGEList(data), scale=1, prior.count=prior.count)
+	abundances <- scaledAverage(asDGEList(data, assay=assay.data), scale=1, prior.count=prior.count)
 
 	if (type=="proportion") {
 		genome.windows <- .getWindowNum(data)
@@ -37,15 +38,15 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
 			.checkLibSizes(data, background)
 			relative.width <- median(bwidth)/median(dwidth)
 			if (is.na(relative.width)) { relative.width <- 1 }
-			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=prior.count)
+			bg.ab <- scaledAverage(asDGEList(background, assay=assay.back), scale=relative.width, prior.count=prior.count)
 			filter.stat <- abundances - .getGlobalBg(background, bg.ab, prior.count)
 			
 		} else if (type=="local") {
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
 			.checkLibSizes(data, background)
 			relative.width <- (bwidth  - dwidth)/dwidth		
-			bg.y <- asDGEList(background)
-			bg.y$counts <- bg.y$counts - assay(data)
+			bg.y <- asDGEList(background, assay=assay.back)
+			bg.y$counts <- bg.y$counts - assay(data, assay=assay.data)
 
 			# Some protection for negative widths (counts should be zero, so only the prior gets involved in bg.ab).
 			subzero <- relative.width <= 0
@@ -82,7 +83,7 @@ filterWindows <- function(data, background, type="global", prior.count=2, norm.f
  		    if (!identical(nrow(data), nrow(background))) { stop("data and background should be of the same length") }	
 			relative.width <- bwidth/dwidth
 			lib.adjust <- prior.count * mean(background$totals)/mean(data$totals) # Account for library size differences.
-			bg.ab <- scaledAverage(asDGEList(background), scale=relative.width, prior.count=lib.adjust)
+			bg.ab <- scaledAverage(asDGEList(background, assay=assay.back), scale=relative.width, prior.count=lib.adjust)
 			filter.stat <- abundances - bg.ab 
 		}
 
