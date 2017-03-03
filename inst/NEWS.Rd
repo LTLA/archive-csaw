@@ -16,11 +16,11 @@ Added the empiricalFDR(), empiricalOverlaps() functions for controlling the empi
 Added the mixedClusters(), mixedOverlaps() functions for testing for mixed clusters.
 
 \item 
-Ensured that window-level FDR threshold chosen by controlClusterFDR() not above the cluster-level FDR.
+Ensured that window-level FDR threshold chosen by controlClusterFDR() is not above the cluster-level FDR.
 
 \item
 Minor fix to scaledAverage() to avoid slightly inaccurate results.
-Zero or negative scale factors now return -Inf and NA, respectively.
+Also, zero or negative scale factors now return -Inf and NA, respectively.
 
 \item
 Switched to new scaleOffset() function for adding offsets in asDGEList().
