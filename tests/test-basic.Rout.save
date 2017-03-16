@@ -36,11 +36,11 @@ Type 'q()' to quit R.
 > 
 > getPESizes(pe.file)
 $sizes
-[1]  70  90  20 150  10  30   2
+[1]  70  90  20 150  10  30  10   2
 
 $diagnostics
   total.reads  mapped.reads        single mate.unmapped    unoriented 
-           23            23             3             0             2 
+           23            23             3             0             1 
     inter.chr 
             1 
 
@@ -125,10 +125,10 @@ GRanges object with 19 ranges and 0 metadata columns:
 [2,]    4
 [3,]    2
 [4,]    1
-[5,]    3
-[6,]    2
+[5,]    4
+[6,]    3
 > out$totals
-[1] 7
+[1] 8
 > rowRanges(out)
 GRanges object with 6 ranges and 0 metadata columns:
       seqnames     ranges strand
@@ -147,10 +147,10 @@ GRanges object with 6 ranges and 0 metadata columns:
 [1,]    2
 [2,]    3
 [3,]    1
-[4,]    3
-[5,]    2
+[4,]    4
+[5,]    3
 > out$totals
-[1] 6
+[1] 7
 > rowRanges(out)
 GRanges object with 5 ranges and 0 metadata columns:
       seqnames     ranges strand
@@ -510,11 +510,12 @@ GRanges object with 19 ranges and 0 metadata columns:
   -------
   seqinfo: 1 sequence from an unspecified genome
 > extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="both"))
-GRanges object with 2 ranges and 0 metadata columns:
+GRanges object with 3 ranges and 0 metadata columns:
       seqnames    ranges strand
          <Rle> <IRanges>  <Rle>
   [1]     chrB [50,  79]      *
-  [2]     chrB [99, 100]      *
+  [2]     chrB [90,  99]      *
+  [3]     chrB [99, 100]      *
   -------
   seqinfo: 1 sequence from an unspecified genome
 > extractReads(pe.file, GRanges("chrB", IRanges(50, 100)), param=readParam(pe="second"))
@@ -531,4 +532,4 @@ GRanges object with 4 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 11.476   0.212  11.699 
+ 14.248   0.228  14.563 

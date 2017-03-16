@@ -93,9 +93,8 @@
     keep <- dkeep & fkeep
     output <- list(pos=left.pos[keep], size=all.sizes[keep])
     if (with.reads) {
-		output$forward <- lapply(left, "[", keep)
-		output$reverse <- lapply(right, "[", keep)
-        names(output$forward) <- names(output$reverse) <- c("pos", "qwidth")
+		output$forward <- list(pos=left.pos[keep], qwidth=left.len[keep])
+		output$reverse <- list(pos=right.pos[keep], qwidth=right.len[keep])
     }
 	return(output)
 }
