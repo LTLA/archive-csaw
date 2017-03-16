@@ -41,6 +41,10 @@ If \code{restrict} is supplied, reads will only be extracted for the specified c
 This is useful to restrict the analysis to interesting chromosomes, e.g., no contigs/scaffolds or mitochondria. 
 Conversely, if \code{discard} is set, a read will be removed if the corresponding alignment is wholly contained within the supplied ranges. 
 This is useful for removing reads in repeat regions. 
+
+Note that secondary or supplementary alignments are ignored in all functions.
+The former usually refer to alternative mapping locations for the same read, while the latter refer to chimeric reads.
+Neither are of much use in a typical ChIP-seq analysis and will be discarded if they are present in the BAM file.
 }
 
 \section{Parameter settings for paired-end data}{

@@ -13,7 +13,7 @@ SEXP extract_single_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end,
     }
     const bool rmdup=asLogical(dedup);
 
-    int set_flags=0, unset_flags=0;
+    int set_flags=0, unset_flags=BAM_FSUPPLEMENTARY + BAM_FSECONDARY;
     if (!isLogical(use_forward) || LENGTH(use_forward)!=1) {
         throw std::runtime_error("forward usage specification should be a logical scalar"); 
     } else {

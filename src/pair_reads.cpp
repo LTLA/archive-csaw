@@ -132,6 +132,11 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     int last_identipos=-1;
 
     while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){
+        const uint32_t& curflag=(br.read -> core).flag;
+        if ((curflag & BAM_FSECONDARY)!=0 || (curflag & BAM_FSUPPLEMENTARY)!=0) {
+            continue; // These guys don't even get counted as reads.
+        }
+
         ++oc.totals;
         curpos = (br.read->core).pos + 1; // Getting 1-indexed position.
         br.extract_data(algn_data);
@@ -146,20 +151,20 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
 //        } 
         
         // If it's a singleton.
-        if (((br.read -> core).flag & BAM_FPAIRED)==0) {
+        if ((curflag & BAM_FPAIRED)==0) {
             if (am_mapped) { oc.add_single(curpos, algn_data); }
             continue;
         }
 
         // Or, if we can see that its partner is obviously unmapped.
-        if (((br.read -> core).flag & BAM_FMUNMAP)!=0) {
+        if ((curflag & BAM_FMUNMAP)!=0) {
             if (am_mapped) { oc.add_onemapped(curpos, algn_data); }
             continue;
         }
 
         // Or if it's inter-chromosomal.
-        is_first=(((br.read->core).flag & BAM_FREAD1)!=0);
-        if (is_first==(((br.read->core).flag & BAM_FREAD2)!=0)) { 
+        is_first=((curflag & BAM_FREAD1)!=0);
+        if (is_first==((curflag & BAM_FREAD2)!=0)) { 
             std::stringstream err;
             err << "read '" << bam_get_qname(br.read) << "' must be either first or second in the pair";
             throw std::runtime_error(err.str()); 

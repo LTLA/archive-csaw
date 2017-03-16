@@ -23,5 +23,3 @@ too.close.1	81	chrB	80	200	20M	=	90	20	NNNNNNNNNNNNNNNNNNNN	hhhhhhhhhhhhhhhhhhhh
 too.close.1	161	chrB	90	200	10M	=	80	-20	NNNNNNNNNN	hhhhhhhhhh
 good.7	97	chrB	99	200	2M8S	=	99	2	NNNNNNNNNN	hhhhhhhhhh
 good.7	145	chrB	99	200	2M8S	=	99	-2	NNNNNNNNNN	hhhhhhhhhh
-
-

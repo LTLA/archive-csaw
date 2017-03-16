@@ -48,7 +48,7 @@ Only the 5' end of each read or the midpoint of each fragment (for paired-end da
 
 \section{Read extraction and counting}{ 
 Read extraction from the BAM files is governed by the \code{param} argument.
-This specifies whether reads are to be read in single- or paired-end mode, whther to apply a threshold to the mapping quality, and so on -- see \code{?\link{readParam}} for details.
+This specifies whether reads are to be read in single- or paired-end mode, whether to apply a threshold to the mapping quality, and so on -- see \code{?\link{readParam}} for details.
 The strandedness of the output \code{rowRanges} is set based on the strand(s) from which the reads are extracted and counted.
 This is determined by the value of the \code{forward} slot in the input \code{param} object.
 

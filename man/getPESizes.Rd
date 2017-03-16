@@ -22,13 +22,14 @@ A list containing:
 }
 
 \details{
-This function computes a number of diagnostics for paired-end sequencing data in a supplied BAM file.
-This aims to provide an indication of data quality.
+This function computes a number of diagnostics for paired-end data in a supplied BAM file.
+The aims is to provide an indication of the quality of library preparation and sequencing.
 
 Firstly, a read is only considered to be mapped if it is not removed by \code{dedup}, \code{minq}, \code{restrict} or \code{discard} in \code{\link{readParam}}.
 Otherwise, the alignment is not considered to be reliable.
 Any read pair with exactly one unmapped read is discarded, and the number of read pairs lost in this manner is recorded.
 Obviously, read pairs with both reads unmapped will be ignored completely, as will any unpaired reads in the BAM file.
+Secondary and supplementary alignments are ignored completely and do not contribute to the total - see \code{\link{readParam}} for details.
 
 Of the mapped pairs, the valid (i.e., proper) read pairs are identified.
 This involves several criteria:

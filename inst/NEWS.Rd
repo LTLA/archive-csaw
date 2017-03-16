@@ -33,6 +33,9 @@ Added multi-TSS support in detailRanges().
 Modified paired-end machinery in windowCounts(), getPESizes() to be more accommodating of overruns.
 
 \item
+Ignored secondary and supplementary alignments in all functions.
+
+\item
 Added options to specify assay in SE objects in filterWindows().
 }}
 
