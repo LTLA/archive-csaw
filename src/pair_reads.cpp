@@ -21,12 +21,13 @@ struct OutputContainer {
             reverse_len = data1.len;
         }
 
-        if (forward_pos > reverse_pos || forward_pos+forward_len > reverse_pos+reverse_len) {
+        // Completely overrun fragments go into the 'unoriented' basket.
+        if (forward_pos >= reverse_pos + reverse_len) {
             add_unoriented(pos1, data1, pos2, data2, isfirst1);
             return; 
-        }
+        } 
 
-        forward_pos_out.push_back(forward_pos); // Get to 1-indexed positions.
+        forward_pos_out.push_back(forward_pos); 
         forward_len_out.push_back(forward_len);
         reverse_pos_out.push_back(reverse_pos);
         reverse_len_out.push_back(reverse_len);

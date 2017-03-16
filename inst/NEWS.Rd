@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.7}{\itemize{
+\section{Version 1.9.8}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
 
@@ -28,6 +28,9 @@ Added option to specify the assay to be used.
 
 \item
 Added multi-TSS support in detailRanges().
+
+\item 
+Modified paired-end machinery in windowCounts(), getPESizes() to be more accommodating of overruns.
 
 \item
 Added options to specify assay in SE objects in filterWindows().

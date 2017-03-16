@@ -52,7 +52,8 @@ This specifies whether reads are to be read in single- or paired-end mode, whthe
 The strandedness of the output \code{rowRanges} is set based on the strand(s) from which the reads are extracted and counted.
 This is determined by the value of the \code{forward} slot in the input \code{param} object.
 
-Fragments are inferred from reads by directional extension (single-end; see below) or by identifying proper pairs (paired-end; see \code{\link{readParam}} for more details).
+Fragments are inferred from reads by directional extension in single-end data (see below) 
+    or by identifying proper pairs in paired-end data (see \code{\link{readParam}} and \code{\link{getPESizes}} for more details).
 The number of fragments overlapping the window for each library is then counted for each window position. 
 Windows will be removed if the count sum across all libraries is below \code{filter}. 
 This reduces the memory footprint of the output by not returning empty or near-empty windows, which are usually uninteresting anyway. 
@@ -90,7 +91,8 @@ These values will not be used in \code{windowCounts}, but instead, in functions 
 
 \seealso{
 \code{\link{correlateReads}},
-\code{\link{readParam}}
+\code{\link{readParam}},
+\code{\link{getPESizes}}
 }
 
 \examples{

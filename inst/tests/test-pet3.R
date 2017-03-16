@@ -98,14 +98,12 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
             }
 
 			# Loading windowCounts.
-			rpam <- readParam(pe=pe, max.frag=max.frag, 
-				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
-			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
-				width=right+left+1, filter=0, param=rpam)
+			rpam <- readParam(pe=pe, max.frag=max.frag, discard=discard, minq=minq, dedup=dedup, restrict=restrict)
+			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, filter=0, param=rpam)
 
 			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 			totals <- integer(length(fnames))
-			for (lib in 1:length(fnames)) { 
+			for (lib in seq_along(fnames)) { 
 				pos1 <- start(firsts[[lib]])
 				chr1 <- as.character(seqnames(firsts[[lib]]))
 				str1 <- as.logical(strand(firsts[[lib]])=="+")
@@ -113,14 +111,20 @@ checkcount<-function (npairs, nsingles, chromosomes, spacing=50, max.frag=500, l
 				chr2 <- as.character(seqnames(seconds[[lib]]))
 				str2 <- as.logical(strand(seconds[[lib]])=="+")
 
-				valid <- chr1==chr2 & str1!=str2 & ifelse(str1, pos1 <= pos2, pos2 <= pos1)
-		   		pos1[!str1] <- pos1[!str1]+rlen
+                # Removing complete overruns (partial overruns are implicitly truncated when computing 'sizes').
+				valid <- chr1==chr2 & str1!=str2 & ifelse(str1, pos1 < pos2 + rlen, pos2 < pos1 + rlen)
+		   		pos1[!str1] <- pos1[!str1]+rlen 
 				pos2[!str2] <- pos2[!str2]+rlen
-   				sizes<-abs(pos1-pos2)
+   				sizes <- abs(pos1-pos2)
 
-				# Checking which ones are lost.
-				keep1 <- (!dedup | !firsts[[lib]]$dup) & firsts[[lib]]$mapq >= minq
-				keep2 <- (!dedup | !seconds[[lib]]$dup) & seconds[[lib]]$mapq >= minq
+                # Pulling out mapping metrics, and checking which reads are lost.
+                first.dup <- firsts[[lib]]$dup
+                first.mapq <- firsts[[lib]]$mapq
+                second.dup <- seconds[[lib]]$dup
+                second.mapq <- seconds[[lib]]$mapq
+
+				keep1 <- (!dedup | !first.dup) & first.mapq >= minq
+				keep2 <- (!dedup | !second.dup) & second.mapq >= minq
 				if (length(discard)) { 
 					keep1 <- keep1 & !overlapsAny(firsts[[lib]], discard, type="within")
 					keep2 <- keep2 & !overlapsAny(seconds[[lib]], discard, type="within")

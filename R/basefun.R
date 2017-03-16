@@ -62,7 +62,7 @@
 # 
 # written by Aaron Lun
 # created 8 December 2013
-# last modified 16 December 2015
+# last modified 18 March 2017
 {
     cur.chr <- as.character(seqnames(where)) 
     bam.file <- path.expand(bam.file)
@@ -75,21 +75,23 @@
         names(out) <- c("forward", "reverse", "total", "single", "ufirst", "usecond", "one.mapped", "ifirst", "isecond")
         return(out)
     }
-    left <- out[[1]]
-    right <- out[[2]]
+    left.pos <- out[[1]][[1]]
+    left.len <- out[[1]][[2]]
+    right.pos <- out[[2]][[1]]
+    right.len <- out[[2]][[2]]
 
     # Filtering by discard.
-    dlkeep <- .discardReads(cur.chr, left[[1]], left[[2]], param$discard)
-    drkeep <- .discardReads(cur.chr, right[[1]], right[[2]], param$discard)
+    dlkeep <- .discardReads(cur.chr, left.pos, left.len, param$discard)
+    drkeep <- .discardReads(cur.chr, right.pos, right.len, param$discard)
     dkeep <- dlkeep & drkeep
 
-    # Filtering by maximum fragment size.
-    all.sizes <- .getFragmentSizes(left, right)
+    # Computing fragment sizes (implicit truncation of overrun reads).
+    all.sizes <- right.pos + right.len - left.pos
     fkeep <- all.sizes <= param$max.frag 
 
     # Reporting output.
     keep <- dkeep & fkeep
-    output <- list(pos=left[[1]][keep], size=all.sizes[keep])
+    output <- list(pos=left.pos[keep], size=all.sizes[keep])
     if (with.reads) {
 		output$forward <- lapply(left, "[", keep)
 		output$reverse <- lapply(right, "[", keep)

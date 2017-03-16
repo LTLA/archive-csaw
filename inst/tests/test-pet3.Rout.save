@@ -1,6 +1,6 @@
 
-R Under development (unstable) (2015-12-04 r69737) -- "Unsuffered Consequences"
-Copyright (C) 2015 The R Foundation for Statistical Computing
+R Under development (unstable) (2016-10-17 r71531) -- "Unsuffered Consequences"
+Copyright (C) 2016 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -117,14 +117,12 @@ Type 'q()' to quit R.
 +             }
 + 
 + 			# Loading windowCounts.
-+ 			rpam <- readParam(pe=pe, max.frag=max.frag, 
-+ 				discard=discard, minq=minq, dedup=dedup, restrict=restrict)
-+ 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, 
-+ 				width=right+left+1, filter=0, param=rpam)
++ 			rpam <- readParam(pe=pe, max.frag=max.frag, discard=discard, minq=minq, dedup=dedup, restrict=restrict)
++ 			x <- windowCounts(fnames, spacing=spacing, ext=ext, shift=left, width=right+left+1, filter=0, param=rpam)
 + 
 + 			counts <- matrix(0L, nrow=nrow(x), ncol=length(fnames))
 + 			totals <- integer(length(fnames))
-+ 			for (lib in 1:length(fnames)) { 
++ 			for (lib in seq_along(fnames)) { 
 + 				pos1 <- start(firsts[[lib]])
 + 				chr1 <- as.character(seqnames(firsts[[lib]]))
 + 				str1 <- as.logical(strand(firsts[[lib]])=="+")
@@ -132,14 +130,20 @@ Type 'q()' to quit R.
 + 				chr2 <- as.character(seqnames(seconds[[lib]]))
 + 				str2 <- as.logical(strand(seconds[[lib]])=="+")
 + 
-+ 				valid <- chr1==chr2 & str1!=str2 & ifelse(str1, pos1 <= pos2, pos2 <= pos1)
-+ 		   		pos1[!str1] <- pos1[!str1]+rlen
++                 # Removing complete overruns (partial overruns are implicitly truncated when computing 'sizes').
++ 				valid <- chr1==chr2 & str1!=str2 & ifelse(str1, pos1 < pos2 + rlen, pos2 < pos1 + rlen)
++ 		   		pos1[!str1] <- pos1[!str1]+rlen 
 + 				pos2[!str2] <- pos2[!str2]+rlen
-+    				sizes<-abs(pos1-pos2)
++    				sizes <- abs(pos1-pos2)
 + 
-+ 				# Checking which ones are lost.
-+ 				keep1 <- (!dedup | !firsts[[lib]]$dup) & firsts[[lib]]$mapq >= minq
-+ 				keep2 <- (!dedup | !seconds[[lib]]$dup) & seconds[[lib]]$mapq >= minq
++                 # Pulling out mapping metrics, and checking which reads are lost.
++                 first.dup <- firsts[[lib]]$dup
++                 first.mapq <- firsts[[lib]]$mapq
++                 second.dup <- seconds[[lib]]$dup
++                 second.mapq <- seconds[[lib]]$mapq
++ 
++ 				keep1 <- (!dedup | !first.dup) & first.mapq >= minq
++ 				keep2 <- (!dedup | !second.dup) & second.mapq >= minq
 + 				if (length(discard)) { 
 + 					keep1 <- keep1 & !overlapsAny(firsts[[lib]], discard, type="within")
 + 					keep2 <- keep2 & !overlapsAny(seconds[[lib]], discard, type="within")
@@ -239,13 +243,13 @@ Type 'q()' to quit R.
 > set.seed(3429201)
 > checkcount(1000, 50, c(chrA=1000, chrB=2000), spacing=20)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2050          1088            24           506           109           134 
+         2050          1088            24           506           107           134 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2050          2050            50             0           357           506 
+         2050          2050            50             0           354           506 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2050          1839            45           182           292           400 
+         2050          1839            45           182           289           400 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2050          1020            24           506           182             0 
+         2050          1020            24           506           181             0 
 GRanges object with 50 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -265,13 +269,13 @@ GRanges object with 50 ranges and 0 metadata columns:
 > 
 > checkcount(2000, 0, c(chrA=1000, chrB=2000), spacing=50)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4000          2150             0          1012           202           283 
+         4000          2150             0          1012           201           283 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4000          4000             0             0           732          1008 
+         4000          4000             0             0           730          1008 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4000          3415             0           515           550           714 
+         4000          3415             0           515           548           714 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4000          1978             0          1008           361             0 
+         4000          1978             0          1008           359             0 
 GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -291,13 +295,13 @@ GRanges object with 20 ranges and 0 metadata columns:
 > 
 > checkcount(5000, 25, c(chrA=1000, chrB=2000), spacing=25)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10025          5333            12          2465           509           732 
+        10025          5333            12          2465           506           732 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10025         10025            25             0          1816          2537 
+        10025         10025            25             0          1799          2537 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10025          8831            23          1056          1397          1957 
+        10025          8831            23          1056          1380          1957 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10025          4945            10          2537           874             0 
+        10025          4945            10          2537           866             0 
 GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -317,13 +321,13 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > checkcount(5000, 10, c(chrA=1000, chrB=2000), spacing=25, max.frag=100)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          5366             5          2485           545           709 
+        10010          5366             5          2485           537           709 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010         10010            10             0          1898          2467 
+        10010         10010            10             0          1888          2467 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          8313             6          1395          1306          1722 
+        10010          8313             6          1395          1297          1722 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          5027             4          2467           952             0 
+        10010          5027             4          2467           949             0 
 GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -347,11 +351,11 @@ GRanges object with 40 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          2010          1065             2           505            96           139 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2010          2010            10             0           351           520 
+         2010          2010            10             0           347           520 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2010          1645             9           310           247           328 
+         2010          1645             9           310           243           328 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2010          1016             6           520           182             0 
+         2010          1016             6           520           179             0 
 GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -373,11 +377,11 @@ GRanges object with 20 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          2020          1116            11           495           112           158 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2020          2020            20             0           376           510 
+         2020          2020            20             0           374           510 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2020          1732            19           251           281           366 
+         2020          1732            19           251           280           366 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2020           979            15           510           176             0 
+         2020           979            15           510           174             0 
 GRanges object with 10 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -398,11 +402,11 @@ GRanges object with 10 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          4050          2129            25           988           210           281 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          4050            50             0           722          1005 
+         4050          4050            50             0           721          1005 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          4050          3555            44           433           572           752 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          2000            21          1005           365             0 
+         4050          2000            21          1005           364             0 
 GRanges object with 10 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -425,11 +429,11 @@ GRanges object with 10 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          2100          1092            55           483           100           137 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2100          2100           100             0           377           476 
+         2100          2100           100             0           374           476 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2100          1837            89           222           299           347 
+         2100          1837            89           222           296           347 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2100          1040            62           476           180             0 
+         2100          1040            62           476           179             0 
 GRanges object with 34 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
@@ -451,11 +455,11 @@ GRanges object with 34 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          2000          1062             0           512           107           131 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000          2000             0             0           373           489 
+         2000          2000             0             0           372           489 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000          1693             0           263           269           342 
+         2000          1693             0           263           268           342 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000           985             0           489           189             0 
+         2000           985             0           489           188             0 
 GRanges object with 51 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
@@ -475,13 +479,13 @@ GRanges object with 51 ranges and 0 metadata columns:
 > 
 > checkcount(2000, 50, c(chrA=1000, chrB=2000), spacing=15, right=-5, left=10)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          2146            27          1025           219           264 
+         4050          2146            27          1025           218           264 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          4050            50             0           757          1003 
+         4050          4050            50             0           752          1003 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          3562            48           438           580           767 
+         4050          3562            48           438           575           767 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          2058            27          1003           395             0 
+         4050          2058            27          1003           391             0 
 GRanges object with 67 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
@@ -503,11 +507,11 @@ GRanges object with 67 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          4025          2138            11           995           214           279 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4025          4025            25             0           767           989 
+         4025          4025            25             0           765           989 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4025          3328            24           602           543           642 
+         4025          3328            24           602           541           642 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4025          2002            13           989           382             0 
+         4025          2002            13           989           381             0 
 GRanges object with 68 ranges and 0 metadata columns:
        seqnames      ranges strand
           <Rle>   <IRanges>  <Rle>
@@ -529,13 +533,13 @@ GRanges object with 68 ranges and 0 metadata columns:
 > 
 > checkcount(1000, 0, c(chrA=1000, chrB=2000), spacing=20, ext=100)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000          1073             0           493            99           154 
+         2000          1073             0           493            98           154 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000          2000             0             0           353           513 
+         2000          2000             0             0           351           513 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000          1726             0           240           267           384 
+         2000          1726             0           240           265           384 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         2000           999             0           513           172             0 
+         2000           999             0           513           170             0 
 GRanges object with 50 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -557,11 +561,11 @@ GRanges object with 50 ranges and 0 metadata columns:
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
          4050          2135            33           984           196           301 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          4050            50             0           783           982 
+         4050          4050            50             0           782           982 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          3544            41           445           573           773 
+         4050          3544            41           445           572           773 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-         4050          2047            23           982           396             0 
+         4050          2047            23           982           395             0 
 GRanges object with 20 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -581,13 +585,13 @@ GRanges object with 20 ranges and 0 metadata columns:
 > 
 > checkcount(5000, 10, c(chrA=1000, chrB=2000), spacing=25, ext=20)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          5341             4          2477           535           733 
+        10010          5341             4          2477           532           733 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010         10010            10             0          1892          2494 
+        10010         10010            10             0          1881          2494 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          8532             9          1281          1365          1809 
+        10010          8532             9          1281          1355          1809 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10010          5055             7          2494           960             0 
+        10010          5055             7          2494           951             0 
 GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -607,13 +611,13 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > checkcount(5000, 20, c(chrA=1000, chrB=2000), spacing=25, ext=200)
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10020          5360            13          2479           543           727 
+        10020          5360            13          2479           540           727 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10020         10020            20             0          1880          2491 
+        10020         10020            20             0          1874          2491 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10020          8630            15          1227          1383          1810 
+        10020          8630            15          1227          1377          1810 
   total.reads  mapped.reads        single mate.unmapped    unoriented     inter.chr 
-        10020          5014             9          2491           962             0 
+        10020          5014             9          2491           958             0 
 GRanges object with 40 ranges and 0 metadata columns:
        seqnames     ranges strand
           <Rle>  <IRanges>  <Rle>
@@ -701,4 +705,4 @@ GRanges object with 40 ranges and 0 metadata columns:
 > 
 > proc.time()
    user  system elapsed 
- 47.311   0.318  47.954 
+ 46.920   0.372  47.295 

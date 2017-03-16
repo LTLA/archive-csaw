@@ -22,17 +22,26 @@ A list containing:
 }
 
 \details{
-This function assembles a number of paired-end diagnostics.
-For starters, a read is only mapped if it is not removed by \code{dedup}, \code{minq}, \code{restrict} or \code{discard} in \code{\link{readParam}}.
+This function computes a number of diagnostics for paired-end sequencing data in a supplied BAM file.
+This aims to provide an indication of data quality.
+
+Firstly, a read is only considered to be mapped if it is not removed by \code{dedup}, \code{minq}, \code{restrict} or \code{discard} in \code{\link{readParam}}.
 Otherwise, the alignment is not considered to be reliable.
 Any read pair with exactly one unmapped read is discarded, and the number of read pairs lost in this manner is recorded.
-Obviously, read pairs with both reads unmapped will be ignored completely.
+Obviously, read pairs with both reads unmapped will be ignored completely, as will any unpaired reads in the BAM file.
 
 Of the mapped pairs, the valid (i.e., proper) read pairs are identified.
-These refer to intrachromosomal read pairs where the reads with the lower and higher genomic coordinates map to the forward and reverse strand, respectively.
-The distance between the positions of the mapped 5' ends of the two reads must also be equal to or greater than the read lengths. 
-Any intrachromosomal read pair that fails these criteria will be considered as improperly oriented.
+This involves several criteria:
+\itemize{
+\item Read pairs must be intrachromosomal.
 If the reads are on different chromosomes, the read pair will be recorded as being interchromosomal.
+\item The two reads in the pair must lie on opposite strands.
+Otherwise, the read pair will be considered as being improperly orientated.
+\item The 5' end of the forward read must not map to a higher genomic coordinate than the 5' end of the reverse read.
+Otherwise, the read pair will be considered as being improperly orientated.
+}
+Note that the 3' end of one read is allowed to overrun the 5' end of the other.
+This avoids being too stringent in the presence of sequencing errors, untrimmed adaptors, etc. at the start or ends of reads.
 
 Each valid read pair corresponds to a DNA fragment where both ends are sequenced. 
 The size of the fragment can be determined by calculating the distance between the 5' ends of the mapped reads. 
