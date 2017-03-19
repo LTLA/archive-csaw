@@ -130,9 +130,10 @@ SEXP extract_pair_data(SEXP bam, SEXP index, SEXP chr, SEXP start, SEXP end, SEX
     std::set<std::string> identical_pos;
     std::set<std::string>::iterator itip;
     int last_identipos=-1;
+    uint32_t curflag;
 
     while (bam_itr_next(bf.in, biter.iter, br.read) >= 0){
-        const uint32_t& curflag=(br.read -> core).flag;
+        curflag=(br.read -> core).flag;
         if ((curflag & BAM_FSECONDARY)!=0 || (curflag & BAM_FSUPPLEMENTARY)!=0) {
             continue; // These guys don't even get counted as reads.
         }
