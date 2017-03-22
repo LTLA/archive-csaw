@@ -10,11 +10,11 @@ getPESizes <- function(bam.file, param=readParam(pe="both"))
 {
 	if (param$pe!="both") { stop("paired-end inputs required") }
 	extracted.chrs <- .activeChrs(bam.file, param$restrict)
-    norm.list <- list()
+    nchrs <- length(extracted.chrs)
     totals <- singles <- one.unmapped <- mapped <- unoriented <- 0L
-    loose.names.1 <- loose.names.2 <- list()
+    norm.list <- loose.names.1 <- loose.names.2 <- vector("list", nchrs)
 
-	for (i in seq_along(extracted.chrs)) {
+	for (i in seq_len(nchrs)) { 
         cur.chr <- names(extracted.chrs)[i]
         output <- .extractPE(bam.file, GRanges(cur.chr, IRanges(1L, extracted.chrs[i])), param=param, diagnostics=TRUE)
         totals <- totals + output$total

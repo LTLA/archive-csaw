@@ -6,7 +6,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 #
 # written by Aaron Lun
 # created 26 February 2015
-# last modified 8 January 2016
+# last modified 22 March 2017
 {
 	nset <- length(data.list)
 	set.it.vec <- seq_len(nset)
@@ -31,7 +31,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 		merged <- do.call(mergeWindows, c(merge.args, regions=all.ranges)) 
 
 		# Formatting for nice output.
-		final.ids <- list()
+		final.ids <- vector("list", nset)
 		last <- 0L
 		for (x in set.it.vec) { 
 			currows <- nrow(result.list[[x]])
@@ -39,8 +39,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 			last <- last + currows
 		}
 	} else {
-		all.ranges <- list()
-		final.ids <- list()
+		all.ranges <- final.ids <- vector("list", nset)
 		for (x in set.it.vec) {
 			olap <- do.call(findOverlaps, c(query=region, subject=data.list[[x]], overlap.args))
 			final.ids[[x]] <- olap
@@ -54,7 +53,7 @@ consolidateSizes <- function(data.list, result.list, equiweight=TRUE,
 	# Calculating weights, so each window size (or spacing) has the same contribution to the final outcome.
 	if (equiweight) {
 		last <- 0L
-		rel.weights <- list()
+		rel.weights <- vector("list", nset)
 		for (x in set.it.vec) {
 			currows <- nrow(result.list[[x]])
 			curid <- merged$id[last + seq_len(currows)]

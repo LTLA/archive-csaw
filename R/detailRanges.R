@@ -10,7 +10,7 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 #
 # written by Aaron Lun
 # created 23 November 2013
-# last modified 28 January 2017
+# last modified 22 March 2017
 {
 	# Obtain exons, and cleaning out the annotation.
 	curex <- exonsBy(txdb, by="gene")
@@ -40,9 +40,10 @@ detailRanges <- function(incoming, txdb, orgdb, dist=5000, promoter=c(3000, 1000
 	anno <- suppressMessages(select(orgdb, keys=summarized$values, columns=name.field, keytype=key.field))
     anno <- anno[match(summarized$values, anno[[key.field]]),,drop=FALSE]
 
-    all.names <- list()	
+    nnames <- length(name.field)
+    all.names <- vector("list", nnames)
 	do.check <- !key.field %in% name.field # Redundant, if it's already being reported.
-	for (x in seq_along(name.field)) {
+	for (x in seq_len(nnames)) { 
 		cur.name <- inverse.rle(list(values=anno[[name.field[x]]], lengths=summarized$length))
 		if (!is.character(cur.name)) { cur.name <- as.character(cur.name) } 
 		if (do.check) { 
