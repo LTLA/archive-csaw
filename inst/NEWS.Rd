@@ -2,9 +2,10 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.8}{\itemize{
+\section{Version 1.9.9}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
+Fixed out-of-array indexing bug in the C++ code. 
 
 \item
 Supported factor input for ids argument in combineTests(), getBestTest().
