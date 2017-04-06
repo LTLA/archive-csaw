@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.9}{\itemize{
+\section{Version 1.9.10}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
 Fixed out-of-array indexing bug in the C++ code. 
@@ -38,6 +38,9 @@ Ignored secondary and supplementary alignments in all functions.
 
 \item
 Added options to specify assay in SE objects in filterWindows().
+
+\item 
+Updated user's guide.
 }}
 
 \section{Version 1.8.0}{\itemize{
