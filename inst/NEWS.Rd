@@ -2,7 +2,7 @@
 \title{csaw News}
 \encoding{UTF-8}
 
-\section{Version 1.9.10}{\itemize{
+\section{Version 1.10.0}{\itemize{
 \item 
 Added calculation of dominant directionality in combineTests().
 Fixed out-of-array indexing bug in the C++ code. 
