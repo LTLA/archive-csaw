@@ -1,6 +1,6 @@
 
-R version 3.3.0 Patched (2016-05-03 r70580) -- "Supposedly Educational"
-Copyright (C) 2016 The R Foundation for Statistical Computing
+R version 3.4.0 RC (2017-04-18 r72535) -- "You Stupid Darkness"
+Copyright (C) 2017 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -28,7 +28,7 @@ Type 'q()' to quit R.
 > 
 > suppressWarnings(suppressPackageStartupMessages(require(csaw)))
 > 
-> comp <- function(nreads, chromos, ext=100, width=200, res=50, weight=TRUE, minq=NA, dedup=FALSE, 
+> comp <- function(nreads, chromos, ext=100, width=200, res=50, minq=NA, dedup=FALSE, 
 + 		use.strand=FALSE, match.strand=FALSE, final.mode=NA) { 
 + 	# Simulating first.
 + 	bam <- regen(nreads, chromos, outfname)
@@ -39,24 +39,27 @@ Type 'q()' to quit R.
 + 
 + 	# Running profileSites.
 + 	xparam <- readParam(minq=minq, dedup=dedup)
-+ 	if (weight) {
-+ 		suppressWarnings(by.win <- regionCounts(bam, windows, ext=ext, param=xparam))
-+ 		metric <- rowSums(assay(by.win))
-+ 	} else {
-+ 		metric <- rep(1, nwin)
-+ 	}
 +     if (!is.na(final.mode)){ ext <- list(ext, final.mode) }
-+ 	
 + 	if (match.strand) { xparam2 <- reform(xparam, forward=NULL) }
 + 	else { xparam2 <- xparam }
 + 	strand.string <- ifelse(use.strand, ifelse(match.strand, "match", "use"), "ignore")
-+ 	observed <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string, weight=1/metric)
-+ 
-+ 	# Checking it's the same if we do a weighted average.
 + 	all.profiles <- profileSites(bam, windows, ext=ext, range=width, average=FALSE, param=xparam2, strand=strand.string)
-+ 	other.observed <- colMeans(all.profiles/metric)
-+ 	if (length(other.observed)!=length(observed)) { stop("vectors are of differing lengths against manual average") }
-+ 	if (any(abs(other.observed - observed) > (other.observed+1e-3)*1e-6)) { stop("coverage profiles don't match up with manual average") }
++ 
++     # Checking names.
++     if (!identical(colnames(all.profiles), as.character((-width):width))) {
++         stop("column names are not as expected")
++     }
++ 
++     # Checking the normalization/averaging options are good.
++ 	none <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string)
++     ref.none <- colMeans(all.profiles)
++ 	if (!isTRUE(all.equal(ref.none, none))) { stop("unnormalized coverage profiles don't match up with manual average") }
++ 	total <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string, normalize="total")
++     ref.total <- colMeans(all.profiles/rowSums(all.profiles))
++ 	if (!isTRUE(all.equal(ref.total, total))) { stop("total-normalized coverage profiles don't match up with manual average") }
++ 	max <- profileSites(bam, windows, ext=ext, range=width, param=xparam2, strand=strand.string, normalize="max")
++     ref.max <- colMeans(all.profiles/apply(all.profiles, 1, max))
++ 	if (!isTRUE(all.equal(ref.max, max))) { stop("max-normalized coverage profiles don't match up with manual average") }
 + 
 + 	# Running the reference analysis.
 + 	totally <- totally.reverse <- list()
@@ -79,7 +82,7 @@ Type 'q()' to quit R.
 + 		relevant.end[reverse] <- end(windows[reverse]) - width
 + 	}
 + 	totes.prof <- integer(width*2+1)
-+ 	for (x in 1:nwin) {
++ 	for (x in seq_len(nwin)) {
 + 		curchr <- as.character(seqnames(windows[x]))
 + 		relevant <- relevant.start[x]:relevant.end[x]
 + 		valid <- relevant > 0L & relevant <= chromos[[curchr]]
@@ -90,14 +93,16 @@ Type 'q()' to quit R.
 + 		} else {
 + 			chosen <- totally
 + 		}
-+ 		totes.prof[valid] <- totes.prof[valid] + as.integer(chosen[[curchr]][relevant[valid]])/metric[x]
++         cur.prof <- as.integer(chosen[[curchr]][relevant[valid]])
++         if (!identical(cur.prof, unname(all.profiles[x,valid]))) { 
++             stop("region-specific coverage profile doesn't match up") 
++         } else if (!all(all.profiles[x,!valid]==0)) {
++             stop("non-zero entries for invalid coverage values")
++         }
 + 	}
 + 
 + 	# Evaluating the two methods.
-+ 	reference <- totes.prof/nwin
-+ 	if (length(reference)!=length(observed)) { stop("vectors are of differing lengths") }
-+ 	if (any(abs(reference - observed) > (reference+1e-3)*1e-6)) { stop("coverage profiles don't match up") }
-+ 	return(head(observed))
++ 	return(head(none))
 + }
 > 
 > ############################################################
@@ -107,92 +112,93 @@ Type 'q()' to quit R.
 > nreads <- 5000
 > chromos <- c(chrA=10000, chrB=5000)
 > comp(nreads, chromos)
-     -200      -199      -198      -197      -196      -195 
-0.6729732 0.6701077 0.6711941 0.6774352 0.6744970 0.6750951 
+  -200   -199   -198   -197   -196   -195 
+35.450 35.300 35.375 35.650 35.475 35.475 
 > comp(nreads, chromos, minq=100)
-     -200      -199      -198      -197      -196      -195 
-0.6621841 0.6642388 0.6572727 0.6591104 0.6563624 0.6593301 
+  -200   -199   -198   -197   -196   -195 
+23.800 23.925 23.650 23.675 23.600 23.800 
 > comp(nreads, chromos, dedup=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.6399946 0.6389985 0.6377986 0.6396924 0.6404963 0.6381132 
+  -200   -199   -198   -197   -196   -195 
+29.100 29.100 29.050 29.100 29.125 28.975 
 > 
 > comp(nreads, chromos, ext=50)
-     -200      -199      -198      -197      -196      -195 
-0.4922395 0.4911493 0.4923385 0.4884104 0.4936909 0.4945896 
+  -200   -199   -198   -197   -196   -195 
+17.875 17.850 17.875 17.750 18.000 18.100 
 > comp(nreads, chromos, ext=200)
-     -200      -199      -198      -197      -196      -195 
-0.7410996 0.7436694 0.7438483 0.7460019 0.7473979 0.7489759 
+  -200   -199   -198   -197   -196   -195 
+69.750 69.950 70.000 70.150 70.250 70.425 
 > comp(nreads, chromos, width=100)
-     -100       -99       -98       -97       -96       -95 
-0.6833187 0.6853190 0.6823009 0.6863808 0.6857329 0.6889577 
+  -100    -99    -98    -97    -96    -95 
+36.800 36.900 36.825 36.975 36.950 37.150 
 > comp(nreads, chromos, width=500)
-     -500      -499      -498      -497      -496      -495 
-0.5692095 0.5746702 0.5751492 0.5756851 0.5755366 0.5746586 
+  -500   -499   -498   -497   -496   -495 
+31.725 31.925 32.000 32.025 32.050 31.950 
 > 
 > comp(nreads, chromos, res=20)
-     -200      -199      -198      -197      -196      -195 
-0.8225748 0.8232036 0.8231338 0.8241603 0.8248423 0.8265105 
+  -200   -199   -198   -197   -196   -195 
+36.625 36.650 36.600 36.675 36.750 36.825 
 > comp(nreads, chromos, res=20, width=100)
-     -100       -99       -98       -97       -96       -95 
-0.8687747 0.8700648 0.8660264 0.8714511 0.8674120 0.8645625 
+  -100    -99    -98    -97    -96    -95 
+37.025 37.100 37.000 37.125 36.975 36.850 
 > comp(nreads, chromos, res=100)
-     -200      -199      -198      -197      -196      -195 
-0.5192391 0.5213136 0.5207227 0.5205697 0.5224694 0.5213434 
+  -200   -199   -198   -197   -196   -195 
+37.575 37.675 37.575 37.625 37.725 37.675 
 > comp(nreads, chromos, res=100, width=500)
-     -500      -499      -498      -497      -496      -495 
-0.4715682 0.4708349 0.4709286 0.4747789 0.4754010 0.4777541 
+  -500   -499   -498   -497   -496   -495 
+33.200 33.125 33.175 33.375 33.400 33.575 
 > 
-> comp(nreads, chromos, res=20, weight=FALSE)
+> comp(nreads, chromos, res=20, dedup=TRUE)
   -200   -199   -198   -197   -196   -195 
-34.700 34.825 34.875 34.900 34.950 35.100 
-> comp(nreads, chromos, res=100, weight=FALSE)
+27.050 27.125 27.175 27.175 27.075 27.200 
+> comp(nreads, chromos, res=100, minq=100)
   -200   -199   -198   -197   -196   -195 
-36.300 36.250 36.075 36.075 36.325 36.325 
-> comp(nreads, chromos, weight=FALSE)
-  -200   -199   -198   -197   -196   -195 
-32.925 33.075 33.125 33.325 33.150 33.150 
-> comp(nreads, chromos, weight=FALSE)
-  -200   -199   -198   -197   -196   -195 
-34.650 34.625 34.400 34.325 34.350 34.250 
+24.050 24.000 23.900 23.925 24.275 24.250 
+> comp(nreads, chromos, width=100, dedup=TRUE)
+  -100    -99    -98    -97    -96    -95 
+27.950 27.750 27.700 27.475 27.350 27.275 
+> comp(nreads, chromos, width=500, minq=100)
+  -500   -499   -498   -497   -496   -495 
+21.900 22.075 22.200 22.300 22.275 22.250 
 > 
 > # Checking effect of stranded options.
 > 
 > comp(nreads, chromos, res=20, use.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.8051357 0.8041238 0.8046621 0.8055796 0.8060276 0.8107401 
+  -200   -199   -198   -197   -196   -195 
+36.750 36.700 36.725 36.775 36.775 36.950 
 > comp(nreads, chromos, res=100, use.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.4707838 0.4703937 0.4711090 0.4737918 0.4741216 0.4765514 
+  -200   -199   -198   -197   -196   -195 
+35.225 35.175 35.300 35.525 35.650 35.775 
 > comp(nreads, chromos, use.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.6991890 0.7007939 0.6966547 0.6972806 0.6985931 0.6996342 
+  -200   -199   -198   -197   -196   -195 
+37.550 37.600 37.425 37.450 37.625 37.600 
 > comp(nreads, chromos, use.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.6364542 0.6369933 0.6374587 0.6336338 0.6323193 0.6319561 
+  -200   -199   -198   -197   -196   -195 
+35.950 35.900 35.875 35.650 35.625 35.675 
 > 
 > comp(nreads, chromos, res=20, match.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.4428624 0.4393412 0.4370269 0.4399277 0.4418173 0.4371100 
+  -200   -199   -198   -197   -196   -195 
+18.575 18.450 18.325 18.425 18.550 18.400 
 > comp(nreads, chromos, res=100, match.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.2450044 0.2434035 0.2447565 0.2439633 0.2439133 0.2447097 
+  -200   -199   -198   -197   -196   -195 
+17.350 17.225 17.300 17.300 17.325 17.300 
 > comp(nreads, chromos, match.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.3363769 0.3355335 0.3347995 0.3358595 0.3329806 0.3327190 
+  -200   -199   -198   -197   -196   -195 
+18.200 18.150 18.150 18.200 18.025 18.050 
 > comp(nreads, chromos, match.strand=TRUE)
-     -200      -199      -198      -197      -196      -195 
-0.3115159 0.3099996 0.3089155 0.3068108 0.3073537 0.3083281 
+  -200   -199   -198   -197   -196   -195 
+16.725 16.600 16.625 16.500 16.525 16.525 
 > 
 > # Just exercising the multi-fragment length options here.
+> 
 > comp(nreads, chromos, ext=50, final.mode=50)
-     -200      -199      -198      -197      -196      -195 
-0.5044137 0.5069770 0.5094377 0.5086463 0.5058005 0.5080510 
+  -200   -199   -198   -197   -196   -195 
+17.275 17.275 17.325 17.225 17.275 17.250 
 > comp(nreads, chromos, ext=50, final.mode=100)
-     -200      -199      -198      -197      -196      -195 
-0.9697828 0.9733498 0.9795869 0.9752660 0.9791760 0.9747179 
+  -200   -199   -198   -197   -196   -195 
+36.875 36.950 37.150 37.000 37.050 36.925 
 > comp(nreads, chromos, ext=50, final.mode=20)
-     -200      -199      -198      -197      -196      -195 
-0.1873135 0.1913828 0.1999723 0.1983774 0.1912769 0.1961858 
+ -200  -199  -198  -197  -196  -195 
+7.050 7.150 7.350 7.375 7.225 7.250 
 > 
 > ############################################################
 > # Cleaning up.
@@ -203,4 +209,4 @@ Type 'q()' to quit R.
 > 
 > proc.time()
    user  system elapsed 
- 16.018   0.226  16.250 
+ 18.532   0.228  18.776 

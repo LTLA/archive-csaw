@@ -39,6 +39,9 @@ Ignored secondary and supplementary alignments in all functions.
 \item
 Added options to specify assay in SE objects in filterWindows().
 
+\item
+Replaced weighting with normalization options in profileSites().
+
 \item 
 Updated user's guide.
 }}

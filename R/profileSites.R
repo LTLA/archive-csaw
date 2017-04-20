@@ -1,5 +1,5 @@
-profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, weight=1, 
-	param=readParam(), strand=c("ignore", "use", "match")) 
+profileSites <- function(bam.files, regions, param=readParam(), range=5000, ext=100, 
+    average=TRUE, normalize="none", strand=c("ignore", "use", "match")) 
 # This is a function to compute the profile around putative binding sites. The 5' edge of the
 # binding site is identified by counting reads into a window of size `width`, on the left and
 # right of a given position, and determining if the right/left ratio is greater than 5. It then
@@ -7,10 +7,8 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 #
 # written by Aaron Lun
 # created 2 July 2014
-# last modified 5 August 2016
+# last modified 20 April 2017
 {
-	weight <- as.double(weight)
-	if(length(weight) != length(regions)) { weight <- rep(weight, length.out=length(regions)) }
 	average <- as.logical(average)
 	nbam <- length(bam.files)
     if (is.list(param)) { 
@@ -31,11 +29,11 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 			reverse <- as.logical(reverse)
 			rregs <- regions[reverse]
 			start(rregs) <- end(rregs) # Using the 5' end of the reverse-stranded region.
-			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, average=average, weight=weight[reverse], 
+			rprof <- Recall(bam.files=bam.files, regions=rregs, range=range, ext=ext, average=average, normalize=normalize,
 				param=reform(param, forward=ifelse(match.strand, FALSE, NA)), strand="ignore") 
 			if (any(!reverse)) { 
 				fprof <- Recall(bam.files=bam.files, regions=regions[!reverse], range=range, ext=ext, average=average, 
-                    weight=weight[!reverse], param=reform(param, forward=ifelse(match.strand, TRUE, NA)), strand="ignore") 
+                    normalize=normalize, param=reform(param, forward=ifelse(match.strand, TRUE, NA)), strand="ignore") 
 			} else { 
 				fprof <- 0 
 			}
@@ -48,10 +46,16 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 				final.mat <- matrix(0L, length(regions), total.len)
 				final.mat[reverse,] <- rprof[,rev(seq_len(total.len))]
 				final.mat[!reverse,] <- fprof
+                colnames(final.mat) <- colnames(fprof)
 				return(final.mat)
 			}
 		}
 	}
+
+    # Determining the normalization type.
+    norm.types <- c("none", "total", "max") 
+	normalize <- match.arg(normalize, norm.types)
+    norm.type <- match(normalize, norm.types)
 
 	# Setting up.
 	extracted.chrs <- .activeChrs(bam.files, param$restrict)
@@ -87,14 +91,13 @@ profileSites <- function(bam.files, regions, range=5000, ext=100, average=TRUE, 
 		all.starts <- start(regions)[chosen]
 		os <- order(all.starts)
 		all.starts <- all.starts[os]
-		all.weights <- weight[chosen][os]
 
 		# We call the C++ functions to aggregate profiles.
 		starts <- unlist(starts)
 		ends <- unlist(ends)
 		if (!length(starts)) { next }
 
-		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, all.weights, range, average) 
+		cur.profile <- .Call(cxx_get_profile, starts, ends, all.starts, range, average, norm.type) 
 		if (is.character(cur.profile)) { stop(cur.profile) }
 		if (average) { 
 			total.profile <- total.profile + cur.profile

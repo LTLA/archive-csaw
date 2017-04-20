@@ -1,12 +1,8 @@
 #include "csaw.h"
 
-#ifdef DEBUG
-#include <map>
-#endif
-
 /* This function scans through the track and pulls out local maxima. */
 
-SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP range, SEXP average) try {
+SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP range, SEXP average, SEXP normalize) try {
 
 	if (!isInteger(starts) || !isInteger(ends)) { throw std::runtime_error("fragment start/end positions should be integer"); }
 	const int nfrags=LENGTH(starts);
@@ -14,8 +10,8 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	if (!isInteger(regstarts)) { throw std::runtime_error("region start/end positions should be integer"); }
 	const int nregs=LENGTH(regstarts);
 	if (nregs==0) { throw std::runtime_error("no regions supplied"); }
-	if (!isReal(weights))  { throw std::runtime_error("weight vector should be double-precision"); }
-	if (LENGTH(weights)!=nregs) { throw std::runtime_error("weight vector should have length equal to number of regions"); }
+	if (!isInteger(normalize) || LENGTH(normalize)!=1)  { throw std::runtime_error("normalize specification should be an integer scalar"); }
+    const int norm_type=asInteger(normalize);
 
 	// Setting up constructs.
 	if (!isInteger(range) || LENGTH(range)!=1) { throw std::runtime_error("range distance should be an integer scalar"); }
@@ -25,7 +21,6 @@ SEXP get_profile(SEXP starts, SEXP ends, SEXP regstarts, SEXP weights, SEXP rang
 	const int* fsptr=INTEGER(starts),
 		  *feptr=INTEGER(ends),
 		  *rsptr=INTEGER(regstarts);
-	const double* wptr=REAL(weights);
 
 	/* Setting up a separate profile for each region. This is necessary
 	 * to ensure that the calculations are integer (despite weighting),
@@ -95,13 +90,35 @@ try {
 		SEXP output=PROTECT(allocVector(REALSXP, totallen));
 	try {
 		double* optr=REAL(output);
-		for (index=0; index<totallen; ++index) { optr[index]=0; }
+        std::fill(optr, optr+totallen, 0);
 		optr += maxrange; // 0 is now distance of zero.
+
+        std::deque<double> weightings(nregs);
+        if (norm_type==1) { 
+            // No normalization.
+            std::fill(weightings.begin(), weightings.end(), 1);
+        } else if (norm_type==2) { 
+            // Normalizing by the total coverage.
+            for (curreg=0; curreg<nregs; ++curreg) {
+    			curprof=all_profiles[curreg];
+                double& cur_weighting=weightings[curreg];
+                for (index=-maxrange; index<=maxrange; ++index) { cur_weighting+=curprof[index]; }
+            }
+        } else if (norm_type==3) { 
+            // Normalizing by the maximum height.
+            for (curreg=0; curreg<nregs; ++curreg) {
+       			curprof=all_profiles[curreg];
+                double& cur_max=weightings[curreg];
+                for (index=-maxrange; index<=maxrange; ++index) { 
+                    if (curprof[index] > cur_max) { cur_max=curprof[index]; }
+                }
+            }
+        }
 
 		for (curreg=0; curreg<nregs; ++curreg) {
 			curprof=all_profiles[curreg];
-			const double& curweight=wptr[curreg];
-			for (index=-maxrange; index<=maxrange; ++index) { optr[index]+=curprof[index]*curweight; }
+			const double& cur_weighting=weightings[curreg];
+			for (index=-maxrange; index<=maxrange; ++index) { optr[index]+=double(curprof[index])/cur_weighting; }
 		}
 	} catch (std::exception& e) {
 		UNPROTECT(1);
