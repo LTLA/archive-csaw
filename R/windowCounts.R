@@ -7,81 +7,67 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 # 
 # written by Aaron Lun
 # created 5 April 2012
-# last modified 8 August 2016
+# last modified 22 June 2017
 {   
 	nbam <- length(bam.files)
-    if (is.list(param)) { 
-        .Deprecated(msg="supplying a list of readParam objects is deprecated, using first element only")
-        param <- param[[1]]
-    }
 	extracted.chrs <- .activeChrs(bam.files, param$restrict)
 
 	# Processing input parameters.
-	if (length(bin)>1L || !is.logical(bin)) { stop("bin must be a logical scalar") }
-	if (!bin) { 
-		spacing <- as.integer(spacing)
-		left <- as.integer(shift)
-		right <- as.integer(width) - left - 1L
-	} else {
-		# A convenience flag, which assigns sensible arguments to everything else.
-		spacing <- as.integer(width)
-		left <- as.integer(shift)
-		right <- spacing - 1L - left
+    shift <- as.integer(shift)
+    width <- as.integer(width)
+    spacing <- as.integer(spacing)
+	if (length(bin)>1L || !is.logical(bin)) { 
+        stop("bin must be a logical scalar") 
+    }
+	if (bin) { # A convenience flag for binning.
+		spacing <- width
 		ext <- 1L
-		final.ext <- NA
 		filter <- min(1, filter)
 	}
 	ext.data <- .collateExt(nbam, ext)
 
-	# Checking the extension and spacing parameters. We've reparameterised it so
-	# that 'left' and 'right' refer to the extension of the window from a nominal
-	# 'center' point. This simplifies read counting as we just measure read
-	# overlaps to those center points, spaced at regular intervals. 
-	if (left >= spacing) { stop("shift must be less than the spacing") }
-	if (left < 0L) { stop("shift must be positive") }
-	if (left + right < 0L) { stop("width must be a positive integer") }
+	# Checking the values of the parameters. 
+	if (shift >= spacing) { stop("shift must be less than the spacing") }
+	if (shift < 0L) { stop("shift must be positive") }
+	if (width <= 0L) { stop("width must be a positive integer") }
 	if (spacing <= 0L) { stop("spacing must be a positive integer") }
 
-	# Need to account for the possible loss of a centre point from the front when
-	# the shift is non-zero, because the corresponding window is wholly outside the
-	# chromosome (i.e., shifted so that the width of the window is before position
-	# 1; can't happen if width > shift; left+right+1 > left; right+1 > 0; right >= 0).
-	at.start <- right >= 0L 
-	first.pt <- ifelse(at.start, 1L, spacing+1L)
-
 	# Initializing various collectable containers (non-empty so it'll work if no chromosomes are around).
-	totals <- integer(nbam)	
-	all.out <- list(matrix(0L, ncol=nbam, nrow=0))
-	all.regions <- list(GRanges())
-	ix <- 1
-    all.extras <- rep(list(list()), nbam)
+	totals <- integer(nbam)
+    nchrs <- length(extracted.chrs)    
+    all.out <- rep(list(matrix(0L, ncol=nbam, nrow=0)), nchrs) # ensure that the class is right, even if nothing is added.
+	all.regions <- rep(list(GRanges()), nchrs)
+    all.lengths <- rep(list(vector("list", nchrs)), nbam)
 
-	for (i in seq_along(extracted.chrs)) {
+	for (i in seq_len(nchrs)) { 
 		chr <- names(extracted.chrs)[i]
 		outlen <- extracted.chrs[i]		
 		where <- GRanges(chr, IRanges(1, outlen))
 
+        # Need to account for the possible loss of a window from the front when
+        # the shift is non-zero, because the corresponding window is wholly outside the
+        # chromosome (i.e., shifted so that the width of the window is before position 1).
+        at.start <- shift < width 
+
 		# Accounting for the possible gain of a centrepoint from the back when
-		# shift/left is non-zero, i.e., does the shift bring the next centre point
-		# (floor((outlen-1)/spacing)*spacing+1+spacing) under outlen? In other words:
-        #     floor((outlen-1)/spacing)*spacing+1+spacing - left <= outlen
-        #     floor((outlen-1)/spacing)*spacing - (outlen - 1) + spacing <= left
-        # [note that floor - original for (outlen-1) is equal to the negative remainder].
-		at.end <- spacing - (outlen - 1L) %% spacing <= left
-		total.pts <- as.integer((outlen-1)/spacing) + at.start + at.end
+		# shift is non-zero, i.e., does the shift bring the next window start under outlen?
+        # i.e., 1L - shift + spacing * X <= outlen, solve for the largest integer X.
+        total.pts <- as.integer(floor((outlen + shift - 1L)/spacing))
+        total.pts <- total.pts + at.start # if the extra point exists at the start.
 		
         # Parallelized loading.
         bp.out <- bpmapply(FUN=.window_counts, bam.file=bam.files, init.ext=ext.data$ext, 
                            MoreArgs=list(where=where, param=param, 
                                          final.ext=ext.data$final, outlen=outlen, bin=bin, 
-                                         left=left, right=right, total.pts=total.pts, spacing=spacing, at.start=at.start),
+                                         shift=shift, width=width, spacing=spacing, 
+                                         total.pts=total.pts, at.start=at.start),
                            BPPARAM=param$BPPARAM, SIMPLIFY=FALSE)
         
         outcome <- matrix(0L, total.pts, nbam)
         for (bf in seq_along(bp.out)) {
             outcome[,bf] <- bp.out[[bf]]$counts
             totals[bf] <- totals[bf] + bp.out[[bf]]$totals
-            all.extras[[bf]][[i]] <- bp.out[[bf]]$extra
+            all.lengths[[bf]][[i]] <- bp.out[[bf]]$lengths
         }
 
 		# Filtering on row sums (for memory efficiency). Note that redundant windows
@@ -89,15 +75,19 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 		# cover the whole chromosome cannot be spaced to a new position where it still 
 		# covers the whole chromosome. The next one must be inside the chromosome.
 		keep <- rowSums(outcome)>=filter 
-		if (!any(keep)) { next } 
-		else if (!all(keep)) { outcome <- outcome[keep,,drop=FALSE] }
-		all.out[[ix]] <- outcome
+		if (!any(keep)) { 
+            next 
+        } else if (!all(keep)) { 
+            outcome <- outcome[keep,,drop=FALSE] 
+        }
+		all.out[[i]] <- outcome
 
-		center <- (which(keep)-1L)*spacing + first.pt
-		reg.start <- pmax(1L, center-left)
-		reg.end <- pmin(outlen, center+right)
-		all.regions[[ix]] <- GRanges(chr, IRanges(reg.start, reg.end))
-		ix <- ix+1L
+        # Defining genomic coordinates.
+		center <- (which(keep) - 1L) * spacing + 1L + ifelse(at.start, 0L, spacing) 
+		reg.start <- center - shift
+		reg.end <- pmin(outlen, reg.start + width - 1L)
+        reg.start <- pmax(1L, reg.start)
+		all.regions[[i]] <- GRanges(chr, IRanges(reg.start, reg.end))
 	}
 
 	# Generating the remaining GRanges for output (suppressing numerous warnings).
@@ -108,21 +98,23 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
 
 	return(SummarizedExperiment(assays=SimpleList(counts=do.call(rbind, all.out)), 
 		rowRanges=all.regions, 
-		colData=.formatColData(bam.files, totals, ext.data, all.extras, param),
+		colData=.formatColData(bam.files, totals, ext.data, all.lengths, param),
 		metadata=list(spacing=spacing, width=width, shift=shift, bin=bin, 
             param=param, final.ext=ifelse(bin, 1L, ext.data$final)))) # For getWidths with paired-end binning.
 }
 
 .window_counts <- function(bam.file, where, param, 
                            init.ext, final.ext, outlen, bin, 
-                           left, right, total.pts, spacing, at.start) {
+                           shift, width, spacing, 
+                           total.pts, at.start) {
+
     if (param$pe!="both") {
         reads <- .getSingleEnd(bam.file, where=where, param=param)
         extended <- .extendSE(reads, ext=init.ext, final=final.ext, chrlen=outlen)
         frag.start <- extended$start
         frag.end <- extended$end
 
-        extra <- cbind(c(mean(reads$forward$qwidth), mean(reads$reverse$qwidth)),
+        rlengths <- cbind(c(mean(reads$forward$qwidth), mean(reads$reverse$qwidth)),
                        c(length(reads$forward$qwidth), length(reads$reverse$qwidth)))
     } else {
         out <- .getPairedEnd(bam.file, where=where, param=param)
@@ -135,15 +127,26 @@ windowCounts <- function(bam.files, spacing=50, width=spacing, ext=100,
             frag.start <- checked$start
             frag.end <- checked$end
         }
-        extra <- c(mean(out$size), length(out$size))
+        rlengths <- c(mean(out$size), length(out$size))
     }
 
-    # Extending reads to account for window sizes > 1 bp. The start of each read
-    # must be extended by 'right' and the end of each read must be extended by
-	# 'left'. We then pull out counts at the specified spacing. We do have to 
-    # keep track of whether or not we want to use the first point, though.
-    out <- .Call(cxx_get_rle_counts, frag.start-right, frag.end+left, total.pts, spacing, at.start)
+    # Windows are parametrized in terms of extension from the window start.
+    # Non-unity window width corresponds to extension to the right.
+    # Shifting causes it to be extended to the left, at the expense of the right.
+    right <- width - shift - 1L
+    left <- shift
+
+    # We make it even simpler by extending the reads, which means that we don't 
+    # have to actually change the window starts. The *start* of each read must be 
+    # extended by 'right' and the *end* of each read must be extended by 'left'. 
+    # (This mirrors the extension of the windows.)
+    frag.start <- frag.start - right
+    frag.end <- frag.end + left    
+    
+    # We pull out counts at the specified spacing. We do have to keep track of 
+    # whether or not we want to use the first point, though.
+    out <- .Call(cxx_get_rle_counts, frag.start, frag.end, total.pts, spacing, at.start)
     if (is.character(out)) { stop(out) }
-    return(list(counts=out, totals=length(frag.start), extra=extra))
+    return(list(counts=out, totals=length(frag.start), lengths=rlengths))
 }
 
